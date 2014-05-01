@@ -177,9 +177,9 @@ public class Analyst {
 		return response;
 	}
 
-	public void batch(String graphId, Integer page, Integer pageCount, String mode, Integer timeLimit) {
+	public void batch(String graphId, String indicatorId, Integer page, Integer pageCount, String mode, Integer timeLimit) {
 		
-	    master.tell(new AnalystBatchRequest(graphId, page, pageCount, mode, timeLimit), master);
+	    master.tell(new AnalystBatchRequest(graphId, indicatorId,  page, pageCount, mode, timeLimit), master);
 
 	}
 	 
@@ -396,12 +396,13 @@ public class Analyst {
 		String graphId;
 		String indicatorId;
 		
-		AnalystBatchRequest(String gId, Integer p, Integer c, String m, Integer tl) {
+		AnalystBatchRequest(String gId, String iId, Integer p, Integer c, String m, Integer tl) {
 			page = p;
 			pageCount = c;
 			mode = m;
 			timeLimit = tl;
 			graphId = gId;
+			indicatorId = iId;
 			
 		}
 	}

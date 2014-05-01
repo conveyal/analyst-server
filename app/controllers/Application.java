@@ -14,9 +14,9 @@ public class Application extends Controller {
 	
 	public static Analyst analyst = new Analyst();
 	
-	public static Result batch(String graphId, Integer page, Integer pageCount, String mode, Integer timeLimit) throws NoSuchAuthorityCodeException, FactoryException {
+	public static Result batch(String graphId, String indicatorId, Integer page, Integer pageCount, String mode, Integer timeLimit) throws NoSuchAuthorityCodeException, FactoryException {
 	    	
-    	Application.analyst.batch(graphId, page, pageCount, mode, timeLimit);
+    	Application.analyst.batch(graphId, indicatorId, page, pageCount, mode, timeLimit);
 		return ok();
     }
 }
