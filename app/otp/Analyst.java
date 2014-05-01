@@ -327,7 +327,7 @@ public class Analyst {
 							
 							Result r = new Result(ar);
 							
-							for(IndicatorItem item : Application.analyst.indicatorManager.queryAll("jobs_edu")) {
+							for(IndicatorItem item : Application.analyst.indicatorManager.queryAll(ar.indicatorId)) {
 								if(item.samples.getSample(ar.graphId) != null) {
 									long time = response.evaluateSample(item.samples.getSample(ar.graphId));
 									if(time <= ar.timeLimit) {
