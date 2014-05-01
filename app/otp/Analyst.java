@@ -5,14 +5,15 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
-
 import model.AnalystRequest;
 import model.IndicatorItem;
+import model.IndicatorSummary;
 import model.SptResponse;
 
 import org.opentripplanner.analyst.core.Sample;	
@@ -287,8 +288,8 @@ public class Analyst {
 	        	 
 	        	 double itemsPerSec = (double)processedItems / elapsedTime * 1000;
 	        	 
-	        	 for(int i = 0; i <= result.i; i++)	 
-	        		 f0.println(result.originId + "," + result.destIds[i] + "," + result.times[i]);
+	        	 f0.println(result.originId + "," + result.count);
+	        		 
 	        	 
 	        	 
 	        	 System.out.print(processedItems + ":" +  failedItems + "\t / \t" + totalItems + " \t -- \t " + itemsPerSec + "\r");
@@ -327,14 +328,20 @@ public class Analyst {
 							
 							Result r = new Result(ar);
 							
+							ArrayList<IndicatorItem> reachableItems = new ArrayList<IndicatorItem>();
+							
 							for(IndicatorItem item : Application.analyst.indicatorManager.queryAll(ar.indicatorId)) {
 								if(item.samples.getSample(ar.graphId) != null) {
 									long time = response.evaluateSample(item.samples.getSample(ar.graphId));
 									if(time <= ar.timeLimit) {
-										r.add(item, time);
+										reachableItems.add(item);
 									}
 								}
 							}
+							
+							IndicatorSummary summary = new IndicatorSummary(ar.indicatorId, reachableItems);
+							
+							r.add(summary.total);
 							
 							getSender().tell(r, getSelf());
 							
@@ -351,21 +358,14 @@ public class Analyst {
 	
 	static class Result {
 		String originId;
-		String[] destIds;
-	    Long[] times;
-	    
-	    int i = 0;
+		Long count = 0l;
 	   
 	    public Result(AnalystWorkerRequest req) {
 	    	originId = req.item.geoId;
-	    	destIds = new String[Application.analyst.indicatorManager.getItemCount(req.indicatorId)];
-	    	times = new Long[Application.analyst.indicatorManager.getItemCount(req.indicatorId)];
 	    }
 	    
-	    public void add(IndicatorItem item, long t) {
-	    	this.destIds[i] = item.geoId;	
-	    	this.times[i] = t;
-	    	i++;
+	    public void add(long c) {
+	    	count += c;
 	    }
 	  }
 	
