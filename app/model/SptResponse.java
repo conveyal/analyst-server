@@ -85,7 +85,7 @@ public class SptResponse {
 	}
 	
 	public Geometry getIsoline(Integer seconds) {
-		
+		/*
 		// hit cache to see if we've already computed this isoline
 		if(isolineCache.containsKey(seconds))
 			return isolineCache.get(seconds);
@@ -157,18 +157,27 @@ public class SptResponse {
        
        // cache isolines for later use -- TODO need to make this cache limited size 
        isolineCache.put(seconds, isoline);
-       
-       return isoline;
+       */
+       return null; 
 	}
 	
-	private void sampleSPT(ShortestPathTree spt, ZSampleGrid<WTWD> sampleGrid, final double d0,
+	public void sampleSPT(ShortestPathTree spt, ZSampleGrid<WTWD> sampleGrid, final double d0,
             final double gridSizeMeters, final double v0, final double maxWalkDistance,
             final double cosLat) {
 
+        final DistanceLibrary distanceLibrary = SphericalDistanceLibrary.getInstance();
+
+        /**
+         * Any given sample is weighted according to the inverse of the squared normalized distance
+         * + 1 to the grid sample. We add to the sampling time a default off-road walk distance to
+         * account for off-road sampling.
+         */
         AccumulativeMetric<WTWD> accMetric = new AccumulativeMetric<WTWD>() {
             @Override
-            public WTWD cumulateSample(Coordinate C0, Coordinate Cs, double z, WTWD zS) {
-                double t = z;
+            public WTWD cumulateSample(Coordinate C0, Coordinate Cs, WTWD z, WTWD zS) {
+                double t = z.wTime / z.w;
+                double b = z.wBoardings / z.w;
+                double wd = z.wWalkDist / z.w;
                 double d = distanceLibrary.fastDistance(C0, Cs, cosLat);
                 // additionnal time
                 double dt = d / v0;
@@ -179,24 +188,53 @@ public class SptResponse {
                     zS.d = Double.MAX_VALUE;
                 }
                 zS.w = zS.w + w;
-                zS.tw = zS.tw + w * (t + dt);
+                zS.wTime = zS.wTime + w * (t + dt);
+                zS.wBoardings = zS.wBoardings + w * b;
+                zS.wWalkDist = zS.wWalkDist + w * (wd + d);
                 if (d < zS.d)
                     zS.d = d;
                 return zS;
             }
 
+            /**
+             * A Generated closing sample take 1) as off-road distance, the minimum of the off-road
+             * distance of all enclosing samples, plus the grid size, and 2) as time the minimum
+             * time of all enclosing samples plus the grid size * off-road walk speed as additional
+             * time. All this are approximations.
+             * 
+             * TODO Is there a better way of computing this? Here the computation will be different
+             * based on the order where we close the samples.
+             */
             @Override
             public WTWD closeSample(WTWD zUp, WTWD zDown, WTWD zRight, WTWD zLeft) {
                 double dMin = Double.MAX_VALUE;
+                double tMin = Double.MAX_VALUE;
+                double bMin = Double.MAX_VALUE;
+                double wdMin = Double.MAX_VALUE;
                 for (WTWD z : new WTWD[] { zUp, zDown, zRight, zLeft }) {
                     if (z == null)
                         continue;
                     if (z.d < dMin)
                         dMin = z.d;
+                    double t = z.wTime / z.w;
+                    if (t < tMin)
+                        tMin = t;
+                    double b = z.wBoardings / z.w;
+                    if (b < bMin)
+                        bMin = b;
+                    double wd = z.wWalkDist / z.w;
+                    if (wd < wdMin)
+                        wdMin = wd;
                 }
                 WTWD z = new WTWD();
                 z.w = 1.0;
-                z.tw = Double.POSITIVE_INFINITY;
+                /*
+                 * The computations below are approximation, but we are on the edge anyway and the
+                 * current sample does not correspond to any computed value.
+                 */
+                z.wTime = tMin + gridSizeMeters / v0;
+                z.wBoardings = bMin;
+                z.wWalkDist = wdMin + gridSizeMeters;
                 z.d = dMin + gridSizeMeters;
                 return z;
             }
@@ -219,23 +257,47 @@ public class SptResponse {
                         + d0 / v0;
                 double t1 = wd1 > maxWalkDistance ? Double.POSITIVE_INFINITY : s1.getActiveTime()
                         + d1 / v0;
-                if (!Double.isInfinite(t0) || !Double.isInfinite(t1))
-                    gridSampler.addSamplingPoint(c, t0 < t1 ? t0 : t1);
+                if (!Double.isInfinite(t0) || !Double.isInfinite(t1)) {
+                    WTWD z = new WTWD();
+                    z.w = 1.0;
+                    z.d = 0.0;
+                    if (t0 < t1) {
+                        z.wTime = t0;
+                        z.wBoardings = s0.getNumBoardings();
+                        z.wWalkDist = s0.getWalkDistance();
+                    } else {
+                        z.wTime = t1;
+                        z.wBoardings = s1.getNumBoardings();
+                        z.wWalkDist = s1.getWalkDistance();
+                    }
+                    gridSampler.addSamplingPoint(c, z);
+                }
             }
         }, d0);
         gridSampler.close();
     }
 	
-	private static class WTWD {
-        private double w;
+	public static class WTWD {
+        /* Total weight */
+        public double w;
 
-        private double tw;
+        // TODO Add generalized cost
 
-        private double d;
+        /* Weighted sum of time in seconds */
+        public double wTime;
+
+        /* Weighted sum of number of boardings (no units) */
+        public double wBoardings;
+
+        /* Weighted sum of walk distance in meters */
+        public double wWalkDist;
+
+        /* Minimum off-road distance to any sample */
+        public double d;
 
         @Override
         public String toString() {
-            return String.format("[t/w=%f,w=%f,d=%f]", tw / w, w, d);
+            return String.format("[t/w=%f,w=%f,d=%f]", wTime / w, w, d);
         }
     }
 }

@@ -55,16 +55,13 @@ public class Indicator {
 			Coordinate coord = new Coordinate(item.lon, item.lat);
 			item.samples = sampleFactory.getMultigraphSample(item.lon, item.lat);
 			item.point = geometryFactory.createPoint(coord);
-
-		
-			item.block = blockData.blocks.get(item.geoId);
 			
 			idIndex.put(item.geoId, item);
 			
-			if(item.block == null)
+			if(item.geom == null)
 				spatialIndex.insert(item.point.getEnvelopeInternal(), item);
 			else
-				spatialIndex.insert(item.block.getEnvelopeInternal(), item);
+				spatialIndex.insert(item.geom.getEnvelopeInternal(), item);
 
 			
 		}

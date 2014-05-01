@@ -5,44 +5,23 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
+
 
 import model.AnalystRequest;
-import model.Location;
+import model.IndicatorItem;
 import model.SptResponse;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.pool.impl.GenericObjectPool.Config;
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.geotools.geometry.jts.JTS;
-import org.geotools.geometry.jts.JTSFactoryFinder;
-import org.geotools.referencing.CRS;
-import org.geotools.referencing.crs.DefaultGeographicCRS;
-import org.opengis.geometry.MismatchedDimensionException;
-import org.opengis.referencing.FactoryException;
-import org.opengis.referencing.NoSuchAuthorityCodeException;
-import org.opengis.referencing.crs.CRSAuthorityFactory;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
-import org.opengis.referencing.crs.GeographicCRS;
-import org.opengis.referencing.operation.MathTransform;
-import org.opengis.referencing.operation.TransformException;
 import org.opentripplanner.analyst.core.Sample;	
 import org.opentripplanner.common.model.GenericLocation;
 import org.opentripplanner.routing.error.VertexNotFoundException;
-import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Graph;
-import org.opentripplanner.routing.graph.Vertex;
 import org.opentripplanner.routing.services.GraphService;
 import org.opentripplanner.routing.services.SPTService;
 import org.opentripplanner.routing.spt.ShortestPathTree;
-import org.opentripplanner.routing.vertextype.TransitStop;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -52,16 +31,11 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.routing.RoundRobinRouter;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Envelope;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.MultiPoint;
 import com.vividsolutions.jts.geom.Point;
+import com.vividsolutions.jts.geom.Envelope;
 
 import controllers.Application;
 import play.Logger;
-import play.libs.Akka;
 
 public class Analyst { 
 	
@@ -69,14 +43,11 @@ public class Analyst {
 	
 	private GraphService graphService;
 	private SPTService sptService;
-	private SampleFactory sampleSource;
 
 	private ActorRef master;
 	
 	private MutligraphSampleFactory sampleFactory = new MutligraphSampleFactory();
-	
-	private ArrayList<Location> destinations = new ArrayList<Location>();
-	
+
 	IndicatorManager indicatorManager;
 
 	public Analyst() {
@@ -111,7 +82,24 @@ public class Analyst {
 	
 		indicatorManager = new IndicatorManager(sampleFactory);
 		
-		System.out.println("loaded " + destinations.size() + " destionations");
+		for(File indicatorFile : (new File("data/indicators/")).listFiles()) {
+			
+			
+			if(indicatorFile.getName().endsWith(".json")){
+			
+				System.out.println("loading " + indicatorFile.getName());
+				
+				try {
+					indicatorManager.loadJson(indicatorFile, null);
+				} catch (IOException e) {
+					System.out.println("unable to load " + indicatorFile.getName());
+				}
+				
+			}
+				
+		}
+			
+		System.out.println("loaded " + indicatorManager.getItemCount() + " items across " +  indicatorManager.getIndicatorCount() + " indicators.");
 	}
 	 
 	public Envelope getMetadata() {
@@ -188,9 +176,7 @@ public class Analyst {
 		
 		return response;
 	}
-	
 
-	
 	public void batch(String graphId, Integer page, Integer pageCount, String mode, Integer timeLimit) {
 		
 	    master.tell(new AnalystBatchRequest(graphId, page, pageCount, mode, timeLimit), master);
@@ -238,8 +224,7 @@ public class Analyst {
 	    private Long startTime;
 	    
 	    PrintWriter f0; 
-	    PrintWriter f1; 
-	    
+
 	    public BatchAnalystMaster(
 	      Analyst analyst,
 	      ActorRef listener) {
@@ -249,7 +234,6 @@ public class Analyst {
 	      Date d = new Date();
 	      try {
 			f0 = new PrintWriter(new FileWriter("data/output/" + d.getTime() + "_"  + "_blocks_pairs.csv"));
-			f1 = new PrintWriter(new FileWriter("data/output/" + d.getTime() + "_failed_block_pairs.csv"));
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -263,24 +247,27 @@ public class Analyst {
 	      if (message instanceof AnalystBatchRequest) {
 	    	  
 	    	AnalystBatchRequest request = (AnalystBatchRequest)message;
-	    		
 			
-			pageSize = (Application.analyst.destinations.size() / request.pageCount) -1;
+			List<IndicatorItem> items = analyst.indicatorManager.queryAll(request.indicatorId);
+		
+			Collections.sort(items);
 			
-			totalItems = pageSize  * totalItems; 
+			int pageSize = (items.size() / request.pageCount) -1;
+			
+			totalItems = pageSize;
 			startTime = System.currentTimeMillis();
 			
 			System.out.println("processing items for page " + request.page);
 			
 			// need to interleave pages as not all items are equal -- sorting unfairly distributed the load
 			int cur = 1;
-			for(Location d : Application.analyst.destinations) {
+			for(IndicatorItem i : items) {
 				
 				if(cur == request.page) {
 					AnalystWorkerRequest ar = new AnalystWorkerRequest();
-					ar.location = d;
-					ar.graphId = request.graphId;
+					ar.item = i;
 					ar.mode = request.mode;
+					ar.indicatorId = request.indicatorId;
 					ar.timeLimit = request.timeLimit;
 					workerRouter.tell(ar, getSelf());
 				}
@@ -289,8 +276,6 @@ public class Analyst {
 					cur =1;
 			}
 			
-					
-					
 	    	  
 	      } else if (message instanceof Result) {
 	        Result result = (Result) message;
@@ -303,7 +288,7 @@ public class Analyst {
 	        	 double itemsPerSec = (double)processedItems / elapsedTime * 1000;
 	        	 
 	        	 for(int i = 0; i <= result.i; i++)	 
-	        		 f0.println(result.originId[i] + "," + result.destId[i] + "," + result.time[i]);
+	        		 f0.println(result.originId + "," + result.destIds[i] + "," + result.times[i]);
 	        	 
 	        	 
 	        	 System.out.print(processedItems + ":" +  failedItems + "\t / \t" + totalItems + " \t -- \t " + itemsPerSec + "\r");
@@ -313,7 +298,6 @@ public class Analyst {
 	      } else if (message instanceof Done)  {
 	    	  if(processedlRequests == pageSize) {
 	    		  f0.flush();
-	     		  f1.flush();
 	    	  }
 	      }
 	      else {
@@ -333,7 +317,7 @@ public class Analyst {
 					
 					try {
 						
-				    	AnalystRequest req = Application.analyst.buildRequest(new GenericLocation(ar.location.point.getY(), ar.location.point.getX()), ar.mode, ar.graphId);
+				    	AnalystRequest req = Application.analyst.buildRequest(new GenericLocation(ar.item.point.getY(), ar.item.point.getX()), ar.mode, ar.graphId);
 				    	
 						if(req != null) {
 							final ShortestPathTree spt = Application.analyst.sptService.getShortestPathTree(req);
@@ -341,12 +325,14 @@ public class Analyst {
 							
 							SptResponse response = new SptResponse(req, spt);
 							
-							Result r = new Result();
+							Result r = new Result(ar);
 							
-							for(Location d : Application.analyst.destinations) {
-								if(d.getSample(ar.graphId) != null) {
-									long time = response.evaluateSample(d.getSample(ar.graphId));
-									r.add(ar.location.id, d.id, time);
+							for(IndicatorItem item : Application.analyst.indicatorManager.queryAll("jobs_edu")) {
+								if(item.samples.getSample(ar.graphId) != null) {
+									long time = response.evaluateSample(item.samples.getSample(ar.graphId));
+									if(time <= ar.timeLimit) {
+										r.add(item, time);
+									}
 								}
 							}
 							
@@ -364,20 +350,21 @@ public class Analyst {
 	}
 	
 	static class Result {
-		String[] originId = new String[Application.analyst.destinations.size()];
-		String[] destId = new String[Application.analyst.destinations.size()];
-	    Long[] time = new Long[Application.analyst.destinations.size()];
+		String originId;
+		String[] destIds;
+	    Long[] times;
 	    
 	    int i = 0;
 	   
-	    public Result() {
-	    	
+	    public Result(AnalystWorkerRequest req) {
+	    	originId = req.item.geoId;
+	    	destIds = new String[Application.analyst.indicatorManager.getItemCount(req.indicatorId)];
+	    	times = new Long[Application.analyst.indicatorManager.getItemCount(req.indicatorId)];
 	    }
 	    
-	    public void add(String oid, String did, long time) {
-	    	this.originId[i] = oid;
-	    	this.destId[i] = did;	
-	    	this.time[i] = time;
+	    public void add(IndicatorItem item, long t) {
+	    	this.destIds[i] = item.geoId;	
+	    	this.times[i] = t;
 	    	i++;
 	    }
 	  }
@@ -407,6 +394,7 @@ public class Analyst {
 		String mode;
 		Integer timeLimit;
 		String graphId;
+		String indicatorId;
 		
 		AnalystBatchRequest(String gId, Integer p, Integer c, String m, Integer tl) {
 			page = p;

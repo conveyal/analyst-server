@@ -26,23 +26,12 @@ public class IndicatorItem implements Comparable<IndicatorItem> {
 	
 	public HashMap<String, Long> attributes  = new HashMap<String, Long>();
 	
-	public Geometry block;
+	public Geometry geom;
 
-	Point centroid;
+	public Geometry centroid;
 	
 	Double percentLand;
 	
-	public IndicatorItem(String geoId, Geometry block, Double percentLand) {
-		
-		this.geoId = geoId;
-		this.block = block;
-		this.centroid = block.getCentroid();
-		
-		this.lat = this.centroid.getY();
-		this.lon = this.centroid.getX();
-		
-		this.percentLand = percentLand;
-	}
 	
 	public IndicatorItem() {
 		 
@@ -50,11 +39,11 @@ public class IndicatorItem implements Comparable<IndicatorItem> {
 	
 	public HaltonPoints getHaltonPoints(String attribute) {
 		
-		if(block == null || !attributes.containsKey(attribute))
-			return new HaltonPoints(block, 0);
+		if(geom == null || !attributes.containsKey(attribute))
+			return new HaltonPoints(geom, 0);
 			
 		// !!! need to handle large values more gracefully
-		return new HaltonPoints(block, (int)(long)attributes.get(attribute));
+		return new HaltonPoints(geom, (int)(long)attributes.get(attribute));
 	}
 	
 

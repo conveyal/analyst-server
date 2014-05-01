@@ -17,6 +17,8 @@ import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.opengis.referencing.FactoryException;
 
+import utils.GeoJsonModule;
+
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.MultiPoint;
 
@@ -36,7 +38,10 @@ public class IndicatorManager {
 	
 	public void loadJson(File jsonFile, Blocks blocks) throws JsonParseException, JsonMappingException, IOException {
 	
+		GeoJsonModule geojsonModule = new GeoJsonModule();
+		
 		ObjectMapper mapper = new ObjectMapper();
+		mapper.registerModule(geojsonModule);
 		Indicator indicator = mapper.readValue(jsonFile, Indicator.class);
 		System.out.println("Loaded " + indicator.id + " with " + indicator.data.size() + " items.");
 	
@@ -45,6 +50,30 @@ public class IndicatorManager {
 		indicatorMetadata.put(indicator.id, indicator.attributes);
 		
 		indicators.put(indicator.id, indicator);
+		
+	}
+	
+	public Integer getItemCount() {
+		
+		Integer size = 0;
+		
+		for(Indicator i : indicators.values()) {
+			size += i.data.size();
+		}
+		
+		return size;
+		
+	}
+	
+	public Integer getItemCount(String indicatorId) {
+	
+		return indicators.get(indicatorId).data.size();
+		
+	}
+	
+	public Integer getIndicatorCount() {
+		
+		return indicators.values().size();
 		
 	}
 	
