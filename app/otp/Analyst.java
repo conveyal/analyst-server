@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import model.AnalystRequest;
-import model.Destination;
+import model.Location;
 import model.SptResponse;
 
 import org.apache.commons.logging.Log;
@@ -73,9 +73,11 @@ public class Analyst {
 
 	private ActorRef master;
 	
-	private HashMap<String, SampleFactory> graphSampleFactories = new HashMap<String, SampleFactory>();
+	private MutligraphSampleFactory sampleFactory = new MutligraphSampleFactory();
 	
-	private ArrayList<Destination> destinations = new ArrayList<Destination>();
+	private ArrayList<Location> destinations = new ArrayList<Location>();
+	
+	IndicatorManager indicatorManager;
 
 	public Analyst() {
 		
@@ -103,23 +105,11 @@ public class Analyst {
 			
 			GeometryIndex graphIndex = new GeometryIndex(graphService.getGraph(routerId));
 			
-			graphSampleFactories.put(routerId, new SampleFactory(graphIndex));
+			sampleFactory.addSampleFactory(routerId, new SampleFactory(graphIndex));
 			
 		}
 	
-		Blocks blocks = new Blocks();
-		blocks.load(new File("data/tl_2010_53033_tabblock10.shp"));
-		
-		for(String blockId : blocks.blocks.keySet()) {
-			
-			Point centroid = blocks.blocks.get(blockId).getCentroid();
-			Destination d = new Destination(blockId, centroid);
-			
-			for(String routerId : graphService.getRouterIds()) {
-				d.addSample(routerId, getSample(routerId, centroid));
-			}
-			destinations.add(d);
-		}
+		indicatorManager = new IndicatorManager(sampleFactory);
 		
 		System.out.println("loaded " + destinations.size() + " destionations");
 	}
@@ -129,7 +119,7 @@ public class Analyst {
 	}
 	
 	public Sample getSample(String graphId, Point p) {
-		return graphSampleFactories.get(graphId).getSample(p.getX(), p.getY());
+		return sampleFactory.getSample(graphId, p.getX(), p.getY());
 	}
 	
 	public AnalystRequest buildRequest(GenericLocation latLon, String mode, String graphId) {
@@ -284,7 +274,7 @@ public class Analyst {
 			
 			// need to interleave pages as not all items are equal -- sorting unfairly distributed the load
 			int cur = 1;
-			for(Destination d : Application.analyst.destinations) {
+			for(Location d : Application.analyst.destinations) {
 				
 				if(cur == request.page) {
 					AnalystWorkerRequest ar = new AnalystWorkerRequest();
@@ -353,7 +343,7 @@ public class Analyst {
 							
 							Result r = new Result();
 							
-							for(Destination d : Application.analyst.destinations) {
+							for(Location d : Application.analyst.destinations) {
 								if(d.getSample(ar.graphId) != null) {
 									long time = response.evaluateSample(d.getSample(ar.graphId));
 									r.add(ar.location.id, d.id, time);

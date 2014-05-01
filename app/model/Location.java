@@ -6,13 +6,13 @@ import org.opentripplanner.analyst.core.Sample;
 
 import com.vividsolutions.jts.geom.Point;
 
-public class Destination {
+public class Location {
 
 	final public String id;
 	final public Point point;
 	HashMap<String, Sample> samples = new HashMap<String, Sample>();
 	
-	public Destination(String i, Point p) {
+	public Location(String i, Point p) {
 		id = i;
 		point = p;
 	}

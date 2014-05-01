@@ -1,13 +1,13 @@
 package otp;
 
-import model.Destination;
+import model.Location;
 
 import com.vividsolutions.jts.geom.Point;
 
 public class AnalystWorkerRequest {
 	
 	String graphId;
-	Destination location;
+	Location location;
 	String mode;
 	Integer timeLimit;
 	
