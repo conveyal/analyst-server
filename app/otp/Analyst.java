@@ -98,9 +98,11 @@ public class Analyst {
 				
 			}
 				
-		}
+		}	
 			
-		System.out.println("loaded " + indicatorManager.getItemCount() + " items across " +  indicatorManager.getIndicatorCount() + " indicators.");
+	
+		
+		System.out.println("loaded " + indicatorManager.getItemCount() + " items across " +  indicatorManager.getIndicatorCount() + " indicators with " + 	indicatorManager.getSampleCount() + " samples");
 	}
 	 
 	public Envelope getMetadata() {
@@ -268,6 +270,7 @@ public class Analyst {
 					AnalystWorkerRequest ar = new AnalystWorkerRequest();
 					ar.item = i;
 					ar.mode = request.mode;
+					ar.graphId = request.graphId;
 					ar.indicatorId = request.indicatorId;
 					ar.timeLimit = request.timeLimit;
 					workerRouter.tell(ar, getSelf());

@@ -65,6 +65,20 @@ public class IndicatorManager {
 		
 	}
 	
+public Integer getSampleCount() {
+		
+		Integer size = 0;
+		
+		for(Indicator i : indicators.values()) {
+			for(IndicatorItem ii : i.data) {
+				size += ii.samples.getSampleCount();
+			}
+		}
+		
+		return size;
+		
+	}
+	
 	public Integer getItemCount(String indicatorId) {
 	
 		return indicators.get(indicatorId).data.size();

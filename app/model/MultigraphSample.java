@@ -15,5 +15,9 @@ public class MultigraphSample {
 	public Sample getSample(String id) {
 		return samples.get(id);
 	}
+	
+	public int getSampleCount() {
+		return samples.values().size();
+	}
 
 }
