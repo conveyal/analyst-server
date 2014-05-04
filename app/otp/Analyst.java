@@ -228,22 +228,24 @@ public class Analyst {
 	    
 	    PrintWriter f0; 
 
-	    public BatchAnalystMaster(
-	      Analyst analyst,
-	      ActorRef listener) {
-	      this.listener = listener;
-	      this.analyst = analyst;
+	    public BatchAnalystMaster( Analyst analyst, ActorRef listener) {
+	    	this.listener = listener;
+	    	this.analyst = analyst;
 	      
-	      Date d = new Date();
-	      try {
-			f0 = new PrintWriter(new FileWriter("data/output/" + d.getTime() + "_"  + "_blocks_pairs.csv"));
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+	    	Date d = new Date();
+	    	try {
+	    		f0 = new PrintWriter(new FileWriter("data/output/" + d.getTime() + "_"  + "_blocks_pairs.csv"));
+	    	} catch (IOException e) {
+	    		// TODO Auto-generated catch block
+	    		e.printStackTrace();
+	    	}
 	      
-	      System.out.println("starting worker with " +  Runtime.getRuntime().availableProcessors() + " threads.");
-	      workerRouter = this.getContext().actorOf(Props.create(BatchAnalystWorker.class).withRouter(new RoundRobinRouter(Runtime.getRuntime().availableProcessors())), "workerRouter");
+	    	System.out.println("starting worker with " +  Runtime.getRuntime().availableProcessors() + " threads.");
+	    	
+	    	int nProcessors = Runtime.getRuntime().availableProcessors();
+	    	RoundRobinRouter router = new RoundRobinRouter(nProcessors);
+	    	Props actorProps = Props.create(BatchAnalystWorker.class).withRouter(router);
+	    	workerRouter = this.getContext().actorOf(actorProps, "workerRouter");
 	    }
 
 	    public void onReceive(Object message) {
