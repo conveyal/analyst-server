@@ -1,7 +1,9 @@
 logs
 project/project
 project/target
+.target
 target
+.DS_Store
 tmp
 .history
 dist
@@ -13,3 +15,4 @@ dist
 /.project
 /RUNNING_PID
 /.settings
+data
