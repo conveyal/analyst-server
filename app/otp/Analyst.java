@@ -147,11 +147,11 @@ public class Analyst {
 		try {
 			req.calcHash();
 		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			return null;
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			return null;
 		}
 		
         try {
@@ -212,9 +212,8 @@ public class Analyst {
 	
 	public static class BatchAnalystMaster extends UntypedActor {
 		
-	    private final long start = System.currentTimeMillis();
-
-	    private final ActorRef listener;
+	    @SuppressWarnings("unused")
+		private final ActorRef listener;
 	    private final ActorRef workerRouter;
 	    
 	    private Analyst analyst;
@@ -228,17 +227,12 @@ public class Analyst {
 	    
 	    PrintWriter f0; 
 
-	    public BatchAnalystMaster( Analyst analyst, ActorRef listener) {
+	    public BatchAnalystMaster( Analyst analyst, ActorRef listener) throws IOException {
 	    	this.listener = listener;
 	    	this.analyst = analyst;
 	      
 	    	Date d = new Date();
-	    	try {
-	    		f0 = new PrintWriter(new FileWriter("data/output/" + d.getTime() + "_"  + "_blocks_pairs.csv"));
-	    	} catch (IOException e) {
-	    		// TODO Auto-generated catch block
-	    		e.printStackTrace();
-	    	}
+	    	f0 = new PrintWriter(new FileWriter("data/output/" + d.getTime() + "_"  + "_blocks_pairs.csv"));
 	      
 	    	System.out.println("starting worker with " +  Runtime.getRuntime().availableProcessors() + " threads.");
 	    	
