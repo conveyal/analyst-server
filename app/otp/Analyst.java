@@ -16,7 +16,7 @@ import model.IndicatorItem;
 import model.IndicatorSummary;
 import model.SptResponse;
 
-import org.opentripplanner.analyst.core.Sample;	
+import org.opentripplanner.analyst.core.Sample;
 import org.opentripplanner.common.model.GenericLocation;
 import org.opentripplanner.routing.error.VertexNotFoundException;
 import org.opentripplanner.routing.graph.Graph;
@@ -38,7 +38,7 @@ import com.vividsolutions.jts.geom.Envelope;
 import controllers.Application;
 import play.Logger;
 
-public class Analyst { 
+public class Analyst {
 
 	private AnalystConfigurator ac;
 
@@ -56,7 +56,8 @@ public class Analyst {
 		// Create an Akka system
 		ActorSystem system = ActorSystem.create("AnalystSystem");
 
-		// create the result listener, which will print the result and shutdown the system
+		// create the result listener, which will print the result and shutdown
+		// the system
 		final ActorRef listener = system.actorOf(Props.create(Listener.class), "listener");
 
 		// create the master
@@ -73,7 +74,7 @@ public class Analyst {
 		graphService = ac.getGraphService();
 		sptService = ac.getSptService();
 
-		for(String routerId : graphService.getRouterIds()) {
+		for (String routerId : graphService.getRouterIds()) {
 
 			GeometryIndex graphIndex = new GeometryIndex(graphService.getGraph(routerId));
 
@@ -83,10 +84,9 @@ public class Analyst {
 
 		indicatorManager = new IndicatorManager(sampleFactory);
 
-		for(File indicatorFile : (new File("data/indicators/")).listFiles()) {
+		for (File indicatorFile : (new File("data/indicators/")).listFiles()) {
 
-
-			if(indicatorFile.getName().endsWith(".json")){
+			if (indicatorFile.getName().endsWith(".json")) {
 
 				System.out.println("loading " + indicatorFile.getName());
 
@@ -98,11 +98,11 @@ public class Analyst {
 
 			}
 
-		}	
+		}
 
-
-
-		System.out.println("loaded " + indicatorManager.getItemCount() + " items across " +  indicatorManager.getIndicatorCount() + " indicators with " + 	indicatorManager.getSampleCount() + " samples");
+		System.out.println("loaded " + indicatorManager.getItemCount() + " items across "
+				+ indicatorManager.getIndicatorCount() + " indicators with " + indicatorManager.getSampleCount()
+				+ " samples");
 	}
 
 	public Envelope getMetadata() {
@@ -116,8 +116,9 @@ public class Analyst {
 	public AnalystRequest buildRequest(GenericLocation latLon, String mode, String graphId) {
 
 		// use center of graph extent if no location is specified
-		if(latLon == null)
-			latLon = new GenericLocation(this.graphService.getGraph().getExtent().centre().y, this.graphService.getGraph().getExtent().centre().x);
+		if (latLon == null)
+			latLon = new GenericLocation(this.graphService.getGraph().getExtent().centre().y, this.graphService
+					.getGraph().getExtent().centre().x);
 
 		AnalystRequest req;
 
@@ -128,7 +129,7 @@ public class Analyst {
 			return null;
 		}
 		req.modes.clear();
-		switch(mode) {
+		switch (mode) {
 		case "TRANSIT":
 			req.modes.setWalk(true);
 			req.modes.setTransit(true);
@@ -158,12 +159,12 @@ public class Analyst {
 			req.setRoutingContext(this.graphService.getGraph());
 			return req;
 		} catch (VertexNotFoundException vnfe) {
-			//Logger.info("no vertex could be created near the origin point");
+			// Logger.info("no vertex could be created near the origin point");
 			return null;
 		}
 	}
 
-	public Graph getGraph () {
+	public Graph getGraph() {
 		return this.graphService.getGraph();
 	}
 
@@ -174,15 +175,16 @@ public class Analyst {
 
 		SptResponse response = new SptResponse(req, spt);
 
-		if(destinations != null)
+		if (destinations != null)
 			response.calcDestinations(destinations);
 
 		return response;
 	}
 
-	public void batch(String graphId, String indicatorId, Integer page, Integer pageCount, String mode, Integer timeLimit) {
+	public void batch(String graphId, String indicatorId, Integer page, Integer pageCount, String mode,
+			Integer timeLimit) {
 
-		master.tell(new AnalystBatchRequest(graphId, indicatorId,  page, pageCount, mode, timeLimit), master);
+		master.tell(new AnalystBatchRequest(graphId, indicatorId, page, pageCount, mode, timeLimit), master);
 
 	}
 
@@ -192,10 +194,10 @@ public class Analyst {
 	}
 
 	public boolean testSpt() {
-		if(sptService != null)
+		if (sptService != null)
 			return true;
 		else
-			return false;	
+			return false;
 	}
 
 	static class BatchStatus {
@@ -225,16 +227,16 @@ public class Analyst {
 		private int pageSize = 0;
 		private Long startTime;
 
-		PrintWriter f0; 
+		PrintWriter f0;
 
-		public BatchAnalystMaster( Analyst analyst, ActorRef listener) throws IOException {
+		public BatchAnalystMaster(Analyst analyst, ActorRef listener) throws IOException {
 			this.listener = listener;
 			this.analyst = analyst;
 
 			Date d = new Date();
-			f0 = new PrintWriter(new FileWriter("data/output/" + d.getTime() + "_"  + "_blocks_pairs.csv"));
+			f0 = new PrintWriter(new FileWriter("data/output/" + d.getTime() + "_" + "_blocks_pairs.csv"));
 
-			System.out.println("starting worker with " +  Runtime.getRuntime().availableProcessors() + " threads.");
+			System.out.println("starting worker with " + Runtime.getRuntime().availableProcessors() + " threads.");
 
 			int nProcessors = Runtime.getRuntime().availableProcessors();
 			RoundRobinRouter router = new RoundRobinRouter(nProcessors);
@@ -245,24 +247,25 @@ public class Analyst {
 		public void onReceive(Object message) {
 			if (message instanceof AnalystBatchRequest) {
 
-				AnalystBatchRequest request = (AnalystBatchRequest)message;
+				AnalystBatchRequest request = (AnalystBatchRequest) message;
 
 				List<IndicatorItem> items = analyst.indicatorManager.queryAll(request.indicatorId);
 
 				Collections.sort(items);
 
-				int pageSize = (items.size() / request.pageCount) -1;
+				int pageSize = (items.size() / request.pageCount) - 1;
 
 				totalItems = pageSize;
 				startTime = System.currentTimeMillis();
 
 				System.out.println("processing items for page " + request.page);
 
-				// need to interleave pages as not all items are equal -- sorting unfairly distributed the load
+				// need to interleave pages as not all items are equal --
+				// sorting unfairly distributed the load
 				int cur = 1;
-				for(IndicatorItem i : items) {
+				for (IndicatorItem i : items) {
 
-					if(cur == request.page) {
+					if (cur == request.page) {
 						AnalystWorkerRequest ar = new AnalystWorkerRequest();
 						ar.item = i;
 						ar.mode = request.mode;
@@ -272,35 +275,32 @@ public class Analyst {
 						workerRouter.tell(ar, getSelf());
 					}
 					cur++;
-					if(cur > request.pageCount)
-						cur =1;
+					if (cur > request.pageCount)
+						cur = 1;
 				}
-
 
 			} else if (message instanceof Result) {
 				Result result = (Result) message;
 
-				synchronized(startTime) {
+				synchronized (startTime) {
 					long elapsedTime = System.currentTimeMillis() - startTime;
 
-					processedItems++; 
+					processedItems++;
 
-					double itemsPerSec = (double)processedItems / elapsedTime * 1000;
+					double itemsPerSec = (double) processedItems / elapsedTime * 1000;
 
 					f0.println(result.originId + "," + result.count);
 
-
-
-					System.out.print(processedItems + ":" +  failedItems + "\t / \t" + totalItems + " \t -- \t " + itemsPerSec + "\r");
+					System.out.print(processedItems + ":" + failedItems + "\t / \t" + totalItems + " \t -- \t "
+							+ itemsPerSec + "\r");
 
 				}
 
-			} else if (message instanceof Done)  {
-				if(processedlRequests == pageSize) {
+			} else if (message instanceof Done) {
+				if (processedlRequests == pageSize) {
 					f0.flush();
 				}
-			}
-			else {
+			} else {
 				unhandled(message);
 			}
 		}
@@ -309,17 +309,17 @@ public class Analyst {
 	public static class BatchAnalystWorker extends UntypedActor {
 		LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
-
 		public void onReceive(Object message) throws Exception {
 
-			if(message instanceof AnalystWorkerRequest) {
-				AnalystWorkerRequest ar = (AnalystWorkerRequest)message;
+			if (message instanceof AnalystWorkerRequest) {
+				AnalystWorkerRequest ar = (AnalystWorkerRequest) message;
 
 				try {
 
-					AnalystRequest req = Application.analyst.buildRequest(new GenericLocation(ar.item.point.getY(), ar.item.point.getX()), ar.mode, ar.graphId);
+					AnalystRequest req = Application.analyst.buildRequest(new GenericLocation(ar.item.point.getY(),
+							ar.item.point.getX()), ar.mode, ar.graphId);
 
-					if(req != null) {
+					if (req != null) {
 						final ShortestPathTree spt = Application.analyst.sptService.getShortestPathTree(req);
 						req.cleanup();
 
@@ -329,10 +329,10 @@ public class Analyst {
 
 						ArrayList<IndicatorItem> reachableItems = new ArrayList<IndicatorItem>();
 
-						for(IndicatorItem item : Application.analyst.indicatorManager.queryAll(ar.indicatorId)) {
-							if(item.samples.getSample(ar.graphId) != null) {
+						for (IndicatorItem item : Application.analyst.indicatorManager.queryAll(ar.indicatorId)) {
+							if (item.samples.getSample(ar.graphId) != null) {
 								long time = response.evaluateSample(item.samples.getSample(ar.graphId));
-								if(time <= ar.timeLimit) {
+								if (time <= ar.timeLimit) {
 									reachableItems.add(item);
 								}
 							}
@@ -347,8 +347,7 @@ public class Analyst {
 					}
 
 					getSender().tell(new Done(), getSelf());
-				}
-				catch(Exception e) {
+				} catch (Exception e) {
 					getSender().tell(new Done(), getSelf());
 				}
 			}
@@ -376,8 +375,7 @@ public class Analyst {
 		public void onReceive(Object message) {
 			if (message instanceof BatchStatus) {
 				BatchStatus status = (BatchStatus) message;
-				System.out.println(String.format("\n\tBatch status: " + 
-						"\t\t%s\n\tCalculation time: \t%s",
+				System.out.println(String.format("\n\tBatch status: " + "\t\t%s\n\tCalculation time: \t%s",
 						status.getProcessed()));
 				getContext().system().shutdown();
 			} else {
