@@ -329,7 +329,7 @@ public class Analyst {
 
 					if (req != null) {
 
-						IndicatorSummary summary = getIndicatorSummary(ar, req);
+						IndicatorSummary summary = computeIndicatorSummary(ar, req);
 
 						Result r = new Result(ar);
 						r.add(summary.total);
@@ -345,7 +345,7 @@ public class Analyst {
 			}
 		}
 
-		private IndicatorSummary getIndicatorSummary(AnalystWorkerRequest ar, AnalystRequest req) {
+		private IndicatorSummary computeIndicatorSummary(AnalystWorkerRequest ar, AnalystRequest req) {
 			final ShortestPathTree spt = Application.analyst.sptService.getShortestPathTree(req);
 			req.cleanup();
 
