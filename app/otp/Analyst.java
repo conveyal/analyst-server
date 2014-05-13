@@ -328,25 +328,10 @@ public class Analyst {
 							ar.item.point.getX()), ar.mode, ar.graphId);
 
 					if (req != null) {
-						final ShortestPathTree spt = Application.analyst.sptService.getShortestPathTree(req);
-						req.cleanup();
+
+						IndicatorSummary summary = getIndicatorSummary(ar, req);
 
 						Result r = new Result(ar);
-
-						ArrayList<IndicatorItem> reachableItems = new ArrayList<IndicatorItem>();
-
-						for (IndicatorItem item : Application.analyst.indicatorManager.queryAll(ar.indicatorId)) {
-							Sample sample = item.samples.getSample(ar.graphId);
-							if (sample != null) {
-								long time = sample.eval(spt);
-								if (time <= ar.timeLimit) {
-									reachableItems.add(item);
-								}
-							}
-						}
-
-						IndicatorSummary summary = new IndicatorSummary(ar.indicatorId, reachableItems);
-
 						r.add(summary.total);
 
 						getSender().tell(r, getSelf());
@@ -358,6 +343,26 @@ public class Analyst {
 					getSender().tell(new Done(), getSelf());
 				}
 			}
+		}
+
+		private IndicatorSummary getIndicatorSummary(AnalystWorkerRequest ar, AnalystRequest req) {
+			final ShortestPathTree spt = Application.analyst.sptService.getShortestPathTree(req);
+			req.cleanup();
+
+			ArrayList<IndicatorItem> reachableItems = new ArrayList<IndicatorItem>();
+
+			for (IndicatorItem item : Application.analyst.indicatorManager.queryAll(ar.indicatorId)) {
+				Sample sample = item.samples.getSample(ar.graphId);
+				if (sample != null) {
+					long time = sample.eval(spt);
+					if (time <= ar.timeLimit) {
+						reachableItems.add(item);
+					}
+				}
+			}
+
+			IndicatorSummary summary = new IndicatorSummary(ar.indicatorId, reachableItems);
+			return summary;
 		}
 	}
 
