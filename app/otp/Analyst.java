@@ -243,68 +243,73 @@ public class Analyst {
 
 		public void onReceive(Object message) throws IOException {
 			if (message instanceof AnalystBatchRequest) {
-				AnalystBatchRequest request = (AnalystBatchRequest) message;
-				
-				Date d = new Date();
-				String fn = "data/output/" + d.getTime() + "_" + request.graphId + "_blocks.csv";
-				f0 = new PrintWriter(new FileWriter(fn));
-				System.out.println( "writing to file "+fn );
-				
-				processedItems = 0;
-
-				List<IndicatorItem> items = analyst.indicatorManager.queryAll(request.indicatorId);
-
-				Collections.sort(items);
-
-				int pageSize = (items.size() / request.pageCount) - 1;
-
-				totalItems = pageSize;
-				startTime = System.currentTimeMillis();
-
-				System.out.println("processing items for page " + request.page);
-
-				// need to interleave pages as not all items are equal --
-				// sorting unfairly distributed the load
-				int cur = 1;
-				for (IndicatorItem i : items) {
-
-					if (cur == request.page) {
-						AnalystWorkerRequest ar = new AnalystWorkerRequest();
-						ar.item = i;
-						ar.mode = request.mode;
-						ar.graphId = request.graphId;
-						ar.indicatorId = request.indicatorId;
-						ar.timeLimit = request.timeLimit;
-						workerRouter.tell(ar, getSelf());
-					}
-					cur++;
-					if (cur > request.pageCount)
-						cur = 1;
-				}
-
+				startBatch((AnalystBatchRequest)message);
 			} else if (message instanceof Result) {
-				Result result = (Result) message;
-
-				synchronized (startTime) {
-					long elapsedTime = System.currentTimeMillis() - startTime;
-
-					processedItems++;
-
-					double itemsPerSec = (double) processedItems / elapsedTime * 1000;
-
-					f0.println(result.originId + "," + result.count);
-
-					System.out.print(processedItems + ":" + failedItems + "\t / \t" + totalItems + " \t -- \t "
-							+ itemsPerSec + "\r");
-
-				}
-
+				catchResult((Result)message);
 			} else if (message instanceof Done) {
 				if (processedlRequests == pageSize) {
 					f0.flush();
 				}
 			} else {
 				unhandled(message);
+			}
+		}
+
+		/*
+		 * Print a line to the CSV and print progress to STDOUT
+		 */
+		private void catchResult(Result result) {
+			synchronized (startTime) {
+				long elapsedTime = System.currentTimeMillis() - startTime;
+
+				processedItems++;
+
+				double itemsPerSec = (double) processedItems / elapsedTime * 1000;
+
+				f0.println(result.originId + "," + result.count);
+
+				System.out.print(processedItems + ":" + failedItems + "\t / \t" + totalItems + " \t -- \t "
+						+ itemsPerSec + "\r");
+
+			}
+		}
+
+		private void startBatch(AnalystBatchRequest request) throws IOException {			
+			Date d = new Date();
+			String fn = "data/output/" + d.getTime() + "_" + request.graphId + "_blocks.csv";
+			f0 = new PrintWriter(new FileWriter(fn));
+			System.out.println( "writing to file "+fn );
+			
+			processedItems = 0;
+
+			List<IndicatorItem> items = analyst.indicatorManager.queryAll(request.indicatorId);
+
+			Collections.sort(items);
+
+			int pageSize = (items.size() / request.pageCount) - 1;
+
+			totalItems = pageSize;
+			startTime = System.currentTimeMillis();
+
+			System.out.println("processing items for page " + request.page);
+
+			// need to interleave pages as not all items are equal --
+			// sorting unfairly distributed the load
+			int cur = 1;
+			for (IndicatorItem i : items) {
+
+				if (cur == request.page) {
+					AnalystWorkerRequest ar = new AnalystWorkerRequest();
+					ar.item = i;
+					ar.mode = request.mode;
+					ar.graphId = request.graphId;
+					ar.indicatorId = request.indicatorId;
+					ar.timeLimit = request.timeLimit;
+					workerRouter.tell(ar, getSelf());
+				}
+				cur++;
+				if (cur > request.pageCount)
+					cur = 1;
 			}
 		}
 	}
