@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.TimeZone;
 
 import model.AnalystRequest;
 import model.IndicatorItem;
@@ -113,7 +114,7 @@ public class Analyst {
 		return sampleFactory.getSample(graphId, p.getX(), p.getY());
 	}
 
-	public AnalystRequest buildRequest(GenericLocation latLon, String mode, String graphId) {
+	public AnalystRequest buildRequest(GenericLocation latLon, String mode, String graphId, String date, String time, String timeZone) {
 
 		// use center of graph extent if no location is specified
 		if (latLon == null)
@@ -128,6 +129,11 @@ public class Analyst {
 			Logger.error("unable to create request id");
 			return null;
 		}
+		
+		// set datetime
+	    TimeZone timeZoneObj = TimeZone.getTimeZone(timeZone);
+	    req.setDateTime(date,time,timeZoneObj);
+		
 		req.modes.clear();
 		switch (mode) {
 		case "TRANSIT":
@@ -182,9 +188,9 @@ public class Analyst {
 	}
 
 	public void batch(String graphId, String indicatorId, Integer page, Integer pageCount, String mode,
-			Integer timeLimit) {
+			Integer timeLimit, String date, String time, String timeZone) {
 
-		master.tell(new AnalystBatchRequest(graphId, indicatorId, page, pageCount, mode, timeLimit), master);
+		master.tell(new AnalystBatchRequest(graphId, indicatorId, page, pageCount, mode, timeLimit, date, time, timeZone), master);
 
 	}
 
@@ -305,6 +311,9 @@ public class Analyst {
 					ar.graphId = request.graphId;
 					ar.indicatorId = request.indicatorId;
 					ar.timeLimit = request.timeLimit;
+					ar.date = request.date;
+					ar.time = request.time;
+					ar.timeZone = request.timeZone;
 					workerRouter.tell(ar, getSelf());
 				}
 				cur++;
@@ -325,7 +334,7 @@ public class Analyst {
 				try {
 
 					AnalystRequest req = Application.analyst.buildRequest(new GenericLocation(ar.item.point.getY(),
-							ar.item.point.getX()), ar.mode, ar.graphId);
+							ar.item.point.getX()), ar.mode, ar.graphId, ar.date, ar.time, ar.timeZone);
 
 					if (req != null) {
 
@@ -404,14 +413,20 @@ public class Analyst {
 		Integer timeLimit;
 		String graphId;
 		String indicatorId;
+		String date;
+		String time;
+		String timeZone;
 
-		AnalystBatchRequest(String gId, String iId, Integer p, Integer c, String m, Integer tl) {
+		AnalystBatchRequest(String gId, String iId, Integer p, Integer c, String m, Integer tl, String dt, String tm, String tz) {
 			page = p;
 			pageCount = c;
 			mode = m;
 			timeLimit = tl;
 			graphId = gId;
 			indicatorId = iId;
+			date = dt;
+			time = tm;
+			timeZone = tz;
 
 		}
 	}

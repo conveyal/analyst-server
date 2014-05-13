@@ -1,7 +1,7 @@
 # Routes
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
-GET     /batch		                controllers.Application.batch(graphId:String, indicatorId:String, page:Integer, pageCount:Integer, mode:String, timeLimit:Integer)
+GET     /batch		                controllers.Application.batch(graphId:String, indicatorId:String, page:Integer, pageCount:Integer, mode:String, timeLimit:Integer, date:String, time:String, timeZone:String)
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)

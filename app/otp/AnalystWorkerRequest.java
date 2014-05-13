@@ -12,4 +12,8 @@ public class AnalystWorkerRequest {
 	String mode;
 	Integer timeLimit;
 	
+	String date;
+	String time;
+	String timeZone;
+	
 }
