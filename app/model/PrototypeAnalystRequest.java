@@ -6,7 +6,7 @@ import controllers.Application;
 public class PrototypeAnalystRequest extends AnalystRequest {
 	
 	// TODO move defaults to config
-	private String date = "2014-04-14";
+	private String date = "2014-04-25";
     private String time = "7:00 AM";
     private TimeZone timeZone = TimeZone.getTimeZone("America/Los_Angeles");
 

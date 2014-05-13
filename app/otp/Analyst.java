@@ -233,9 +233,6 @@ public class Analyst {
 			this.listener = listener;
 			this.analyst = analyst;
 
-			Date d = new Date();
-			f0 = new PrintWriter(new FileWriter("data/output/" + d.getTime() + "_" + "_blocks_pairs.csv"));
-
 			System.out.println("starting worker with " + Runtime.getRuntime().availableProcessors() + " threads.");
 
 			int nProcessors = Runtime.getRuntime().availableProcessors();
@@ -244,10 +241,16 @@ public class Analyst {
 			workerRouter = this.getContext().actorOf(actorProps, "workerRouter");
 		}
 
-		public void onReceive(Object message) {
+		public void onReceive(Object message) throws IOException {
 			if (message instanceof AnalystBatchRequest) {
-
 				AnalystBatchRequest request = (AnalystBatchRequest) message;
+				
+				Date d = new Date();
+				String fn = "data/output/" + d.getTime() + "_" + request.graphId + "_blocks.csv";
+				f0 = new PrintWriter(new FileWriter(fn));
+				System.out.println( "writing to file "+fn );
+				
+				processedItems = 0;
 
 				List<IndicatorItem> items = analyst.indicatorManager.queryAll(request.indicatorId);
 
@@ -323,15 +326,15 @@ public class Analyst {
 						final ShortestPathTree spt = Application.analyst.sptService.getShortestPathTree(req);
 						req.cleanup();
 
-						SptResponse response = new SptResponse(req, spt);
-
 						Result r = new Result(ar);
 
+						
 						ArrayList<IndicatorItem> reachableItems = new ArrayList<IndicatorItem>();
 
 						for (IndicatorItem item : Application.analyst.indicatorManager.queryAll(ar.indicatorId)) {
-							if (item.samples.getSample(ar.graphId) != null) {
-								long time = response.evaluateSample(item.samples.getSample(ar.graphId));
+							Sample sample = item.samples.getSample(ar.graphId);
+							if (sample != null) {
+								long time = sample.eval(spt);
 								if (time <= ar.timeLimit) {
 									reachableItems.add(item);
 								}
