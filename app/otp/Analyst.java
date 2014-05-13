@@ -243,9 +243,9 @@ public class Analyst {
 
 		public void onReceive(Object message) throws IOException {
 			if (message instanceof AnalystBatchRequest) {
-				startBatch((AnalystBatchRequest)message);
+				startBatch((AnalystBatchRequest) message);
 			} else if (message instanceof Result) {
-				catchResult((Result)message);
+				catchResult((Result) message);
 			} else if (message instanceof Done) {
 				if (processedlRequests == pageSize) {
 					f0.flush();
@@ -274,12 +274,12 @@ public class Analyst {
 			}
 		}
 
-		private void startBatch(AnalystBatchRequest request) throws IOException {			
+		private void startBatch(AnalystBatchRequest request) throws IOException {
 			Date d = new Date();
 			String fn = "data/output/" + d.getTime() + "_" + request.graphId + "_blocks.csv";
 			f0 = new PrintWriter(new FileWriter(fn));
-			System.out.println( "writing to file "+fn );
-			
+			System.out.println("writing to file " + fn);
+
 			processedItems = 0;
 
 			List<IndicatorItem> items = analyst.indicatorManager.queryAll(request.indicatorId);
@@ -333,7 +333,6 @@ public class Analyst {
 
 						Result r = new Result(ar);
 
-						
 						ArrayList<IndicatorItem> reachableItems = new ArrayList<IndicatorItem>();
 
 						for (IndicatorItem item : Application.analyst.indicatorManager.queryAll(ar.indicatorId)) {
