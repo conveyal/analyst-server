@@ -16,4 +16,7 @@ public class AnalystWorkerRequest {
 	String time;
 	String timeZone;
 	
+	Integer span;
+	Integer nSamples;
+	
 }

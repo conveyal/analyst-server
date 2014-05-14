@@ -114,7 +114,8 @@ public class Analyst {
 		return sampleFactory.getSample(graphId, p.getX(), p.getY());
 	}
 
-	public AnalystRequest buildRequest(GenericLocation latLon, String mode, String graphId, String date, String time, String timeZone) {
+	public AnalystRequest buildRequest(GenericLocation latLon, String mode, String graphId, String date, String time,
+			String timeZone) {
 
 		// use center of graph extent if no location is specified
 		if (latLon == null)
@@ -129,11 +130,11 @@ public class Analyst {
 			Logger.error("unable to create request id");
 			return null;
 		}
-		
+
 		// set datetime
-	    TimeZone timeZoneObj = TimeZone.getTimeZone(timeZone);
-	    req.setDateTime(date,time,timeZoneObj);
-		
+		TimeZone timeZoneObj = TimeZone.getTimeZone(timeZone);
+		req.setDateTime(date, time, timeZoneObj);
+
 		req.modes.clear();
 		switch (mode) {
 		case "TRANSIT":
@@ -188,9 +189,10 @@ public class Analyst {
 	}
 
 	public void batch(String graphId, String indicatorId, Integer page, Integer pageCount, String mode,
-			Integer timeLimit, String date, String time, String timeZone) {
+			Integer timeLimit, String date, String time, String timeZone, Integer span, Integer nSamples) {
 
-		master.tell(new AnalystBatchRequest(graphId, indicatorId, page, pageCount, mode, timeLimit, date, time, timeZone), master);
+		master.tell(new AnalystBatchRequest(graphId, indicatorId, page, pageCount, mode, timeLimit, date, time,
+				timeZone, span, nSamples), master);
 
 	}
 
@@ -314,6 +316,8 @@ public class Analyst {
 					ar.date = request.date;
 					ar.time = request.time;
 					ar.timeZone = request.timeZone;
+					ar.span = request.span;
+					ar.nSamples = request.nSamples;
 					workerRouter.tell(ar, getSelf());
 				}
 				cur++;
@@ -333,15 +337,26 @@ public class Analyst {
 
 				try {
 
-					AnalystRequest req = Application.analyst.buildRequest(new GenericLocation(ar.item.point.getY(),
+					AnalystRequest startReq = Application.analyst.buildRequest(new GenericLocation(ar.item.point.getY(),
 							ar.item.point.getX()), ar.mode, ar.graphId, ar.date, ar.time, ar.timeZone);
 
-					if (req != null) {
+					if (startReq != null) {
 
-						IndicatorSummary summary = computeIndicatorSummary(ar, req);
+						long samplePeriod = ar.nSamples>1 ? ar.span/(ar.nSamples-1) : ar.span;
+						
+						List<Long> totals = new ArrayList<Long>();
+						for(int i=0; i<ar.nSamples; i++){
+							long t = startReq.dateTime + i*samplePeriod;
+							AnalystRequest req = (AnalystRequest) startReq.clone();
+							req.dateTime = t;
+							IndicatorSummary summary = computeIndicatorSummary(ar, req);
+							totals.add( summary.total );
+						}
+						
+						long meanTotal = mean(totals);
 
 						Result r = new Result(ar);
-						r.add(summary.total);
+						r.add(meanTotal);
 
 						getSender().tell(r, getSelf());
 
@@ -352,6 +367,14 @@ public class Analyst {
 					getSender().tell(new Done(), getSelf());
 				}
 			}
+		}
+
+		private long mean(List<Long> totals) {
+			long sum=0;
+			for(Long ii : totals){
+				sum += ii;
+			}
+			return sum/totals.size();
 		}
 
 		private IndicatorSummary computeIndicatorSummary(AnalystWorkerRequest ar, AnalystRequest req) {
@@ -416,8 +439,11 @@ public class Analyst {
 		String date;
 		String time;
 		String timeZone;
+		Integer span;
+		Integer nSamples;
 
-		AnalystBatchRequest(String gId, String iId, Integer p, Integer c, String m, Integer tl, String dt, String tm, String tz) {
+		AnalystBatchRequest(String gId, String iId, Integer p, Integer c, String m, Integer tl, String dt, String tm,
+				String tz, Integer spn, Integer nSmp) {
 			page = p;
 			pageCount = c;
 			mode = m;
@@ -427,7 +453,8 @@ public class Analyst {
 			date = dt;
 			time = tm;
 			timeZone = tz;
-
+			span = spn;
+			nSamples = nSmp;
 		}
 	}
 
