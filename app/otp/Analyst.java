@@ -351,11 +351,19 @@ public class Analyst {
 						
 						List<Long> totals = new ArrayList<Long>();
 						for(int i=0; i<ar.nSamples; i++){
-							long t = startReq.dateTime + i*samplePeriod;
-							AnalystRequest req = (AnalystRequest) startReq.clone();
-							req.dateTime = t;
-							IndicatorSummary summary = computeIndicatorSummary(ar, req);
-							totals.add( summary.total );
+							AnalystRequest req = Application.analyst.buildRequest(new GenericLocation(ar.item.point.getY(),
+									ar.item.point.getX()), ar.mode, ar.graphId, ar.date, ar.time, ar.timeZone);
+							req.dateTime = startReq.dateTime + i*samplePeriod;
+							
+							try{
+								IndicatorSummary summary = computeIndicatorSummary(ar, req);
+								totals.add( summary.total );
+							} catch( Exception ex ){
+								ex.printStackTrace();
+								throw ex;
+							}
+							
+							req.cleanup();
 						}
 						
 						long meanTotal = mean(totals);
@@ -384,7 +392,6 @@ public class Analyst {
 
 		private IndicatorSummary computeIndicatorSummary(AnalystWorkerRequest ar, AnalystRequest req) {
 			final ShortestPathTree spt = Application.analyst.sptService.getShortestPathTree(req);
-			req.cleanup();
 
 			ArrayList<IndicatorItem> reachableItems = new ArrayList<IndicatorItem>();
 
