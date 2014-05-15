@@ -255,6 +255,11 @@ public class Analyst {
 			} else if (message instanceof Result) {
 				catchResult((Result) message);
 			} else if (message instanceof Done) {
+				Done doneMsg = (Done)message;
+				if(doneMsg.status==Done.FAILURE){
+					failedItems += 1;
+				}
+				
 				if (processedlRequests == pageSize) {
 					f0.flush();
 				}
@@ -362,9 +367,9 @@ public class Analyst {
 
 					}
 
-					getSender().tell(new Done(), getSelf());
+					getSender().tell(new Done(Done.SUCCESS), getSelf());
 				} catch (Exception e) {
-					getSender().tell(new Done(), getSelf());
+					getSender().tell(new Done(Done.FAILURE), getSelf());
 				}
 			}
 		}
@@ -412,6 +417,14 @@ public class Analyst {
 	}
 
 	static class Done {
+		public static final int FAILURE = 0;
+		public static final int SUCCESS = 1;
+
+		int status;
+		
+		public Done(int status) {
+			this.status = status;
+		}
 
 	}
 
