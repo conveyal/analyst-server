@@ -333,6 +333,7 @@ public class Analyst {
 	}
 
 	public static class BatchAnalystWorker extends UntypedActor {
+		private static final int SPTTRIES = 5;
 		LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
 		public void onReceive(Object message) throws Exception {
@@ -345,38 +346,48 @@ public class Analyst {
 					AnalystRequest startReq = Application.analyst.buildRequest(new GenericLocation(ar.item.point.getY(),
 							ar.item.point.getX()), ar.mode, ar.graphId, ar.date, ar.time, ar.timeZone);
 
-					if (startReq != null) {
 
-						long samplePeriod = ar.nSamples>1 ? ar.span/(ar.nSamples-1) : ar.span;
+					long samplePeriod = ar.nSamples>1 ? ar.span/(ar.nSamples-1) : ar.span;
+					
+					List<Long> totals = new ArrayList<Long>();
+					for(int i=0; i<ar.nSamples; i++){
+						AnalystRequest req = Application.analyst.buildRequest(new GenericLocation(ar.item.point.getY(),
+								ar.item.point.getX()), ar.mode, ar.graphId, ar.date, ar.time, ar.timeZone);
+						req.dateTime = startReq.dateTime + i*samplePeriod;
 						
-						List<Long> totals = new ArrayList<Long>();
-						for(int i=0; i<ar.nSamples; i++){
-							AnalystRequest req = Application.analyst.buildRequest(new GenericLocation(ar.item.point.getY(),
-									ar.item.point.getX()), ar.mode, ar.graphId, ar.date, ar.time, ar.timeZone);
-							req.dateTime = startReq.dateTime + i*samplePeriod;
-							
+						//TODO HACKNOLOGY alert this is just brute-forcing past a race condition
+						IndicatorSummary summary=null;
+						for(int j=0; j<SPTTRIES; j++){
 							try{
-								IndicatorSummary summary = computeIndicatorSummary(ar, req);
-								totals.add( summary.total );
+								summary = computeIndicatorSummary(ar, req);
+								break;
 							} catch( Exception ex ){
-								ex.printStackTrace();
-								throw ex;
+								if(j==SPTTRIES-1){
+									Thread.sleep(500);
+									throw ex;
+								} else {
+									System.out.println( "spt retry "+(j+1) );
+								}
 							}
-							
-							req.cleanup();
 						}
 						
-						long meanTotal = mean(totals);
-
-						Result r = new Result(ar);
-						r.add(meanTotal);
-
-						getSender().tell(r, getSelf());
-
+						
+						totals.add( summary.total );
+						
+						req.cleanup();
 					}
+					
+					long meanTotal = mean(totals);
+
+					Result r = new Result(ar);
+					r.add(meanTotal);
+
+					getSender().tell(r, getSelf());
+
 
 					getSender().tell(new Done(Done.SUCCESS), getSelf());
 				} catch (Exception e) {
+					e.printStackTrace();
 					getSender().tell(new Done(Done.FAILURE), getSelf());
 				}
 			}
