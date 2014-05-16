@@ -363,10 +363,10 @@ public class Analyst {
 								break;
 							} catch( Exception ex ){
 								if(j==SPTTRIES-1){
-									Thread.sleep(500);
 									throw ex;
 								} else {
 									System.out.println( "spt retry "+(j+1) );
+									Thread.sleep(500);
 								}
 							}
 						}
