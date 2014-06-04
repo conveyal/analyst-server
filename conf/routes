@@ -1,0 +1,26 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+GET     /		                controllers.Application.index()
+
+GET		/messages				controllers.Application.jsMessages()
+
+# data api
+
+GET     /api/project					controllers.Api.getProject(id:String = null)
+GET     /api/project/:id				controllers.Api.getProject(id:String)
+POST    /api/project/					controllers.Api.createProject()
+PUT     /api/project/:id				controllers.Api.updateProject(id:String)
+DELETE  /api/project/:id				controllers.Api.deleteProject(id:String)
+
+
+GET     /api/spt                    controllers.Api.spt(lat:Double, lon:Double, mode:String)
+GET     /api/indicator              controllers.Api.indicator(sptId:String, indicatorId: String, timeLimit:Integer)
+
+GET     /api/tile                   controllers.Api.tile(sptId:String, indicatorId: String, timeLimit:Integer, x:Integer, y:Integer, z:Integer, hiddenAttributes:String)
+
+GET     /api/metadata               controllers.Api.metadata()
+GET		/api/indicatorMetadata		controllers.Api.indicatorMetadata()		
+
+# Map static resources from the /public folder to the /assets URL path
+GET     /assets/*file               controllers.Assets.at(path="/public", file)

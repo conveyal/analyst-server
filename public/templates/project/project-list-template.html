@@ -1,0 +1,13 @@
+<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+	 			
+	{{#if selectedProject}}
+			{{selectedProject}}
+	{{else}}
+		{{I18n "app.no-project-selected"}}
+	{{/if}}
+
+		<span class="caret"></span>
+</button>
+<ul class="dropdown-menu pull-right">
+ 	<li><a href="#" id="createNewProject"><em>{{I18n "app.create-new-project"}}</em></a></li>
+</ul>

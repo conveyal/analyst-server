@@ -1,0 +1,40 @@
+# en strings
+
+app.shared.create=Create
+app.shared.save=Save
+app.shared.cancel=Cancel
+
+
+app.projects=Projects
+app.no-project-selected=No project selected
+app.create-new-project=Create new project
+
+app.data=Data
+app.analysis=Analysis
+app.project-settings=Settings
+
+project-settings.project-name=Name
+project-settings.project-description=Description
+project-settings.project-boundary=Boundary
+
+data-manager.spaitial-data-sets=Spatial Data Sets
+data-manager.transit-data-sets=Transit Data Sets
+data-manager.osm-data-sets=OpenStreetMap Data Sets
+data-manager.transport-scenarios=Transport Scenarios
+
+data-manager.no-data=No data
+
+analysis.analysis-type=Analysis Type
+
+analysis.single-point=Single-point Analysis
+analysis.multi-point=Multi-point Analysis
+
+analysis.primary-indicator=Primary Indicator
+
+analysis.scenario-comparison=Scenario Comparison
+
+analysis.scenario.no-comparison=No comparison
+analysis.scenario.compare=Compare
+
+analysis.scenario-1=Scenario 1
+analysis.scenario-2=Scenario 2
