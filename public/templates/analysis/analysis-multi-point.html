@@ -1,0 +1,85 @@
+<div style="margin-top: 10px;" class="panel-group" id="accordion">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h5 class="panel-title">
+        <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">
+          Settings
+        </a>
+      </h5>
+    </div>
+    <div id="collapseOne" class="panel-collapse collapse in">
+      <div class="panel-body">
+
+		<h5>{{I18n "analysis.primary-indicator"}}</h5>
+		<select class="primary-indicator form-control">
+		  <option value="jobs" {{#if singlePoint}}selected{{/if}}>Jobs</option>
+		  <option value="population" {{#if multiPoint}}selected{{/if}}>Population</option>
+		</select>
+
+		<h5>{{I18n "analysis.scenario-comparison"}}</h5>
+		<select class="scenario-comparison form-control">
+		  <option value="compare" {{#if compare}}selected{{/if}}>{{I18n "analysis.scenario.compare"}}</option>
+		  <option value="no-comparison" selected{{#if noComparison}}selected{{/if}}>{{I18n "analysis.scenario.no-comparison"}}</option>
+		</select>
+
+		<h5>{{I18n "analysis.scenario-1"}}</h5>
+		<select class="scenario1 form-control">
+		  <option value="scenario" {{#if singlePoint}}selected{{/if}}>Default Scenario</option>
+		</select>
+
+		<div style="margin-top: 10px;" class="btn-group " data-toggle="buttons">
+			  <label class="btn btn-default">
+			    <input type="radio" name="options" id="modeCar" value="CAR"><span class="icon icon-car"></span>
+			  </label>
+			  <label class="btn btn-default active">
+			    <input type="radio" name="options" id="modeBus" value="TRANSIT"><span class="icon icon-pedestrian"></span> + <span class="icon icon-bus"></span>
+			  </label>
+			  <label class="btn btn-default">
+			    <input type="radio" name="options" id="modeBike" value="BIKE"><span class="icon icon-bike"></span>
+			  </label>
+			  <label class="btn btn-default">
+			    <input type="radio" name="options" id="modePed" value="WALK"><span class="icon icon-pedestrian"></span>
+			  </label>
+		</div>
+
+
+		<div id="scenario2-controls">
+			<h5>{{I18n "analysis.scenario-2"}}</h5>
+			<select class="scenario2 form-control">
+		  		<option value="scenario" {{#if singlePoint}}selected{{/if}}>Default Scenario</option>
+			</select>
+
+			<div style="margin-top: 10px;" class="btn-group " data-toggle="buttons">
+				  <label class="btn btn-default">
+				    <input type="radio" name="options" id="modeCar" value="CAR"><span class="icon icon-car"></span>
+				  </label>
+				  <label class="btn btn-default active">
+				    <input type="radio" name="options" id="modeBus" value="TRANSIT"><span class="icon icon-pedestrian"></span> + <span class="icon icon-bus"></span>
+				  </label>
+				  <label class="btn btn-default">
+				    <input type="radio" name="options" id="modeBike" value="BIKE"><span class="icon icon-bike"></span>
+				  </label>
+				  <label class="btn btn-default">
+				    <input type="radio" name="options" id="modePed" value="WALK"><span class="icon icon-pedestrian"></span>
+				  </label>
+			</div>
+
+		</div>
+	</div>
+    </div>
+  </div>
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h5 class="panel-title">
+        <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo">
+          Results
+        </a>
+      </h5>
+    </div>
+    <div id="collapseTwo" class="panel-collapse collapse">
+      <div class="panel-body">
+      		<a href="#">export csv</a> | <a href="#">export shapefile</a> 
+      </div>
+    </div>
+  </div>
+</div>

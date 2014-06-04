@@ -1,0 +1,67 @@
+html, body, #map {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  padding: 0px;
+  margin: 0px;  
+}
+
+#app {
+	z-index: 2000;
+	position: fixed;
+	top: 10px;
+	right: 10px;
+	width: 450px;
+}
+
+.title {
+	
+}
+
+.container {
+	padding-left: 0px;
+	padding-right: 0px;
+	background: rgba(255,255,255,0.75);	
+}
+
+.panel-title {
+	font-size: 14px;
+}
+
+@font-face {
+	font-family: 'icons';
+	src:url('/assets/fonts/icons.eot?11u8qc');
+	src:url('/assets/fonts/iscons.eot?#iefix11u8qc') format('embedded-opentype'),
+		url('/assets/fonts/icons.woff?11u8qc') format('woff'),
+		url('/assets/fonts/icons.ttf?11u8qc') format('truetype'),
+		url('/assets/fonts/icons.svg?11u8qc#icomoon') format('svg');
+	font-weight: normal;
+	font-style: normal;
+}
+
+[class^="icon-"], [class*=" icon-"] {
+	font-family: 'icons';
+	speak: none;
+	font-style: normal;
+	font-weight: normal;
+	font-variant: normal;
+	text-transform: none;
+	line-height: 1;
+
+	/* Better Font Rendering =========== */
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+.icon-pedestrian:before {
+	content: "\e600";
+}
+.icon-car:before {
+	content: "\e601";
+}
+.icon-bus:before {
+	content: "\e602";
+}
+.icon-bike:before {
+	content: "\e603";
+}
