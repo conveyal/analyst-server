@@ -165,9 +165,9 @@ var Analyst = Analyst || {};
 
 			if(this.activeTab == "data") {
 
-				var dataController = new A.data.DataController({model: this.model, region: this.projectDetail});
+				var dataLayout = new A.data.DataLayout({model: this.model});
 
-				dataController.show();
+				this.projectDetail.show(dataLayout);
 			}
 
 			if(this.activeTab == "analysis") {

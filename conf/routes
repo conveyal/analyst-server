@@ -13,14 +13,31 @@ POST    /api/project/					controllers.Api.createProject()
 PUT     /api/project/:id				controllers.Api.updateProject(id:String)
 DELETE  /api/project/:id				controllers.Api.deleteProject(id:String)
 
+GET     /api/shapefile					controllers.Api.getShapefile(id:String = null)
+GET     /api/shapefile/:id				controllers.Api.getShapefile(id:String)
+POST    /api/shapefile/					controllers.Api.createShapefile()
+PUT     /api/shapefile/:id				controllers.Api.updateShapefile(id:String)
+DELETE  /api/shapfile/:id				controllers.Api.deleteShapefile(id:String)
 
-GET     /api/spt                    controllers.Api.spt(lat:Double, lon:Double, mode:String)
-GET     /api/indicator              controllers.Api.indicator(sptId:String, indicatorId: String, timeLimit:Integer)
+GET     /api/pointset					controllers.Api.getPointset(id:String ?= null, projectId:String ?= null)
+GET     /api/pointset/:id				controllers.Api.getPointsetById(id:String)
+POST    /api/pointset/					controllers.Api.createPointset()
+PUT     /api/pointset/:id				controllers.Api.updatePointset(id:String)
+DELETE  /api/pointset/:id				controllers.Api.deletePointset(id:String)
 
-GET     /api/tile                   controllers.Api.tile(sptId:String, indicatorId: String, timeLimit:Integer, x:Integer, y:Integer, z:Integer, hiddenAttributes:String)
 
-GET     /api/metadata               controllers.Api.metadata()
-GET		/api/indicatorMetadata		controllers.Api.indicatorMetadata()		
+GET     /tile/spatial                  	controllers.Tiles.spatial(spatialId:String, x:Integer, y:Integer, z:Integer)
+GET     /tile/spt                  		controllers.Tiles.spt(sptId:String, spatialId:String, x:Integer, y:Integer, z:Integer, showIso:Boolean ?= true, showPoints:Boolean ?= true, timeLimit:Integer ?= 3600)
+
+GET     /api/spt                    	controllers.Api.spt(graphId:String, spatialId:String, lat:Double, lon:Double, mode:String)
+
+
+# GET     /api/indicator              	controllers.Api.indicator(sptId:String, indicatorId: String, timeLimit:Integer)
+ 
+# 
+
+# GET     /api/metadata               controllers.Api.metadata()
+# GET	  /api/indicatorMetadata		controllers.Api.indicatorMetadata()		
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)

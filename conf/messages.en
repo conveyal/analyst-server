@@ -3,6 +3,8 @@
 app.shared.create=Create
 app.shared.save=Save
 app.shared.cancel=Cancel
+app.shared.name=Name
+app.shared.description=Description
 
 
 app.projects=Projects
@@ -13,8 +15,6 @@ app.data=Data
 app.analysis=Analysis
 app.project-settings=Settings
 
-project-settings.project-name=Name
-project-settings.project-description=Description
 project-settings.project-boundary=Boundary
 
 data-manager.spaitial-data-sets=Spatial Data Sets
@@ -23,6 +23,22 @@ data-manager.osm-data-sets=OpenStreetMap Data Sets
 data-manager.transport-scenarios=Transport Scenarios
 
 data-manager.no-data=No data
+
+data-manager.create-new-spatial-data=Create New Spatial Data Set
+data-manager.select-shapefile=Select Shapefile
+data-manager.select-shapefile-field=Select Shapefile Field
+data-manager.create-new-indicator-name=Indicator Name
+data-manager.create-new-indicator-description=Indicator Description
+data-manager.create-new-indicator-color=Indicator Color
+
+
+
+data-manager.upload-shapefile-file=Shapefile (zipped)
+data-manager.upload-shapefile-name=Shapefile Name
+data-manager.upload-shapefile-description=Shapefile Description
+data-manager.upload-shapefile=Upload Shapefile
+
+data-manager.upload-shapefile-uploading=Uploading & Processing Shapefile
 
 analysis.analysis-type=Analysis Type
 

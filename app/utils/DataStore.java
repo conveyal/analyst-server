@@ -7,6 +7,7 @@ import java.util.Map;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 
+import controllers.Application;
 import play.Play;
 
 public class DataStore<T> {
@@ -15,12 +16,17 @@ public class DataStore<T> {
 	Map<String,T> map;
 	
 	public DataStore(String dataFile) {
+	
+		this(new File(Application.dataPath), dataFile);
+	}
+
+	public DataStore(File directory, String dataFile) {
 		
-		db = DBMaker.newFileDB(new File(Play.application().configuration().getString("application.data"), dataFile))
-					.closeOnJvmShutdown()
-	               	.make();
+		db = DBMaker.newFileDB(new File(directory, dataFile + ".db"))
+			.closeOnJvmShutdown()
+	        .make();
 		
-		map = db.getHashMap("projects");
+		map = db.getHashMap(dataFile);
 	}
 	
 	public void save(String id, T obj) {
@@ -39,6 +45,10 @@ public class DataStore<T> {
 	
 	public Collection<T> getAll() {
 		return map.values();
+	}
+	
+	public Integer size() {
+		return map.keySet().size();
 	}
 	
 }

@@ -28,6 +28,10 @@ html, body, #map {
 	font-size: 14px;
 }
 
+label {
+	font-size: 12px;
+}
+
 @font-face {
 	font-family: 'icons';
 	src:url('/assets/fonts/icons.eot?11u8qc');

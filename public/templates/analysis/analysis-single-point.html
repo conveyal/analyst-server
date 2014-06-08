@@ -10,10 +10,21 @@
     <div id="collapseOne" class="panel-collapse collapse in">
       <div class="panel-body">
 
+      	<p>
+			<b>Max Travel Time: <span class="notes" id="timeLimitValue"></span></b>
+		</p>	
+		<input id="timeSlider1" data-slider-id="timeSlider" style="width: 380px;" type="text" data-slider-min="15" data-slider-max="60" data-slider-step="5" data-slider-value="60"/>
+		   	
+		<div class="timeScale"></div>
+		   	
+	   	<div class="timeScaleLabels">
+	   		<span class="note pull-right">60 mins</span>
+	   		<span class="note">15 mins</span>
+	   	</div>
+
 		<h5>{{I18n "analysis.primary-indicator"}}</h5>
-		<select class="primary-indicator form-control">
-		  <option value="jobs" {{#if singlePoint}}selected{{/if}}>Jobs</option>
-		  <option value="population" {{#if multiPoint}}selected{{/if}}>Population</option>
+		<select id="primaryIndicator" class="primary-indicator form-control">
+		
 		</select>
 
 		<h5>{{I18n "analysis.scenario-comparison"}}</h5>
@@ -27,18 +38,18 @@
 		  <option value="scenario" {{#if singlePoint}}selected{{/if}}>Default Scenario</option>
 		</select>
 
-		<div style="margin-top: 10px;" class="btn-group " data-toggle="buttons">
+		<div style="margin-top: 10px;" class="btn-group mode-selector" data-toggle="buttons">
 			  <label class="btn btn-default">
-			    <input type="radio" name="options" id="modeCar" value="CAR"><span class="icon icon-car"></span>
+			    <input type="radio" name="mode1" id="modeCar" value="CAR"><span class="icon icon-car"></span>
 			  </label>
 			  <label class="btn btn-default active">
-			    <input type="radio" name="options" id="modeBus" value="TRANSIT"><span class="icon icon-pedestrian"></span> + <span class="icon icon-bus"></span>
+			    <input type="radio" name="mode1" id="modeBus" value="TRANSIT"><span class="icon icon-pedestrian"></span> + <span class="icon icon-bus"></span>
 			  </label>
 			  <label class="btn btn-default">
-			    <input type="radio" name="options" id="modeBike" value="BIKE"><span class="icon icon-bike"></span>
+			    <input type="radio" name="mode1" id="modeBike" value="BIKE"><span class="icon icon-bike"></span>
 			  </label>
 			  <label class="btn btn-default">
-			    <input type="radio" name="options" id="modePed" value="WALK"><span class="icon icon-pedestrian"></span>
+			    <input type="radio" name="mode1" id="modePed" value="WALK"><span class="icon icon-pedestrian"></span>
 			  </label>
 		</div>
 
@@ -49,22 +60,33 @@
 		  		<option value="scenario" {{#if singlePoint}}selected{{/if}}>Default Scenario</option>
 			</select>
 
-			<div style="margin-top: 10px;" class="btn-group " data-toggle="buttons">
+			<div style="margin-top: 10px;" class="btn-group mode-selector" data-toggle="buttons">
 				  <label class="btn btn-default">
-				    <input type="radio" name="options" id="modeCar" value="CAR"><span class="icon icon-car"></span>
+				    <input type="radio" name="mode2" id="modeCar" value="CAR"><span class="icon icon-car"></span>
 				  </label>
 				  <label class="btn btn-default active">
-				    <input type="radio" name="options" id="modeBus" value="TRANSIT"><span class="icon icon-pedestrian"></span> + <span class="icon icon-bus"></span>
+				    <input type="radio" name="mode2" id="modeBus" value="TRANSIT"><span class="icon icon-pedestrian"></span> + <span class="icon icon-bus"></span>
 				  </label>
 				  <label class="btn btn-default">
-				    <input type="radio" name="options" id="modeBike" value="BIKE"><span class="icon icon-bike"></span>
+				    <input type="radio" name="mode2" id="modeBike" value="BIKE"><span class="icon icon-bike"></span>
 				  </label>
 				  <label class="btn btn-default">
-				    <input type="radio" name="options" id="modePed" value="WALK"><span class="icon icon-pedestrian"></span>
+				    <input type="radio" name="mode2" id="modePed" value="WALK"><span class="icon icon-pedestrian"></span>
 				  </label>
 			</div>
 
 		</div>
+
+		<div class="checkbox">
+		    <label>
+		      <input type="checkbox" checked id="showIso"> Show Isochrones
+		    </label>
+	 	</div>
+	 	<div class="checkbox">
+		    <label>
+		      <input type="checkbox" checked id="showPoints"> Show Points
+		    </label>
+	 	</div>
 	</div>
     </div>
   </div>

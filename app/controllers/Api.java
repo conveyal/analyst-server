@@ -6,6 +6,7 @@ import java.awt.Polygon;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Collection;
@@ -14,8 +15,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.zip.ZipException;
 
 import javax.imageio.ImageIO;
+
 import org.geotools.coverage.grid.GridEnvelope2D;
 import org.geotools.coverage.grid.GridGeometry2D;
 import org.geotools.geometry.Envelope2D;
@@ -27,16 +30,11 @@ import org.opentripplanner.analyst.request.TileRequest;
 import org.opentripplanner.common.model.GenericLocation;
 
 import otp.Analyst;
-import model.AnalystRequest;
-import model.AttributeGroup;
-import model.DefaultDestinations;
-import model.HaltonPoints;
-import model.IndicatorItem;
-import model.IndicatorQueryItem;
-import model.IndicatorResponse;
-import model.Metadata;
-import model.SptResponse;
+import otp.AnalystRequest;
+import otp.SptResponse;
 import models.Project;
+import models.Shapefile;
+import models.SpatialDataSet;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerationException;
@@ -52,6 +50,7 @@ import play.libs.F.Function;
 import play.libs.F.Function0;
 import play.libs.F.Promise;
 import play.mvc.*;
+import play.mvc.Http.MultipartFormData.FilePart;
 
 public class Api extends Controller {
 
@@ -62,9 +61,6 @@ public class Api extends Controller {
 	private static ObjectMapper mapper = new ObjectMapper();
     private static JsonFactory jf = new JsonFactory();
 
-    public static DefaultDestinations defaultDestinations = new DefaultDestinations();
-	
-	private static  Map<String, byte[]> tileCache = new HashMap<String, byte[]>();
     
     private static String toJson(Object pojo, boolean prettyPrint)
         throws JsonMappingException, JsonGenerationException, IOException {
@@ -152,20 +148,191 @@ public class Api extends Controller {
     }
     
     
+ // **** shapefile controllers ****
     
-public static Promise<Result> spt(final Double lat, final Double lon, final String mode) {
+    
+    public static Result getShapefile(String id) {
+        
+    	try {
+    		
+            if(id != null) {
+            	Shapefile s = Shapefile.getShapefile(id);
+                if(s != null)
+                    return ok(Api.toJson(s, false));
+                else
+                    return notFound();
+            }
+            else {
+                return ok(Api.toJson(Shapefile.getShapfiles(), false));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return badRequest();
+        }
+
+    }
+    
+    public static Result createShapefile() throws ZipException, IOException {
+    	
+    	Http.MultipartFormData body = request().body().asMultipartFormData();
+        
+        Http.MultipartFormData.FilePart file = body.getFile("file");
+		          
+        if (file != null && file.getFile() != null) {
+
+        	Shapefile s = Shapefile.create(file.getFile());
+        	
+        	s.name = body.asFormUrlEncoded().get("name")[0];
+        	s.description = body.asFormUrlEncoded().get("description")[0];
+        	
+        	s.save();
+        	
+            return ok(Api.toJson(s, false));  
+        } 
+        else {
+            return forbidden(); 
+        }
+    }
+    
+    public static Result updateShapefile(String id) {
+        
+    	Shapefile s;
+
+        try {
+        	
+        	s = mapper.readValue(request().body().asJson().traverse(), Shapefile.class);
+        	
+        	if(s.id == null || Project.getProject(s.id) == null)
+                return badRequest();
+        	
+        	s.save();
+
+            return ok(Api.toJson(s, false));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return badRequest();
+        }
+    }
+    
+    public static Result deleteShapefile(String id) {
+        if(id == null)
+            return badRequest();
+
+        Shapefile s = Shapefile.getShapefile(id);
+
+        if(s == null)
+        	return badRequest();
+
+        s.delete();
+
+        return ok();
+    }
+    
+    
+    /*** pointset controllers ***/
+    
+    public static Result getPointsetById(String id) {
+    	return getPointset(id, null);
+    }
+    
+    public static Result getPointset(String id, String projectId) {
+        
+    	try {
+    		
+            if(id != null) {
+            	SpatialDataSet s = SpatialDataSet.getSpatialDataSet(id);
+                if(s != null)
+                    return ok(Api.toJson(s, false));
+                else
+                    return notFound();
+            }
+            else {
+                return ok(Api.toJson(SpatialDataSet.getSpatialDataSets(projectId), false));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return badRequest();
+        }
+
+    }
+    
+    public static Result getPointsetsByProjectId(String projectId) {
+        
+    	try {
+    		
+    		return ok(Api.toJson(SpatialDataSet.getSpatialDataSets(projectId), false));
+    		
+        } catch (Exception e) {
+            e.printStackTrace();
+            return badRequest();
+        }
+
+    }
+    
+    
+    
+    public static Result createPointset() {
+    	SpatialDataSet sd;
+        try {
+        
+        	sd = mapper.readValue(request().body().asJson().traverse(), SpatialDataSet.class);
+            sd.save();
+
+            return ok(Api.toJson(sd, false));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return badRequest();
+        }
+    	
+    }
+    
+    public static Result updatePointset(String id) {
+        
+    	SpatialDataSet sd;
+
+        try {
+        	
+        	sd = mapper.readValue(request().body().asJson().traverse(), SpatialDataSet.class);
+        	
+        	if(sd.id == null || Project.getProject(sd.id) == null)
+                return badRequest();
+        	
+        	sd.save();
+
+            return ok(Api.toJson(sd, false));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return badRequest();
+        }
+    }
+    
+    public static Result deletePointset(String id) {
+        if(id == null)
+            return badRequest();
+
+        SpatialDataSet sd = SpatialDataSet.getSpatialDataSet(id);
+
+        if(sd == null)
+        	return badRequest();
+
+        sd.delete();
+
+        return ok();
+    }
+    
+    public static Promise<Result> spt(final String graphId, final String spatialId, final Double lat, final Double lon, final String mode) {
     	
     	Promise<SptResponse> promise = Promise.promise(
 		    new Function0<SptResponse>() {
 		      public SptResponse apply() {
 		    	  GenericLocation latLon = new GenericLocation(lat, lon);
 	          	
-	              	AnalystRequest request = analyst.buildRequest(latLon, mode);
+	              	AnalystRequest request = analyst.buildRequest(graphId, latLon, mode);
 	              	
 	              	if(request == null)
 	              		return null;
 	              		
-	              	SptResponse sptResponse = analyst.getSpt(request, defaultDestinations.destinations);
+	              	SptResponse sptResponse = analyst.getSptResponse(request, spatialId);
 	              	
 	              	return sptResponse;
 		      }
@@ -184,6 +351,8 @@ public static Promise<Result> spt(final Double lat, final Double lon, final Stri
 		  );
     	
     }
+    
+    /* 
       
     public static Result indicator(String sptId, String indicatorId, Integer timeLimit) {
     	
@@ -358,15 +527,15 @@ public static Promise<Result> spt(final Double lat, final Double lon, final Stri
             // skipping retina for now for performance reasons (2-3x savings)
             // revisit with GPU acceleration...
             
-           /* int w = before.getWidth();
+            //int w = before.getWidth();
 
-            int h = before.getHeight();
-            BufferedImage after = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
-            AffineTransform at = new AffineTransform();
-            at.scale(2.0, 2.0);
-            AffineTransformOp scaleOp = 
-               new AffineTransformOp(at, AffineTransformOp.TYPE_BICUBIC);
-            after = scaleOp.filter(before, after); */
+            //int h = before.getHeight();
+            //BufferedImage after = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+            //AffineTransform at = new AffineTransform();
+            //at.scale(2.0, 2.0);
+            //AffineTransformOp scaleOp = 
+            //   new AffineTransformOp(at, AffineTransformOp.TYPE_BICUBIC);
+            //after = scaleOp.filter(before, after); 
 
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ImageIO.write(before, "png", baos);
@@ -402,8 +571,8 @@ public static Promise<Result> spt(final Double lat, final Double lon, final Stri
             e.printStackTrace();
         }
 
-    	return ok(items.size() + "");
-    }
+    	return ok(items.size() + ""); 
+    } 
     
     public static Result metadata() {
         
@@ -415,7 +584,7 @@ public static Promise<Result> spt(final Double lat, final Double lon, final Stri
     public static Result indicatorMetadata() {
     	
     	return ok(Json.toJson(analyst.getIndicatorMetadata()));
-    }
+    } */
 
     
 }

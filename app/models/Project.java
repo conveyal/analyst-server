@@ -15,7 +15,7 @@ public class Project implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	static private DataStore<Project> projectData = new DataStore<Project>("project.db");
+	static private DataStore<Project> projectData = new DataStore<Project>("projects");
 	
 	public String id;
 	public String name;
@@ -34,6 +34,7 @@ public class Project implements Serializable {
 		
 		// assign id at save
 		if(id == null || id.isEmpty()) {
+			
 			Date d = new Date();
 			id = HashUtils.hashString("p_" + d.toString());
 			

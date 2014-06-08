@@ -15,7 +15,7 @@ A.analysis = {};
 	    
 	    show: function(){
 
-	    	var analysisLayout = new A.analysis.AnalysisLayout();
+	    	var analysisLayout = new A.analysis.AnalysisLayout({model : this.project});
 	    	this.region.show(analysisLayout);
 	        
 	    }
@@ -26,7 +26,11 @@ A.analysis = {};
 		template: Handlebars.getTemplate('analysis', 'analysis-layout'),
 
 		events: {
-		  'change .analysis-type': 'selectAnalysisType'
+		  'change .analysis-type': 'selectAnalysisType',
+		  'change .primary-indicator': 'loadSpt',
+		  'click #showIso': 'updateMap',
+		  'click #showPoints': 'updateMap',
+		  'click .mode-selector' : 'updateMap'
 		},
 
 		regions: {
@@ -34,20 +38,65 @@ A.analysis = {};
 		},
 
 		initialize: function(options){
-			_.bindAll(this, 'loadSpt', 'updateMap')
+			_.bindAll(this, 'loadSpt', 'updateMap');
+		},
+
+		onShow : function() {
+
+			var _this = this;
+
+			this.pointsets = new A.models.PointSets(); 
+
+			this.timeSlider = $('#timeSlider1').slider({
+				formater: function(value) {
+					$('#timeLimitValue').html(value + " mins");
+					return value + " minutes";
+				}
+			}).on('slideStop', function(value) {
+
+				_this.updateMap();
+			}).data('slider');
+
+			this.mode1 = 'TRANSIT';
+
+			this.mode2 = 'TRANSIT';
+
+			$('input[name=mode1]:radio').on('change', function(event) {
+				_this.mode1 = $('input:radio[name=mode1]:checked').val();
+				_this.loadSpt();
+		    });
+
+		    $('input[name=mode2]:radio').on('change', function(event) {
+				_this.mode2 = $('input:radio[name=mode2]:checked').val();
+				_this.loadSpt();
+		    });
+
+			this.pointsets.fetch({reset: true, data : {projectId: this.model.get("id")}, success: function(collection, response, options){
+
+				_this.$("#primaryIndicator").empty();
+
+				for(var i in _this.pointsets.models)
+	    			_this.$("#primaryIndicator").append('<option value="' + _this.pointsets.models[i].get("id") + '">' + _this.pointsets.models[i].get("name") + '</option>');
+
+			}});
+
 		},
 
 		onClose : function() {
 			if(A.map.tileOverlay && A.map.hasLayer(A.map.tileOverlay))
-		  			A.map.removeLayer(A.map.tileOverlay);
+		  		A.map.removeLayer(A.map.tileOverlay);
 
-		  		if(A.map.marker && A.map.hasLayer(A.map.marker))
-		  			A.map.removeLayer(A.map.marker);
-		  	},
+		  	if(A.map.marker && A.map.hasLayer(A.map.marker))
+		  		A.map.removeLayer(A.map.marker);
+		 },
 
 		loadSpt : function() {
+
+			if(A.map.tileOverlay && A.map.hasLayer(A.map.tileOverlay))
+		  		A.map.removeLayer(A.map.tileOverlay);
+
 			var _this = this;
-			var sptUrl = '/api/spt?lat=' + A.map.marker.getLatLng().lat + '&lon=' + A.map.marker.getLatLng().lng + '&mode=TRANSIT';
+			var sptUrl = '/api/spt?graphId=default&lat=' + A.map.marker.getLatLng().lat + '&spatialId=' + this.$("#primaryIndicator").val() + '&lon=' + A.map.marker.getLatLng().lng + '&mode=' + this.mode1;
 		    $.getJSON(sptUrl, function(data) {
 
 		  	  _this.sptId = data.sptId;
@@ -56,20 +105,22 @@ A.analysis = {};
 		},
 
 		updateMap : function() {
+	
+			if(!this.$("#primaryIndicator").val() ||  !this.sptId)
+				return;	
 
-			
-		  	if(A.map.tileOverlay && A.map.hasLayer(A.map.tileOverlay))
+			if(A.map.tileOverlay && A.map.hasLayer(A.map.tileOverlay))
 		  		A.map.removeLayer(A.map.tileOverlay);
-		  	
+
 		  	var sptQuery = this.sptId;
-
-		  	//sptQuery = 'all';
-
 		  
-			var timeLimit = 1800;
-			var mapIndicatorId = "jobs_type";
+			var timeLimit = this.timeSlider.getValue() * 60;
+
+			var showIso =  $('#showIso').prop('checked');
+			var showPoints =  $('#showPoints').prop('checked');
+
 		  	
-			A.map.tileOverlay = L.tileLayer('/api/tile?z={z}&x={x}&y={y}&&indicatorId=' + mapIndicatorId + '&timeLimit=' + timeLimit + '&hiddenAttributes=&sptId=' + sptQuery  , {
+			A.map.tileOverlay = L.tileLayer('/tile/spt?z={z}&x={x}&y={y}&&spatialId=' +  this.$("#primaryIndicator").val() + '&timeLimit=' + timeLimit + '&showPoints=' + showPoints + '&showIso=' + showIso + '&sptId=' + this.sptId, {
 				attribution: 'US Cenus LODES'
 				}).addTo(A.map);
 
@@ -92,17 +143,22 @@ A.analysis = {};
 				if(A.map.marker && A.map.hasLayer(A.map.marker))
 		  			A.map.removeLayer(A.map.marker);
 
-				A.map.marker = new L.marker(new L.latLng(-34.65072034337064,-58.416709899902344), {draggable:'true'});
+		  		A.map.on('click', function(evt) {
 
+		  			if(A.map.marker && A.map.hasLayer(A.map.marker))
+		  				A.map.removeLayer(A.map.marker);
 
-				A.map.marker.on('dragend', function(event){
-			    	_this.loadSpt();    	
-			    });
+		  			A.map.marker = new L.marker(evt.latlng, {draggable:'true'});
 
+		  			A.map.marker.on('dragend', function(event){
+			    		_this.loadSpt();    	
+			    	});
 
+			    	A.map.addLayer(A.map.marker);
 
-			    A.map.addLayer(A.map.marker);
+			    	_this.loadSpt();  
 
+		  		});
 			}
 			else if(this.analysisType == 'multi') {
 
@@ -113,11 +169,9 @@ A.analysis = {};
 		  			A.map.removeLayer(A.map.marker);
 
 		  		A.map.tileOverlay = L.tileLayer('http://{s}.tiles.mapbox.com/v3/conveyal.574uc8fr/{z}/{x}/{y}.png', {
-	    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
-	    maxZoom: 18
-	}).addTo(Analyst.map);
-
-		  		
+				    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
+				    maxZoom: 18
+				}).addTo(Analyst.map);
 
 				var analysisMultiPointLayout = new A.analysis.AnalysisMultiPointLayout();
 

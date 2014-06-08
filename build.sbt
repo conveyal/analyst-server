@@ -7,7 +7,9 @@ libraryDependencies ++= Seq(
   javaEbean,
   cache,
   "org.mapdb" % "mapdb" % "1.0.1",
-  "org.julienrf" %% "play-jsmessages" % "1.6.1"
+  "org.julienrf" %% "play-jsmessages" % "1.6.1",
+  "commons-io" % "commons-io" % "2.4"
 )     
+
 
 play.Project.playJavaSettings
