@@ -28,14 +28,13 @@
 		</select>
 
 		<h5>{{I18n "analysis.scenario-comparison"}}</h5>
-		<select class="scenario-comparison form-control">
+		<select id="scenarioComparison" class="scenario-comparison form-control">
 		  <option value="compare" {{#if compare}}selected{{/if}}>{{I18n "analysis.scenario.compare"}}</option>
 		  <option value="no-comparison" selected{{#if noComparison}}selected{{/if}}>{{I18n "analysis.scenario.no-comparison"}}</option>
 		</select>
 
 		<h5>{{I18n "analysis.scenario-1"}}</h5>
-		<select class="scenario1 form-control">
-		  <option value="scenario" {{#if singlePoint}}selected{{/if}}>Default Scenario</option>
+		<select id="scenario1" class="scenario-list form-control">
 		</select>
 
 		<div style="margin-top: 10px;" class="btn-group mode-selector" data-toggle="buttons">
@@ -56,8 +55,7 @@
 
 		<div id="scenario2-controls">
 			<h5>{{I18n "analysis.scenario-2"}}</h5>
-			<select class="scenario2 form-control">
-		  		<option value="scenario" {{#if singlePoint}}selected{{/if}}>Default Scenario</option>
+			<select id="scenario2" class="scenario-list form-control">
 			</select>
 
 			<div style="margin-top: 10px;" class="btn-group mode-selector" data-toggle="buttons">
@@ -79,12 +77,12 @@
 
 		<div class="checkbox">
 		    <label>
-		      <input type="checkbox" checked id="showIso"> Show Isochrones
+		      <input type="checkbox" checked id="showIso"> {{I18n "analysis.show-isochrones"}}
 		    </label>
 	 	</div>
 	 	<div class="checkbox">
 		    <label>
-		      <input type="checkbox" checked id="showPoints"> Show Points
+		      <input type="checkbox" checked id="showPoints"> {{I18n "analysis.show-points"}}
 		    </label>
 	 	</div>
 	</div>
@@ -94,13 +92,27 @@
     <div class="panel-heading">
       <h5 class="panel-title">
         <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo">
-          Results
+          {{I18n "analysis.results"}}
         </a>
       </h5>
     </div>
     <div id="collapseTwo" class="panel-collapse collapse">
       <div class="panel-body">
-      		<a href="#">export csv</a> | <a href="#">export shapefile</a> 
+
+      	<h4 id="primaryIndicatorLabel"></h4>
+
+      	<div id="results1" style="margin-left: 10px;">
+      		<h5 id="scenarioLabel1"></h5>
+	     	{{I18n "analysis.number-accessible"}}: <strong><span id="totalAccessible1"></span></strong><br/>
+	     	{{I18n "analysis.percent-accessible"}}: <strong><span id="percentAccessible1"></span></strong>
+	     </div>
+
+	     <div id="results2"  style="margin-left: 10px;">
+      		<h5 id="scenarioLabel2"></h5>
+	     	{{I18n "analysis.number-accessible"}}: <strong><span id="totalAccessible2"></span></strong><br/>
+	     	{{I18n "analysis.percent-accessible"}}: <strong><span id="percentAccessible2"></span></strong>
+	     </div>
+      		<!-- <a href="#">export csv</a> | <a href="#">export shapefile</a>  -->
       </div>
     </div>
   </div>

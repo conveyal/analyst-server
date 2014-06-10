@@ -44,7 +44,7 @@ public class AnalystRequest extends RoutingRequest{
 	    md5.update(baos.toByteArray());
 
 	    BigInteger hash = new BigInteger(1, md5.digest());
-	    sptId = hash.toString(16);
+	    sptId = graphId + "_" + hash.toString(16);
 
 	}
 	

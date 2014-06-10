@@ -66,4 +66,23 @@ var Analyst = Analyst || {};
 
 	});
 
+	A.models.Scenario = Backbone.Model.extend({
+		urlRoot: '/api/scenario/',
+
+		defaults: {
+			id: null,
+			name: null,
+			description: null,
+			filenames: []
+		}	
+
+	});
+
+	A.models.Scenarios = Backbone.Collection.extend({
+	  type: 'Scenarios',
+	  model: A.models.Scenario,
+	  url: '/api/scenario'
+
+	});
+
 })(Analyst, jQuery);	

@@ -17,6 +17,7 @@ import org.opentripplanner.analyst.core.Sample;
 import org.opentripplanner.common.model.GenericLocation;
 import org.opentripplanner.routing.algorithm.EarliestArrivalSPTService;
 import org.opentripplanner.routing.error.VertexNotFoundException;
+import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.spt.ShortestPathTree;
 
 import play.Logger;
@@ -87,6 +88,10 @@ public class Analyst {
         }
     }
 
+	
+	public Graph getGraph (String graphId) {
+		return graphService.getGraph(graphId);
+	}
 	
 	public Sample getSample (String graphId, double lon, double lat) {
 		return graphService.getSampleFactory(graphId).getSample(lon, lat);

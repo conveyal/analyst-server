@@ -25,19 +25,20 @@ POST    /api/pointset/					controllers.Api.createPointset()
 PUT     /api/pointset/:id				controllers.Api.updatePointset(id:String)
 DELETE  /api/pointset/:id				controllers.Api.deletePointset(id:String)
 
+GET     /api/scenario					controllers.Api.getScenario(id:String ?= null, projectId:String ?= null)
+GET     /api/scenario/:id				controllers.Api.getScenarioById(id:String)
+POST    /api/scenario/					controllers.Api.createScenario()
+PUT     /api/scenario/:id				controllers.Api.updateScenario(id:String)
+DELETE  /api/scenario/:id				controllers.Api.deleteScenario(id:String)
 
 GET     /tile/spatial                  	controllers.Tiles.spatial(spatialId:String, x:Integer, y:Integer, z:Integer)
 GET     /tile/spt                  		controllers.Tiles.spt(sptId:String, spatialId:String, x:Integer, y:Integer, z:Integer, showIso:Boolean ?= true, showPoints:Boolean ?= true, timeLimit:Integer ?= 3600)
+GET     /tile/compareSpt                controllers.Tiles.compareSpt(sptId1:String, sptId2:String, spatialId:String, x:Integer, y:Integer, z:Integer, timeLimit:Integer ?= 3600)
+
 
 GET     /api/spt                    	controllers.Api.spt(graphId:String, spatialId:String, lat:Double, lon:Double, mode:String)
 
-
-# GET     /api/indicator              	controllers.Api.indicator(sptId:String, indicatorId: String, timeLimit:Integer)
- 
-# 
-
-# GET     /api/metadata               controllers.Api.metadata()
-# GET	  /api/indicatorMetadata		controllers.Api.indicatorMetadata()		
+GET     /api/sptSummary                 controllers.Api.sptSummary(sptId:String, spatialId:String, timeLimit:Integer ?= 3600)
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)

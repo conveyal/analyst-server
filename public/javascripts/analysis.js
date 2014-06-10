@@ -27,6 +27,9 @@ A.analysis = {};
 
 		events: {
 		  'change .analysis-type': 'selectAnalysisType',
+		  'change #scenarioComparison': 'loadSpt',
+		  'change #scenario1': 'loadSpt',
+		  'change #scenario2': 'loadSpt',
 		  'change .primary-indicator': 'loadSpt',
 		  'click #showIso': 'updateMap',
 		  'click #showPoints': 'updateMap',
@@ -46,6 +49,7 @@ A.analysis = {};
 			var _this = this;
 
 			this.pointsets = new A.models.PointSets(); 
+			this.scenarios = new A.models.Scenarios(); 
 
 			this.timeSlider = $('#timeSlider1').slider({
 				formater: function(value) {
@@ -80,6 +84,20 @@ A.analysis = {};
 
 			}});
 
+			this.scenarios.fetch({reset: true, data : {projectId: this.model.get("id")}, success: function(collection, response, options){
+
+				_this.$(".scenario-list").empty();
+
+				for(var i in _this.scenarios.models) {
+					if(_this.scenarios.models[i].get("id") == "default")
+						_this.$(".scenario-list").append('<option selected value="' + _this.scenarios.models[i].get("id") + '">' + _this.scenarios.models[i].get("name") + '</option>');
+					else
+						_this.$(".scenario-list").append('<option value="' + _this.scenarios.models[i].get("id") + '">' + _this.scenarios.models[i].get("name") + '</option>');
+						
+				}
+	    			
+			}});
+
 		},
 
 		onClose : function() {
@@ -88,42 +106,149 @@ A.analysis = {};
 
 		  	if(A.map.marker && A.map.hasLayer(A.map.marker))
 		  		A.map.removeLayer(A.map.marker);
+
+		  	A.map.marker = false;
+
 		 },
 
 		loadSpt : function() {
 
+			if(!A.map.marker)
+				return;
+
 			if(A.map.tileOverlay && A.map.hasLayer(A.map.tileOverlay))
 		  		A.map.removeLayer(A.map.tileOverlay);
 
-			var _this = this;
-			var sptUrl = '/api/spt?graphId=default&lat=' + A.map.marker.getLatLng().lat + '&spatialId=' + this.$("#primaryIndicator").val() + '&lon=' + A.map.marker.getLatLng().lng + '&mode=' + this.mode1;
-		    $.getJSON(sptUrl, function(data) {
+		  	this.sptId1 = false;
+		  	this.sptId2 = false;
 
-		  	  _this.sptId = data.sptId;
+ 			
+
+ 			var graphId1 = this.$('#scenario1').val();
+
+			var _this = this;
+			
+			var sptUrl1 = '/api/spt?graphId=' + graphId1 + '&lat=' + A.map.marker.getLatLng().lat + '&spatialId=' + this.$("#primaryIndicator").val() + '&lon=' + A.map.marker.getLatLng().lng + '&mode=' + this.mode1;
+		    $.getJSON(sptUrl1, function(data) {
+
+		  	  _this.sptId1 = data.sptId;
 		  	  _this.updateMap();
+
 		    });
+
+		    if(this.comparisonType == 'compare') {
+
+		    	var graphId2 = this.$('#scenario2').val();
+
+		    	var sptUrl2 = '/api/spt?graphId=' + graphId2 + '&lat=' + A.map.marker.getLatLng().lat + '&spatialId=' + this.$("#primaryIndicator").val() + '&lon=' + A.map.marker.getLatLng().lng + '&mode=' + this.mode2;
+			    $.getJSON(sptUrl2, function(data) {
+
+			  	  _this.sptId2 = data.sptId;
+			  	  _this.updateMap();
+
+			    });
+
+		    }
 		},
 
 		updateMap : function() {
 	
-			if(!this.$("#primaryIndicator").val() ||  !this.sptId)
+			if(!this.$("#primaryIndicator").val() ||  !this.sptId1)
 				return;	
 
-			if(A.map.tileOverlay && A.map.hasLayer(A.map.tileOverlay))
-		  		A.map.removeLayer(A.map.tileOverlay);
+			$('#results1').hide();
+			$('#results2').hide();
 
-		  	var sptQuery = this.sptId;
-		  
-			var timeLimit = this.timeSlider.getValue() * 60;
+			if(this.comparisonType == 'compare') { 
 
-			var showIso =  $('#showIso').prop('checked');
-			var showPoints =  $('#showPoints').prop('checked');
+				if(!this.sptId1 || !this.sptId2)
+					return;
 
-		  	
-			A.map.tileOverlay = L.tileLayer('/tile/spt?z={z}&x={x}&y={y}&&spatialId=' +  this.$("#primaryIndicator").val() + '&timeLimit=' + timeLimit + '&showPoints=' + showPoints + '&showIso=' + showIso + '&sptId=' + this.sptId, {
-				attribution: 'US Cenus LODES'
-				}).addTo(A.map);
+				if(A.map.tileOverlay && A.map.hasLayer(A.map.tileOverlay))
+		  			A.map.removeLayer(A.map.tileOverlay);
+			  
+				var timeLimit = this.timeSlider.getValue() * 60;
 
+				A.map.tileOverlay = L.tileLayer('/tile/compareSpt?z={z}&x={x}&y={y}&spatialId=' +  this.$("#primaryIndicator").val() + '&timeLimit=' + timeLimit + '&sptId1=' + this.sptId1  + '&sptId2=' + this.sptId2, {
+		
+					}).addTo(A.map);
+
+				
+
+				$.getJSON('/api/sptSummary?&spatialId=' +  this.$("#primaryIndicator").val() + '&timeLimit=' + timeLimit + '&sptId=' + this.sptId1, function(data){
+
+					var primaryIndicator = $("#primaryIndicator option:selected").text();
+
+					var scenarioLabel = $("#scenario1 option:selected").text();
+
+					var percent = (data.accessible / data.total) * 100;
+					var percentOut = percent.toFixed(2) + "%";
+
+					$('#primaryIndicatorLabel').html(primaryIndicator);
+					$('#scenarioLabel1').html(scenarioLabel);
+					$('#totalAccessible1').html(data.accessible);
+					$('#percentAccessible1').html(percentOut);
+
+					$('#results1').show();
+
+				});
+
+				$.getJSON('/api/sptSummary?&spatialId=' +  this.$("#primaryIndicator").val() + '&timeLimit=' + timeLimit + '&sptId=' + this.sptId2, function(data){
+
+					var primaryIndicator = $("#primaryIndicator option:selected").text();
+
+					var scenarioLabel = $("#scenario2 option:selected").text();
+
+					var percent = (data.accessible / data.total) * 100;
+					var percentOut = percent.toFixed(2) + "%";
+
+
+
+					$('#primaryIndicatorLabel').html(primaryIndicator);
+					$('#scenarioLabel2').html(scenarioLabel);
+					$('#totalAccessible2').html(data.accessible);
+					$('#percentAccessible2').html(percentOut);
+
+					$('#results2').show();
+
+				});
+
+			}
+			else {
+
+				if(A.map.tileOverlay && A.map.hasLayer(A.map.tileOverlay))
+		  			A.map.removeLayer(A.map.tileOverlay);
+			  
+				var timeLimit = this.timeSlider.getValue() * 60;
+
+				var showIso =  $('#showIso').prop('checked');
+				var showPoints =  $('#showPoints').prop('checked');
+
+			  	
+				A.map.tileOverlay = L.tileLayer('/tile/spt?z={z}&x={x}&y={y}&spatialId=' +  this.$("#primaryIndicator").val() + '&timeLimit=' + timeLimit + '&showPoints=' + showPoints + '&showIso=' + showIso + '&sptId=' + this.sptId1, {
+					
+					}).addTo(A.map);
+
+
+				$.getJSON('/api/sptSummary?&spatialId=' +  this.$("#primaryIndicator").val() + '&timeLimit=' + timeLimit + '&sptId=' + this.sptId1, function(data){
+
+					var primaryIndicator = $("#primaryIndicator option:selected").text();
+
+					var scenarioLabel = $("#scenario1 option:selected").text();
+
+					var percent = (data.accessible / data.total) * 100;
+					var percentOut = percent.toFixed(2) + "%";
+
+					$('#primaryIndicatorLabel').html(primaryIndicator);
+					$('#scenarioLabel1').html(scenarioLabel);
+					$('#totalAccessible1').html(data.accessible);
+					$('#percentAccessible1').html(percentOut);
+
+					$('#results1').show();
+
+				});
+
+			}
 
 		},
 
@@ -213,8 +338,8 @@ A.analysis = {};
 		  'change .scenario-comparison': 'selectComparisonType'
 		},
 
-		onRender : function () {
-			$('#scenario2-controls').hide();
+		onShow : function () {
+			this.$('#scenario2-controls').hide();
 		},
 
 		selectComparisonType : function(evt) {

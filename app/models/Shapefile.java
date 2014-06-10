@@ -108,6 +108,14 @@ public class Shapefile implements Serializable {
 		}
 		
 		@JsonIgnore 
+		public Integer getAttribute(String attributeId) {
+			if(attributes.containsKey(attributeId))
+				return (Integer)attributes.get(attributeId);
+			else
+				return 0;
+		}
+		
+		@JsonIgnore 
 		transient private Map<String,Sample> graphSampleMap;
 		
 		@JsonIgnore
@@ -195,6 +203,12 @@ public class Shapefile implements Serializable {
 	public List<ShapeFeature> query(Envelope env) {
 		
 		return getSpatialIndex().query(env);
+		
+	}
+	
+	public Collection<ShapeFeature> queryAll() {
+		
+		return shapeFeatures.getAll();
 		
 	}
 	

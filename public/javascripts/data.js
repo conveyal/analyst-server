@@ -10,7 +10,7 @@ A.data = {};
 
 		regions: {
 		  spatialData 	: "#spatial",
-		  transportData : "#transport"
+		  scenarioData 	: "#scenario"
 		},
 
 		initialize : function(options) {
@@ -21,6 +21,10 @@ A.data = {};
 
 			this.pointsets.fetch({reset: true, data : {projectId: this.model.get("id")}});
 
+			this.scenarios  = new A.models.Scenarios (); 
+
+			this.scenarios.fetch({reset: true, data : {projectId: this.model.get("id")}});
+
 		},
 
 		onShow : function() {
@@ -28,10 +32,18 @@ A.data = {};
 			this.pointSetLayout = new A.data.PointSetLayout({collection: this.pointsets});
 
 			this.listenTo(this.pointSetLayout, "pointsetCreate", this.createPointset);		
-
 			
 			this.spatialData.show(this.pointSetLayout);
+
+
 		
+			this.scenarioLayout = new A.data.ScenarioLayout({collection: this.scenarios});
+
+			this.listenTo(this.scenarioLayout, "scenarioCreate", this.createScenario);		
+			
+			this.scenarioData.show(this.scenarioLayout);
+		
+
 		},
 
 		createPointset : function(evt) {
@@ -43,6 +55,7 @@ A.data = {};
 			this.listenTo(pointSetCreateLayout, "pointsetCreate:cancel", this.cancelNewPointset);	
 
 			this.spatialData.show(pointSetCreateLayout);
+			this.scenarioData.close();
 
 		},
 
@@ -60,7 +73,27 @@ A.data = {};
 			this.spatialData.close();
 
 			this.onShow();
-		}
+		},
+
+		createScenario : function(evt) {
+
+			var _this = this;
+
+			var scenarioCreateLayout = new A.data.ScenarioCreateView({projectId: this.model.get("id")});		
+
+			this.listenTo(scenarioCreateLayout, "scenarioCreate:save", function() {
+					_this.scenarios.fetch({reset: true, data : {projectId: _this.model.get("id")}});
+					this.onShow();
+				});
+
+			this.listenTo(scenarioCreateLayout, "scenarioCreate:cancel", this.onShow());	
+
+			this.spatialData.close();
+			this.scenarioData.show(scenarioCreateLayout);
+
+		},
+
+
 	});
 
 	A.data.PointSetLayout = Marionette.Layout.extend({
@@ -150,13 +183,20 @@ A.data = {};
 
 	  events: { 
 
-	  	'click' : 'clickItem' 
+	  	'click #deleteItem' : 'deleteItem',
+	  	'click' : 'clickItem'
+
 	  },
 
 	  clickItem : function(evt) {
 
-	  	 $(evt.target).toggleClass("list-group-item-warning")
+	  	$(evt.target).toggleClass("list-group-item-warning")
 	  	this.trigger("pointsetToggle", $(evt.target).data("id"));
+
+	  },
+
+	  deleteItem: function(evt) {
+	  	this.model.destroy();
 	  },
 
 	  onRender: function () {
@@ -205,6 +245,140 @@ A.data = {};
 
 
 	});
+
+	A.data.ScenarioCreateView = Backbone.Marionette.Layout.extend({
+
+		template: Handlebars.getTemplate('data', 'data-scenario-create-form'),
+
+		ui: {
+			name: 			'#name',
+			description:  	'#description'
+		},
+
+		regions: {
+		  shapefileSelect 	: "#shapefileSelect"
+		},
+
+		events: {
+		  'click #scenarioSave': 'saveScenarioCreate',
+		  'click #scenarioCancel': 'cancelScenarioCreate'
+		},
+
+		initialize : function(options) {
+
+			this.projectId = options.projectId;
+		},
+
+		cancelScenarioCreate : function(evt) {
+
+			this.trigger("scenarioCreate:cancel");
+
+		},
+
+		saveScenarioCreate : function(evt) {
+
+			evt.preventDefault();
+			var _this = this;
+		    var values = {};
+
+		    if(event){ event.preventDefault(); }
+
+		    _.each(this.$('form').serializeArray(), function(input){
+		      values[ input.name ] = input.value;
+		    })
+
+		    values.projectid = this.projectId;
+		    values.scenarioType = this.$('#scenarioType').val();
+
+		    var scenario = new A.models.Scenario();
+
+		    scenario.save(values, { iframe: true,
+		                              files: this.$('form :file'),
+		                              data: values,
+		                              success: function(){
+		                      				_this.trigger("scenarioCreate:save");
+		                              }});
+		}
+
+	});
+
+
+	A.data.ScenarioLayout = Marionette.Layout.extend({
+
+		template: Handlebars.getTemplate('data', 'data-scenario-layout'),
+
+		events:  {
+			'click #createScenario' : 'createScenario'
+		},
+
+		regions: {
+		  main 	: "#main"
+		},
+
+		onShow : function() {
+
+			var scenarioListLayout = new A.data.ScenarioListView({collection: this.collection});			
+
+			this.main.show(scenarioListLayout);
+
+		},
+
+		createScenario : function(evt) {
+			this.trigger("scenarioCreate");
+		}
+
+	});
+
+	A.data.ScenarioListItem = Backbone.Marionette.ItemView.extend({
+
+	  template: Handlebars.getTemplate('data', 'data-scenario-list-item'),
+
+	  events: { 
+
+	  	'click #deleteItem' : 'deleteItem'
+	  	
+	  },
+
+
+	  deleteItem: function(evt) {
+	  	this.model.destroy();
+	  },
+
+
+	  onRender: function () {
+        // Get rid of that pesky wrapping-div.
+        // Assumes 1 child element present in template.
+        this.$el = this.$el.children();
+        // Unwrap the element to prevent infinitely 
+        // nesting elements during re-render.
+        this.$el.unwrap();
+        this.setElement(this.$el);
+      }
+
+	});
+
+	A.data.ScenarioListView = Backbone.Marionette.CompositeView.extend({
+
+		template: Handlebars.getTemplate('data', 'data-scenario-list'),
+		itemView: A.data.ScenarioListItem,
+
+		initialize : function() {
+
+			
+		},
+
+		onClose : function() {
+
+		},
+
+		appendHtml: function(collectionView, itemView){
+	    	collectionView.$("#scenarioList").append(itemView.el);
+	 	},
+
+	});
+
+
+
 
 	A.data.ShapefileListItem = Backbone.Marionette.ItemView.extend({
 
