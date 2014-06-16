@@ -65,7 +65,7 @@ public class Tiles extends Controller {
          
     	Envelope2D env = JTS.getEnvelope2D(jtsEnvelope, DefaultGeographicCRS.WGS84);
     	
-    	TileRequest tileRequest = new TileRequest(env, 256, 256);
+    	TileRequest tileRequest = new TileRequest("", env, 256, 256);
     	GridEnvelope2D gridEnv = new GridEnvelope2D(0, 0, tileRequest.width, tileRequest.height);
     	GridGeometry2D gg = new GridGeometry2D(gridEnv, (org.opengis.geometry.Envelope)(tileRequest.bbox));
     	
@@ -173,7 +173,7 @@ public class Tiles extends Controller {
          
     	Envelope2D env = JTS.getEnvelope2D(jtsEnvelope, DefaultGeographicCRS.WGS84);
     	
-    	TileRequest tileRequest = new TileRequest(env, 256, 256);
+    	TileRequest tileRequest = new TileRequest("", env, 256, 256);
     	GridEnvelope2D gridEnv = new GridEnvelope2D(0, 0, tileRequest.width, tileRequest.height);
     	GridGeometry2D gg = new GridGeometry2D(gridEnv, (org.opengis.geometry.Envelope)(tileRequest.bbox));
     	
@@ -307,7 +307,7 @@ public class Tiles extends Controller {
          
     	Envelope2D env = JTS.getEnvelope2D(jtsEnvelope, DefaultGeographicCRS.WGS84);
     	
-    	TileRequest tileRequest = new TileRequest(env, 256, 256);
+    	TileRequest tileRequest = new TileRequest("", env, 256, 256);
     	GridEnvelope2D gridEnv = new GridEnvelope2D(0, 0, tileRequest.width, tileRequest.height);
     	GridGeometry2D gg = new GridGeometry2D(gridEnv, (org.opengis.geometry.Envelope)(tileRequest.bbox));
     	

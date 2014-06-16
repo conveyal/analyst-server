@@ -122,7 +122,7 @@ A.analysis = {};
 		  	this.sptId1 = false;
 		  	this.sptId2 = false;
 
- 			
+		  	this.comparisonType = this.$('.scenario-comparison').val();
 
  			var graphId1 = this.$('#scenario1').val();
 
@@ -158,6 +158,9 @@ A.analysis = {};
 
 			$('#results1').hide();
 			$('#results2').hide();
+
+
+
 
 			if(this.comparisonType == 'compare') { 
 
