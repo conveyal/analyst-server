@@ -253,23 +253,35 @@ A.analysis = {};
 				var showPoints =  $('#showPoints').prop('checked');
 
 			  	
-				A.map.tileOverlay = L.tileLayer('/tile/surface?z={z}&x={x}&y={y}&pointSetId=' +  this.$("#primaryIndicator").val() + '&timeLimit=' + timeLimit + '&showPoints=' + showPoints + '&showIso=' + showIso + '&surfaceId=' + this.surfaceId1, {
+				A.map.tileOverlay = L.tileLayer('/tile/surface?z={z}&x={x}&y={y}&pointSetId=' +  this.$("#primaryIndicator").val() + '&timeLimit=' + timeLimit + '&showPoints=' + showPoints + '&showIso=' + false + '&surfaceId=' + this.surfaceId1, {
 					
 					}).addTo(A.map);
 
+				if(showIso) {
 
-				$.getJSON('/api/isochrone?&cutoffs=' + timeLimit + '&surfaceId=' + this.surfaceId1, function(data){
+						$.getJSON('/api/isochrone?&cutoffs=' + timeLimit + '&surfaceId=' + this.surfaceId1, function(data){
+
+						if(A.map.isochronesLayer  && A.map.hasLayer(A.map.isochronesLayer))
+			  				A.map.removeLayer(A.map.isochronesLayer);
+
+
+						A.map.isochronesLayer = L.geoJson(data.features, {
+					      style: function(feature) {
+					        return _this.isochroneStyle(feature.properties.Time);
+					      }
+					    })
+						.addTo(A.map);
+					});
+
+				}
+				else {
 
 					if(A.map.isochronesLayer  && A.map.hasLayer(A.map.isochronesLayer))
 		  				A.map.removeLayer(A.map.isochronesLayer);
 
-					A.map.isochronesLayer = L.geoJson(data.features, {
-				      style: function(feature) {
-				        return _this.isochroneStyle(feature.properties.Time);
-				      }
-				    })
-					.addTo(A.map);
-				});
+				}
+
+				
 			}
 		},
 

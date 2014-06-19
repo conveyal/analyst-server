@@ -369,7 +369,7 @@ A.data = {};
 	 			A.map.removeLayer(this.pointSetOverlays[data.pointSetId ]);
 
 			var selectedAttributes = data.checkedAttributes.join();
-			this.pointSetOverlays[data.pointSetId] = L.tileLayer('/tile/spatial?z={z}&x={x}&y={y}&&spatialId=' + data.pointSetId + '&selectedAttributes=' + selectedAttributes).addTo(A.map);	
+			this.pointSetOverlays[data.pointSetId] = L.tileLayer('/tile/spatial?z={z}&x={x}&y={y}&pointSetId=' + data.pointSetId + '&selectedAttributes=' + selectedAttributes).addTo(A.map);	
 		},
 
 		pointSetHide : function(data) {
