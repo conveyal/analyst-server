@@ -10,9 +10,7 @@
     <div id="collapseOne" class="panel-collapse collapse in">
       <div class="panel-body">
 
-      	<p>
-			<b>Max Travel Time: <span class="notes" id="timeLimitValue"></span></b>
-		</p>	
+      	<h5>Max Travel Time: <span class="notes" id="timeLimitValue"></span></h5>	
 		<input id="timeSlider1" data-slider-id="timeSlider" style="width: 380px;" type="text" data-slider-min="15" data-slider-max="60" data-slider-step="5" data-slider-value="60"/>
 		   	
 		<div class="timeScale"></div>
@@ -36,6 +34,14 @@
 		<h5>{{I18n "analysis.scenario-1"}}</h5>
 		<select id="scenario1" class="scenario-list form-control">
 		</select>
+
+		<div class="pull-right" style="width: 180px;">
+			<h5>Average Walk Speed:  <br/><span class="notes" id="walkSpeedValue"></span></h5>		
+			<input id="walkSpeedSlider" data-slider-id="walkSpeedSlider" style="width: 180px;" type="text" data-slider-min="1" data-slider-max="10" data-slider-step="1" data-slider-value="5"/>
+
+			<h5>Average Bike Speed: <br/><span class="notes" id="bikeSpeedValue"></span></h5>	
+			<input id="bikeSpeedSlider" data-slider-id="bikeSpeedSlider" style="width: 180px;" type="text" data-slider-min="1" data-slider-max="40" data-slider-step="1" data-slider-value="15"/>
+		</div>	
 
 		<div style="margin-top: 10px;" class="btn-group mode-selector" data-toggle="buttons">
 			  <label class="btn btn-default">

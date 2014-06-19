@@ -98,7 +98,7 @@ public class Api extends Controller {
     	public Long accessible = 0l;
     }
     
-    public static Promise<Result> surface(final String graphId, final Double lat, final Double lon, final String mode) {
+    public static Promise<Result> surface(final String graphId, final Double lat, final Double lon, final String mode, final Double bikeSpeed, final Double walkSpeed) {
     	
     	Promise<TimeSurfaceShort> promise = Promise.promise(
 		    new Function0<TimeSurfaceShort>() {
@@ -106,6 +106,8 @@ public class Api extends Controller {
 		    	  GenericLocation latLon = new GenericLocation(lat, lon);
 	          	
 	              	AnalystRequest request = analyst.buildRequest(graphId, latLon, mode, maxTimeLimit);
+	              	request.setBikeSpeed(bikeSpeed);
+	              	request.setWalkSpeed(walkSpeed);
 	              	
 	              	if(request == null)
 	              		return null;

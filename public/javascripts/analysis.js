@@ -70,13 +70,33 @@ A.analysis = {};
 			this.scenarios = new A.models.Scenarios(); 
 
 			this.timeSlider = $('#timeSlider1').slider({
-				formater: function(value) {
-					$('#timeLimitValue').html(value + " mins");
-					return value + " minutes";
-				}
-			}).on('slideStop', function(value) {
+					formater: function(value) {
+						$('#timeLimitValue').html(value + " mins");
+						return value + " minutes";
+					}
+				}).on('slideStop', function(value) {
 
 				_this.updateMap();
+			}).data('slider');
+
+			this.walkSpeedSlider = $('#walkSpeedSlider').slider({
+					formater: function(value) {
+						$('#walkSpeedValue').html(value + " km/h");
+						return value + " km/h";
+					}
+				}).on('slideStop', function(value) {
+
+				_this.createSurface();
+			}).data('slider');
+
+			this.bikeSpeedSlider = $('#bikeSpeedSlider').slider({
+					formater: function(value) {
+						$('#bikeSpeedValue').html(value + " km/h");
+						return value + " km/h";
+					}
+				}).on('slideStop', function(value) {
+
+				_this.createSurface();
 			}).data('slider');
 
 			this.mode1 = 'TRANSIT';
@@ -149,11 +169,14 @@ A.analysis = {};
 
 		  	this.comparisonType = this.$('.scenario-comparison').val();
 
+		  	var bikeSpeed = (this.bikeSpeedSlider.getValue() * 1000 / 60 / 60 );
+		  	var walkSpeed = (this.walkSpeedSlider.getValue() * 1000 / 60 / 60 );
+
  			var graphId1 = this.$('#scenario1').val();
 
 			var _this = this;
 			
-			var surfaceUrl1 = '/api/surface?graphId=' + graphId1 + '&lat=' + A.map.marker.getLatLng().lat + '&lon=' + A.map.marker.getLatLng().lng + '&mode=' + this.mode1;
+			var surfaceUrl1 = '/api/surface?graphId=' + graphId1 + '&lat=' + A.map.marker.getLatLng().lat + '&lon=' + A.map.marker.getLatLng().lng + '&mode=' + this.mode1 + '&bikeSpeed=' + bikeSpeed + '&walkSpeed=' + walkSpeed;
 		    $.getJSON(surfaceUrl1, function(data) {
 
 		  	  _this.surfaceId1 = data.id;

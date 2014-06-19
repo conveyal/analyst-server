@@ -36,7 +36,7 @@ GET     /tile/surface                  	controllers.Tiles.surface(surfaceId:Inte
 GET     /tile/compareSpt                controllers.Tiles.compareSpt(surfaceId1:Integer, surfaceId2:Integer, spatialId:String, x:Integer, y:Integer, z:Integer, timeLimit:Integer ?= 3600)
 
 
-GET     /api/surface                    controllers.Api.surface(graphId:String, lat:Double, lon:Double, mode:String)
+GET     /api/surface                    controllers.Api.surface(graphId:String, lat:Double, lon:Double, mode:String, bikeSpeed:Double, walkSpeed:Double)
 GET		/api/isochrone					controllers.Api.isochrone(surfaceId:Integer, cutoffs:java.util.List[Integer])
 
 # Map static resources from the /public folder to the /assets URL path
