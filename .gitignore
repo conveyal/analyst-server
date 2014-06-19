@@ -15,5 +15,5 @@ dist
 /.project
 /RUNNING_PID
 /.settings
-data
+/data
 /bin
