@@ -14,6 +14,11 @@ html, body, #map {
 	width: 450px;
 }
 
+.glyphicon {
+	color: #98b8eb;
+  	cursor: pointer;
+}
+
 .title {
 	
 }

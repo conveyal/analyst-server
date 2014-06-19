@@ -41,7 +41,7 @@ A.analysis = {};
 		},
 
 		initialize: function(options){
-			_.bindAll(this, 'loadSpt', 'updateMap');
+			_.bindAll(this, 'loadSpt', 'updateMap', 'onMapClick');
 		},
 
 		onShow : function() {
@@ -106,6 +106,8 @@ A.analysis = {};
 
 		  	if(A.map.marker && A.map.hasLayer(A.map.marker))
 		  		A.map.removeLayer(A.map.marker);
+
+		  	A.map.off('click', this.onMapClick);
 
 		  	A.map.marker = false;
 
@@ -271,22 +273,8 @@ A.analysis = {};
 				if(A.map.marker && A.map.hasLayer(A.map.marker))
 		  			A.map.removeLayer(A.map.marker);
 
-		  		A.map.on('click', function(evt) {
+		  		A.map.on('click', this.onMapClick);
 
-		  			if(A.map.marker && A.map.hasLayer(A.map.marker))
-		  				A.map.removeLayer(A.map.marker);
-
-		  			A.map.marker = new L.marker(evt.latlng, {draggable:'true'});
-
-		  			A.map.marker.on('dragend', function(event){
-			    		_this.loadSpt();    	
-			    	});
-
-			    	A.map.addLayer(A.map.marker);
-
-			    	_this.loadSpt();  
-
-		  		});
 			}
 			else if(this.analysisType == 'multi') {
 
@@ -305,6 +293,21 @@ A.analysis = {};
 
 				this.analysisDetail.show(analysisMultiPointLayout);
 			}
+
+		},
+
+		onMapClick : function(evt) {
+
+  			if(A.map.marker && A.map.hasLayer(A.map.marker))
+  				A.map.removeLayer(A.map.marker);
+
+  			A.map.marker = new L.marker(evt.latlng, {draggable:'true'});
+
+  			A.map.marker.on('dragend', this.loadSpt);
+
+	    	A.map.addLayer(A.map.marker);
+
+	    	this.loadSpt();  
 
 		},
 

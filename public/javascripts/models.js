@@ -32,11 +32,33 @@ var Analyst = Analyst || {};
 			id: null,
 			name: null,
 			description: null,
-			color: null,
-			shapefileid: null,
-			shapefieldname: null,
-			projectid: null
-		}	
+			shapeFileId: null,
+			projectId: null,
+			attributes: []
+		},	
+
+		addAttribute : function (name, description, color, fieldName) {
+
+			this.deleteAttribute(fieldName);
+
+			var item = {
+				name: name,
+				description: description,
+				color: color,
+				fieldName: fieldName
+			};
+
+			this.set(this.get("attributes").push(item));
+		},
+
+		deleteAttribute : function (fieldName) {
+			this.set("attributes", _.filter(this.get("attributes"), function(item) {
+				if(item.fieldName == fieldName)
+					return false;
+				else
+					return true;
+			}));
+		}
 
 	});
 

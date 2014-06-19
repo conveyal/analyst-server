@@ -19,11 +19,9 @@ A.data = {};
 
 			this.pointsets = new A.models.PointSets(); 
 
-			this.pointsets.fetch({reset: true, data : {projectId: this.model.get("id")}});
+			this.scenarios  = new A.models.Scenarios(); 
 
-			this.scenarios  = new A.models.Scenarios (); 
-
-			this.scenarios.fetch({reset: true, data : {projectId: this.model.get("id")}});
+			
 
 		},
 
@@ -35,14 +33,13 @@ A.data = {};
 			
 			this.spatialData.show(this.pointSetLayout);
 
-
-		
 			this.scenarioLayout = new A.data.ScenarioLayout({collection: this.scenarios});
 
 			this.listenTo(this.scenarioLayout, "scenarioCreate", this.createScenario);		
 			
 			this.scenarioData.show(this.scenarioLayout);
-		
+
+			this.scenarios.fetch({reset: true, data : {projectId: this.model.get("id")}});			
 
 		},
 
@@ -61,7 +58,7 @@ A.data = {};
 
 		saveNewPointset: function(data) {
 
-			data.projectid = this.model.get("id");
+			data.projectId = this.model.get("id");
 			this.pointsets.create(data, {wait: true});
 			this.spatialData.close();
 
@@ -150,11 +147,11 @@ A.data = {};
 
 			this.shapefileSelect.show(this.shapefileListView);
 
-			this.colorVal = '#0fb0b0';
+			//this.colorVal = '#0fb0b0';
 
-			this.colorPicker = this.$('#pointsetColorPicker').colorpicker({color:this.colorVal}).on('changeColor', function(ev){
-			 _this.colorVal = ev.color.toHex();
-			});
+			//this.colorPicker = this.$('#pointsetColorPicker').colorpicker({color:this.colorVal}).on('changeColor', function(ev){
+			// _this.colorVal = ev.color.toHex();
+			//});
 
 		},
 
@@ -168,30 +165,117 @@ A.data = {};
 
 			evt.preventDefault();
 			var data = Backbone.Syphon.serialize(this);
-			data.color = this.colorVal;
+			//data.color = this.colorVal;
 
-			if(data.name && data.shapefileid && data.shapefieldname)
+			if(data.name && data.shapeFileId)
 				this.trigger("pointsetCreate:save", data);
 
 		}
 
 	});
 
-	A.data.PointSetListItem = Backbone.Marionette.ItemView.extend({
+	A.data.PointSetAttributeCreateView = Backbone.Marionette.Layout.extend({
+
+		template: Handlebars.getTemplate('data', 'data-pointset-attribute-create-form'),
+
+		onShow : function() {
+
+			alert("test");
+		},
+
+		cancelPointSetAttributeCreate : function(evt) {
+
+			this.trigger("pointSetAttributeCreate:cancel");
+
+		},
+
+		savePointSetAttributeCreate : function(evt) {
+
+			this.trigger("pointSetAttributeCreate:save");
+
+		},
+
+	});
+
+	A.data.PointSetListItem = Backbone.Marionette.Layout.extend({
 
 	  template: Handlebars.getTemplate('data', 'data-pointset-list-item'),
 
 	  events: { 
 
 	  	'click #deleteItem' : 'deleteItem',
-	  	'click' : 'clickItem'
+	  	'click #pointsetCheckbox' : 'clickItem',
+	  	'click .pointsetAttributeCheckbox' : 'clickItem',
+	  	'click #addAttribute' : 'addAttribute',
+	  	'click #deleteAttribute' : 'deleteAttribute',
+	  },
 
+	  regions : {
+	  		createAttribute : "#createAttribute"
+	  },
+
+	  modelEvents : {
+	  	"change" : "render"
+	  },
+
+	  initialize : function() {
+
+	  	_.bindAll(this, "addAttribute");
 	  },
 
 	  clickItem : function(evt) {
 
-	  	$(evt.target).toggleClass("list-group-item-warning")
-	  	this.trigger("pointsetToggle", $(evt.target).data("id"));
+	  	
+	  	var target = $($(evt.target).closest(".pointset-group"));
+	  	
+	  	var pointSetId = $(target.find("#pointsetCheckbox")).data("id")
+	  	var attributeCheckboxes = target.find(".pointsetAttributeCheckbox");
+
+	  	var checkedAttributes = new Array();
+	  	attributeCheckboxes.each( function(item) {
+	  		if($(this).prop("checked")) {
+	  			checkedAttributes.push($(this).data("id"));
+	  		}	
+	  	});
+	  		
+	  	if($(target.find("#pointsetCheckbox")).prop("checked"))
+	  		this.trigger("pointSetShow", {pointSetId : pointSetId, checkedAttributes: checkedAttributes});
+	  	else
+	  		this.trigger("pointSetHide", {pointSetId : pointSetId});
+
+	  },
+
+	  addAttribute : function(evt) {
+
+	  	var pointSetAttributeCreateLayout = new A.data.PointSetAttributeCreateView();		
+
+		this.listenTo(pointSetAttributeCreateLayout, "pointSetAttributeCreate:save", this.saveNewAttribute);
+
+		this.listenTo(pointSetAttributeCreateLayout, "pointSetAttributeCreate:cancel", this.cancelNewPointset);	
+
+		this.createAttribute.show(pointSetAttributeCreateLayout);
+
+		this.$("#addAttribute").hide();
+		  	
+	  },
+
+	  saveNewAttribute : function(data) {
+	  	this.addAttribute(data.name, data.description, data.color, data.fieldName);
+
+
+	  },
+
+	  cancelNewAttribute : function() {
+	  	this.createAttribute.close();
+	  	this.$("#addAttribute").show();
+	  },
+
+	  deleteAttribute : function(evt) {
+
+	  	var attributeId = $(evt.target).data("id");
+
+	  	this.model.deleteAttribute(attributeId);
+	  	this.model.save();
 
 	  },
 
@@ -217,8 +301,18 @@ A.data = {};
 		itemView: A.data.PointSetListItem,
 
 		initialize : function() {
-			this.pointSetOverlays = {}
+			this.pointSetOverlays = {};
 			
+			this.collection.on("reset", function() {
+				$("#loadingPointsets").show();
+			});
+		},
+
+		onShow : function() {
+			this.collection.fetch({reset: true, data : {projectId: A.app.selectedProject.get("id")}, success :function() {	
+				$("#loadingPointsets").hide();
+			}});
+
 		},
 
 		onClose : function() {
@@ -232,15 +326,24 @@ A.data = {};
 
 		appendHtml: function(collectionView, itemView){
 	    	collectionView.$("#pointsetList").append(itemView.el);
-	    	this.listenTo(itemView, "pointsetToggle", this.togglePointSet);	
+	    	this.listenTo(itemView, "pointSetShow", this.pointSetShow);	
+	    	this.listenTo(itemView, "pointSetHide", this.pointSetHide);	
 	 	 },
 
-	 	togglePointSet : function(data) {
+	 	pointSetShow : function(data) {
 
-			if(this.pointSetOverlays[data] && A.map.hasLayer(this.pointSetOverlays[data]))
-				A.map.removeLayer(this.pointSetOverlays[data]);
-			else
-				this.pointSetOverlays[data] = L.tileLayer('/tile/spatial?z={z}&x={x}&y={y}&&spatialId=' + data).addTo(A.map);
+	 		if(A.map.hasLayer(this.pointSetOverlays[data.pointSetId]))
+	 			A.map.removeLayer(this.pointSetOverlays[data.pointSetId ]);
+
+			var selectedAttributes = data.checkedAttributes.join();
+			this.pointSetOverlays[data.pointSetId] = L.tileLayer('/tile/spatial?z={z}&x={x}&y={y}&&spatialId=' + data.pointSetId + '&selectedAttributes=' + selectedAttributes).addTo(A.map);	
+		},
+
+		pointSetHide : function(data) {
+
+			if(A.map.hasLayer(this.pointSetOverlays[data.pointSetId]))
+				A.map.removeLayer(this.pointSetOverlays[data.pointSetId ]);
+	
 		}
 
 
@@ -287,7 +390,7 @@ A.data = {};
 		      values[ input.name ] = input.value;
 		    })
 
-		    values.projectid = this.projectId;
+		    values.projectId = this.projectId;
 		    values.scenarioType = this.$('#scenarioType').val();
 
 		    var scenario = new A.models.Scenario();
@@ -454,13 +557,6 @@ A.data = {};
 	    	else {
 	    		this.$("#fieldSelectGroup").show();
 	    		this.$("#uploadShapefile").hide();
-
-	    		var fieldnames = this.collection.get(this.$("#shapefileSelect").val()).get("fieldnames");
-
-	    		this.$("#shapefileFieldSelect").empty();
-
-	    		for(var fieldname in fieldnames)
-	    			this.$("#shapefileFieldSelect").append('<option value="' + fieldnames[fieldname] + '">' + fieldnames[fieldname] + '</option>');
 	    	}
 	    },
 

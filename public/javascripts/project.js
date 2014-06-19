@@ -44,7 +44,7 @@ var Analyst = Analyst || {};
 			this.projectListView = new A.project.ProjectListView({collection: this.projects});
 
 			this.projects.on("add", function(project) {
-				_this.selectedProject = null;
+				A.app.selectedProject = null;
 
 				_this.projectListView.setSelected(project.id);
 			});
@@ -78,9 +78,9 @@ var Analyst = Analyst || {};
 
 			this.projectDetail.close();
 
-			if(this.selectedProject != null) {
+			if(A.app.selectedProject != null) {
 	    
-	    		var projectDetailLayout = new A.project.ProjectDetailLayout({model: this.selectedProject});
+	    		var projectDetailLayout = new A.project.ProjectDetailLayout({model: A.app.selectedProject});
 
 	    		this.projectDetail.show(projectDetailLayout);
 	    	}
@@ -89,11 +89,11 @@ var Analyst = Analyst || {};
 
 		getSelectedMapState : function() {
 
-			if(this.selectedProject != null) {
+			if(A.app.selectedProject != null) {
 
-				var lat = this.selectedProject.get("defaultLat");
-				var lng = this.selectedProject.get("defaultLon");
-				var zoom = this.selectedProject.get("defaultZoom");
+				var lat = A.app.selectedProject.get("defaultLat");
+				var lng = A.app.selectedProject.get("defaultLon");
+				var zoom = A.app.selectedProject.get("defaultZoom");
 
 				if(lat && lng && zoom) {
 					var latlng = L.latLng(lat, lng);
@@ -123,12 +123,14 @@ var Analyst = Analyst || {};
 	    	
 			this.saveSelectedMapState();
 
-	    	this.selectedProject = this.projects.get(id);
+	    	A.app.selectedProject = this.projects.get(id);
 
-	    	if(this.selectedProject != null) {
+	    	if(A.app.selectedProject != null) {
+
+
 	    		this.projectDetail.close();
 
-	    		var projectDetailLayout = new A.project.ProjectDetailLayout({model: this.selectedProject});
+	    		var projectDetailLayout = new A.project.ProjectDetailLayout({model: A.app.selectedProject});
 
 	    		this.projectDetail.show(projectDetailLayout);
 	    	}
