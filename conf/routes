@@ -31,14 +31,13 @@ POST    /api/scenario/					controllers.Api.createScenario()
 PUT     /api/scenario/:id				controllers.Api.updateScenario(id:String)
 DELETE  /api/scenario/:id				controllers.Api.deleteScenario(id:String)
 
-GET     /tile/spatial                  	controllers.Tiles.spatial(spatialId:String, x:Integer, y:Integer, z:Integer)
-GET     /tile/spt                  		controllers.Tiles.spt(sptId:String, spatialId:String, x:Integer, y:Integer, z:Integer, showIso:Boolean ?= true, showPoints:Boolean ?= true, timeLimit:Integer ?= 3600)
-GET     /tile/compareSpt                controllers.Tiles.compareSpt(sptId1:String, sptId2:String, spatialId:String, x:Integer, y:Integer, z:Integer, timeLimit:Integer ?= 3600)
+GET     /tile/spatial                  	controllers.Tiles.spatial(pointSetId:String, x:Integer, y:Integer, z:Integer, selectedAttributes:String	)
+GET     /tile/surface                  	controllers.Tiles.surface(surfaceId:Integer, pointSetId:String, x:Integer, y:Integer, z:Integer, showIso:Boolean ?= true, showPoints:Boolean ?= true, timeLimit:Integer ?= 3600)
+GET     /tile/compareSpt                controllers.Tiles.compareSpt(surfaceId1:Integer, surfaceId2:Integer, spatialId:String, x:Integer, y:Integer, z:Integer, timeLimit:Integer ?= 3600)
 
 
-GET     /api/spt                    	controllers.Api.spt(graphId:String, spatialId:String, lat:Double, lon:Double, mode:String)
-
-GET     /api/sptSummary                 controllers.Api.sptSummary(sptId:String, spatialId:String, timeLimit:Integer ?= 3600)
+GET     /api/surface                    controllers.Api.surface(graphId:String, lat:Double, lon:Double, mode:String)
+GET		/api/isochrone					controllers.Api.isochrone(surfaceId:Integer, cutoffs:java.util.List[Integer])
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)

@@ -9,6 +9,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -32,6 +33,8 @@ import org.geotools.referencing.CRS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
+import org.mapdb.Fun;
+import org.mapdb.Fun.Tuple2;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.Property;
 import org.opengis.feature.simple.SimpleFeatureType;
@@ -78,7 +81,7 @@ public class Shapefile implements Serializable {
 	@JsonIgnore 
 	transient private STRtree spatialIndex;
 	
-	static public class ShapeFeature  implements Serializable {
+	static public class ShapeFeature  implements Serializable, Comparable<ShapeFeature> {
 
 		private static final long serialVersionUID = 1L;
 		public String id;
@@ -135,7 +138,12 @@ public class Shapefile implements Serializable {
 			return graphSampleMap.get(graphId);
 		}
 		
-		Map<String,Object> attributes = new HashMap<String,Object>();	
+		Map<String,Object> attributes = new HashMap<String,Object>();
+
+		@Override
+		public int compareTo(ShapeFeature o) {
+			return this.id.compareTo(o.id);
+		}	
 	}
 	
 	public static class FeatureTime {
@@ -158,11 +166,19 @@ public class Shapefile implements Serializable {
 	}
 	
 	@JsonIgnore
+	public void setShapeFeatureStore(List<Fun.Tuple2<String,ShapeFeature>> features) {
+	        
+		shapeFeatures = new DataStore<ShapeFeature>(getShapeDataPath(), id, features);
+		
+	}
+	
+	@JsonIgnore
 	public DataStore<ShapeFeature> getShapeFeatureStore() {
 		
-		if(shapeFeatures == null)
+		if(shapeFeatures == null){
 			shapeFeatures = new DataStore<ShapeFeature>(getShapeDataPath(), id);
-		
+		}
+			
 		return shapeFeatures;
 		
 	}
@@ -255,10 +271,15 @@ public class Shapefile implements Serializable {
 	    	shapefile.file = new File(Shapefile.getShapeDataPath(),  shapefileHash + ".zip");
 	    	FileUtils.copyFile(originalShapefileZip, shapefile.file);
 	    
-	    	shapefile.populateShapeData();
+	    	Logger.info("loading shapefile " + shapefileHash);
+	    	List<Fun.Tuple2<String,ShapeFeature>> features = shapefile.getShapeFeatures();
+	    	Logger.info("saving " + features.size() + " features...");
 	    	
+	    	shapefile.setShapeFeatureStore(features);
 
 	    	shapefile.save();
+	    	
+	    	Logger.info("done loading shapefile " + shapefileHash);
 	    }
 	    else 
 	    	shapefile = null;
@@ -268,7 +289,9 @@ public class Shapefile implements Serializable {
 		return shapefile;
 	}
 
-	private void populateShapeData() throws ZipException, IOException {
+	private List<Fun.Tuple2<String,ShapeFeature>> getShapeFeatures() throws ZipException, IOException {
+		
+		List<Fun.Tuple2<String,ShapeFeature>> features = new ArrayList<Fun.Tuple2<String,ShapeFeature>>();
 		
 		File unzippedShapefile = getUnzippedShapefile();
 		
@@ -288,7 +311,7 @@ public class Shapefile implements Serializable {
 			transform = CRS.findMathTransform(shpCRS, DefaultGeographicCRS.WGS84, true);
 		} catch (FactoryException e1) {
 			e1.printStackTrace();
-			return;
+			return features;
 		}
 
 		SimpleFeatureCollection collection = featureSource.getFeatures();
@@ -297,6 +320,8 @@ public class Shapefile implements Serializable {
 		int skippedFeatures = 0;
 		
 		Set<String> fieldnamesFound = new HashSet<String>();
+		
+		
 		
 		try {
 			while( iterator.hasNext() ) {
@@ -320,7 +345,7 @@ public class Shapefile implements Serializable {
 			        			feature.attributes.put(p.getName().toString(), (int)(long)p.getValue());
 			        			
 			        			fieldnamesFound.add(p.getName().toString());
-			        			//Logger.info(name + " : " + value + " : " + value.getClass().getName());
+			        			
 			        		} else if( value instanceof Integer) {
 			        			feature.attributes.put(p.getName().toString(), (int)p.getValue());
 
@@ -330,22 +355,17 @@ public class Shapefile implements Serializable {
 			        			feature.attributes.put(p.getName().toString(), (int)(long)Math.round((Double)p.getValue()));
 			        		
 			        			fieldnamesFound.add(p.getName().toString());
-			        			//Logger.info(name + " : " + value + " : " + value.getClass().getName());
+			        			
 			        		}
 			        	}
 			        }
-			        
-			        Logger.info(feature.id);
-			        
-			        this.getShapeFeatureStore().save(feature.id, feature);
+			    	features.add(new Fun.Tuple2<String,ShapeFeature>(feature.id, feature));
 				}
 				catch(Exception e) {
 					skippedFeatures++;
 					System.out.println(e.toString());
 					continue;
 				}
-				
-				
 		     }
 		}
 		finally {
@@ -356,9 +376,10 @@ public class Shapefile implements Serializable {
 		
 		fieldnames = new ArrayList<String>(fieldnamesFound);
 		Collections.sort(fieldnames);
-		
+	
 		cleanupUnzippedShapefile();
-		
+	
+		return features;
 	}
 	
 	@JsonIgnore

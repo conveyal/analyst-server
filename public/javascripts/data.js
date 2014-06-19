@@ -147,12 +147,6 @@ A.data = {};
 
 			this.shapefileSelect.show(this.shapefileListView);
 
-			//this.colorVal = '#0fb0b0';
-
-			//this.colorPicker = this.$('#pointsetColorPicker').colorpicker({color:this.colorVal}).on('changeColor', function(ev){
-			// _this.colorVal = ev.color.toHex();
-			//});
-
 		},
 
 		cancelPointSetCreate : function(evt) {
@@ -178,9 +172,36 @@ A.data = {};
 
 		template: Handlebars.getTemplate('data', 'data-pointset-attribute-create-form'),
 
+		events : {
+
+			"click #attributeCancel" : "cancelPointSetAttributeCreate",
+			"click #attributeSave" : "savePointSetAttributeCreate"
+		},
+
+
+
 		onShow : function() {
 
-			alert("test");
+			var _this = this;
+
+			this.shapefileFields = new A.models.Shapefile({id: this.model.get("shapeFileId")})
+			this.shapefileFields.fetch({success: function(model, response, options) {
+
+				_this.$("#shapeFieldSelect").empty();
+
+				var fieldnames = model.get("fieldnames");
+
+	    		for(var fieldname in fieldnames)
+	    			_this.$("#shapeFieldSelect").append('<option value="' + fieldnames[fieldname] + '">' + fieldnames[fieldname] + '</option>');
+
+
+			}});
+
+			this.colorVal = '#0fb0b0';
+
+			this.colorPicker = this.$('#attributeColorPicker').colorpicker({color:this.colorVal}).on('changeColor', function(ev){
+			 _this.colorVal = ev.color.toHex();
+			});
 		},
 
 		cancelPointSetAttributeCreate : function(evt) {
@@ -191,7 +212,10 @@ A.data = {};
 
 		savePointSetAttributeCreate : function(evt) {
 
-			this.trigger("pointSetAttributeCreate:save");
+			evt.preventDefault();
+			var data = Backbone.Syphon.serialize(this);
+			data.color = this.colorVal;
+			this.trigger("pointSetAttributeCreate:save", data);
 
 		},
 
@@ -215,7 +239,8 @@ A.data = {};
 	  },
 
 	  modelEvents : {
-	  	"change" : "render"
+	  	"change" : "render",
+
 	  },
 
 	  initialize : function() {
@@ -247,21 +272,29 @@ A.data = {};
 
 	  addAttribute : function(evt) {
 
-	  	var pointSetAttributeCreateLayout = new A.data.PointSetAttributeCreateView();		
+	  	this.pointSetAttributeCreateLayout = new A.data.PointSetAttributeCreateView({model: this.model});		
 
-		this.listenTo(pointSetAttributeCreateLayout, "pointSetAttributeCreate:save", this.saveNewAttribute);
+		this.listenTo(this.pointSetAttributeCreateLayout, "pointSetAttributeCreate:save", this.saveNewAttribute);
 
-		this.listenTo(pointSetAttributeCreateLayout, "pointSetAttributeCreate:cancel", this.cancelNewPointset);	
+		this.listenTo(this.pointSetAttributeCreateLayout, "pointSetAttributeCreate:cancel", this.cancelNewAttribute);	
 
-		this.createAttribute.show(pointSetAttributeCreateLayout);
+		this.createAttribute.show(this.pointSetAttributeCreateLayout);
 
 		this.$("#addAttribute").hide();
+		this.$("#attributeList").hide();
 		  	
 	  },
 
 	  saveNewAttribute : function(data) {
-	  	this.addAttribute(data.name, data.description, data.color, data.fieldName);
+	  	this.model.addAttribute(data.name, data.description, data.color, data.fieldName);
+	  	this.model.save();
 
+	  	this.createAttribute.close();
+	  	this.$("#addAttribute").show();
+	  	this.$("#attributeList").show();
+
+
+	  	this.render();
 
 	  },
 

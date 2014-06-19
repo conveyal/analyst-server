@@ -18,6 +18,7 @@ import org.opentripplanner.common.model.GenericLocation;
 import org.opentripplanner.routing.algorithm.EarliestArrivalSPTService;
 import org.opentripplanner.routing.error.VertexNotFoundException;
 import org.opentripplanner.routing.graph.Graph;
+import org.opentripplanner.routing.services.GraphService;
 import org.opentripplanner.routing.spt.ShortestPathTree;
 
 import play.Logger;
@@ -31,7 +32,7 @@ public class Analyst {
 		
 	}
 	 
-	public AnalystRequest buildRequest(String graphId, GenericLocation latLon, String mode) {
+	public AnalystRequest buildRequest(String graphId, GenericLocation latLon, String mode, int cutoffMinutes) {
 		
 		// use center of graph extent if no location is specified
 		if(latLon == null)
@@ -40,7 +41,7 @@ public class Analyst {
 		AnalystRequest req;
 		
 		try {
-			req = AnalystRequest.create(graphId, latLon);
+			req = AnalystRequest.create(graphId, latLon, cutoffMinutes);
 		} catch (NoSuchAlgorithmException | IOException e) {
 			Logger.error("unable to create request id");
 			return null;
@@ -68,16 +69,7 @@ public class Analyst {
 				req.modes.setWalk(true);
 				break;
 		}
-		
-		try {
-			req.calcHash();
-		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+	
 		
         try {
             req.setRoutingContext(this.graphService.getGraph(graphId));
@@ -93,13 +85,12 @@ public class Analyst {
 		return graphService.getGraph(graphId);
 	}
 	
+	public GraphService getGraphService() {
+		return graphService;
+	}
+	
 	public Sample getSample (String graphId, double lon, double lat) {
-		return graphService.getSampleFactory(graphId).getSample(lon, lat);
+		return graphService.getGraph(graphId).getSampleFactory().getSample(lon, lat);
 	}
-	 
-	public SptResponse getSptResponse(AnalystRequest req, String spatialId) {
-		
-		SptResponse response = SptResponse.create(req, spatialId);
-		return response;
-	}
+	
 }

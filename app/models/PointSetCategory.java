@@ -1,47 +1,52 @@
 package models;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.SortedSet;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
+import java.util.concurrent.ConcurrentHashMap;
 
-import org.mapdb.Bind;
-import org.mapdb.Fun;
+import models.Shapefile.ShapeFeature;
+
+import org.opentripplanner.analyst.PointSet;
+import org.opentripplanner.analyst.PointSet.AttributeData;
+import org.opentripplanner.routing.services.GraphService;
 
 import play.Logger;
 import utils.DataStore;
 import utils.HashUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.vividsolutions.jts.geom.Geometry;
 
-public class SpatialDataSet implements Serializable {
+import controllers.Api;
+
+public class PointSetCategory implements Serializable {
 	
-	static DataStore<SpatialDataSet> spatialDataSets = new DataStore<SpatialDataSet>("spatial");
+	private static final long serialVersionUID = 1L;
+
+	static DataStore<PointSetCategory> spatialDataSets = new DataStore<PointSetCategory>("pointset");
 
 	public String id;
-	public String projectid;
+	public String projectId;
 	public String name;
 	public String description;
-	public String color;
 	
-	public String shapefileid;
-	public String shapefieldname;
+	public String shapeFileId;
+	
+	public List<Attribute> attributes = new ArrayList<Attribute>();
 	
 	public Integer featureCount;
 	
+	public static Map<String,PointSet> pointSetCache = new ConcurrentHashMap<String,PointSet>(); 
+	
+	
 	@JsonIgnore
 	public Shapefile getShapefile() {
-		return Shapefile.getShapefile(shapefileid);
+		return Shapefile.getShapefile(shapeFileId);
 	}
 
 	public Integer getFeatureCount() {
@@ -51,8 +56,13 @@ public class SpatialDataSet implements Serializable {
 		return featureCount;
 	}
 	
-	public SpatialDataSet() {
-
+	public PointSetCategory() {
+	
+	}
+	
+	public void addAttribute(Attribute attribute) {
+	
+    	attributes.add(attribute);
 	}
 	
 	public void save() {
@@ -76,22 +86,52 @@ public class SpatialDataSet implements Serializable {
 		
 		Logger.info("delete spatial data set sd" +id);
 	}
+	
+	@JsonIgnore
+	public PointSet getPointSet() {
+		
+		synchronized (pointSetCache) {
+			if(pointSetCache.containsKey(this.id))
+				return pointSetCache.get(this.id);
+				
+			PointSet ps = new PointSet(featureCount);
+			ps.setGraphService(Api.analyst.getGraphService());
+			
+			int index = 0;
+			for(ShapeFeature sf :  this.getShapefile().getShapeFeatureStore().getAll()) {
+				
+				List<AttributeData> attributeData = new ArrayList<AttributeData>();
+				
+				for(Attribute a : this.attributes) {
+					AttributeData ad = new AttributeData(Attribute.convertNameToId(this.name), Attribute.convertNameToId(a.name), sf.getAttribute(a.fieldName));
+					attributeData.add(ad);
+				}
+				
+				ps.addFeature(sf.id, sf.geom, attributeData, index);
+				index++;
+			}
+			
+			pointSetCache.put(this.id, ps);
+			
+			return ps;
+		}
+	}
 
-	static public SpatialDataSet getSpatialDataSet(String id) {
+	static public PointSetCategory getPointSetCategory(String id) {
 		
 		return spatialDataSets.getById(id);	
 	}
 	
-	static public Collection<SpatialDataSet> getSpatialDataSets(String projectId) {
+	static public Collection<PointSetCategory> getPointSetCategories(String projectId) {
 		
 		if(projectId == null)
 			return spatialDataSets.getAll();
 		
 		else {
-			Collection<SpatialDataSet> data = new ArrayList<SpatialDataSet>();
+			Collection<PointSetCategory> data = new ArrayList<PointSetCategory>();
 			
-			for(SpatialDataSet sd : spatialDataSets.getAll()) {
-				if(sd.projectid.equals(projectId))
+			for(PointSetCategory sd : spatialDataSets.getAll()) {
+				if(sd.projectId.equals(projectId))
 					data.add(sd);
 			}
 			

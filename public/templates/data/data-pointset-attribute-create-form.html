@@ -11,7 +11,19 @@
     <input type="text" class="form-control" id="description" name="description" placeholder="{{I18n "data-manager.create-new-category-description"}}" value="{{description}}">
   </div>  
 
-  <div id="fieldNameSelect"></div>
+  <div class="form-group" id="fieldNameSelect">
+    <label for="projectDescription">{{I18n "data-manager.select-shapefile-field"}}</label>
+    <select class="form-control" name="fieldName" id="shapeFieldSelect">
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label for="projectDescription">{{I18n "data-manager.create-new-attribute-color"}}</label>
+    <div class="input-group" id="attributeColorPicker">
+      <span class="input-group-addon"><i></i></span>
+      <input type="text" value="" class="form-control" />
+    </div>
+    </div>
 
   <button id="attributeSave" type="button" class="save btn btn-primary">{{I18n "app.shared.create"}}</button> <button type="button" id="attributeCancel" class="cancel btn btn-default">{{I18n "app.shared.cancel"}}</button>
 </form>

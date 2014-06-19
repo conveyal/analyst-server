@@ -8,7 +8,10 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -18,24 +21,37 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.zip.ZipException;
 
 import javax.imageio.ImageIO;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
 
 import org.geotools.coverage.grid.GridEnvelope2D;
 import org.geotools.coverage.grid.GridGeometry2D;
+import org.geotools.data.simple.SimpleFeatureCollection;
+import org.geotools.feature.FeatureCollection;
+import org.geotools.geojson.feature.FeatureJSON;
 import org.geotools.geometry.Envelope2D;
 import org.geotools.geometry.jts.JTS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.operation.MathTransform;
+import org.opentripplanner.analyst.PointSet;
+import org.opentripplanner.analyst.TimeSurface;
+import org.opentripplanner.analyst.core.IsochroneData;
 import org.opentripplanner.analyst.core.SlippyTile;
 import org.opentripplanner.analyst.request.TileRequest;
+import org.opentripplanner.analyst.request.SampleGridRenderer.WTWD;
+import org.opentripplanner.api.model.TimeSurfaceShort;
+import org.opentripplanner.api.resource.LIsochrone;
+import org.opentripplanner.common.geometry.DelaunayIsolineBuilder;
 import org.opentripplanner.common.model.GenericLocation;
 
 import otp.Analyst;
 import otp.AnalystRequest;
-import otp.SptResponse;
+import models.Attribute;
 import models.Project;
 import models.Scenario;
 import models.Shapefile;
-import models.SpatialDataSet;
+import models.PointSetCategory;
 import models.Shapefile.ShapeFeature;
 
 import com.fasterxml.jackson.core.JsonFactory;
@@ -57,7 +73,7 @@ import utils.HaltonPoints;
 
 public class Api extends Controller {
 
-	public static Long maxTimeLimit = 3600l;
+	public static int maxTimeLimit = 60; // in minutes
 	
 	public static Analyst analyst = new Analyst();
 	
@@ -82,27 +98,25 @@ public class Api extends Controller {
     	public Long accessible = 0l;
     }
     
-    public static Promise<Result> spt(final String graphId, final String spatialId, final Double lat, final Double lon, final String mode) {
+    public static Promise<Result> surface(final String graphId, final Double lat, final Double lon, final String mode) {
     	
-    	Promise<SptResponse> promise = Promise.promise(
-		    new Function0<SptResponse>() {
-		      public SptResponse apply() {
+    	Promise<TimeSurfaceShort> promise = Promise.promise(
+		    new Function0<TimeSurfaceShort>() {
+		      public TimeSurfaceShort apply() {
 		    	  GenericLocation latLon = new GenericLocation(lat, lon);
 	          	
-	              	AnalystRequest request = analyst.buildRequest(graphId, latLon, mode);
+	              	AnalystRequest request = analyst.buildRequest(graphId, latLon, mode, maxTimeLimit);
 	              	
 	              	if(request == null)
 	              		return null;
 	              		
-	              	SptResponse sptResponse = analyst.getSptResponse(request, spatialId);
-	              	
-	              	return sptResponse;
+	              	return request.createSurface();
 		      }
 		    }
 		  );
     	return promise.map(
-		    new Function<SptResponse, Result>() {
-		      public Result apply(SptResponse response) {
+		    new Function<TimeSurfaceShort, Result>() {
+		      public Result apply(TimeSurfaceShort response) {
 		    	
 		    	if(response == null)
 		    	  return notFound();
@@ -114,55 +128,54 @@ public class Api extends Controller {
     	
     }
     
-    public static Result sptSummary(String sptId, String spatialId, Integer timeLimit) {
-    	
-		SpatialDataSet sd = SpatialDataSet.getSpatialDataSet(spatialId);
-		
-		if(sd == null)
-			return badRequest();
-		
-		SptResponse sptResponse = SptResponse.getResponse(sptId, spatialId);
-		
-		if(sptResponse == null) 
-			return notFound();
-		
-    	
-    	try {
-    	           
-            BufferedImage before = new BufferedImage(256, 256, BufferedImage.TYPE_4BYTE_ABGR);
-        	
-            Graphics2D gr = before.createGraphics();
-       
-            Collection<ShapeFeature> features = sd.getShapefile().queryAll();
-         	
-            AccesibilitySummary summary = new AccesibilitySummary();
-            
-            for(ShapeFeature feature : features) {
-            	
-            	Integer value = feature.getAttribute(sd.shapefieldname);
-            	
-            	summary.total += value;
-            	
-            	if(!sptResponse.destinationTimes.containsKey(feature.id) || sptResponse.destinationTimes.get(feature.id) > timeLimit)
-            		continue;
-            	
-            	summary.accessible += value;
-            	
-	            	            	
-            }
-           
-            return ok(Json.toJson(summary));
-            
-            
-        } catch (Exception e) {
-           
-            e.printStackTrace();
-        }
-    	
-    	return badRequest();
-    } 
-
     
+    public static Result isochrone(Integer surfaceId, List<Integer> cutoffs) throws IOException {
+    	
+    	 final TimeSurface surf = AnalystRequest.getSurface(surfaceId);
+         if (surf == null) return badRequest("Invalid TimeSurface ID.");
+         if (cutoffs == null || cutoffs.isEmpty()) {
+        	 cutoffs = new ArrayList<Integer>();
+             cutoffs.add(surf.cutoffMinutes);
+             cutoffs.add(surf.cutoffMinutes / 2);
+         }
+         
+         List<IsochroneData> isochrones = getIsochronesAccumulative(surf, cutoffs);
+         final SimpleFeatureCollection fc = LIsochrone.makeContourFeatures(isochrones);
+
+         FeatureJSON fj = new FeatureJSON();
+         ByteArrayOutputStream os = new ByteArrayOutputStream();
+         fj.writeFeatureCollection(fc, os);
+         String fcString = new String(os.toByteArray(),"UTF-8");
+         
+         response().setContentType("application/json");
+         return ok(fcString);
+    }
+    
+    /**
+     * Use Laurent's accumulative grid sampler. Cutoffs in minutes.
+     * The grid and delaunay triangulation are cached, so subsequent requests are very fast.
+     */
+    public static List<IsochroneData> getIsochronesAccumulative(TimeSurface surf, List<Integer> cutoffs) {
+
+        long t0 = System.currentTimeMillis();
+        DelaunayIsolineBuilder<WTWD> isolineBuilder = new DelaunayIsolineBuilder<WTWD>(
+                surf.sampleGrid.delaunayTriangulate(), new WTWD.IsolineMetric());
+
+        double D0 = 400.0; // TODO ? Set properly
+        List<IsochroneData> isochrones = new ArrayList<IsochroneData>();
+        for (int cutoffSec : cutoffs) {
+           
+            WTWD z0 = new WTWD();
+            z0.w = 1.0;
+            z0.wTime = cutoffSec;
+            z0.d = D0;
+            IsochroneData isochrone = new IsochroneData(cutoffSec, isolineBuilder.computeIsoline(z0));
+            isochrones.add(isochrone);
+        }
+
+        long t1 = System.currentTimeMillis();
+        return isochrones;
+    }
     
 	
 	// **** project controllers ****
@@ -331,14 +344,14 @@ public class Api extends Controller {
     	try {
     		
             if(id != null) {
-            	SpatialDataSet s = SpatialDataSet.getSpatialDataSet(id);
+            	PointSetCategory s = PointSetCategory.getPointSetCategory(id);
                 if(s != null)
                     return ok(Api.toJson(s, false));
                 else
                     return notFound();
             }
             else {
-                return ok(Api.toJson(SpatialDataSet.getSpatialDataSets(projectId), false));
+                return ok(Api.toJson(PointSetCategory.getPointSetCategories(projectId), false));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -351,7 +364,7 @@ public class Api extends Controller {
         
     	try {
     		
-    		return ok(Api.toJson(SpatialDataSet.getSpatialDataSets(projectId), false));
+    		return ok(Api.toJson(PointSetCategory.getPointSetCategories(projectId), false));
     		
         } catch (Exception e) {
             e.printStackTrace();
@@ -361,13 +374,14 @@ public class Api extends Controller {
     }
     
     
-    
     public static Result createPointset() {
-    	SpatialDataSet sd;
+    	PointSetCategory sd;
         try {
         
-        	sd = mapper.readValue(request().body().asJson().traverse(), SpatialDataSet.class);
-            sd.save();
+        	sd = mapper.readValue(request().body().asJson().traverse(), PointSetCategory.class);
+        	sd.save();
+        	
+        	Tiles.resetCache();
 
             return ok(Api.toJson(sd, false));
         } catch (Exception e) {
@@ -379,17 +393,19 @@ public class Api extends Controller {
     
     public static Result updatePointset(String id) {
         
-    	SpatialDataSet sd;
+    	PointSetCategory sd;
 
         try {
         	
-        	sd = mapper.readValue(request().body().asJson().traverse(), SpatialDataSet.class);
+        	sd = mapper.readValue(request().body().asJson().traverse(), PointSetCategory.class);
         	
-        	if(sd.id == null || Project.getProject(sd.id) == null)
+        	if(sd.id == null || PointSetCategory.getPointSetCategory(sd.id) == null)
                 return badRequest();
         	
         	sd.save();
 
+        	Tiles.resetCache();
+        	
             return ok(Api.toJson(sd, false));
         } catch (Exception e) {
             e.printStackTrace();
@@ -401,19 +417,20 @@ public class Api extends Controller {
         if(id == null)
             return badRequest();
 
-        SpatialDataSet sd = SpatialDataSet.getSpatialDataSet(id);
+        PointSetCategory sd = PointSetCategory.getPointSetCategory(id);
 
         if(sd == null)
         	return badRequest();
 
         sd.delete();
+        
+        Tiles.resetCache();
 
         return ok();
     }
     
     
-    
-// **** shapefile controllers ****
+    // **** scenario controllers ****
     
     
     public static Result getScenarioById(String id) {

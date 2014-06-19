@@ -1,14 +1,15 @@
-<li class="list-group-item pointset-group" style="padding-bottom: 10px;"><input id="pointsetCheckbox" type="checkbox" data-id="{{id}}"/> <strong>{{name}}</strong> <i style="margin-left: 5px;" id="deleteItem" class="pull-right glyphicon glyphicon-trash"></i><span class="badge">{{featureCount}}</span>
+<li  class="list-group-item pointset-group" style="padding-bottom: 10px;"><input id="pointsetCheckbox" type="checkbox" data-id="{{id}}"/> <strong>{{name}}</strong> <i style="margin-left: 5px;" id="deleteItem" class="pull-right glyphicon glyphicon-trash"></i><span class="badge">{{featureCount}}</span>
 
-	<ul style="margin-top: 10px; margin-bottom: 10px;" class="list-group">
+	<ul id="attributeList" style="margin-top: 10px; margin-bottom: 10px;" class="list-group">
 		{{#each attributes}}
 		  <li class="list-group-item" class="disabled"><input class="pointsetAttributeCheckbox" type="checkbox" data-id="{{fieldName}}" checked/> {{name}} <i style="margin-left: 5px;" id="deleteAttribute" class="pull-right glyphicon glyphicon-trash" data-id="{{fieldName}}"></i><span style="background-color: {{color}};" class="badge">{{fieldName}}</span></li>
 		{{/each}}
 	</ul>
 
-	<button id="addAttribute" type="button" class="pull-right btn btn-default btn-xs"><span class="glyphicon glyphicon-plus"></span></button>
-
 	<div id="createAttribute"></div>
 
+	<button id="addAttribute" type="button" class="pull-right btn btn-default btn-xs"><span class="glyphicon glyphicon-plus"></span></button>
 	<br clear="all"/>
+	
 </li>
+

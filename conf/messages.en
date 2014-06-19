@@ -1,67 +1,72 @@
 # en strings
 
-app.shared.create=Crear
-app.shared.save=Salvar
-app.shared.cancel=Cancelar
-app.shared.name=Nombre
-app.shared.description=Descripción
+app.shared.create=Create
+app.shared.save=Save
+app.shared.cancel=Cancel
+app.shared.name=Name
+app.shared.description=Description
+app.shared.loading=Loading...	
 
-
-app.projects=Proyecto
-app.no-project-selected=Proyecto No Seleccionado
-app.create-new-project=Crear Nuevo Proyecto
+app.projects=Projects
+app.no-project-selected=No project selected
+app.create-new-project=Create new project
 
 app.data=Data
-app.analysis=Análisis
-app.project-settings=Ajuste
+app.analysis=Analysis
+app.project-settings=Settings
 
-project-settings.project-boundary=Fronteta
+project-settings.project-boundary=Boundary
 
-data-manager.spaitial-data-sets=Bases de Datos Espaciales
-data-manager.transport-scenarios=Escenarios de Transporte
+data-manager.spaitial-data-sets=Spatial Data Sets
+data-manager.transport-scenarios=Transport Scenarios
 
-data-manager.no-data=Sin Datos
+data-manager.no-data=No data
 
-data-manager.create-new-spatial-data=Crear Nueva Base de Datos Espacial
-data-manager.select-shapefile=Seleccionar Shapefile
-data-manager.select-shapefile-field=Seleccionar Área del Shapefile
-data-manager.create-new-indicator-name=Nombre del Indicador
-data-manager.create-new-indicator-description=Descripción del Indicador
-data-manager.create-new-indicator-color=Color del Indicador
+data-manager.create-new-spatial-data=Create New Spatial Data Set
+data-manager.select-shapefile=Select Shapefile
+data-manager.select-shapefile-field=Select Shapefile Field
 
+data-manager.create-new-category-name=Category Name
 
-data-manager.create-new-scenario=Crear Escenario
-data-manager.scenario-gtfs-file=Escenario del Archivo GTFS
-data-manager.scenario-name=Nombre del Escenario
-data-manager.scenario-description=Descripción del Escenario
+data-manager.create-new-category-description=Category Description
 
 
-data-manager.upload-shapefile-file=Shapefile (comprimido)
-data-manager.upload-shapefile-name=Nombre del Shapefile
-data-manager.upload-shapefile-description=Descripción del Shapefile
-data-manager.upload-shapefile=Cargar Shapefile
+data-manager.create-new-attribute=Create New Attribute
+data-manager.create-new-attribute-name=Attribute Name
+data-manager.create-new-attribute-description=Attribute Description
+data-manager.create-new-attribute-color=Attribute Color
 
-data-manager.upload-shapefile-uploading=Cargando & Procesando Shapefile
+data-manager.create-new-scenario=Create Scenario
+data-manager.scenario-gtfs-file=Scenario GTFS File
+data-manager.scenario-name=Scenario Name
+data-manager.scenario-description=Scenario Description
 
-analysis.analysis-type=Tipo de Análisis
+data-manager.upload-shapefile-file=Shapefile (zipped)
+data-manager.upload-shapefile-name=Shapefile Name
+data-manager.upload-shapefile-description=Shapefile Description
+data-manager.upload-shapefile=Upload Shapefile
 
-analysis.single-point=Análisis de un Solo Punto
-analysis.multi-point=Análisis Agregado (Multi-Punto)
+data-manager.upload-shapefile-uploading=Uploading & Processing Shapefile
 
-analysis.primary-indicator=Indicador Primario
+analysis.analysis-type=Analysis Type
 
-analysis.scenario-comparison=Comparación de Escenario
+analysis.single-point=Single-point Analysis
+analysis.multi-point=Multi-point Analysis
 
-analysis.scenario.no-comparison=Sin Comparación
-analysis.scenario.compare=Comparar
+analysis.primary-indicator=Primary Indicator
 
-analysis.scenario-1=Escenario 1
-analysis.scenario-2=Escenario 2
+analysis.scenario-comparison=Scenario Comparison
 
-analysis.show-isochrones=Mostrar Isocronas
-analysis.show-points=Mostrar Puntos
+analysis.scenario.no-comparison=No comparison
+analysis.scenario.compare=Compare
 
-analysis.results=Resultados
+analysis.scenario-1=Scenario 1
+analysis.scenario-2=Scenario 2
 
-analysis.number-accessible=Accesible
-analysis.percent-accessible=Porcentaje Accesible
+analysis.show-isochrones=Show Isochrones
+analysis.show-points=Show Points
+
+analysis.results=Results
+
+analysis.number-accessible=Accessible
+analysis.percent-accessible=Percent Accessible

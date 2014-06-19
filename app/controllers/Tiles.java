@@ -6,14 +6,17 @@ import java.awt.Polygon;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.imageio.ImageIO;
 
+import lombok.Synchronized;
 import models.Shapefile.ShapeFeature;
-import models.SpatialDataSet;
+import models.PointSetCategory;
+import models.Attribute;
 
 import org.geotools.coverage.grid.GridEnvelope2D;
 import org.geotools.coverage.grid.GridGeometry2D;
@@ -21,10 +24,12 @@ import org.geotools.geometry.Envelope2D;
 import org.geotools.geometry.jts.JTS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.operation.MathTransform;
+import org.opentripplanner.analyst.Indicator;
+import org.opentripplanner.analyst.TimeSurface;
 import org.opentripplanner.analyst.core.SlippyTile;
 import org.opentripplanner.analyst.request.TileRequest;
 
-import otp.SptResponse;
+import otp.AnalystRequest;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
@@ -37,15 +42,26 @@ public class Tiles extends Controller {
 
 	private static  Map<String, byte[]> tileCache = new ConcurrentHashMap<String, byte[]>();
 	
-	public static Result spatial(String spatialId, Integer x, Integer y, Integer z) {
+	public static void resetCache() {
+		tileCache.clear();
+	}
+	
+	public static Result spatial(String pointSetId, Integer x, Integer y, Integer z, String selectedAttributes) {
     	
-		SpatialDataSet sd = SpatialDataSet.getSpatialDataSet(spatialId);
+		PointSetCategory sd = PointSetCategory.getPointSetCategory(pointSetId);
+		
+		HashSet<String> attributes = new HashSet<String>();
+		
+		if(selectedAttributes != null) {
+			for(String attribute : selectedAttributes.split(",")) {
+				attributes.add(attribute);
+			}
+		}
 		
 		if(sd == null)
 			return badRequest();
 		
-		
-    	String tileId = "spatialTile_" + spatialId + "_" + x + "_" + "_" + y + "_" + "_" + z;
+    	String tileId = "spatialTile_" + pointSetId + "_" + x + "_" + "_" + y + "_" + "_" + z + "_" + selectedAttributes;
     	
     	if(tileCache.containsKey(tileId)) {
     		
@@ -82,41 +98,55 @@ public class Tiles extends Controller {
          	
             for(ShapeFeature feature : features) {
             	
-            	Geometry g  = JTS.transform(feature.geom, tr);
-            
-               
-            	// draw halton points for indicator
- 
-    			HaltonPoints hp = feature.getHaltonPoints(sd.shapefieldname);
-            	
-    			if(hp.getNumPoints() > 0) {
-	         
-	            	double[] coords = hp.transformPoints(tr);
-	            	
-	            	Color color = new Color(Integer.parseInt(sd.color.replace("#", ""), 16));
-	            	
-	            	int i = 0;
-	            	for(i = 0; i < hp.getNumPoints() * 2; i += 2){
-	            		
-	            		if(coords[i] > 0 && coords[i] < before.getWidth() &&  coords[i+1] > 0 && coords[i+1] < before.getHeight())
-	            			before.setRGB((int)coords[i], (int)coords[i+1], color.getRGB());
+            	if(sd.attributes.size() > 0 || attributes.isEmpty()) {
+            		for(Attribute a : sd.attributes) {
+                    	
+            			if(!attributes.contains(a.fieldName))
+            				continue;
             			
-	            		if(z > 14) {
-            				
-            				if(x+1 < before.getWidth() && y+1 < before.getHeight())
-            					before.setRGB((int)coords[i]+1, (int)coords[i+1]+1, color.getRGB());
-            				
-            				if(y+1 < before.getHeight())
-            					before.setRGB((int)coords[i], (int)coords[i+1]+1, color.getRGB());
-            				
-            				if(x+1 < before.getWidth())
-            					before.setRGB((int)coords[i]+1, (int)coords[i+1], color.getRGB());
-	            			
+            			// draw halton points for indicator
+            			 
+            			HaltonPoints hp = feature.getHaltonPoints(a.fieldName);
+                    	
+            			if(hp.getNumPoints() > 0) {
+        	         
+        	            	double[] coords = hp.transformPoints(tr);
+        	            	
+        	            	Color color = new Color(Integer.parseInt(a.color.replace("#", ""), 16));
+        	            	
+        	            	int i = 0;
+        	            	for(i = 0; i < hp.getNumPoints() * 2; i += 2){
+        	            		
+        	            		if(coords[i] > 0 && coords[i] < before.getWidth() &&  coords[i+1] > 0 && coords[i+1] < before.getHeight())
+        	            			before.setRGB((int)coords[i], (int)coords[i+1], color.getRGB());
+                    			
+        	            		if(z > 14) {
+                    				
+                    				if(x+1 < before.getWidth() && y+1 < before.getHeight())
+                    					before.setRGB((int)coords[i]+1, (int)coords[i+1]+1, color.getRGB());
+                    				
+                    				if(y+1 < before.getHeight())
+                    					before.setRGB((int)coords[i], (int)coords[i+1]+1, color.getRGB());
+                    				
+                    				if(x+1 < before.getWidth())
+                    					before.setRGB((int)coords[i]+1, (int)coords[i+1], color.getRGB());
+        	            			
+                    			}	
+        	            	}	
             			}
-	          		
-	            	}	
-    			}
-	            	            	
+            		}        	
+            	}
+            	else {
+            		Geometry g  = JTS.transform(feature.geom, tr);
+                   
+            		gr.setColor(new Color(0.0f,0.0f,0.0f,0.1f));
+            		
+	            	Polygon p = new Polygon();
+	            	for(Coordinate c : g.getCoordinates())
+	            		p.addPoint((int)c.x, (int)c.y);
+	            	
+	            	gr.fillPolygon(p);         		
+            	}
             }
             
             gr.dispose();
@@ -141,19 +171,19 @@ public class Tiles extends Controller {
     	return badRequest();
     } 
 	
-	public static Result spt(String sptId, String spatialId, Integer x, Integer y, Integer z, Boolean showIso, Boolean showPoints, Integer timeLimit) {
+	public static Result surface(Integer surfaceId, String pointSetId, Integer x, Integer y, Integer z, Boolean showIso, Boolean showPoints, Integer timeLimit) {
     	
-		SpatialDataSet sd = SpatialDataSet.getSpatialDataSet(spatialId);
+		PointSetCategory sd = PointSetCategory.getPointSetCategory(pointSetId);
 		
 		if(sd == null)
 			return badRequest();
 		
-		SptResponse sptResponse = SptResponse.getResponse(sptId, spatialId);
+		final TimeSurface surface = AnalystRequest.getSurface(surfaceId);
 		
-		if(sptResponse == null) 
+		if(surface == null) 
 			return notFound();
 		
-    	String tileId = "sptTile_" + sptId + "_" + spatialId + "_" + x + "_" + "_" + y + "_" + "_" + z + "_" + showIso + "_" + showPoints + "_" + timeLimit;
+    	String tileId = "surfaceTile_" + surfaceId + "_" + pointSetId + "_" + x + "_" + "_" + y + "_" + "_" + z + "_" + showIso + "_" + showPoints + "_" + timeLimit;
     	
     	if(tileCache.containsKey(tileId)) {
     		
@@ -163,6 +193,7 @@ public class Tiles extends Controller {
     		
     	}
     	
+    	Indicator indicator = AnalystRequest.getIndicator(surfaceId, pointSetId);
     	double maxLat = SlippyTile.tile2lat(y, z);
         double minLat = SlippyTile.tile2lat(y + 1, z);
         double minLon = SlippyTile.tile2lon(x, z);
@@ -189,14 +220,13 @@ public class Tiles extends Controller {
          	
             for(ShapeFeature feature : features) {
             	
-            	if(!sptResponse.destinationTimes.containsKey(feature.id) || sptResponse.destinationTimes.get(feature.id) > timeLimit)
+            	Integer sampleTime = indicator.getTime(feature.id);
+            	if(sampleTime == null || sampleTime > timeLimit)
             		continue;
             
-            	// draw polygon 
                	
     			// draw isotiles for block time
-        		float opacity = 0.5f - ((((float)sptResponse.destinationTimes.get(feature.id) / (float)Api.maxTimeLimit)) / 2);
-        		
+        		float opacity = 0.5f;
         		
         		
         		if(showIso) {
@@ -218,38 +248,39 @@ public class Tiles extends Controller {
             	// draw halton points for indicator
  
         		if(showPoints) {
-        		
-	    			HaltonPoints hp = feature.getHaltonPoints(sd.shapefieldname);
-	            	
-	    			if(hp.getNumPoints() > 0) {
-	    				
-		            	double[] coords = hp.transformPoints(tr);
+        				
+            		for(Attribute a : sd.attributes) {
+    		
+		    			HaltonPoints hp = feature.getHaltonPoints(a.fieldName);
 		            	
-		            	Color color = new Color(Integer.parseInt(sd.color.replace("#", ""), 16));
-		            
-		            	int i = 0;
-		            	for(i = 0; i < hp.getNumPoints() * 2; i += 2){
-		            		
-		            		if(coords[i] > 0 && coords[i] < before.getWidth() &&  coords[i+1] > 0 && coords[i+1] < before.getHeight())
-		            			before.setRGB((int)coords[i], (int)coords[i+1], color.getRGB());
-	            			
-		            		if(z > 14) {
-	            				
-	            				if(x+1 < before.getWidth() && y+1 < before.getHeight())
-	            					before.setRGB((int)coords[i]+1, (int)coords[i+1]+1, color.getRGB());
-	            				
-	            				if(y+1 < before.getHeight())
-	            					before.setRGB((int)coords[i], (int)coords[i+1]+1, color.getRGB());
-	            				
-	            				if(x+1 < before.getWidth())
-	            					before.setRGB((int)coords[i]+1, (int)coords[i+1], color.getRGB());
+		    			if(hp.getNumPoints() > 0) {
+		    				
+			            	double[] coords = hp.transformPoints(tr);
+			            	
+			            	Color color = new Color(Integer.parseInt(a.color.replace("#", ""), 16));
+			            
+			            	int i = 0;
+			            	for(i = 0; i < hp.getNumPoints() * 2; i += 2){
+			            		
+			            		if(coords[i] > 0 && coords[i] < before.getWidth() &&  coords[i+1] > 0 && coords[i+1] < before.getHeight())
+			            			before.setRGB((int)coords[i], (int)coords[i+1], color.getRGB());
 		            			
-	            			}
-		          		
-		            	}	
-	    			}
-        		}
-	            	            	
+			            		if(z > 14) {
+		            				
+		            				if(x+1 < before.getWidth() && y+1 < before.getHeight())
+		            					before.setRGB((int)coords[i]+1, (int)coords[i+1]+1, color.getRGB());
+		            				
+		            				if(y+1 < before.getHeight())
+		            					before.setRGB((int)coords[i], (int)coords[i+1]+1, color.getRGB());
+		            				
+		            				if(x+1 < before.getWidth())
+		            					before.setRGB((int)coords[i]+1, (int)coords[i+1], color.getRGB());
+			            			
+		            			}     		
+			            	}	
+		    			}
+            		}
+    			}         	
             }
             
             gr.dispose();
@@ -274,20 +305,20 @@ public class Tiles extends Controller {
     } 
 	
 	
-	public static Result compareSpt(String sptId1, String sptId2, String spatialId, Integer x, Integer y, Integer z, Integer timeLimit) {
+	public static Result compareSpt(Integer surfaceId1, Integer surfaceId2, String spatialId, Integer x, Integer y, Integer z, Integer timeLimit) {
     	
-		SpatialDataSet sd = SpatialDataSet.getSpatialDataSet(spatialId);
+		PointSetCategory sd = PointSetCategory.getPointSetCategory(spatialId);
 		
 		if(sd == null)
 			return badRequest();
 		
-		SptResponse sptResponse1 = SptResponse.getResponse(sptId1, spatialId);
-		SptResponse sptResponse2 = SptResponse.getResponse(sptId2, spatialId);
+		final TimeSurface surf1 = AnalystRequest.getSurface(surfaceId1);
+		final TimeSurface surf2 = AnalystRequest.getSurface(surfaceId2);
 		
-		if(sptResponse1 == null || sptResponse2 == null) 
+		if(surf1 == null || surf2 == null) 
 			return notFound();
 		
-    	String tileId = "compareSpt_" + sptId1 + "_" + sptId2 + "_" + spatialId + "_" + x + "_" + "_" + y + "_" + "_" + z + "_" +  "_" + timeLimit;
+    	String tileId = "compareSpt_" + surfaceId1 + "_" + surfaceId2 + "_" + spatialId + "_" + x + "_" + "_" + y + "_" + "_" + z + "_" +  "_" + timeLimit;
     	
     	if(tileCache.containsKey(tileId)) {
     		
@@ -323,8 +354,8 @@ public class Tiles extends Controller {
          	
             for(ShapeFeature feature : features) {
             	
-            	Long time1 = sptResponse1.destinationTimes.get(feature.id);
-            	Long time2 = sptResponse2.destinationTimes.get(feature.id);
+            	Long time1 = 1l;//sptResponse1.destinationTimes.get(feature.id);
+            	Long time2 = 1l;//sptResponse2.destinationTimes.get(feature.id);
             	
              	if((time1 == null || time1 > timeLimit) && 
              			(time2 == null || time2 > timeLimit)) 
@@ -357,8 +388,6 @@ public class Tiles extends Controller {
 					gr.setColor(new Color(0.8f,0.7f,0.2f,opacity));
     			
     			
-    			
-    				
     			Polygon p = new Polygon();
             	for(Coordinate c : g.getCoordinates())
             		p.addPoint((int)c.x, (int)c.y);

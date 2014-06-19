@@ -27,10 +27,10 @@ A.analysis = {};
 
 		events: {
 		  'change .analysis-type': 'selectAnalysisType',
-		  'change #scenarioComparison': 'loadSpt',
-		  'change #scenario1': 'loadSpt',
-		  'change #scenario2': 'loadSpt',
-		  'change .primary-indicator': 'loadSpt',
+		  'change #scenarioComparison': 'createSurface',
+		  'change #scenario1': 'createSurface',
+		  'change #scenario2': 'createSurface',
+		  'change .primary-indicator': 'createSurface',
 		  'click #showIso': 'updateMap',
 		  'click #showPoints': 'updateMap',
 		  'click .mode-selector' : 'updateMap'
@@ -41,8 +41,26 @@ A.analysis = {};
 		},
 
 		initialize: function(options){
-			_.bindAll(this, 'loadSpt', 'updateMap', 'onMapClick');
+			_.bindAll(this, 'createSurface', 'updateMap', 'onMapClick');
 		},
+
+		isochroneStyle: function(seconds) {
+		    var style = {
+		      color: '#333',
+		      fillColor: '#333',
+		      lineCap: 'round',
+		      lineJoin: 'round',
+		      weight: 3,
+		      dashArray: '5, 5',
+		      fillOpacity: '0.05'
+		    };
+		    if (seconds == 3600) {
+		      style.weight = 1.5;
+		    } else {
+		      style.weight = 3;
+		    }
+		    return style;
+		  },
 
 		onShow : function() {
 
@@ -65,14 +83,15 @@ A.analysis = {};
 
 			this.mode2 = 'TRANSIT';
 
+			
 			$('input[name=mode1]:radio').on('change', function(event) {
 				_this.mode1 = $('input:radio[name=mode1]:checked').val();
-				_this.loadSpt();
+				_this.createSurface();
 		    });
 
 		    $('input[name=mode2]:radio').on('change', function(event) {
 				_this.mode2 = $('input:radio[name=mode2]:checked').val();
-				_this.loadSpt();
+				_this.createSurface();
 		    });
 
 			this.pointsets.fetch({reset: true, data : {projectId: this.model.get("id")}, success: function(collection, response, options){
@@ -107,13 +126,17 @@ A.analysis = {};
 		  	if(A.map.marker && A.map.hasLayer(A.map.marker))
 		  		A.map.removeLayer(A.map.marker);
 
+		  	if(A.map.isochronesLayer  && A.map.hasLayer(A.map.isochronesLayer))
+		  		A.map.removeLayer(A.map.isochronesLayer);
+		  	
+
 		  	A.map.off('click', this.onMapClick);
 
 		  	A.map.marker = false;
 
 		 },
 
-		loadSpt : function() {
+		createSurface : function() {
 
 			if(!A.map.marker)
 				return;
@@ -121,8 +144,8 @@ A.analysis = {};
 			if(A.map.tileOverlay && A.map.hasLayer(A.map.tileOverlay))
 		  		A.map.removeLayer(A.map.tileOverlay);
 
-		  	this.sptId1 = false;
-		  	this.sptId2 = false;
+		  	this.surfaceId1 = false;
+		  	this.surfaceId2 = false;
 
 		  	this.comparisonType = this.$('.scenario-comparison').val();
 
@@ -130,10 +153,10 @@ A.analysis = {};
 
 			var _this = this;
 			
-			var sptUrl1 = '/api/spt?graphId=' + graphId1 + '&lat=' + A.map.marker.getLatLng().lat + '&spatialId=' + this.$("#primaryIndicator").val() + '&lon=' + A.map.marker.getLatLng().lng + '&mode=' + this.mode1;
-		    $.getJSON(sptUrl1, function(data) {
+			var surfaceUrl1 = '/api/surface?graphId=' + graphId1 + '&lat=' + A.map.marker.getLatLng().lat + '&lon=' + A.map.marker.getLatLng().lng + '&mode=' + this.mode1;
+		    $.getJSON(surfaceUrl1, function(data) {
 
-		  	  _this.sptId1 = data.sptId;
+		  	  _this.surfaceId1 = data.id;
 		  	  _this.updateMap();
 
 		    });
@@ -142,10 +165,10 @@ A.analysis = {};
 
 		    	var graphId2 = this.$('#scenario2').val();
 
-		    	var sptUrl2 = '/api/spt?graphId=' + graphId2 + '&lat=' + A.map.marker.getLatLng().lat + '&spatialId=' + this.$("#primaryIndicator").val() + '&lon=' + A.map.marker.getLatLng().lng + '&mode=' + this.mode2;
-			    $.getJSON(sptUrl2, function(data) {
+		    	var surfaceUrl1 = '/api/surface?graphId=' + graphId1 + '&lat=' + A.map.marker.getLatLng().lat + '&lon=' + A.map.marker.getLatLng().lng + '&mode=' + this.mode1;
+		    	$.getJSON(surfaceUrl1, function(data) {
 
-			  	  _this.sptId2 = data.sptId;
+			  	  _this.surfaceId2 = data.id;
 			  	  _this.updateMap();
 
 			    });
@@ -154,19 +177,18 @@ A.analysis = {};
 		},
 
 		updateMap : function() {
+			var _this = this;
 	
-			if(!this.$("#primaryIndicator").val() ||  !this.sptId1)
+			if(!this.$("#primaryIndicator").val() ||  !this.surfaceId1)
 				return;	
 
 			$('#results1').hide();
 			$('#results2').hide();
 
 
-
-
 			if(this.comparisonType == 'compare') { 
 
-				if(!this.sptId1 || !this.sptId2)
+				if(!this.surfaceId1 || !this.surfaceId2)
 					return;
 
 				if(A.map.tileOverlay && A.map.hasLayer(A.map.tileOverlay))
@@ -174,13 +196,13 @@ A.analysis = {};
 			  
 				var timeLimit = this.timeSlider.getValue() * 60;
 
-				A.map.tileOverlay = L.tileLayer('/tile/compareSpt?z={z}&x={x}&y={y}&spatialId=' +  this.$("#primaryIndicator").val() + '&timeLimit=' + timeLimit + '&sptId1=' + this.sptId1  + '&sptId2=' + this.sptId2, {
+				A.map.tileOverlay = L.tileLayer('/tile/compareSpt?z={z}&x={x}&y={y}&pointSetId=' +  this.$("#primaryIndicator").val() + '&timeLimit=' + timeLimit + '&sptId1=' + this.sptId1  + '&sptId2=' + this.sptId2, {
 		
 					}).addTo(A.map);
 
 				
 
-				$.getJSON('/api/sptSummary?&spatialId=' +  this.$("#primaryIndicator").val() + '&timeLimit=' + timeLimit + '&sptId=' + this.sptId1, function(data){
+				$.getJSON('/api/sptSummary?&pointSetId=' +  this.$("#primaryIndicator").val() + '&timeLimit=' + timeLimit + '&sptId=' + this.sptId1, function(data){
 
 					var primaryIndicator = $("#primaryIndicator option:selected").text();
 
@@ -221,6 +243,7 @@ A.analysis = {};
 			}
 			else {
 
+				
 				if(A.map.tileOverlay && A.map.hasLayer(A.map.tileOverlay))
 		  			A.map.removeLayer(A.map.tileOverlay);
 			  
@@ -230,31 +253,24 @@ A.analysis = {};
 				var showPoints =  $('#showPoints').prop('checked');
 
 			  	
-				A.map.tileOverlay = L.tileLayer('/tile/spt?z={z}&x={x}&y={y}&spatialId=' +  this.$("#primaryIndicator").val() + '&timeLimit=' + timeLimit + '&showPoints=' + showPoints + '&showIso=' + showIso + '&sptId=' + this.sptId1, {
+				A.map.tileOverlay = L.tileLayer('/tile/surface?z={z}&x={x}&y={y}&pointSetId=' +  this.$("#primaryIndicator").val() + '&timeLimit=' + timeLimit + '&showPoints=' + showPoints + '&showIso=' + showIso + '&surfaceId=' + this.surfaceId1, {
 					
 					}).addTo(A.map);
 
 
-				$.getJSON('/api/sptSummary?&spatialId=' +  this.$("#primaryIndicator").val() + '&timeLimit=' + timeLimit + '&sptId=' + this.sptId1, function(data){
+				$.getJSON('/api/isochrone?&cutoffs=' + timeLimit + '&surfaceId=' + this.surfaceId1, function(data){
 
-					var primaryIndicator = $("#primaryIndicator option:selected").text();
+					if(A.map.isochronesLayer  && A.map.hasLayer(A.map.isochronesLayer))
+		  				A.map.removeLayer(A.map.isochronesLayer);
 
-					var scenarioLabel = $("#scenario1 option:selected").text();
-
-					var percent = (data.accessible / data.total) * 100;
-					var percentOut = percent.toFixed(2) + "%";
-
-					$('#primaryIndicatorLabel').html(primaryIndicator);
-					$('#scenarioLabel1').html(scenarioLabel);
-					$('#totalAccessible1').html(data.accessible);
-					$('#percentAccessible1').html(percentOut);
-
-					$('#results1').show();
-
+					A.map.isochronesLayer = L.geoJson(data.features, {
+				      style: function(feature) {
+				        return _this.isochroneStyle(feature.properties.Time);
+				      }
+				    })
+					.addTo(A.map);
 				});
-
 			}
-
 		},
 
 		onRender : function() {
@@ -303,11 +319,11 @@ A.analysis = {};
 
   			A.map.marker = new L.marker(evt.latlng, {draggable:'true'});
 
-  			A.map.marker.on('dragend', this.loadSpt);
+  			A.map.marker.on('dragend', this.createSurface);
 
 	    	A.map.addLayer(A.map.marker);
 
-	    	this.loadSpt();  
+	    	this.createSurface();  
 
 		},
 
