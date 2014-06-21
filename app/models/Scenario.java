@@ -33,7 +33,7 @@ public class Scenario implements Serializable {
 	static DataStore<Scenario> scenarioData = new DataStore<Scenario>("scenario");
 
 	public String id;
-	public String projectid;
+	public String projectId;
 	public String name;
 	public String description;
 	
@@ -129,7 +129,7 @@ public class Scenario implements Serializable {
 			Collection<Scenario> data = new ArrayList<Scenario>();
 			
 			for(Scenario sd : scenarioData.getAll()) {
-				if(sd.projectid.equals(projectId))
+				if(sd.projectId.equals(projectId))
 					data.add(sd);
 			}
 			
@@ -138,7 +138,7 @@ public class Scenario implements Serializable {
 				
 				defaultScenario.id = "default";
 				defaultScenario.name = "Default Scenario";
-				defaultScenario.projectid = projectId;
+				defaultScenario.projectId = projectId;
 				defaultScenario.save();
 				
 				data.add(defaultScenario);

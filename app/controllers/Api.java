@@ -474,7 +474,7 @@ public class Api extends Controller {
         	
         	s.name = body.asFormUrlEncoded().get("name")[0];
         	s.description = body.asFormUrlEncoded().get("description")[0];
-        	s.projectid = body.asFormUrlEncoded().get("projectid")[0];
+        	s.projectId = body.asFormUrlEncoded().get("projectId")[0];
         	
         	s.save();
         	
