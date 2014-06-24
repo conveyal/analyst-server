@@ -379,7 +379,6 @@ A.data = {};
 	
 		}
 
-
 	});
 
 	A.data.ScenarioCreateView = Backbone.Marionette.Layout.extend({
@@ -401,6 +400,7 @@ A.data = {};
 		},
 
 		initialize : function(options) {
+
 
 			this.projectId = options.projectId;
 		},
@@ -471,15 +471,27 @@ A.data = {};
 
 	  events: { 
 
-	  	'click #deleteItem' : 'deleteItem'
+	  	'click #deleteItem' : 'deleteItem',
+	  	'click #scenarioCheckbox' : 'clickItem'
 	  	
 	  },
 
+	  clickItem : function(evt) {
+
+	 	var target = $(evt.target);
+	  	
+	  	var scenarioId = target.data("id")
+	  		
+	  	if(target.prop("checked"))
+	  		this.trigger("transitShow", {scenarioId : scenarioId});
+	  	else
+	  		this.trigger("transitHide", {scenarioId : scenarioId});
+
+	  },
 
 	  deleteItem: function(evt) {
 	  	this.model.destroy();
 	  },
-
 
 	  onRender: function () {
         // Get rid of that pesky wrapping-div.
@@ -499,17 +511,39 @@ A.data = {};
 		itemView: A.data.ScenarioListItem,
 
 		initialize : function() {
-
+			this.transitOverlays = {};
 			
 		},
 
 		onClose : function() {
 
+			for(var id in this.transitOverlays){
+				if(this.transitOverlays[id] && A.map.hasLayer(this.transitOverlays[id]))
+					A.map.removeLayer(this.transitOverlays[id]);
+			}
+
 		},
 
 		appendHtml: function(collectionView, itemView){
 	    	collectionView.$("#scenarioList").append(itemView.el);
+	    	this.listenTo(itemView, "transitShow", this.transitShow);	
+	    	this.listenTo(itemView, "transitHide", this.transitHide);	
 	 	},
+
+	 	transitShow : function(data) {
+
+	 		if(A.map.hasLayer(this.transitOverlays[data.scenarioId]))
+	 			A.map.removeLayer(this.transitOverlays[data.scenarioId ]);
+
+			this.transitOverlays[data.scenarioId] = L.tileLayer('/tile/transit?z={z}&x={x}&y={y}&scenarioId=' + data.scenarioId).addTo(A.map);	
+		},
+
+		transitHide : function(data) {
+
+			if(A.map.hasLayer(this.transitOverlays[data.scenarioId]))
+				A.map.removeLayer(this.transitOverlays[data.scenarioId ]);
+	
+		}
 
 	});
 

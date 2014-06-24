@@ -145,7 +145,7 @@ var Analyst = Analyst || {};
 		template: Handlebars.getTemplate('project', 'project-detail-layout-template'), 
 
 		regions: {
-		  projectDetail: 	 "#detail"
+		  projectDetail: 	 "#projectDetail"
 		},
 
 		events: {
@@ -178,6 +178,13 @@ var Analyst = Analyst || {};
 
 				analysisController.show();
 			}
+
+			$('#projectDetail').height($(window).height() - 300);
+
+			$(window).resize(function() {
+			    $('#projectDetail').height($(window).height() - 300);
+			});
+			
 
 		},
 
