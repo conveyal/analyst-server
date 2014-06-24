@@ -33,6 +33,7 @@ A.analysis = {};
 		  'change .primary-indicator': 'createSurface',
 		  'click #showIso': 'updateMap',
 		  'click #showPoints': 'updateMap',
+		  'click #showTransit': 'updateMap',
 		  'click .mode-selector' : 'updateMap'
 		},
 
@@ -42,6 +43,8 @@ A.analysis = {};
 
 		initialize: function(options){
 			_.bindAll(this, 'createSurface', 'updateMap', 'onMapClick');
+
+			this.transitOverlays = {}
 		},
 
 		isochroneStyle: function(seconds) {
@@ -50,14 +53,14 @@ A.analysis = {};
 		      fillColor: '#333',
 		      lineCap: 'round',
 		      lineJoin: 'round',
-		      weight: 3,
+		      weight: 1.5,
 		      dashArray: '5, 5',
 		      fillOpacity: '0.05'
 		    };
 		    if (seconds == 3600) {
 		      style.weight = 1.5;
 		    } else {
-		      style.weight = 3;
+		      style.weight = 1.5;
 		    }
 		    return style;
 		  },
@@ -148,6 +151,12 @@ A.analysis = {};
 
 		  	if(A.map.isochronesLayer  && A.map.hasLayer(A.map.isochronesLayer))
 		  		A.map.removeLayer(A.map.isochronesLayer);
+
+
+			for(var id in this.transitOverlays){
+				if(this.transitOverlays[id] && A.map.hasLayer(this.transitOverlays[id]))
+					A.map.removeLayer(this.transitOverlays[id]);
+			}
 		  	
 
 		  	A.map.off('click', this.onMapClick);
@@ -201,6 +210,27 @@ A.analysis = {};
 
 		updateMap : function() {
 			var _this = this;
+
+			var showTransit =  $('#showTransit').prop('checked');
+
+			if(showTransit) {
+
+				var scenarioId = this.$('#scenario1').val();
+
+				if(A.map.hasLayer(this.transitOverlays[scenarioId]))
+		 			A.map.removeLayer(this.transitOverlays[scenarioId]);
+
+				this.transitOverlays[scenarioId] = L.tileLayer('/tile/transit?z={z}&x={x}&y={y}&scenarioId=' + scenarioId).addTo(A.map);	
+
+			}
+			else {
+
+				for(var id in this.transitOverlays){
+					if(this.transitOverlays[id] && A.map.hasLayer(this.transitOverlays[id]))
+						A.map.removeLayer(this.transitOverlays[id]);
+				}
+
+			}
 	
 			if(!this.$("#primaryIndicator").val() ||  !this.surfaceId1)
 				return;	
@@ -274,8 +304,7 @@ A.analysis = {};
 
 				var showIso =  $('#showIso').prop('checked');
 				var showPoints =  $('#showPoints').prop('checked');
-
-			  	
+				
 				A.map.tileOverlay = L.tileLayer('/tile/surface?z={z}&x={x}&y={y}&pointSetId=' +  this.$("#primaryIndicator").val() + '&timeLimit=' + timeLimit + '&showPoints=' + showPoints + '&showIso=' + false + '&surfaceId=' + this.surfaceId1, {
 					
 					}).addTo(A.map);
@@ -304,7 +333,6 @@ A.analysis = {};
 
 				}
 
-				
 			}
 		},
 

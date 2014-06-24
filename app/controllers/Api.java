@@ -34,6 +34,7 @@ import org.geotools.geometry.Envelope2D;
 import org.geotools.geometry.jts.JTS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.operation.MathTransform;
+import org.opentripplanner.analyst.Indicator;
 import org.opentripplanner.analyst.PointSet;
 import org.opentripplanner.analyst.TimeSurface;
 import org.opentripplanner.analyst.core.IsochroneData;
@@ -151,6 +152,16 @@ public class Api extends Controller {
          
          response().setContentType("application/json");
          return ok(fcString);
+    }
+    
+    public static Result indicator(Integer surfaceId, String pointSetId) {
+    	final TimeSurface surf = AnalystRequest.getSurface(surfaceId);
+    	
+    	final PointSetCategory ps = PointSetCategory.getPointSetCategory(pointSetId);
+    	
+    	final Indicator indicator = new Indicator(ps.getPointSet(), surf, false);
+    	//indicator.writeJson(out);
+    	return ok(Json.toJson(indicator));
     }
     
     /**
