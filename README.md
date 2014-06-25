@@ -7,10 +7,10 @@ Currently released as an alpha version supporting functionality for single-point
 
 *REQUIRES*
 
-+Java 7 JRE (for use)
++ Java 7 JRE (for use)
 
-+Play Framework 2.2 (for development)
-+Java 7 JDK (for development)
++ Play Framework 2.2 (for development)
++ Java 7 JDK (for development)
 
 
 *INSTALL*
