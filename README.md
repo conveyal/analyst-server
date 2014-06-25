@@ -14,7 +14,7 @@ Java 7 JDK (for development)
 
 *INSTALL*
 
-Download and unzip a binary distibution from the Releases. 
+Download and unzip a binary distibution [here](https://dl.dropboxusercontent.com/u/620583/analyst-server-alpha1-SNAPSHOT.zip). 
 
 On Mac or Linux run the bin/analyst-server application. On Windows run bin/analyst-server.bat. 
 
