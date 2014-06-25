@@ -74,7 +74,7 @@ import utils.HaltonPoints;
 
 public class Api extends Controller {
 
-	public static int maxTimeLimit = 60; // in minutes
+	public static int maxTimeLimit = 90; // in minutes
 	
 	public static Analyst analyst = new Analyst();
 	
@@ -160,8 +160,12 @@ public class Api extends Controller {
     	final PointSetCategory ps = PointSetCategory.getPointSetCategory(pointSetId);
     	
     	final Indicator indicator = new Indicator(ps.getPointSet(), surf, false);
-    	//indicator.writeJson(out);
-    	return ok(Json.toJson(indicator));
+    	
+    	ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    	indicator.writeJson(baos);    
+        ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+        response().setContentType("application/json");
+    	return ok(bais);
     }
     
     /**
@@ -395,6 +399,7 @@ public class Api extends Controller {
         	sd.save();
         	
         	Tiles.resetCache();
+        	PointSetCategory.pointSetCache.clear();
 
             return ok(Api.toJson(sd, false));
         } catch (Exception e) {
@@ -418,6 +423,7 @@ public class Api extends Controller {
         	sd.save();
 
         	Tiles.resetCache();
+        	PointSetCategory.pointSetCache.clear();
         	
             return ok(Api.toJson(sd, false));
         } catch (Exception e) {
@@ -438,6 +444,7 @@ public class Api extends Controller {
         sd.delete();
         
         Tiles.resetCache();
+        PointSetCategory.pointSetCache.clear();
 
         return ok();
     }

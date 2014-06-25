@@ -1,0 +1,91 @@
+/* ============== General ============== */
+
+.otpa-graph {
+
+}
+
+
+.otpa-graph-axis path {
+
+}
+
+.x.axis path {
+  display: none;
+}
+
+.text {
+  text-anchor: middle;
+  fill: black;
+  font-size: 15px;
+
+}
+
+
+
+.otpa-graph-axis path {
+  fill: none;
+  stroke: black;
+  stroke-width; 1;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+/* ================ Line =============== */
+
+.otpa-graph-line-line {
+  fill: none;
+  stroke-width: 2px;
+}
+
+.otpa-graph-line-circles circle {
+  fill: white;
+  stroke-width: 2px;
+}
+
+/* =============== Circle ============== */
+
+/* ============== Tree map ============= */
+
+/* ================ Bar ================ */
+
+
+/* =============== Table =============== */
+
+.otpa-graph-table {
+  font-size: 14px;
+  width: 100%;
+  margin: 10px 0;
+  border-collapse: separate;
+  border-spacing: 2px;
+}
+
+.otpa-graph-table td {
+  vertical-align: center;
+  padding: 2px;
+  width: 10px;
+}
+
+.otpa-graph-table td.otpa-graph-table-row-value,
+.otpa-graph-table td.otpa-graph-table-row-percentage {
+  text-align: right;
+}
+
+.otpa-graph-table td.otpa-graph-table-row-value {
+  width: 50px;
+}
+
+.otpa-graph-table td.otpa-graph-table-row-percentage {
+  color: #999;
+  width: 42px;
+}
+
+.otpa-graph-table td.otpa-graph-table-row-color div {
+  width: 20px;
+  height: 20px;
+  position: relative;
+}

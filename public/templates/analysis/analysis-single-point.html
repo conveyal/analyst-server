@@ -2,23 +2,23 @@
   <div class="panel panel-default">
     <div class="panel-heading">
       <h5 class="panel-title">
-        <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">
           Settings
-        </a>
       </h5>
     </div>
     <div id="collapseOne" class="panel-collapse collapse in">
       <div class="panel-body">
 
-      	<h5>Max Travel Time: <span class="notes" id="timeLimitValue"></span></h5>	
-		<input id="timeSlider1" data-slider-id="timeSlider" style="width: 380px;" type="text" data-slider-min="15" data-slider-max="60" data-slider-step="5" data-slider-value="60"/>
-		   	
+
+		<h5>Max Travel Time: <span class="notes" id="timeLimitValue"></span></h5>	
+
+      	<input id="timeSlider1" data-slider-id="timeSlider" style="width: 380px;" type="text" data-slider-min="15" data-slider-max="90" data-slider-step="5" data-slider-value="60"/>
+   	
 		<div class="timeScale"></div>
 		   	
-	   	<div class="timeScaleLabels">
-	   		<span class="note pull-right">60 mins</span>
-	   		<span class="note">15 mins</span>
-	   	</div>
+		<div class="timeScaleLabels">
+			<span class="note pull-right">90 mins</span>
+			<span class="note">15 mins</span>
+		</div>
 
 		<h5>{{I18n "analysis.primary-indicator"}}</h5>
 		<select id="primaryIndicator" class="primary-indicator form-control">
@@ -83,7 +83,7 @@
 
 		<div class="checkbox">
 		    <label>
-		      <input type="checkbox" checked id="showIso"> {{I18n "analysis.show-isochrones"}}
+		      <input type="checkbox" id="showIso"> {{I18n "analysis.show-isochrones"}}
 		    </label>
 	 	</div>
 	 	<div class="checkbox">
@@ -102,27 +102,24 @@
   <div class="panel panel-default">
     <div class="panel-heading">
       <h5 class="panel-title">
-        <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo">
           {{I18n "analysis.results"}}
-        </a>
       </h5>
     </div>
-    <div id="collapseTwo" class="panel-collapse collapse">
+    <div id="collapseTwo" class="panel-collapse">
       <div class="panel-body">
 
-      	<h4 id="primaryIndicatorLabel"></h4>
+      	<select id="chartType" class="pull-right form-control col-xs-4">
+		  <option value="bar">Bar</option>
+		  <option value="line">Line</option> 
+		  <option value="circle">Circle</option> 
+		  <option selected value="table">Table</option> 
+		  <!--<option  value="density">Density</option> -->
+		</select>
 
-      	<div id="results1" style="margin-left: 10px;">
-      		<h5 id="scenarioLabel1"></h5>
-	     	{{I18n "analysis.number-accessible"}}: <strong><span id="totalAccessible1"></span></strong><br/>
-	     	{{I18n "analysis.percent-accessible"}}: <strong><span id="percentAccessible1"></span></strong>
-	     </div>
+      	<h5><span id="resultsSummary"></span></h5>
 
-	     <div id="results2"  style="margin-left: 10px;">
-      		<h5 id="scenarioLabel2"></h5>
-	     	{{I18n "analysis.number-accessible"}}: <strong><span id="totalAccessible2"></span></strong><br/>
-	     	{{I18n "analysis.percent-accessible"}}: <strong><span id="percentAccessible2"></span></strong>
-	     </div>
+      	<div id="graph"></div>
+      	
       		<!-- <a href="#">export csv</a> | <a href="#">export shapefile</a>  -->
       </div>
     </div>

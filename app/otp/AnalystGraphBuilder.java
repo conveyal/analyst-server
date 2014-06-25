@@ -37,7 +37,7 @@ public class AnalystGraphBuilder {
         File configFile = null;
         /* For now this is adding files from all directories listed, rather than building multiple graphs. */
        
-        if ( ! dir.isDirectory() && dir.canRead()) {
+        if ( !dir.isDirectory() && dir.canRead()) {
             return null;
         }
         

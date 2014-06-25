@@ -31,6 +31,7 @@ A.analysis = {};
 		  'change #scenario1': 'createSurface',
 		  'change #scenario2': 'createSurface',
 		  'change .primary-indicator': 'createSurface',
+		  'change #chartType' : 'updateResults',
 		  'click #showIso': 'updateMap',
 		  'click #showPoints': 'updateMap',
 		  'click #showTransit': 'updateMap',
@@ -78,7 +79,7 @@ A.analysis = {};
 						return value + " minutes";
 					}
 				}).on('slideStop', function(value) {
-
+				_this.updateResults(true)
 				_this.updateMap();
 			}).data('slider');
 
@@ -190,6 +191,7 @@ A.analysis = {};
 
 		  	  _this.surfaceId1 = data.id;
 		  	  _this.updateMap();
+		  	  _this.updateResults();
 
 		    });
 
@@ -207,6 +209,60 @@ A.analysis = {};
 
 		    }
 		},
+
+		updateResults : function (timeUpdateOnly) {
+
+			var _this = this;
+			if(timeUpdateOnly == true) {
+
+				var categoryId =  _.keys(this.indicators.features[0].properties.structured)[0];
+
+				$("#resultsSummary").html(this.indicators.properties.schema[categoryId].label + " accessible in " + _this.timeSlider.getValue() + " minutes" )
+
+				var timeLimit = _this.timeSlider.getValue() * 60;
+				d3.select('#graph').selectAll('.otpa-graph')
+					.data([{seconds: timeLimit, attributes: _this.graphAttributes}])
+	          		.call(otpaGraph);
+
+			}
+			else {
+
+				graphType = $('#chartType').val();
+				visWidth = 275;
+				
+				d3.select('#graph').selectAll('.otpa-graph').remove();
+				otpaGraph = d3.otpaGraph().type(graphType).width(visWidth);
+
+				$.getJSON('/api/indicator?&pointSetId=' + this.$("#primaryIndicator").val() + '&surfaceId=' + this.surfaceId1, function(data) {
+
+					_this.indicators = data;
+
+					var categoryId =  _.keys(_this.indicators.features[0].properties.structured)[0];
+
+					$("#resultsSummary").html(_this.indicators.properties.schema[categoryId].label + " accessible in " + _this.timeSlider.getValue() + " minutes" )
+
+			        var indicatorKeys = Object.keys(_this.indicators.features[0].properties.structured);
+			        
+			        var colors = [];
+		        	
+		        	var attributeKeys = Object.keys(_this.indicators.features[0].properties.structured[categoryId]);
+		        	_.each(attributeKeys, function(attrId) {
+		        	 	colors.push(_this.indicators.properties.schema[categoryId + ':' + attrId].style.color);
+		        	});
+			        
+			        otpaGraph.color(colors);
+					
+					var timeLimit = _this.timeSlider.getValue() * 60;
+					_this.graphAttributes = data.features[0].properties.structured[categoryId];
+		     		d3.select('#graph').selectAll('.otpa-graph')
+						.data([{seconds: timeLimit, attributes: _this.graphAttributes}])
+		          		.call(otpaGraph);
+	          	});
+
+			}
+			
+		},
+
 
 		updateMap : function() {
 			var _this = this;

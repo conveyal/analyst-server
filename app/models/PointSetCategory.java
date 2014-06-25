@@ -97,18 +97,29 @@ public class PointSetCategory implements Serializable {
 			PointSet ps = new PointSet(featureCount);
 			ps.setGraphService(Api.analyst.getGraphService());
 			
+			String categoryId = Attribute.convertNameToId(this.name);
+			
 			int index = 0;
 			for(ShapeFeature sf :  this.getShapefile().getShapeFeatureStore().getAll()) {
 				
 				List<AttributeData> attributeData = new ArrayList<AttributeData>();
 				
 				for(Attribute a : this.attributes) {
-					AttributeData ad = new AttributeData(Attribute.convertNameToId(this.name), Attribute.convertNameToId(a.name), sf.getAttribute(a.fieldName));
+					String attrId = Attribute.convertNameToId(a.name);
+					AttributeData ad = new AttributeData(categoryId, attrId, sf.getAttribute(a.fieldName));
 					attributeData.add(ad);
 				}
 				
 				ps.addFeature(sf.id, sf.geom, attributeData, index);
 				index++;
+			}
+			
+			ps.setLabel(categoryId, this.name);
+			
+			for(Attribute attr : this.attributes) {
+				String attrId = Attribute.convertNameToId(attr.name);
+				ps.setLabel(categoryId, attrId, attr.name);
+				ps.setStyle(categoryId, attrId, "color", attr.color);
 			}
 			
 			pointSetCache.put(this.id, ps);
