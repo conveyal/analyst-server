@@ -1,7 +1,7 @@
 analyst-server
 ==============
 
-A web-based data management and query design user interface for OPT Analyst. Allows users to create transport accessibility measures using OpenStreetMap, GTFS and custom spatial data inputs (e.g. jobs, schools, hospitals). 
+A web-based data management and query design user interface for OTP Analyst. Allows users to create transport accessibility measures using OpenStreetMap, GTFS and custom spatial data inputs (e.g. jobs, schools, hospitals). 
 
 Currently released as an alpha version supporting functionality for single-point queries.
 
