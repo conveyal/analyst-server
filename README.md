@@ -5,14 +5,14 @@ A web-based data management and query design user interface for OPT Analyst. All
 
 Currently released as an alpha version supporting functionality for single-point queries.
 
-REQURIES
+##REQUIRES
 
 Java 7 JRE (for use)
 Play Framework 2.2 (for development)
 Java 7 JDK (for development)
 
 
-INSTALL
+##INSTALL
 
 Download and unzip a binary distibution from the Releases. 
 
