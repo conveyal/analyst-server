@@ -85,6 +85,7 @@
     <div id="collapseTwo" class="panel-collapse">
       <div class="panel-body">
 
+      	
       	<h5>Scenario 1</h5>
       	<div id="barChart1"></div>
 
@@ -108,6 +109,46 @@
 		    <label>
 		      <input type="checkbox" checked id="showIso"> {{I18n "analysis.show-isochrones"}}
 		    </label>
+
+		    <div id="compareLegend" class="indicator_box">
+
+				<div class="legend-item">
+					<div class="colorbox" style="background-color:#e5b234;"></div>
+					<div class="legend-item-text">Scenario 2 No Change</div>
+				</div>
+
+				<div class="legend-item">
+					<div class="colorbox" style="background-color:#cc00cc;"></div>
+					<div class="legend-item-text">Scenario 2 New Coverage</div>
+				</div>
+
+				<div class="legend-item">
+					<div class="colorbox" style="background-color:#0000cc;"></div>
+					<div class="legend-item-text">Scenario 2 Faster</div>
+				</div>
+
+				<div class="legend-item">
+					<div class="colorbox" style="background-color:#cacaca;"></div>
+					<div class="legend-item-text">Not in range</div>
+				</div>
+
+			</div>
+
+			<div id="legend" class="indicator_box">
+
+				<div class="legend-item">
+					<div class="colorbox" style="background-color:#e5b234;"></div>
+					<div class="legend-item-text">Travel Time</div>
+				</div>
+
+				<div class="legend-item">
+					<div class="colorbox" style="background-color:#cacaca;"></div>
+					<div class="legend-item-text">Not in range</div>
+				</div>
+
+			</div>
+
+
 	 	</div>
 	 	<div class="checkbox">
 		    <label>

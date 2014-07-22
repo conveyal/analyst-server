@@ -75,6 +75,24 @@ label {
 	content: "\e603";
 }
 
+.legend-item-text {
+	margin-left: 15px;	
+}
+
+div.legend-item {
+	
+	cursor: pointer;
+}
+
+.legend-item-text {
+	margin-left: 15px;	
+}
+  
+.indicator_box {
+	width:100%;
+	margin-top: 10px;
+} 
+
 .isochrone-scale {
 	background: rgb(30,87,153); /* Old browsers */
 	background: -moz-linear-gradient(left, rgba(30,87,153,1) 0%, rgba(125,185,232,1) 100%); /* FF3.6+ */
@@ -86,6 +104,16 @@ label {
 	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#1e5799', endColorstr='#7db9e8',GradientType=1 ); /* IE6-9 */
 }
 
+.colorbox {   
+    float: left;
+    width: 17px;
+    height: 18px;
+    margin: -3px 6px;
+    padding-bottom: 5px;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #b3b3b3;
+}
 
 
 

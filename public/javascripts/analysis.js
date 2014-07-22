@@ -87,6 +87,9 @@ A.analysis = {};
 				_this.updateMap();
 			}).data('slider');
 
+			$('#minTimeValue').html("0");
+			$('#timeLimitValue').html("60 mins");
+
 			this.walkSpeedSlider = $('#walkSpeedSlider').slider({
 					formater: function(value) {
 						$('#walkSpeedValue').html(value + " km/h");
@@ -145,6 +148,7 @@ A.analysis = {};
 			}});
 
 			this.$('#comparisonChart').hide();
+			this.$('#compareLegend').hide();
 
 		},
 
@@ -185,16 +189,26 @@ A.analysis = {};
 		  	this.barChart1 = false;
 		  	this.barChart2 = false;
 
+		  	this.scenario1Data = false;
+		  	this.scenario2Data = false;
+
 		  	this.maxChartValue = 0;
 
 		  	this.resetCharts();
 		  		
 		  	this.comparisonType = this.$('.scenario-comparison').val();
 
-		  	if(this.comparisonType == 'compare')
+		  	if(this.comparisonType == 'compare') {
 		  		this.$('#comparisonChart').show();
-		  	else	
+		  		this.$('#compareLegend').show();
+		  		this.$('#legend').hide();
+		  	}	
+		  	else {
 		  		this.$('#comparisonChart').hide();
+		  		this.$('#compareLegend').hide();
+		  		this.$('#legend').show();
+		  	} 	
+		  		
 
 		  	var bikeSpeed = (this.bikeSpeedSlider.getValue() * 1000 / 60 / 60 );
 		  	var walkSpeed = (this.walkSpeedSlider.getValue() * 1000 / 60 / 60 );
@@ -245,6 +259,7 @@ A.analysis = {};
 				if(this.surfaceId1) {
 					$.getJSON('/api/result?&pointSetId=' + this.$("#primaryIndicator").val() + '&surfaceId=' + this.surfaceId1, function(res) {
 
+						_this.scenario1Data = res;
 						_this.drawChart(res, 1, "#barChart1", 175);
 
 					});	
@@ -253,6 +268,7 @@ A.analysis = {};
 				if(this.surfaceId2) {
 					$.getJSON('/api/result?&pointSetId=' + this.$("#primaryIndicator").val() + '&surfaceId=' + this.surfaceId2, function(res) {
 
+						_this.scenario2Data = res;
 						_this.drawChart(res, 2, "#barChart2", 175);
 
 					});	
@@ -382,6 +398,8 @@ A.analysis = {};
 			var id = new Array();
 
 
+			$()
+
 			_.each(res.data, function(val,key) {
 
 				id.push(key);
@@ -490,6 +508,13 @@ A.analysis = {};
          	dc.renderAll();
 
 		},
+
+		/*updateSummary : function() {
+
+			this.$("#resultSummary").append("<tr><td></td></tr>");
+
+
+		},*/
 
 		scaleBarCharts : function() {
 
