@@ -22,12 +22,14 @@ public class TransportIndex {
 	private Map<String, STRtree> indexMap = new ConcurrentHashMap<String,STRtree>();
 	
 	public class TransitSegment {
+		final public String edgeId;
 		public LineString geom;
 		public TraverseMode mode;
 		
 		public TransitSegment(PatternHop ph) {
 			GeometryFactory geometryFactory = JTSFactoryFinder.getGeometryFactory( null );
 			
+			this.edgeId = ph.getBeginStop().getId().toString() + "_" + ph.getEndStop().getId().toString();
 			this.geom = geometryFactory.createLineString(ph.getGeometry().getCoordinates());
 			this.mode = ph.getMode();
 		}
@@ -46,7 +48,7 @@ public class TransportIndex {
 			List<TransitSegment> segments = new ArrayList<TransitSegment>();
 			for(TripPattern tp : Api.analyst.getGraph(graphId).index.patternsForRoute.values()) {
 				for(PatternHop ph : tp.getPatternHops()) {
-					if(ph.getGeometry() != null) {
+					if(ph.getGeometry() != null && ph.getBeginStop() != null && ph.getEndStop() != null) {
 						TransitSegment ts = new TransitSegment(ph);
 						segments.add(ts);
 					}

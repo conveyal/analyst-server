@@ -45,7 +45,7 @@ A.analysis = {};
 		initialize: function(options){
 			_.bindAll(this, 'createSurface', 'updateMap', 'onMapClick');
 
-			this.transitOverlays = {}
+			this.transitOverlays = {};
 		},
 
 		isochroneStyle: function(seconds) {
@@ -64,7 +64,7 @@ A.analysis = {};
 		      style.weight = 1.5;
 		    }
 		    return style;
-		  },
+		},
 
 		onShow : function() {
 
@@ -75,10 +75,14 @@ A.analysis = {};
 
 			this.timeSlider = $('#timeSlider1').slider({
 					formater: function(value) {
-						$('#timeLimitValue').html(value + " mins");
 						return value + " minutes";
 					}
-				}).on('slideStop', function(value) {
+				}).on('slideStop', function(evt) {
+
+					$('#minTimeValue').html(evt.value[0] + "");
+					$('#timeLimitValue').html(evt.value[1] + " mins");
+
+
 				_this.updateResults(true)
 				_this.updateMap();
 			}).data('slider');
@@ -104,7 +108,6 @@ A.analysis = {};
 			}).data('slider');
 
 			this.mode1 = 'TRANSIT';
-
 			this.mode2 = 'TRANSIT';
 
 			
@@ -140,6 +143,8 @@ A.analysis = {};
 				}
 	    			
 			}});
+
+			this.$('#comparisonChart').hide();
 
 		},
 
@@ -177,7 +182,19 @@ A.analysis = {};
 		  	this.surfaceId1 = false;
 		  	this.surfaceId2 = false;
 
+		  	this.barChart1 = false;
+		  	this.barChart2 = false;
+
+		  	this.maxChartValue = 0;
+
+		  	this.resetCharts();
+		  		
 		  	this.comparisonType = this.$('.scenario-comparison').val();
+
+		  	if(this.comparisonType == 'compare')
+		  		this.$('#comparisonChart').show();
+		  	else	
+		  		this.$('#comparisonChart').hide();
 
 		  	var bikeSpeed = (this.bikeSpeedSlider.getValue() * 1000 / 60 / 60 );
 		  	var walkSpeed = (this.walkSpeedSlider.getValue() * 1000 / 60 / 60 );
@@ -190,21 +207,28 @@ A.analysis = {};
 		    $.getJSON(surfaceUrl1, function(data) {
 
 		  	  _this.surfaceId1 = data.id;
-		  	  _this.updateMap();
-		  	  _this.updateResults();
-
+		  	  
+		  	  if(!this.comparisonType || _this.surfaceId2) {
+		  	 	_this.updateMap();
+		  	 	_this.updateResults();
+		  	  }
+		  	 
 		    });
 
 		    if(this.comparisonType == 'compare') {
 
 		    	var graphId2 = this.$('#scenario2').val();
 
-		    	var surfaceUrl1 = '/api/surface?graphId=' + graphId1 + '&lat=' + A.map.marker.getLatLng().lat + '&lon=' + A.map.marker.getLatLng().lng + '&mode=' + this.mode1;
-		    	$.getJSON(surfaceUrl1, function(data) {
+		    	var surfaceUrl2 = '/api/surface?graphId=' + graphId2 + '&lat=' + A.map.marker.getLatLng().lat + '&lon=' + A.map.marker.getLatLng().lng + '&mode=' + this.mode2 + '&bikeSpeed=' + bikeSpeed + '&walkSpeed=' + walkSpeed;
+		    	$.getJSON(surfaceUrl2, function(data) {
 
 			  	  _this.surfaceId2 = data.id;
-			  	  _this.updateMap();
-
+			  	 
+			  	  if(_this.surfaceId1) {
+			  	  	_this.updateMap();
+			  	  	_this.updateResults();
+			  	  }
+			  	  
 			    });
 
 		    }
@@ -213,71 +237,71 @@ A.analysis = {};
 		updateResults : function (timeUpdateOnly) {
 
 			var _this = this;
-			if(timeUpdateOnly == true) {
+	
+			this.comparisonType = this.$('.scenario-comparison').val();
 
-				var categoryId =  _.keys(this.indicators.features[0].properties.structured)[0];
-
-				$("#resultsSummary").html(this.indicators.properties.schema[categoryId].label + " accessible in " + _this.timeSlider.getValue() + " minutes" )
-
-				var timeLimit = _this.timeSlider.getValue() * 60;
-				d3.select('#graph').selectAll('.otpa-graph')
-					.data([{seconds: timeLimit, attributes: _this.graphAttributes}])
-	          		.call(otpaGraph);
-
-			}
-			else {
-
-				graphType = $('#chartType').val();
-				visWidth = 275;
+			if(this.comparisonType == 'compare') { 
 				
-				d3.select('#graph').selectAll('.otpa-graph').remove();
-				otpaGraph = d3.otpaGraph().type(graphType).width(visWidth);
+				if(this.surfaceId1) {
+					$.getJSON('/api/result?&pointSetId=' + this.$("#primaryIndicator").val() + '&surfaceId=' + this.surfaceId1, function(res) {
 
-				$.getJSON('/api/indicator?&pointSetId=' + this.$("#primaryIndicator").val() + '&surfaceId=' + this.surfaceId1, function(data) {
+						_this.drawChart(res, 1, "#barChart1", 175);
 
-					_this.indicators = data;
+					});	
+				}
 
-					var categoryId =  _.keys(_this.indicators.features[0].properties.structured)[0];
+				if(this.surfaceId2) {
+					$.getJSON('/api/result?&pointSetId=' + this.$("#primaryIndicator").val() + '&surfaceId=' + this.surfaceId2, function(res) {
 
-					$("#resultsSummary").html(_this.indicators.properties.schema[categoryId].label + " accessible in " + _this.timeSlider.getValue() + " minutes" )
+						_this.drawChart(res, 2, "#barChart2", 175);
 
-			        var indicatorKeys = Object.keys(_this.indicators.features[0].properties.structured);
-			        
-			        var colors = [];
-		        	
-		        	var attributeKeys = Object.keys(_this.indicators.features[0].properties.structured[categoryId]);
-		        	_.each(attributeKeys, function(attrId) {
-		        	 	colors.push(_this.indicators.properties.schema[categoryId + ':' + attrId].style.color);
-		        	});
-			        
-			        otpaGraph.color(colors);
-					
-					var timeLimit = _this.timeSlider.getValue() * 60;
-					_this.graphAttributes = data.features[0].properties.structured[categoryId];
-		     		d3.select('#graph').selectAll('.otpa-graph')
-						.data([{seconds: timeLimit, attributes: _this.graphAttributes}])
-		          		.call(otpaGraph);
-	          	});
+					});	
+				}
+			}	
+			else {
+				$.getJSON('/api/result?&pointSetId=' + this.$("#primaryIndicator").val() + '&surfaceId=' + this.surfaceId1, function(res) {
 
+					_this.drawChart(res, 1, "#barChart1", 175);
+
+				});	
 			}
-			
 		},
-
 
 		updateMap : function() {
 			var _this = this;
 
 			var showTransit =  $('#showTransit').prop('checked');
 
+			this.comparisonType = this.$('.scenario-comparison').val();
+
 			if(showTransit) {
+				if(this.comparisonType == 'compare') { 
 
-				var scenarioId = this.$('#scenario1').val();
+					var scenarioId = this.$('#scenario1').val();
 
-				if(A.map.hasLayer(this.transitOverlays[scenarioId]))
-		 			A.map.removeLayer(this.transitOverlays[scenarioId]);
+					if(A.map.hasLayer(this.transitOverlays[scenarioId]))
+			 			A.map.removeLayer(this.transitOverlays[scenarioId]);
 
-				this.transitOverlays[scenarioId] = L.tileLayer('/tile/transit?z={z}&x={x}&y={y}&scenarioId=' + scenarioId).addTo(A.map);	
+					this.transitOverlays[scenarioId] = L.tileLayer('/tile/transit?z={z}&x={x}&y={y}&scenarioId=' + scenarioId).addTo(A.map);
 
+					scenarioId = this.$('#scenario2').val();
+
+					if(A.map.hasLayer(this.transitOverlays[scenarioId]))
+			 			A.map.removeLayer(this.transitOverlays[scenarioId]);
+
+					this.transitOverlays[scenarioId] = L.tileLayer('/tile/transit?z={z}&x={x}&y={y}&scenarioId=' + scenarioId).addTo(A.map);
+
+				}
+				else {
+
+					var scenarioId = this.$('#scenario1').val();
+
+					if(A.map.hasLayer(this.transitOverlays[scenarioId]))
+			 			A.map.removeLayer(this.transitOverlays[scenarioId]);
+
+					this.transitOverlays[scenarioId] = L.tileLayer('/tile/transit?z={z}&x={x}&y={y}&scenarioId=' + scenarioId).addTo(A.map);
+
+				}
 			}
 			else {
 
@@ -294,6 +318,11 @@ A.analysis = {};
 			$('#results1').hide();
 			$('#results2').hide();
 
+			var minTime = this.timeSlider.getValue()[0] * 60;
+			var timeLimit = this.timeSlider.getValue()[1] * 60;
+
+			var showIso =  $('#showIso').prop('checked');
+			var showPoints =  $('#showPoints').prop('checked');
 
 			if(this.comparisonType == 'compare') { 
 
@@ -302,70 +331,21 @@ A.analysis = {};
 
 				if(A.map.tileOverlay && A.map.hasLayer(A.map.tileOverlay))
 		  			A.map.removeLayer(A.map.tileOverlay);
-			  
-				var timeLimit = this.timeSlider.getValue() * 60;
 
-				A.map.tileOverlay = L.tileLayer('/tile/compareSpt?z={z}&x={x}&y={y}&pointSetId=' +  this.$("#primaryIndicator").val() + '&timeLimit=' + timeLimit + '&sptId1=' + this.sptId1  + '&sptId2=' + this.sptId2, {
-		
-					}).addTo(A.map);
-
-				
-
-				$.getJSON('/api/sptSummary?&pointSetId=' +  this.$("#primaryIndicator").val() + '&timeLimit=' + timeLimit + '&sptId=' + this.sptId1, function(data){
-
-					var primaryIndicator = $("#primaryIndicator option:selected").text();
-
-					var scenarioLabel = $("#scenario1 option:selected").text();
-
-					var percent = (data.accessible / data.total) * 100;
-					var percentOut = percent.toFixed(2) + "%";
-
-					$('#primaryIndicatorLabel').html(primaryIndicator);
-					$('#scenarioLabel1').html(scenarioLabel);
-					$('#totalAccessible1').html(data.accessible);
-					$('#percentAccessible1').html(percentOut);
-
-					$('#results1').show();
-
-				});
-
-				$.getJSON('/api/sptSummary?&spatialId=' +  this.$("#primaryIndicator").val() + '&timeLimit=' + timeLimit + '&sptId=' + this.sptId2, function(data){
-
-					var primaryIndicator = $("#primaryIndicator option:selected").text();
-
-					var scenarioLabel = $("#scenario2 option:selected").text();
-
-					var percent = (data.accessible / data.total) * 100;
-					var percentOut = percent.toFixed(2) + "%";
-
-
-
-					$('#primaryIndicatorLabel').html(primaryIndicator);
-					$('#scenarioLabel2').html(scenarioLabel);
-					$('#totalAccessible2').html(data.accessible);
-					$('#percentAccessible2').html(percentOut);
-
-					$('#results2').show();
-
-				});
+				A.map.tileOverlay = L.tileLayer('/tile/compare?z={z}&x={x}&y={y}&spatialId=' +  this.$("#primaryIndicator").val() + '&minTime=' + minTime + '&timeLimit=' + timeLimit + '&surfaceId1=' + this.surfaceId1  + '&surfaceId2=' + this.surfaceId2 + '&showIso=' + showIso + '&showPoints=' +  showPoints, {}
+					).addTo(A.map);
 
 			}
 			else {
-
 				
 				if(A.map.tileOverlay && A.map.hasLayer(A.map.tileOverlay))
 		  			A.map.removeLayer(A.map.tileOverlay);
-			  
-				var timeLimit = this.timeSlider.getValue() * 60;
-
-				var showIso =  $('#showIso').prop('checked');
-				var showPoints =  $('#showPoints').prop('checked');
-				
-				A.map.tileOverlay = L.tileLayer('/tile/surface?z={z}&x={x}&y={y}&pointSetId=' +  this.$("#primaryIndicator").val() + '&timeLimit=' + timeLimit + '&showPoints=' + showPoints + '&showIso=' + false + '&surfaceId=' + this.surfaceId1, {
+			  				
+				A.map.tileOverlay = L.tileLayer('/tile/surface?z={z}&x={x}&y={y}&pointSetId=' +  this.$("#primaryIndicator").val() + '&minTime=' + minTime + '&timeLimit=' + timeLimit + '&showPoints=' + showPoints + '&showIso=' + showIso + '&surfaceId=' + this.surfaceId1, {
 					
 					}).addTo(A.map);
 
-				if(showIso) {
+				/*if(showIso) {
 
 						$.getJSON('/api/isochrone?&cutoffs=' + timeLimit + '&surfaceId=' + this.surfaceId1, function(data){
 
@@ -387,9 +367,151 @@ A.analysis = {};
 					if(A.map.isochronesLayer  && A.map.hasLayer(A.map.isochronesLayer))
 		  				A.map.removeLayer(A.map.isochronesLayer);
 
-				}
+				}*/
 
 			}
+		},
+
+		drawChart : function(res, barChart, divSelector, chartHeight) {
+
+			var _this = this;
+
+			var color = new Array();
+			var label = new Array();
+			var value = new Array();
+			var id = new Array();
+
+
+			_.each(res.data, function(val,key) {
+
+				id.push(key);
+				value.push(val.sums);
+				label.push(res.properties.schema[key].label);
+				color.push(res.properties.schema[key].style.color);
+
+			});
+
+			var transformedData = new Array();
+
+			var minute = 1;
+			var item = {};
+
+			var maxVals = {};
+
+			for(i in id) {
+				item[id[i]] = 0;
+			}
+
+			for(var v in value[0]) {
+
+				maxVals[v] = 0;
+
+				if(minute % 1 == 0) {
+					item['min'] = Math.ceil(minute / 1);
+
+					for(i in id) {
+						item[id[i]] = item[id[i]] +  parseInt(value[i][v]);
+						maxVals[v] = maxVals[v] + parseInt(value[i][v]);
+					}
+
+					transformedData.push(item);
+
+					item = {};
+
+					for(i in id) {
+						item[id[i]] = 0;
+					}
+				}
+				else {
+					for(i in id) {
+						item[id[i]] = item[id[i]] +  parseInt(value[i][v]);
+					}
+				}
+				
+				minute++;
+			}
+
+			for(var v in maxVals) {
+				if(maxVals[v] > this.maxChartValue)
+					this.maxChartValue = maxVals[v];
+			}
+			
+			var minuteDimension;
+
+			if(barChart == 1) {
+				this.barChart1 = dc.barChart(divSelector);
+				this.cfData1 = crossfilter(transformedData);
+				minuteDimension = this.cfData1.dimension(function(d) {
+					return d.min;
+				});
+				barChart = this.barChart1;
+			}		
+			else if(barChart == 2) {
+				this.barChart2 = dc.barChart(divSelector);
+				this.cfData2 = crossfilter(transformedData);
+				minuteDimension = this.cfData2.dimension(function(d) {
+					return d.min;
+				});
+				barChart = this.barChart2;
+			}
+				
+
+			barChart
+                .width(400)
+                .height(chartHeight)
+                .margins({top: 10, right: 20, bottom: 10, left: 40})
+                .elasticY(false)
+                .y(d3.scale.linear().domain([0, this.maxChartValue]))
+                .dimension(minuteDimension)
+                .ordinalColors(color)
+                .xAxisLabel("Minutes")
+                .yAxisLabel("# " + res.properties.label)
+                .transitionDuration(0);
+
+
+            for(i in id) {
+            	var group = minuteDimension.group().reduceSum(function(d){return d[id[i]]});
+
+            	if(i == 0)
+            		barChart.group(group, label[i])
+            	else
+            		barChart.stack(group, label[i])
+            }
+             
+            barChart.x(d3.scale.linear().domain([0, 120]))
+                .renderHorizontalGridLines(true)
+                .centerBar(true)
+                .brushOn(false)
+                .legend(dc.legend().x(250).y(10))
+                .xAxis().ticks(5).tickFormat(d3.format("d"));
+
+            this.scaleBarCharts();
+
+         	dc.renderAll();
+
+		},
+
+		scaleBarCharts : function() {
+
+			if(this.barChart1)
+				this.barChart1.y(d3.scale.linear().domain([0, this.maxChartValue]));
+
+			if(this.barChart2)
+				this.barChart2.y(d3.scale.linear().domain([0, this.maxChartValue])); 
+		},
+
+		resetCharts : function() {
+
+			if(this.cfData1) {
+				this.cfData1.remove();	
+			}
+
+			if(this.cfData2) {
+				this.cfData2.remove();	
+			}
+
+			dc.renderAll();
+
 		},
 
 		onRender : function() {

@@ -44,6 +44,14 @@ public class Application extends Controller {
 	
 	public static Result index() throws IOException  {
 
+		
+		/*try {
+			Api.analyst.createJob();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}*/
+		
 		return ok(index.render());
 		
     }

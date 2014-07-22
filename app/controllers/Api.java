@@ -34,8 +34,8 @@ import org.geotools.geometry.Envelope2D;
 import org.geotools.geometry.jts.JTS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.operation.MathTransform;
-import org.opentripplanner.analyst.Indicator;
 import org.opentripplanner.analyst.PointSet;
+import org.opentripplanner.analyst.ResultFeature;
 import org.opentripplanner.analyst.TimeSurface;
 import org.opentripplanner.analyst.core.IsochroneData;
 import org.opentripplanner.analyst.core.SlippyTile;
@@ -52,7 +52,7 @@ import models.Attribute;
 import models.Project;
 import models.Scenario;
 import models.Shapefile;
-import models.PointSetCategory;
+import models.SpatialLayer;
 import models.Shapefile.ShapeFeature;
 
 import com.fasterxml.jackson.core.JsonFactory;
@@ -74,7 +74,7 @@ import utils.HaltonPoints;
 
 public class Api extends Controller {
 
-	public static int maxTimeLimit = 90; // in minutes
+	public static int maxTimeLimit = 120; // in minutes
 	
 	public static Analyst analyst = new Analyst();
 	
@@ -154,20 +154,21 @@ public class Api extends Controller {
          return ok(fcString);
     }
     
-    public static Result indicator(Integer surfaceId, String pointSetId) {
+    public static Result result(Integer surfaceId, String pointSetId) {
     	final TimeSurface surf = AnalystRequest.getSurface(surfaceId);
     	
-    	final PointSetCategory ps = PointSetCategory.getPointSetCategory(pointSetId);
+    	final SpatialLayer ps = SpatialLayer.getPointSetCategory(pointSetId);
     	
-    	final Indicator indicator = new Indicator(ps.getPointSet(), surf, false);
+    	final ResultFeature result = new ResultFeature(ps.getPointSet().getSampleSet(surf.routerId), surf);
+ 
     	
     	ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    	indicator.writeJson(baos);    
+    	result.writeJson(baos, ps.getPointSet());    
         ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
         response().setContentType("application/json");
     	return ok(bais);
     }
-    
+    	
     /**
      * Use Laurent's accumulative grid sampler. Cutoffs in minutes.
      * The grid and delaunay triangulation are cached, so subsequent requests are very fast.
@@ -361,14 +362,14 @@ public class Api extends Controller {
     	try {
     		
             if(id != null) {
-            	PointSetCategory s = PointSetCategory.getPointSetCategory(id);
+            	SpatialLayer s = SpatialLayer.getPointSetCategory(id);
                 if(s != null)
                     return ok(Api.toJson(s, false));
                 else
                     return notFound();
             }
             else {
-                return ok(Api.toJson(PointSetCategory.getPointSetCategories(projectId), false));
+                return ok(Api.toJson(SpatialLayer.getPointSetCategories(projectId), false));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -381,7 +382,7 @@ public class Api extends Controller {
         
     	try {
     		
-    		return ok(Api.toJson(PointSetCategory.getPointSetCategories(projectId), false));
+    		return ok(Api.toJson(SpatialLayer.getPointSetCategories(projectId), false));
     		
         } catch (Exception e) {
             e.printStackTrace();
@@ -392,14 +393,14 @@ public class Api extends Controller {
     
     
     public static Result createPointset() {
-    	PointSetCategory sd;
+    	SpatialLayer sd;
         try {
         
-        	sd = mapper.readValue(request().body().asJson().traverse(), PointSetCategory.class);
+        	sd = mapper.readValue(request().body().asJson().traverse(), SpatialLayer.class);
         	sd.save();
         	
         	Tiles.resetCache();
-        	PointSetCategory.pointSetCache.clear();
+        	SpatialLayer.pointSetCache.clear();
 
             return ok(Api.toJson(sd, false));
         } catch (Exception e) {
@@ -411,19 +412,19 @@ public class Api extends Controller {
     
     public static Result updatePointset(String id) {
         
-    	PointSetCategory sd;
+    	SpatialLayer sd;
 
         try {
         	
-        	sd = mapper.readValue(request().body().asJson().traverse(), PointSetCategory.class);
+        	sd = mapper.readValue(request().body().asJson().traverse(), SpatialLayer.class);
         	
-        	if(sd.id == null || PointSetCategory.getPointSetCategory(sd.id) == null)
+        	if(sd.id == null || SpatialLayer.getPointSetCategory(sd.id) == null)
                 return badRequest();
         	
         	sd.save();
 
         	Tiles.resetCache();
-        	PointSetCategory.pointSetCache.clear();
+        	SpatialLayer.pointSetCache.clear();
         	
             return ok(Api.toJson(sd, false));
         } catch (Exception e) {
@@ -436,7 +437,7 @@ public class Api extends Controller {
         if(id == null)
             return badRequest();
 
-        PointSetCategory sd = PointSetCategory.getPointSetCategory(id);
+        SpatialLayer sd = SpatialLayer.getPointSetCategory(id);
 
         if(sd == null)
         	return badRequest();
@@ -444,7 +445,7 @@ public class Api extends Controller {
         sd.delete();
         
         Tiles.resetCache();
-        PointSetCategory.pointSetCache.clear();
+        SpatialLayer.pointSetCache.clear();
 
         return ok();
     }

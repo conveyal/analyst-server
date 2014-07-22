@@ -15,7 +15,7 @@ import javax.imageio.ImageIO;
 
 import lombok.Synchronized;
 import models.Shapefile.ShapeFeature;
-import models.PointSetCategory;
+import models.SpatialLayer;
 import models.Attribute;
 
 import org.geotools.coverage.grid.GridEnvelope2D;
@@ -24,13 +24,12 @@ import org.geotools.geometry.Envelope2D;
 import org.geotools.geometry.jts.JTS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.operation.MathTransform;
-import org.opentripplanner.analyst.Indicator;
+import org.opentripplanner.analyst.ResultFeature;
+import org.opentripplanner.analyst.ResultFeatureDelta;
+import org.opentripplanner.analyst.ResultFeatureWithTimes;
 import org.opentripplanner.analyst.TimeSurface;
 import org.opentripplanner.analyst.core.SlippyTile;
 import org.opentripplanner.analyst.request.TileRequest;
-import org.opentripplanner.routing.core.TraverseMode;
-import org.opentripplanner.routing.edgetype.PatternHop;
-import org.opentripplanner.routing.edgetype.TripPattern;
 
 import otp.AnalystRequest;
 
@@ -59,7 +58,7 @@ public class Tiles extends Controller {
 	
 	public static Result spatial(String pointSetId, Integer x, Integer y, Integer z, String selectedAttributes) {
     	
-		PointSetCategory sd = PointSetCategory.getPointSetCategory(pointSetId);
+		SpatialLayer sd = SpatialLayer.getPointSetCategory(pointSetId);
 		
 		HashSet<String> attributes = new HashSet<String>();
 		
@@ -105,16 +104,13 @@ public class Tiles extends Controller {
 	            		
 	            		Color color = new Color(0.0f,0.0f,0.0f,0.1f);
 	            		
-	            		tile.renderPolygon(feature.geom, color);
-	            		  		
+	            		tile.renderPolygon(feature.geom, color); 		  		
 	            	}
 	            }
 	            
 	            response().setContentType("image/png");
 	           
 	            tileCache.put(tile.tileId, tile.generateImage());
-	          
-	 
 	    	}
 	    	
 	    	ByteArrayInputStream bais = new ByteArrayInputStream(tileCache.get(tile.tileId)); 
@@ -126,14 +122,12 @@ public class Tiles extends Controller {
             e.printStackTrace();
             return badRequest();
         }
-    	
-    	
 
     } 
 	
-	public static Result surface(Integer surfaceId, String pointSetId, Integer x, Integer y, Integer z, Boolean showPoints, Integer timeLimit) {
+	public static Result surface(Integer surfaceId, String pointSetId, Integer x, Integer y, Integer z, Boolean showIso, Boolean showPoints, Integer timeLimit, Integer minTime) {
     	
-		PointSetCategory sd = PointSetCategory.getPointSetCategory(pointSetId);
+		SpatialLayer sd = SpatialLayer.getPointSetCategory(pointSetId);
 		
 		if(sd == null)
 			return badRequest();
@@ -143,42 +137,63 @@ public class Tiles extends Controller {
 		if(surface == null) 
 			return notFound();
 		
-    	String tileIdPrefix = "surfaceTile_" + surfaceId + "_" + pointSetId + "_" + showPoints + "_" + timeLimit;
-
+		String tileIdPrefix = "surfaceTile_" + surfaceId + "_" + pointSetId + "_" +  "_" + showIso + "_" + showPoints +"_" + timeLimit;
+		
+		if(minTime != null)
+			tileIdPrefix += "_" + minTime;
+	
     	Tile tile = new Tile(tileIdPrefix, x, y, z);
     	try {
 	    	if(!tileCache.containsKey(tile.tileId)) {
 	    
-		    		Indicator indicator = AnalystRequest.getIndicator(surfaceId, pointSetId);
-		    	           
-		            List<ShapeFeature> features = sd.getShapefile().query(tile.envelope);
-		         	
-		            for(ShapeFeature feature : features) {
-		            	
-		            	Integer sampleTime = indicator.getTime(feature.id);
-		            	if(sampleTime == null || sampleTime > timeLimit)
-		            		continue;
-		            
-		            	// draw halton points for indicator
-		 
-		        		if(showPoints) {
-		        				
-		            		for(Attribute a : sd.attributes) {
-		    		
-				    			HaltonPoints hp = feature.getHaltonPoints(a.fieldName);
-				            	
-		            			if(hp.getNumPoints() > 0) {
-		        	         
-		        	            	Color color = new Color(Integer.parseInt(a.color.replace("#", ""), 16));
-		        	            	
-		        	            	tile.renderHaltonPoints(hp, color);
-		            			}
-		            		}
-		    			}         	
-		            }
-		               
-		            tileCache.put(tile.tileId, tile.generateImage());
-		       
+	    		ResultFeatureWithTimes result = AnalystRequest.getResultWithTimes(surfaceId, pointSetId);
+	    	           
+	            List<ShapeFeature> features = sd.getShapefile().query(tile.envelope);
+	         	
+	            for(ShapeFeature feature : features) {
+	            	
+	            	Integer sampleTime = result.getTime(feature.id);
+	            	if(sampleTime == null) 
+	            		continue;
+	            	
+	            	if(sampleTime == Integer.MAX_VALUE)
+                		continue;
+	            	
+	            	if(showIso) {
+	            		
+	            		Color color = null;
+	            		
+                     	if(sampleTime < timeLimit && (minTime != null && sampleTime > minTime)){
+                     		float opacity = 1.0f - (float)((float)sampleTime / (float)timeLimit);
+                     		color = new Color(0.9f,0.7f,0.2f,opacity);
+                     	}
+        				else {
+        					color = new Color(0.0f,0.0f,0.0f,0.1f);
+        				}
+        		
+                     	if(color != null)
+                     		tile.renderPolygon(feature.geom, color);
+                	}
+	            
+	            	// draw halton points for indicator
+	 
+	        		if(showPoints && sampleTime < timeLimit && (minTime != null && sampleTime > minTime)) {
+	        				
+	            		for(Attribute a : sd.attributes) {
+	    		
+			    			HaltonPoints hp = feature.getHaltonPoints(a.fieldName);
+			            	
+	            			if(hp.getNumPoints() > 0) {
+	        	         
+	        	            	Color color = new Color(Integer.parseInt(a.color.replace("#", ""), 16));
+	        	            	
+	        	            	tile.renderHaltonPoints(hp, color);
+	            			}
+	            		}
+	    			}         	
+	            }
+	               
+	            tileCache.put(tile.tileId, tile.generateImage());
 			}
 			
 			ByteArrayInputStream bais = new ByteArrayInputStream(tileCache.get(tile.tileId)); 
@@ -199,16 +214,39 @@ public class Tiles extends Controller {
     	Tile tile = new Tile(tileIdPrefix, x, y, z);
 		
     	try {
+    		
+    		HashSet<String> defaultEdges = new HashSet<String>();
+    		
 	    	if(!tileCache.containsKey(tile.tileId)) {
+	    		
+	    		if(!scenarioId.equals("default")) {
+	    			STRtree index = transitIndex.getIndexForGraph("default");
+	    			List<TransitSegment> segments = index.query(tile.envelope);
+	    			
+	    			for(TransitSegment ts : segments) {
+	    				defaultEdges.add(ts.edgeId);
+	    			}
+	    		}
 	    		STRtree index = transitIndex.getIndexForGraph(scenarioId);
 	    		List<TransitSegment> segments = index.query(tile.envelope);
+	    		
+	    		
 	    		
 	    		for(TransitSegment ts : segments) {
 	    			Color color;
 	    			
-	    			color = new Color(0.6f,0.6f,1.0f,0.25f);
+	    			if(!scenarioId.equals("default")) {
+	    				if(!defaultEdges.contains(ts.edgeId)) {
+	    					color = new Color(0.6f,0.8f,0.6f,0.75f);
+		    				
+			    			tile.renderLineString(ts.geom, color, 5);
+	    				}
+	    			}
+	    			else {
+	    				color = new Color(0.6f,0.6f,1.0f,0.25f);
 	    				
-	    			tile.renderLineString(ts.geom, color);
+		    			tile.renderLineString(ts.geom, color, null);
+	    			}	
 	    		}
 	    		tileCache.put(tile.tileId, tile.generateImage());	
 	    	}
@@ -258,115 +296,95 @@ public class Tiles extends Controller {
 	}
 	
 	
-	public static Result compareSpt(Integer surfaceId1, Integer surfaceId2, String spatialId, Integer x, Integer y, Integer z, Integer timeLimit) {
+	public static Result compare(Integer surfaceId1, Integer surfaceId2, String spatialId, Integer x, Integer y, Integer z, Boolean showIso, Boolean showPoints, Integer timeLimit, Integer minTime) {
     	
-		PointSetCategory sd = PointSetCategory.getPointSetCategory(spatialId);
+		SpatialLayer sd = SpatialLayer.getPointSetCategory(spatialId);
 		
 		if(sd == null)
 			return badRequest();
 		
-		final TimeSurface surf1 = AnalystRequest.getSurface(surfaceId1);
-		final TimeSurface surf2 = AnalystRequest.getSurface(surfaceId2);
-		
-		if(surf1 == null || surf2 == null) 
-			return notFound();
-		
-    	String tileId = "compareSpt_" + surfaceId1 + "_" + surfaceId2 + "_" + spatialId + "_" + x + "_" + "_" + y + "_" + "_" + z + "_" +  "_" + timeLimit;
-    	
-    	if(tileCache.containsKey(tileId)) {
-    		
-    		ByteArrayInputStream bais = new ByteArrayInputStream(tileCache.get(tileId)); 
-            response().setContentType("image/png");
-    		return ok(bais);
-    		
-    	}
-    	
-    	double maxLat = SlippyTile.tile2lat(y, z);
-        double minLat = SlippyTile.tile2lat(y + 1, z);
-        double minLon = SlippyTile.tile2lon(x, z);
-        double maxLon = SlippyTile.tile2lon(x + 1, z);
-    	
-        // annoyingly need both jts and opengis envelopes -- there's probably a smarter way to get them
-        Envelope jtsEnvelope = new Envelope(maxLon, minLon, maxLat, minLat);
-         
-    	Envelope2D env = JTS.getEnvelope2D(jtsEnvelope, DefaultGeographicCRS.WGS84);
-    	
-    	TileRequest tileRequest = new TileRequest("", env, 256, 256);
-    	GridEnvelope2D gridEnv = new GridEnvelope2D(0, 0, tileRequest.width, tileRequest.height);
-    	GridGeometry2D gg = new GridGeometry2D(gridEnv, (org.opengis.geometry.Envelope)(tileRequest.bbox));
-    	
-      	MathTransform tr = gg.getCRSToGrid2D();
+		String tileIdPrefix = "compare_" + surfaceId1 + "_" + surfaceId2 + "_" + spatialId + "_" + showIso + "_" + showPoints + "_" + timeLimit + "_" + minTime;
+
+    	Tile tile = new Tile(tileIdPrefix, x, y, z);
     	
     	try {
-    	           
-            BufferedImage before = new BufferedImage(256, 256, BufferedImage.TYPE_4BYTE_ABGR);
-        	
-            Graphics2D gr = before.createGraphics();
-       
-            List<ShapeFeature> features = sd.getShapefile().query(jtsEnvelope);
-         	
-            for(ShapeFeature feature : features) {
-            	
-            	Long time1 = 1l;//sptResponse1.destinationTimes.get(feature.id);
-            	Long time2 = 1l;//sptResponse2.destinationTimes.get(feature.id);
-            	
-             	if((time1 == null || time1 > timeLimit) && 
-             			(time2 == null || time2 > timeLimit)) 
-             		continue;
-            	
-            	
-            	// draw polygon 
-               	
-    			// draw isotiles for block time
-        		float opacity; 
-    			Geometry g  = JTS.transform(feature.geom, tr);
-    			
-    			if(time2 != null) {
-    				opacity = 0.5f - ((((float)time2 / (float)Api.maxTimeLimit)) / 2);
-    			}
-    			else {
-    				opacity = 0.5f - ((((float)time1 / (float)Api.maxTimeLimit)) / 2);
-    			}
+    		
+    		if(!tileCache.containsKey(tile.tileId)) {
 
-    			if(time1 == null || time1 > timeLimit)
-    				time1 = -1l;
-    			if(time2 == null || time2 > timeLimit)
-    				time2 = -1l;
+    			final TimeSurface surf1 = AnalystRequest.getSurface(surfaceId1);
+    			final TimeSurface surf2 = AnalystRequest.getSurface(surfaceId2);
     			
-    			if(time1 < 0)
-    				gr.setColor(new Color(0.0f,0.0f,0.8f,opacity));
-    			else if(time1 > time2)
-					gr.setColor(new Color(0.8f,0.0f,0.8f,opacity));
-				else
-					gr.setColor(new Color(0.8f,0.7f,0.2f,opacity));
+    			if(surf1 == null || surf2 == null) 
+    				return notFound();
     			
+    			ResultFeatureDelta resultDelta = new ResultFeatureDelta(sd.getPointSet().getSampleSet(surf1.routerId), sd.getPointSet().getSampleSet(surf2.routerId),  surf1, surf2);
     			
-    			Polygon p = new Polygon();
-            	for(Coordinate c : g.getCoordinates())
-            		p.addPoint((int)c.x, (int)c.y);
-            	
-            	gr.fillPolygon(p);
-            			
-            }
-            gr.dispose();
-
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ImageIO.write(before, "png", baos);
+    			List<ShapeFeature> features = sd.getShapefile().query(tile.envelope);
+             	
+                for(ShapeFeature feature : features) {
+                	
+                	if(resultDelta.timeIdMap.get(feature.id) == 0 &&  resultDelta.times2IdMap.get(feature.id) == 0)
+                		continue;
+                	
+                	int time1 = resultDelta.timeIdMap.get(feature.id);
+                	int time2 = resultDelta.times2IdMap.get(feature.id);
+                	
+                	if(time1 == Integer.MAX_VALUE && time2 == Integer.MAX_VALUE)
+                		continue;
+                	
+                	Color color = null;
+                	
+                	if(showIso) {
+                		
+                     	if((time2 == time1 || time2 > time1) && time1 > minTime && time1 < timeLimit){
+                     		float opacity = 1.0f - (float)((float)time1 / (float)timeLimit);
+                     		color = new Color(0.9f,0.7f,0.2f,opacity);
+                     	}
+                     		
+        				else if((time1 == Integer.MAX_VALUE || time1 > timeLimit) && time2 < timeLimit && time2 > minTime) {
+        					float opacity = 1.0f - (float)((float)time2 / (float)timeLimit);
+        					color = new Color(0.8f,0.0f,0.8f,opacity);
+        				}
+        				else if(time1 > time2 && time2 < timeLimit && time2 > minTime) {
+        					float opacity = 1.0f - (float)((float)time2 / (float)time1);
+        					color = new Color(0.0f,0.0f,0.8f,opacity);
+        				}
+        				else {
+        					color = new Color(0.0f,0.0f,0.0f,0.1f);
+        				}
+        		
+                     	if(color != null)
+                     		tile.renderPolygon(feature.geom, color);
+                	}
+                		
+                 	if(showPoints && (time1 < timeLimit || time2 < timeLimit)) {
+        				
+	            		for(Attribute a : sd.attributes) {
+	    		
+			    			HaltonPoints hp = feature.getHaltonPoints(a.fieldName);
+			            	
+	            			if(hp.getNumPoints() > 0) {
+	        	         
+	        	            	color = new Color(Integer.parseInt(a.color.replace("#", ""), 16));
+	        	            	
+	        	            	tile.renderHaltonPoints(hp, color);
+	            			}
+	            		}
+	    			}       
+                }
+                
+                tileCache.put(tile.tileId, tile.generateImage());	
+    		}
+                 
+            ByteArrayInputStream bais = new ByteArrayInputStream(tileCache.get(tile.tileId)); 
+			
+		    response().setContentType("image/png");
+			return ok(bais);
             
-            tileCache.put(tileId, baos.toByteArray());
-            
-            ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray()); 
-            response().setContentType("image/png");
-      
-            return ok(bais);
-            
-            
-        } catch (Exception e) {
-           
-            e.printStackTrace();
-        }
-    	
-    	return badRequest();
+    	} catch (Exception e) {
+	    	e.printStackTrace();
+	    	return badRequest();
+	    }
     }    
 	
 }

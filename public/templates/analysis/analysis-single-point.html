@@ -8,18 +8,6 @@
     <div id="collapseOne" class="panel-collapse collapse in">
       <div class="panel-body">
 
-
-		<h5>Max Travel Time: <span class="notes" id="timeLimitValue"></span></h5>	
-
-      	<input id="timeSlider1" data-slider-id="timeSlider" style="width: 380px;" type="text" data-slider-min="15" data-slider-max="90" data-slider-step="5" data-slider-value="60"/>
-   	
-		<div class="timeScale"></div>
-		   	
-		<div class="timeScaleLabels">
-			<span class="note pull-right">90 mins</span>
-			<span class="note">15 mins</span>
-		</div>
-
 		<h5>{{I18n "analysis.primary-indicator"}}</h5>
 		<select id="primaryIndicator" class="primary-indicator form-control">
 		
@@ -35,14 +23,6 @@
 		<select id="scenario1" class="scenario-list form-control">
 		</select>
 
-		<div class="pull-right" style="width: 180px;">
-			<h5>Average Walk Speed:  <br/><span class="notes" id="walkSpeedValue"></span></h5>		
-			<input id="walkSpeedSlider" data-slider-id="walkSpeedSlider" style="width: 180px;" type="text" data-slider-min="1" data-slider-max="10" data-slider-step="1" data-slider-value="5"/>
-
-			<h5>Average Bike Speed: <br/><span class="notes" id="bikeSpeedValue"></span></h5>	
-			<input id="bikeSpeedSlider" data-slider-id="bikeSpeedSlider" style="width: 180px;" type="text" data-slider-min="1" data-slider-max="40" data-slider-step="1" data-slider-value="15"/>
-		</div>	
-
 		<div style="margin-top: 10px;" class="btn-group mode-selector" data-toggle="buttons">
 			  <label class="btn btn-default">
 			    <input type="radio" name="mode1" id="modeCar" value="CAR"><span class="icon icon-car"></span>
@@ -50,6 +30,9 @@
 			  <label class="btn btn-default active">
 			    <input type="radio" name="mode1" id="modeBus" value="TRANSIT"><span class="icon icon-pedestrian"></span> + <span class="icon icon-bus"></span>
 			  </label>
+			  <label class="btn btn-default">
+				    <input type="radio" name="mode2" id="modeBus" value="BIKE,TRANSIT"><span class="icon icon-bike"></span> + <span class="icon icon-bus"></span>
+				  </label>
 			  <label class="btn btn-default">
 			    <input type="radio" name="mode1" id="modeBike" value="BIKE"><span class="icon icon-bike"></span>
 			  </label>
@@ -72,6 +55,9 @@
 				    <input type="radio" name="mode2" id="modeBus" value="TRANSIT"><span class="icon icon-pedestrian"></span> + <span class="icon icon-bus"></span>
 				  </label>
 				  <label class="btn btn-default">
+				    <input type="radio" name="mode2" id="modeBus" value="BIKE,TRANSIT"><span class="icon icon-bike"></span> + <span class="icon icon-bus"></span>
+				  </label>
+				  <label class="btn btn-default">
 				    <input type="radio" name="mode2" id="modeBike" value="BIKE"><span class="icon icon-bike"></span>
 				  </label>
 				  <label class="btn btn-default">
@@ -81,21 +67,12 @@
 
 		</div>
 
-		<div class="checkbox">
-		    <label>
-		      <input type="checkbox" id="showIso"> {{I18n "analysis.show-isochrones"}}
-		    </label>
-	 	</div>
-	 	<div class="checkbox">
-		    <label>
-		      <input type="checkbox" checked id="showPoints"> {{I18n "analysis.show-points"}}
-		    </label>
-	 	</div>
-	 	<div class="checkbox">
-		    <label>
-		      <input type="checkbox" id="showTransit"> {{I18n "analysis.show-transit"}}
-		    </label>
-	 	</div>
+		<h5>Average Walk Speed: <span class="notes" id="walkSpeedValue"></span></h5>
+		<input id="walkSpeedSlider" data-slider-id="walkSpeedSlider" style="width: 250px;" type="text" data-slider-min="1" data-slider-max="40" data-slider-step="1" data-slider-value="5"/>
+
+		<h5>Average Bike Speed: <span class="notes" id="bikeSpeedValue"></span></h5>
+		<input id="bikeSpeedSlider" data-slider-id="bikeSpeedSlider" style="width: 250px;" type="text" data-slider-min="1" data-slider-max="40" data-slider-step="1" data-slider-value="15"/>
+	
 	</div>
     </div>
   </div>
@@ -108,17 +85,40 @@
     <div id="collapseTwo" class="panel-collapse">
       <div class="panel-body">
 
-      	<select id="chartType" class="pull-right form-control col-xs-4">
-		  <option value="bar">Bar</option>
-		  <option value="line">Line</option> 
-		  <option value="circle">Circle</option> 
-		  <option selected value="table">Table</option> 
-		  <!--<option  value="density">Density</option> -->
-		</select>
+      	<h5>Scenario 1</h5>
+      	<div id="barChart1"></div>
 
-      	<h5><span id="resultsSummary"></span></h5>
+      	<div id="comparisonChart">
+	      	<h5>Scenario 2</h5>
+	      	<div id="barChart2"></div>
+	    </div>
 
-      	<div id="graph"></div>
+      	<h5>Travel Time Range: <span class="notes" id="minTimeValue"></span>-<span class="notes" id="timeLimitValue"></span></h5>	
+
+      	<input id="timeSlider1" data-slider-id="timeSlider" style="width: 380px;" type="text" data-slider-min="0" data-slider-max="120" data-slider-step="5" data-slider-value="[0,60]"/>
+   	
+		<div class="timeScale"></div>
+		   	
+		<div class="timeScaleLabels">
+			<span class="note pull-right">120 mins</span>
+			<span class="note">0 mins</span>
+		</div>
+
+		<div class="checkbox">
+		    <label>
+		      <input type="checkbox" checked id="showIso"> {{I18n "analysis.show-isochrones"}}
+		    </label>
+	 	</div>
+	 	<div class="checkbox">
+		    <label>
+		      <input type="checkbox" id="showPoints"> {{I18n "analysis.show-points"}}
+		    </label>
+	 	</div>
+	 	<div class="checkbox">
+		    <label>
+		      <input type="checkbox" id="showTransit"> {{I18n "analysis.show-transit"}}
+		    </label>
+	 	</div>
       	
       		<!-- <a href="#">export csv</a> | <a href="#">export shapefile</a>  -->
       </div>

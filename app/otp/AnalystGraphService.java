@@ -27,9 +27,7 @@ public class AnalystGraphService implements GraphService {
 			
 			Graph g = gbt.getGraph();
 			
-			GeometryIndex geomIndex = new GeometryIndex(g);
-			
-			SampleFactory sampleSource = new SampleFactory(geomIndex);
+			g.setRouterId(graphId);
 			
 			graphMap.put(graphId,g);
 					

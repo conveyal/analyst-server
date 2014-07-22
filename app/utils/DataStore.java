@@ -1,6 +1,7 @@
 package utils;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -19,6 +20,7 @@ import org.mapdb.Pump;
 import org.mapdb.Fun.Tuple2;
 
 import controllers.Application;
+import play.Logger;
 import play.Play;
 
 public class DataStore<T> {
@@ -32,6 +34,16 @@ public class DataStore<T> {
 	}
 
 	public DataStore(File directory, String dataFile) {
+	
+		if(!directory.exists())
+			directory.mkdirs();
+		
+		try {
+			Logger.info(directory.getCanonicalPath());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 		db = DBMaker.newFileDB(new File(directory, dataFile + ".db"))
 			.closeOnJvmShutdown()
@@ -41,6 +53,16 @@ public class DataStore<T> {
 	}
 	
 	public DataStore(File directory, String dataFile, List<Fun.Tuple2<String,T>>inputData) {
+		
+		if(!directory.exists())
+			directory.mkdirs();
+		
+		try {
+			Logger.info(directory.getCanonicalPath());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 		db = DBMaker.newFileDB(new File(directory, dataFile + ".db"))
 			.transactionDisable()

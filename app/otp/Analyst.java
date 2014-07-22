@@ -21,6 +21,13 @@ import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.services.GraphService;
 import org.opentripplanner.routing.spt.ShortestPathTree;
 
+import com.conveyal.otpac.JobItemCallback;
+import com.conveyal.otpac.message.JobSpec;
+import com.conveyal.otpac.message.WorkResult;
+import com.conveyal.otpac.standalone.StandaloneCluster;
+import com.conveyal.otpac.standalone.StandaloneExecutive;
+import com.conveyal.otpac.standalone.StandaloneWorker;
+
 import play.Logger;
 
 
@@ -59,6 +66,10 @@ public class Analyst {
 				req.kissAndRide = true;
 				req.walkReluctance = 1.0;
 				break;	
+			case "BIKE,TRANSIT":
+				req.modes.setBicycle(true);
+				req.modes.setTransit(true);
+				break;
 			case "CAR":
 				req.modes.setCar(true);
 				break;
@@ -79,6 +90,43 @@ public class Analyst {
             return null;
         }
     }
+	
+	public void createJob() throws Exception {
+		// start up cluster
+		StandaloneCluster cluster = new StandaloneCluster("s3credentials");
+	
+		StandaloneExecutive exec = cluster.createExecutive();
+		StandaloneWorker worker = cluster.createWorker(1, true);
+	
+		cluster.registerWorker(exec, worker);
+	
+		// build the request
+		JobSpec js = new JobSpec("austin", "austin.csv", "austin.csv", "2014-06-09", "8:05 AM", "America/Chicago");
+	
+		// plus a callback that registers how many work items have returned
+		class CounterCallback implements JobItemCallback {
+			int jobsBack = 0;
+	
+			@Override
+			public void onWorkResult(WorkResult res) {
+				System.out.println("got callback: " + res.getResult().id );
+				jobsBack += 1;
+			}
+		}
+		;
+		CounterCallback callback = new CounterCallback();
+		js.setCallback(callback);
+	
+		// start the job
+		exec.find(js);
+	
+		// stall until a work item returns
+		while (callback.jobsBack == 0) {
+			Thread.sleep(100);
+		}
+		
+		cluster.stop(worker);
+	}
 
 	
 	public Graph getGraph (String graphId) {

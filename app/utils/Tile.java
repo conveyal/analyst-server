@@ -1,5 +1,6 @@
 package utils;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Polygon;
@@ -33,9 +34,10 @@ public class Tile {
 	
 	final public String tileId;
 	final public Integer x, y, z;
+	final public Integer scaleFactor;
 	final private MathTransform tr;
 	
-	public BufferedImage buffer;
+	public BufferedImage buffer;	
 	public Graphics2D gr;
 	
 	final public Envelope envelope;
@@ -45,6 +47,11 @@ public class Tile {
 		this.x = x;
 		this.y = y;
 		this.z = z;
+		
+		if(14 - z <= 0)
+			this.scaleFactor = 1;
+		else
+			this.scaleFactor = 14 - z;
 		
 		tileId = tileIdPrefix + "_" + x + "_" + "_" + y + "_" + "_" + z;
 		
@@ -58,13 +65,13 @@ public class Tile {
          
     	Envelope2D env = JTS.getEnvelope2D(envelope, DefaultGeographicCRS.WGS84);
     	
-    	TileRequest tileRequest = new TileRequest("", env, 256, 256);
+    	TileRequest tileRequest = new TileRequest("", env, 256 * this.scaleFactor, 256 * this.scaleFactor);
     	GridEnvelope2D gridEnv = new GridEnvelope2D(0, 0, tileRequest.width, tileRequest.height);
     	GridGeometry2D gg = new GridGeometry2D(gridEnv, (org.opengis.geometry.Envelope)(tileRequest.bbox));
     	
       	tr = gg.getCRSToGrid2D();
       	
-      	buffer = new BufferedImage(256, 256, BufferedImage.TYPE_4BYTE_ABGR);
+      	buffer = new BufferedImage(tileRequest.width, tileRequest.height, BufferedImage.TYPE_4BYTE_ABGR);
       
 	}
 	
@@ -98,6 +105,9 @@ public class Tile {
 		if(gr == null)
 			gr = buffer.createGraphics();
 		
+		gr.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                RenderingHints.VALUE_ANTIALIAS_ON);
+		
 		Geometry gTr  = JTS.transform(g, tr);
         
 		gr.setColor(c);
@@ -109,7 +119,7 @@ public class Tile {
     	gr.fillPolygon(p);       
 	}
 	
-	public void renderLineString(Geometry g, Color c) throws MismatchedDimensionException, TransformException {
+	public void renderLineString(Geometry g, Color c, Integer strokeWidth) throws MismatchedDimensionException, TransformException {
 		
 		if(gr == null)
 			gr = buffer.createGraphics();
@@ -120,6 +130,9 @@ public class Tile {
 		Geometry gTr  = JTS.transform(g, tr);
         
 		gr.setColor(c);
+		
+		if(strokeWidth != null)
+			gr.setStroke(new BasicStroke(5));
 		
 		Path2D path = new Path2D.Double();
 		
@@ -137,6 +150,37 @@ public class Tile {
 	}
 	
 	public byte[] generateImage() throws IOException {
+		
+		if(this.scaleFactor > 1) {
+			
+			int w = buffer.getWidth();
+            int h = buffer.getHeight();
+			
+			do {
+				w /= 2;
+                if (w < 256) {
+                    w = 256;
+                }
+                
+                h /= 2;
+                if (h < 256) {
+                    h = 256;
+                }
+				
+				BufferedImage original = buffer;
+				
+
+				BufferedImage resized = new BufferedImage(w, h, original.getType());
+			    Graphics2D g = resized.createGraphics();
+			    g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+			    g.drawImage(original, 0, 0, w, h, null);
+			    g.dispose();
+			    g = null;
+			    
+			    buffer = resized;
+
+	        } while (w != 256 || h != 256);
+		}
 		
 		if(gr != null)
 			gr.dispose();
