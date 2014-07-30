@@ -104,7 +104,36 @@ var Analyst = Analyst || {};
 	  type: 'Scenarios',
 	  model: A.models.Scenario,
 	  url: '/api/scenario'
+	});
 
+	A.models.Query = Backbone.Model.extend({
+		urlRoot: '/api/query/',
+
+		defaults: {
+			id: null,
+			name: null,
+			mode: null,
+			pointSetId: null,
+			scenarioId: null,
+			status: null,
+			totalPoints: null,
+			completePoints: null
+		},	
+
+		updateStatus : function() {
+
+		},
+
+		getPoints : function() {
+
+		}
+ 
+	});
+
+	A.models.Queries = Backbone.Collection.extend({
+	  type: 'Queries',
+	  model: A.models.Query,
+	  url: '/api/query'
 	});
 
 })(Analyst, jQuery);	

@@ -1,9 +1,14 @@
 package otp;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import org.opentripplanner.graph_builder.GraphBuilderTask;
 import org.opentripplanner.routing.graph.Graph;
@@ -35,6 +40,44 @@ public class AnalystGraphService implements GraphService {
 		
 		return graphMap.get(graphId);
 	}
+	
+	public synchronized File getZippedGraph(String graphId) throws IOException {
+		
+		File graphDataDir = new File(new File(Application.dataPath,"graphs"), graphId);
+		
+		File graphZipFile = new File(new File(Application.dataPath,"graphs"), graphId + ".zip");
+		
+		if(graphDataDir.exists() && graphDataDir.isDirectory()) {
+			
+			FileOutputStream fileOutputStream = new FileOutputStream(graphZipFile);
+			ZipOutputStream zipOutputStream = new ZipOutputStream(fileOutputStream);
+			
+			byte[] buffer = new byte[1024];
+			
+			for(File f : graphDataDir.listFiles()) {
+				ZipEntry zipEntry = new ZipEntry(f.getName());
+				zipOutputStream.putNextEntry(zipEntry);
+	    		FileInputStream fileInput = new FileInputStream(f);
+
+	    		int len;
+	    		while ((len = fileInput.read(buffer)) > 0) {
+	    			zipOutputStream.write(buffer, 0, len);
+	    		}
+	 
+	    		fileInput.close();
+	    		zipOutputStream.closeEntry();
+			}
+			
+			zipOutputStream.close();
+			
+			return graphZipFile;
+					
+		}
+		
+		return null;
+		
+	}
+	
 
 	@Override
 	public int evictAll() {

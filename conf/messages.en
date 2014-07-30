@@ -60,6 +60,7 @@ analysis.scenario-comparison=Scenario Comparison
 analysis.scenario.no-comparison=No comparison
 analysis.scenario.compare=Compare
 
+analysis.scenario=Scenario
 analysis.scenario-1=Scenario 1
 analysis.scenario-2=Scenario 2
 
@@ -71,3 +72,6 @@ analysis.results=Results
 
 analysis.number-accessible=Accessible
 analysis.percent-accessible=Percent Accessible
+
+analysis.create-new-query-name=Query Name
+analysis.run-query=Run Query

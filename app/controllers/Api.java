@@ -50,6 +50,7 @@ import otp.Analyst;
 import otp.AnalystRequest;
 import models.Attribute;
 import models.Project;
+import models.Query;
 import models.Scenario;
 import models.Shapefile;
 import models.SpatialLayer;
@@ -324,7 +325,7 @@ public class Api extends Controller {
         	
         	s = mapper.readValue(request().body().asJson().traverse(), Shapefile.class);
         	
-        	if(s.id == null || Project.getProject(s.id) == null)
+        	if(s.id == null || Shapefile.getShapefile(s.id) == null)
                 return badRequest();
         	
         	s.save();
@@ -455,7 +456,7 @@ public class Api extends Controller {
     
     
     public static Result getScenarioById(String id) {
-    	return getPointset(id, null);
+    	return getScenario(id, null);
     }
     
     public static Result getScenario(String id, String projectId) {
@@ -512,7 +513,7 @@ public class Api extends Controller {
         	
         	s = mapper.readValue(request().body().asJson().traverse(), Scenario.class);
         	
-        	if(s.id == null || Project.getProject(s.id) == null)
+        	if(s.id == null || Scenario.getScenario(s.id) == null)
                 return badRequest();
         	
         	s.save();
@@ -538,6 +539,81 @@ public class Api extends Controller {
         return ok();
     }
     
-  
+    
+    // **** query controllers ****
+    
+    public static Result getQueryById(String id) {
+    	return getQuery(id, null);
+    }
+    
+    public static Result getQuery(String id, String projectId) {
+        
+    	try {
+    		
+            if(id != null) {
+            	Query q = Query.getQuery(id);
+                if(q != null)
+                    return ok(Api.toJson(q, false));
+                else
+                    return notFound();
+            }
+            else {
+                return ok(Api.toJson(Query.getQueries(projectId), false));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return badRequest();
+        }
+
+    }
+    
+    public static Result createQuery() throws IOException {
+    		
+    	Query  q = Query.create();
+    	
+    	q = mapper.readValue(request().body().asJson().traverse(), Query.class);
+    	
+    	q.save();
+    	
+    	q.run();
+    	
+        return ok(Api.toJson(q, false));  
+       
+    }
+    
+    public static Result updateQuery(String id) {
+        
+    	Query q;
+
+        try {
+        	
+        	q = mapper.readValue(request().body().asJson().traverse(), Query.class);
+        	
+        	if(q.id == null || Query.getQuery(q.id) == null)
+                return badRequest();
+        	
+        	q.save();
+
+            return ok(Api.toJson(q, false));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return badRequest();
+        }
+    }
+    
+    public static Result deleteQuery(String id) throws IOException {
+        if(id == null)
+            return badRequest();
+
+        Query q = Query.getQuery(id);
+
+        if(q == null)
+        	return badRequest();
+
+        q.delete();
+
+        return ok();
+    }
+    
     
 }

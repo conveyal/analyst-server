@@ -1,85 +1,54 @@
-<div style="margin-top: 10px;" class="panel-group" id="accordion">
+<button id="newQuery" type="button" class="btn btn-default btn-xs pull-right"><span class="glyphicon glyphicon-plus"></span></button>
+<h5>Multi-Point Queries</h5>
+
+<div style="margin-top: 10px;" class="panel-group" id="createQueryForm">
   <div class="panel panel-default">
     <div class="panel-heading">
       <h5 class="panel-title">
-        <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">
-          Settings
-        </a>
+          Create Query          
       </h5>
     </div>
     <div id="collapseOne" class="panel-collapse collapse in">
       <div class="panel-body">
+        <div class="form-group">
+          <label for="name">{{I18n "analysis.create-new-query-name"}}</label>
+          <input type="text" class="form-control" id="name" name="name" placeholder="{{I18n "analysis.create-new-query-name"}}" value="">
+        </div>
 
-		<h5>{{I18n "analysis.primary-indicator"}}</h5>
-		<select class="primary-indicator form-control">
-		  <option value="jobs" {{#if singlePoint}}selected{{/if}}>Jobs</option>
-		  <option value="population" {{#if multiPoint}}selected{{/if}}>Population</option>
-		</select>
+        <div class="form-group">
+          <label>{{I18n "analysis.primary-indicator"}}</label>
+          <select id="primaryIndicator" class="primary-indicator form-control">
+          </select>
+        </div>
 
-		<h5>{{I18n "analysis.scenario-comparison"}}</h5>
-		<select class="scenario-comparison form-control">
-		  <option value="compare" {{#if compare}}selected{{/if}}>{{I18n "analysis.scenario.compare"}}</option>
-		  <option value="no-comparison" selected{{#if noComparison}}selected{{/if}}>{{I18n "analysis.scenario.no-comparison"}}</option>
-		</select>
+        <div class="form-group">
+          <label>{{I18n "analysis.scenario"}}</label>
+          <select id="scenario1" class="scenario-list form-control">
+          </select>
+        
+          <div style="margin-top: 10px;" class="btn-group mode-selector" data-toggle="buttons">
+            <label class="btn btn-default">
+              <input type="radio" name="mode1" id="modeCar" value="CAR"><span class="icon icon-car"></span>
+            </label>
+            <label class="btn btn-default active">
+              <input type="radio" name="mode1" id="modeBus" value="TRANSIT"><span class="icon icon-pedestrian"></span> + <span class="icon icon-bus"></span>
+            </label>
+            <label class="btn btn-default">
+                <input type="radio" name="mode1" id="modeBus" value="BIKE,TRANSIT"><span class="icon icon-bike"></span> + <span class="icon icon-bus"></span>
+              </label>
+            <label class="btn btn-default">
+              <input type="radio" name="mode1" id="modeBike" value="BIKE"><span class="icon icon-bike"></span>
+            </label>
+            <label class="btn btn-default">
+              <input type="radio" name="mode1" id="modePed" value="WALK"><span class="icon icon-pedestrian"></span>
+            </label>
+          </div>
+        </div>
 
-		<h5>{{I18n "analysis.scenario-1"}}</h5>
-		<select class="scenario1 form-control">
-		  <option value="scenario" {{#if singlePoint}}selected{{/if}}>Default Scenario</option>
-		</select>
-
-		<div style="margin-top: 10px;" class="btn-group " data-toggle="buttons">
-			  <label class="btn btn-default">
-			    <input type="radio" name="options" id="modeCar" value="CAR"><span class="icon icon-car"></span>
-			  </label>
-			  <label class="btn btn-default active">
-			    <input type="radio" name="options" id="modeBus" value="TRANSIT"><span class="icon icon-pedestrian"></span> + <span class="icon icon-bus"></span>
-			  </label>
-			  <label class="btn btn-default">
-			    <input type="radio" name="options" id="modeBike" value="BIKE"><span class="icon icon-bike"></span>
-			  </label>
-			  <label class="btn btn-default">
-			    <input type="radio" name="options" id="modePed" value="WALK"><span class="icon icon-pedestrian"></span>
-			  </label>
-		</div>
-
-
-		<div id="scenario2-controls">
-			<h5>{{I18n "analysis.scenario-2"}}</h5>
-			<select class="scenario2 form-control">
-		  		<option value="scenario" {{#if singlePoint}}selected{{/if}}>Default Scenario</option>
-			</select>
-
-			<div style="margin-top: 10px;" class="btn-group " data-toggle="buttons">
-				  <label class="btn btn-default">
-				    <input type="radio" name="options" id="modeCar" value="CAR"><span class="icon icon-car"></span>
-				  </label>
-				  <label class="btn btn-default active">
-				    <input type="radio" name="options" id="modeBus" value="TRANSIT"><span class="icon icon-pedestrian"></span> + <span class="icon icon-bus"></span>
-				  </label>
-				  <label class="btn btn-default">
-				    <input type="radio" name="options" id="modeBike" value="BIKE"><span class="icon icon-bike"></span>
-				  </label>
-				  <label class="btn btn-default">
-				    <input type="radio" name="options" id="modePed" value="WALK"><span class="icon icon-pedestrian"></span>
-				  </label>
-			</div>
-
-		</div>
-	</div>
-    </div>
-  </div>
-  <div class="panel panel-default">
-    <div class="panel-heading">
-      <h5 class="panel-title">
-        <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo">
-          Results
-        </a>
-      </h5>
-    </div>
-    <div id="collapseTwo" class="panel-collapse collapse">
-      <div class="panel-body">
-      		<a href="#">export csv</a> | <a href="#">export shapefile</a> 
-      </div>
+        <button class="btn btn-primary" id="createQuery">{{I18n "analysis.run-query"}}</button> <button class="btn btn-default" id="cancelQuery">{{I18n "app.shared.cancel"}}</button>
+      </div>      
     </div>
   </div>
 </div>
+
+<div id="main"></div>

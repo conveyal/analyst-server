@@ -1,6 +1,10 @@
 package models;
 
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -21,6 +25,7 @@ import play.Logger;
 import utils.DataStore;
 import utils.HashUtils;
 
+import com.conveyal.otpac.PointSetDatastore;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import controllers.Api;
@@ -110,7 +115,7 @@ public class SpatialLayer implements Serializable {
 				HashMap<String,Integer> propertyData = new HashMap<String,Integer>();
 				
 				for(Attribute a : this.attributes) {
-					String propertyId = categoryId + "." + Attribute.convertNameToId(a.name);
+					String propertyId = categoryId + "." + Attribute.convertNameToId(a.name);	
 					propertyData.put(propertyId, sf.getAttribute(a.fieldName));
 				}
 				
@@ -139,6 +144,29 @@ public class SpatialLayer implements Serializable {
 			return ps;
 		}
 	}
+	
+	public String writeToClusterCache(Boolean workOffline) throws IOException {
+		
+		
+		
+		PointSet ps = this.getPointSet();	
+		String cachePointSetId = id + ".json";
+		
+		File f = new File(cachePointSetId);
+		
+		FileOutputStream fos = new FileOutputStream(f);
+		ps.writeJson(fos, true);
+		fos.close();
+		
+		PointSetDatastore datastore = new PointSetDatastore(10, "s3Credentials", workOffline);
+	
+		datastore.addPointSet(f, cachePointSetId);
+		
+		f.delete();
+		
+		return cachePointSetId;
+			
+	}
 
 	static public SpatialLayer getPointSetCategory(String id) {
 		
@@ -160,8 +188,7 @@ public class SpatialLayer implements Serializable {
 			
 			return data;
 		}
-		
 	}
-
-
+	
+	
 }

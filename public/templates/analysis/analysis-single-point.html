@@ -8,22 +8,26 @@
     <div id="collapseOne" class="panel-collapse collapse in">
       <div class="panel-body">
 
-		<h5>{{I18n "analysis.primary-indicator"}}</h5>
-		<select id="primaryIndicator" class="primary-indicator form-control">
+		<div class="form-group">
+          <label>{{I18n "analysis.primary-indicator"}}</label>
+          <select id="primaryIndicator" class="primary-indicator form-control"></select>
+        </div>
+
+		<div class="form-group">
+          <label>{{I18n "analysis.scenario-comparison"}}</label>
+			<select id="scenarioComparison" class="scenario-comparison form-control">
+			  <option value="compare" {{#if compare}}selected{{/if}}>{{I18n "analysis.scenario.compare"}}</option>
+			  <option value="no-comparison" selected{{#if noComparison}}selected{{/if}}>{{I18n "analysis.scenario.no-comparison"}}</option>
+			</select>
+		</div>
+
+		<div class="form-group">
+          <label>{{I18n "analysis.scenario-1"}}</label>
+			<select id="scenario1" class="scenario-list form-control">
+			</select>
 		
-		</select>
 
-		<h5>{{I18n "analysis.scenario-comparison"}}</h5>
-		<select id="scenarioComparison" class="scenario-comparison form-control">
-		  <option value="compare" {{#if compare}}selected{{/if}}>{{I18n "analysis.scenario.compare"}}</option>
-		  <option value="no-comparison" selected{{#if noComparison}}selected{{/if}}>{{I18n "analysis.scenario.no-comparison"}}</option>
-		</select>
-
-		<h5>{{I18n "analysis.scenario-1"}}</h5>
-		<select id="scenario1" class="scenario-list form-control">
-		</select>
-
-		<div style="margin-top: 10px;" class="btn-group mode-selector" data-toggle="buttons">
+			<div style="margin-top: 10px;" class="btn-group mode-selector" data-toggle="buttons">
 			  <label class="btn btn-default">
 			    <input type="radio" name="mode1" id="modeCar" value="CAR"><span class="icon icon-car"></span>
 			  </label>
@@ -31,7 +35,7 @@
 			    <input type="radio" name="mode1" id="modeBus" value="TRANSIT"><span class="icon icon-pedestrian"></span> + <span class="icon icon-bus"></span>
 			  </label>
 			  <label class="btn btn-default">
-				    <input type="radio" name="mode2" id="modeBus" value="BIKE,TRANSIT"><span class="icon icon-bike"></span> + <span class="icon icon-bus"></span>
+				    <input type="radio" name="mode1" id="modeBus" value="BIKE,TRANSIT"><span class="icon icon-bike"></span> + <span class="icon icon-bus"></span>
 				  </label>
 			  <label class="btn btn-default">
 			    <input type="radio" name="mode1" id="modeBike" value="BIKE"><span class="icon icon-bike"></span>
@@ -39,15 +43,16 @@
 			  <label class="btn btn-default">
 			    <input type="radio" name="mode1" id="modePed" value="WALK"><span class="icon icon-pedestrian"></span>
 			  </label>
+			</div>
 		</div>
 
-
 		<div id="scenario2-controls">
-			<h5>{{I18n "analysis.scenario-2"}}</h5>
-			<select id="scenario2" class="scenario-list form-control">
-			</select>
+			<div class="form-group">
+          		<label>{{I18n "analysis.scenario-2"}}</label>
+				<select id="scenario2" class="scenario-list form-control">
+				</select>
 
-			<div style="margin-top: 10px;" class="btn-group mode-selector" data-toggle="buttons">
+				<div style="margin-top: 10px;" class="btn-group mode-selector" data-toggle="buttons">
 				  <label class="btn btn-default">
 				    <input type="radio" name="mode2" id="modeCar" value="CAR"><span class="icon icon-car"></span>
 				  </label>
@@ -63,16 +68,22 @@
 				  <label class="btn btn-default">
 				    <input type="radio" name="mode2" id="modePed" value="WALK"><span class="icon icon-pedestrian"></span>
 				  </label>
+				</div>
 			</div>
 
 		</div>
 
-		<h5>Average Walk Speed: <span class="notes" id="walkSpeedValue"></span></h5>
-		<input id="walkSpeedSlider" data-slider-id="walkSpeedSlider" style="width: 250px;" type="text" data-slider-min="1" data-slider-max="40" data-slider-step="1" data-slider-value="5"/>
 
-		<h5>Average Bike Speed: <span class="notes" id="bikeSpeedValue"></span></h5>
-		<input id="bikeSpeedSlider" data-slider-id="bikeSpeedSlider" style="width: 250px;" type="text" data-slider-min="1" data-slider-max="40" data-slider-step="1" data-slider-value="15"/>
-	
+		<div class="form-group">
+          	<label>Average Walk Speed: <span class="notes" id="walkSpeedValue"></span></label>
+			<input id="walkSpeedSlider" data-slider-id="walkSpeedSlider" style="width: 250px;" type="text" data-slider-min="1" data-slider-max="40" data-slider-step="1" data-slider-value="5"/>
+		</div>
+
+		<div class="form-group">
+          	<label>Average Bike Speed: <span class="notes" id="bikeSpeedValue"></span></label>
+			<input id="bikeSpeedSlider" data-slider-id="bikeSpeedSlider" style="width: 250px;" type="text" data-slider-min="1" data-slider-max="40" data-slider-step="1" data-slider-value="15"/>
+		</div>
+
 	</div>
     </div>
   </div>
@@ -147,7 +158,6 @@
 				</div>
 
 			</div>
-
 
 	 	</div>
 	 	<div class="checkbox">

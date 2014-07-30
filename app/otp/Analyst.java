@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import models.SpatialLayer;
+
 import org.opentripplanner.analyst.core.Sample;	
 import org.opentripplanner.common.model.GenericLocation;
 import org.opentripplanner.routing.algorithm.EarliestArrivalSPTService;
@@ -92,11 +94,12 @@ public class Analyst {
     }
 	
 	public void createJob() throws Exception {
+		
 		// start up cluster
-		StandaloneCluster cluster = new StandaloneCluster("s3credentials");
+		StandaloneCluster cluster = new StandaloneCluster("s3credentials", true, null);
 	
 		StandaloneExecutive exec = cluster.createExecutive();
-		StandaloneWorker worker = cluster.createWorker(1, true);
+		StandaloneWorker worker = cluster.createWorker();
 	
 		cluster.registerWorker(exec, worker);
 	
@@ -109,7 +112,7 @@ public class Analyst {
 	
 			@Override
 			public void onWorkResult(WorkResult res) {
-				System.out.println("got callback: " + res.getResult().id );
+				System.out.println("got callback: ");
 				jobsBack += 1;
 			}
 		}
@@ -131,6 +134,10 @@ public class Analyst {
 	
 	public Graph getGraph (String graphId) {
 		return graphService.getGraph(graphId);
+	}
+	
+	public File getZippedGraph (String graphId) throws IOException {
+		return graphService.getZippedGraph(graphId);
 	}
 	
 	public GraphService getGraphService() {

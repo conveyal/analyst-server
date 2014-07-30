@@ -1996,7 +1996,7 @@ dc.coordinateGridMixin = function (_chart) {
         _xAxisLabel = _;
         _chart.margins().bottom -= _xAxisLabelPadding;
         _xAxisLabelPadding = (padding === undefined) ? DEFAULT_AXIS_LABEL_PADDING : padding;
-        _chart.margins().bottom += 30;//_xAxisLabelPadding;
+        _chart.margins().bottom += 20;//_xAxisLabelPadding;
 
         return _chart;
     };

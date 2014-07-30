@@ -14,6 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.imageio.ImageIO;
 
 import lombok.Synchronized;
+import models.Query;
 import models.Shapefile.ShapeFeature;
 import models.SpatialLayer;
 import models.Attribute;
@@ -41,6 +42,7 @@ import com.vividsolutions.jts.index.strtree.STRtree;
 
 import play.mvc.*;
 import utils.HaltonPoints;
+import utils.QueryResults;
 import utils.Tile;
 import utils.TransportIndex;
 import utils.TransportIndex.TransitSegment;
@@ -48,6 +50,8 @@ import utils.TransportIndex.TransitSegment;
 public class Tiles extends Controller {
 
 	private static  Map<String, byte[]> tileCache = new ConcurrentHashMap<String, byte[]>();
+	
+	private static  Map<String, QueryResults> queryResultsCache = new ConcurrentHashMap<String, QueryResults>();
 	
 	private static TransportIndex transitIndex = new TransportIndex();
 	
@@ -204,7 +208,61 @@ public class Tiles extends Controller {
 	    	e.printStackTrace();
 	    	return badRequest();
 	    }
-    } 
+    }
+		
+	public static Result query(String queryId, Integer x, Integer y, Integer z, Integer timeLimit) {
+    	
+		Query query = Query.getQuery(queryId);
+		
+		if(query == null)
+			return badRequest();
+		
+		String tileIdPrefix = "query_" + queryId + "_" + timeLimit;
+		
+    	Tile tile = new Tile(tileIdPrefix, x, y, z);
+    	
+    	try {
+	    	if(!tileCache.containsKey(tile.tileId)) {
+	    		
+	    		if(!queryResultsCache.containsKey(queryId)) {
+	    			QueryResults qr = new QueryResults(query);
+	    			queryResultsCache.put(queryId, qr);
+	    		}
+	    		
+	    		QueryResults qr = queryResultsCache.get(queryId);
+	    		
+	    		SpatialLayer sd = SpatialLayer.getPointSetCategory(query.pointSetId);
+	    		       
+	            List<ShapeFeature> features = sd.getShapefile().query(tile.envelope);
+	         
+	            for(ShapeFeature feature : features) {
+	            	
+	            	Color color = null;
+	            
+                 	if(qr.items.containsKey(feature.id)) {
+                 		float opacity = (float)((float)qr.items.get(feature.id).value / (float)qr.maxValue);
+                 		color = new Color(0.2f,0.2f,0.9f,opacity);
+                 	}
+    				else {
+    					color = new Color(0.0f,0.0f,0.0f,0.1f);
+    				}
+    		
+                 	if(color != null)
+                 		tile.renderPolygon(feature.geom, color);
+	            }
+	               
+	            tileCache.put(tile.tileId, tile.generateImage());
+			}
+			
+			ByteArrayInputStream bais = new ByteArrayInputStream(tileCache.get(tile.tileId)); 
+		    response().setContentType("image/png");
+			return ok(bais);
+		
+    	} catch (Exception e) {
+	    	e.printStackTrace();
+	    	return badRequest();
+	    }
+    }
 	
 	
 	public static Result transit(String scenarioId, Integer x, Integer y, Integer z) {
