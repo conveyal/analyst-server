@@ -1,1 +1,13 @@
-<li class="list-group-item" data-id="{{id}}"><input id="queryCheckbox" type="checkbox" data-id="{{id}}"/> {{name}} <i style="margin-left: 5px;" id="deleteItem" class="pull-right glyphicon glyphicon-trash"></i></li>
+<li class="list-group-item" data-id="{{id}}">
+
+	<input id="queryCheckbox" type="checkbox" data-id="{{id}}"/> <strong>{{name}}</strong> <i style="margin-left: 5px;" id="deleteItem" class="pull-right glyphicon glyphicon-trash"></i>
+
+	<p>
+		<div class="progress" style="margin-bottom: 0px;">
+		  <div class="progress-bar" role="progressbar" aria-valuenow="{{percent}}" aria-valuemin="0" aria-valuemax="100" style="width: {{percent}}%;">
+		    <strong>{{percent}}%</strong>
+		  </div>
+		</div>
+		<small>({{completePoints}} of {{totalPoints}} complete)<small> 
+	</p>
+</li>

@@ -122,6 +122,26 @@ var Analyst = Analyst || {};
 	  	
 	  },
 
+	  modelEvents: {
+	  	'change': 'fieldsChanged'
+	  },
+
+	  initialize : function() {
+	  	var _this = this;
+	  	 this.updateInterval = setInterval(function() {
+        	if(_this.model.get("percent") < 100)
+        		_this.model.fetch();
+		}, 1000);
+	  },
+
+	  onClose : function() {
+	  	clearInterval(this.updateInterval);
+	  },
+
+	  fieldsChanged: function() {
+	  	this.render();
+	  },
+
 	  clickItem : function(evt) {
 
 	 	var target = $(evt.target);
@@ -140,6 +160,7 @@ var Analyst = Analyst || {};
 	  },
 
 	  onRender: function () {
+	  	
         // Get rid of that pesky wrapping-div.
         // Assumes 1 child element present in template.
         this.$el = this.$el.children();
@@ -168,16 +189,15 @@ var Analyst = Analyst || {};
 				if(this.queryOverlay[id] && A.map.hasLayer(this.queryOverlay[id]))
 					A.map.removeLayer(this.queryOverlay[id]);
 			}
-
 		},
 
 		appendHtml: function(collectionView, itemView){
 	    	collectionView.$("#queryList").append(itemView.el);
-	    	this.listenTo(itemView, "queryShow", this.transitShow);	
-	    	this.listenTo(itemView, "queryHide", this.transitHide);	
+	    	this.listenTo(itemView, "queryShow", this.queryShow);	
+	    	this.listenTo(itemView, "queryHide", this.queryHide);	
 	 	},
 
-	 	transitShow : function(data) {
+	 	queryShow : function(data) {
 
 	 		if(A.map.hasLayer(this.queryOverlay[data.queryId]))
 	 			A.map.removeLayer(this.queryOverlay[data.queryId ]);

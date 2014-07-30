@@ -114,6 +114,13 @@ public class Query implements Serializable {
 		return results;
 	}
 	
+	public Integer getPercent() {
+		if(this.totalPoints != null && this.completePoints != null && this.totalPoints > 0)
+			return Math.round((float)((float)this.completePoints / (float)this.totalPoints) * 100); 
+		else 
+			return 0;
+	}
+	
 	static public Query getQuery(String id) {
 		
 		return queryData.getById(id);	

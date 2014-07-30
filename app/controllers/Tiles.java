@@ -67,6 +67,10 @@ public class Tiles extends Controller {
 	
 	public static Result spatial(String pointSetId, Integer x, Integer y, Integer z, String selectedAttributes) {
     	
+		response().setHeader(CACHE_CONTROL, "no-cache, no-store, must-revalidate");
+		response().setHeader(PRAGMA, "no-cache");
+		response().setHeader(EXPIRES, "0");
+		
 		SpatialLayer sd = SpatialLayer.getPointSetCategory(pointSetId);
 		
 		HashSet<String> attributes = new HashSet<String>();
@@ -136,6 +140,10 @@ public class Tiles extends Controller {
 	
 	public static Result surface(Integer surfaceId, String pointSetId, Integer x, Integer y, Integer z, Boolean showIso, Boolean showPoints, Integer timeLimit, Integer minTime) {
     	
+		response().setHeader(CACHE_CONTROL, "no-cache, no-store, must-revalidate");
+		response().setHeader(PRAGMA, "no-cache");
+		response().setHeader(EXPIRES, "0");
+		
 		SpatialLayer sd = SpatialLayer.getPointSetCategory(pointSetId);
 		
 		if(sd == null)
@@ -217,6 +225,10 @@ public class Tiles extends Controller {
 		
 	public static Result query(String queryId, Integer x, Integer y, Integer z, Integer timeLimit) {
     	
+		response().setHeader(CACHE_CONTROL, "no-cache, no-store, must-revalidate");
+		response().setHeader(PRAGMA, "no-cache");
+		response().setHeader(EXPIRES, "0");
+		
 		Query query = Query.getQuery(queryId);
 		
 		if(query == null)
@@ -229,12 +241,13 @@ public class Tiles extends Controller {
     	try {
 	    	if(!tileCache.containsKey(tile.tileId)) {
 	    		
+	    		QueryResults qr = null;
 	    		if(!queryResultsCache.containsKey(queryId)) {
-	    			QueryResults qr = new QueryResults(query);
+	    			qr = new QueryResults(query);
 	    			queryResultsCache.put(queryId, qr);
 	    		}
-	    		
-	    		QueryResults qr = queryResultsCache.get(queryId);
+	    		else
+	    			qr = queryResultsCache.get(queryId);
 	    		
 	    		SpatialLayer sd = SpatialLayer.getPointSetCategory(query.pointSetId);
 	    		       
@@ -271,6 +284,10 @@ public class Tiles extends Controller {
 	
 	
 	public static Result transit(String scenarioId, Integer x, Integer y, Integer z) {
+		
+		response().setHeader(CACHE_CONTROL, "no-cache, no-store, must-revalidate");
+		response().setHeader(PRAGMA, "no-cache");
+		response().setHeader(EXPIRES, "0");
 		
 		String tileIdPrefix = "transit_" + scenarioId;
 
@@ -328,6 +345,10 @@ public class Tiles extends Controller {
 	
 	public static Result traffic(String scenarioId, Integer x, Integer y, Integer z) {
 		
+		response().setHeader(CACHE_CONTROL, "no-cache, no-store, must-revalidate");
+		response().setHeader(PRAGMA, "no-cache");
+		response().setHeader(EXPIRES, "0");
+		
 		String tileIdPrefix = "transit_" + scenarioId;
 
     	Tile tile = new Tile(tileIdPrefix, x, y, z);
@@ -361,6 +382,10 @@ public class Tiles extends Controller {
 	
 	public static Result compare(Integer surfaceId1, Integer surfaceId2, String spatialId, Integer x, Integer y, Integer z, Boolean showIso, Boolean showPoints, Integer timeLimit, Integer minTime) {
     	
+		response().setHeader(CACHE_CONTROL, "no-cache, no-store, must-revalidate");
+		response().setHeader(PRAGMA, "no-cache");
+		response().setHeader(EXPIRES, "0");
+		
 		SpatialLayer sd = SpatialLayer.getPointSetCategory(spatialId);
 		
 		if(sd == null)
