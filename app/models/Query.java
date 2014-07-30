@@ -30,6 +30,7 @@ import com.vividsolutions.jts.geom.Geometry;
 
 import controllers.Api;
 import controllers.Application;
+import controllers.Tiles;
 
 public class Query implements Serializable {
 
@@ -144,6 +145,8 @@ public class Query implements Serializable {
 			return;
 		
 		q.getResults().save(rf.id, rf);
+		
+		Tiles.resetQueryCache(id);
 	}
 	
 	static void updateStatus(String id, JobStatus js) {

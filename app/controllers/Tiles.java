@@ -55,7 +55,12 @@ public class Tiles extends Controller {
 	
 	private static TransportIndex transitIndex = new TransportIndex();
 	
-	public static void resetCache() {
+	public static void resetTileCache() {
+		tileCache.clear();
+	}
+	
+	public static void resetQueryCache(String queryId) {
+		queryResultsCache.remove(queryId);
 		tileCache.clear();
 	}
 	

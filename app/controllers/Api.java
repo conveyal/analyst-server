@@ -400,7 +400,7 @@ public class Api extends Controller {
         	sd = mapper.readValue(request().body().asJson().traverse(), SpatialLayer.class);
         	sd.save();
         	
-        	Tiles.resetCache();
+        	Tiles.resetTileCache();
         	SpatialLayer.pointSetCache.clear();
 
             return ok(Api.toJson(sd, false));
@@ -424,7 +424,7 @@ public class Api extends Controller {
         	
         	sd.save();
 
-        	Tiles.resetCache();
+        	Tiles.resetTileCache();
         	SpatialLayer.pointSetCache.clear();
         	
             return ok(Api.toJson(sd, false));
@@ -445,7 +445,7 @@ public class Api extends Controller {
 
         sd.delete();
         
-        Tiles.resetCache();
+        Tiles.resetTileCache();
         SpatialLayer.pointSetCache.clear();
 
         return ok();
