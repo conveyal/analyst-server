@@ -10,7 +10,7 @@ public class PrototypeAnalystRequest extends AnalystRequest {
 	// TODO move defaults to config
 	private String date = "2014-06-09";
     private String time = "8:00 AM";
-    private TimeZone timeZone = TimeZone.getTimeZone("America/Mexico_City");
+    private TimeZone timeZone = TimeZone.getTimeZone("America/Argentina/Buenos_Aires");
 
     public PrototypeAnalystRequest() {
     	

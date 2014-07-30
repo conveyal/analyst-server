@@ -60,7 +60,7 @@ public class Application extends Controller {
 		
 		cluster.registerWorker(exec, worker);
 		
-		JobSpec js = new JobSpec(graphId, pointSetId + ".json",  pointSetId + ".json", "2014-06-09", "8:05 AM", "America/New York");
+		JobSpec js = new JobSpec(graphId, pointSetId + ".json",  pointSetId + ".json", "2014-06-09", "8:05 AM", "America/New York", "TRANSIT");
 		
 		// plus a callback that registers how many work items have returned
 		class CounterCallback implements JobItemCallback {

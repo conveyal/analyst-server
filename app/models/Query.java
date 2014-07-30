@@ -180,7 +180,7 @@ public class Query implements Serializable {
 				
 				cluster.registerWorker(exec, worker);
 				
-				JobSpec js = new JobSpec(q.scenarioId, q.pointSetId + ".json",  q.pointSetId + ".json", "2014-06-09", "8:05 AM", "America/New York");
+				JobSpec js = new JobSpec(q.scenarioId, q.pointSetId + ".json",  q.pointSetId + ".json", "2014-06-09", "8:05 AM", "America/New York", q.mode);
 				
 				// plus a callback that registers how many work items have returned
 				class CounterCallback implements JobItemCallback {

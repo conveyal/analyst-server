@@ -104,7 +104,7 @@ public class Analyst {
 		cluster.registerWorker(exec, worker);
 	
 		// build the request
-		JobSpec js = new JobSpec("austin", "austin.csv", "austin.csv", "2014-06-09", "8:05 AM", "America/Chicago");
+		JobSpec js = new JobSpec("austin", "austin.csv", "austin.csv", "2014-06-09", "8:05 AM", "America/Chicago", "TRANSIT");
 	
 		// plus a callback that registers how many work items have returned
 		class CounterCallback implements JobItemCallback {
