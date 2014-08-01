@@ -47,6 +47,8 @@ GET     /tile/compare                	controllers.Tiles.compare(surfaceId1:Integ
 
 GET     /gis/query	                    controllers.Gis.query(queryId:String, timeLimit:Integer ?= 3600, normalizeBy:String ?= null, groupBy:String ?= null)
 
+GET     /api/queryBins	                controllers.Api.queryBins(queryId:String, timeLimit:Integer ?= 3600, normalizeBy:String ?= null, groupBy:String ?= null)
+
 GET     /api/surface                    controllers.Api.surface(graphId:String, lat:Double, lon:Double, mode:String, bikeSpeed:Double, walkSpeed:Double)
 GET		/api/isochrone					controllers.Api.isochrone(surfaceId:Integer, cutoffs:java.util.List[Integer])
 GET		/api/result						controllers.Api.result(surfaceId:Integer, pointSetId:String)

@@ -72,6 +72,9 @@ import play.libs.F.Promise;
 import play.mvc.*;
 import play.mvc.Http.MultipartFormData.FilePart;
 import utils.HaltonPoints;
+import utils.QueryResults;
+import utils.Tile;
+import utils.QueryResults.QueryResultItem;
 
 public class Api extends Controller {
 
@@ -194,6 +197,57 @@ public class Api extends Controller {
 
         long t1 = System.currentTimeMillis();
         return isochrones;
+    }
+    
+    public static Result queryBins(String queryId, Integer timeLimit, String normalizeBy, String groupBy) {
+    	
+		response().setHeader(CACHE_CONTROL, "no-cache, no-store, must-revalidate");
+		response().setHeader(PRAGMA, "no-cache");
+		response().setHeader(EXPIRES, "0");
+		
+		Query query = Query.getQuery(queryId);
+		
+		if(query == null)
+			return badRequest();
+	   	
+    	try {
+	
+    		String queryKey = queryId + "_" + timeLimit;
+    		
+    		QueryResults qr = null;
+    		
+    		synchronized(Tiles.queryResultsCache) {
+    			if(!Tiles.queryResultsCache.containsKey(queryKey)) {
+	    			qr = new QueryResults(query, timeLimit);
+	    			Tiles.queryResultsCache.put(queryKey, qr);
+	    		}
+	    		else
+	    			qr = Tiles.queryResultsCache.get(queryKey);
+    		}
+    		
+            if(normalizeBy == null) {
+            	return ok(Json.toJson(qr.jenksClassifier.bins));
+            }
+            else {
+            
+            	QueryResults normalizeQr = qr.normalizeBy(normalizeBy);
+        	
+            	if(groupBy == null) {
+            		return ok(Json.toJson(normalizeQr.jenksClassifier.bins));
+            	}
+            	else {
+            		QueryResults gruopedQr = normalizeQr.groupBy(groupBy);
+            		
+            		return ok(Json.toJson(gruopedQr.jenksClassifier.bins));
+            	}
+	            
+            }
+
+		
+    	} catch (Exception e) {
+	    	e.printStackTrace();
+	    	return badRequest();
+	    }
     }
     
 	

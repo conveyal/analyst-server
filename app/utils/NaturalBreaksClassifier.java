@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class NaturalBreaksClassifier {
 	
@@ -153,12 +154,17 @@ public class NaturalBreaksClassifier {
 		public Double lower;
 		public Double upper;
 		
+		@JsonIgnore
 		public Color color;
+		
+		public String hexColor;
 		
 		public Bin(Double lower, Double upper, Color color) {
 			this.lower = lower;
 			this.upper = upper;
 			this.color = color;
+		
+			this.hexColor = String.format("#%02x%02x%02x", this.color.getRed(), this.color.getGreen(), this.color.getBlue());
 		}
 	}
 	

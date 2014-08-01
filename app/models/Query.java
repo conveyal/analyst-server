@@ -26,12 +26,14 @@ import com.conveyal.otpac.standalone.StandaloneCluster;
 import com.conveyal.otpac.standalone.StandaloneExecutive;
 import com.conveyal.otpac.standalone.StandaloneWorker;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.vividsolutions.jts.geom.Geometry;
 
 import controllers.Api;
 import controllers.Application;
 import controllers.Tiles;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Query implements Serializable {
 
 	private static final long serialVersionUID = 1L;

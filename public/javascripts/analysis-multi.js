@@ -182,7 +182,7 @@ var Analyst = Analyst || {};
 
 	  	var timeLimit = this.timeSlider.getValue() * 60;
 
-	  	var url = '/gis/query?z={z}&x={x}&y={y}&queryId=' + this.model.id + '&timeLimit=' + timeLimit;
+	  	var url = '/gis/query?queryId=' + this.model.id + '&timeLimit=' + timeLimit;
 
  		if(this.groupById)
  			url = url + "&groupBy=" + this.groupById;
@@ -211,18 +211,16 @@ var Analyst = Analyst || {};
 	  refreshMap : function() {
 	  	var target = this.$("#queryCheckbox");
 
-	  	if(this.$("#groupCheckbox").prop('checked')) {
-	  		this.$("#groupBy").prop("disabled", false);
-	  		this.groupById = this.$("#groupBy").val();	
-	  	}
-	  	else  {
-	  		this.groupById = false;
-	  		this.$("#groupBy").prop("disabled", true);
-	  	}
+	  	var legendTitle = this.model.get("name");
+
+	  	var _this = this;
+
 
 	  	if(this.$("#normalizeCheckbox").prop('checked')) {
 	  		this.$("#normalizeBy").prop("disabled", false);
 	  		this.normalizeById = this.$("#normalizeBy").val();
+
+	  		legendTitle = legendTitle + " normalized by " + $("#normalizeBy option:selected").text();
 	  	}
 	  	else {
 	  		this.$("#normalizeBy").prop("disabled", true);
@@ -230,13 +228,25 @@ var Analyst = Analyst || {};
 
 	  	}
 
+	  	if(this.$("#groupCheckbox").prop('checked')) {
+	  		this.$("#groupBy").prop("disabled", false);
+	  		this.groupById = this.$("#groupBy").val();	
+
+	  		legendTitle = legendTitle + " grouped by " + $("#groupBy option:selected").text();
+	  	}
+	  	else  {
+	  		this.groupById = false;
+	  		this.$("#groupBy").prop("disabled", true);
+	  	}
+
+
 	  	if(target.prop("checked")) {
 	  		if(A.map.hasLayer(this.queryOverlay))
 	 			A.map.removeLayer(this.queryOverlay);
 
 	 		var timeLimit = this.timeSlider.getValue() * 60;
 
-	 		var url = '/tile/query?z={z}&x={x}&y={y}&queryId=' + this.model.id + '&timeLimit=' + timeLimit;
+	 		var url = 'queryId=' + this.model.id + '&timeLimit=' + timeLimit;
 
 	 		if(this.groupById)
 	 			url = url + "&groupBy=" + this.groupById;
@@ -244,12 +254,35 @@ var Analyst = Analyst || {};
 	 		if(this.normalizeById)
 	 			url = url + "&normalizeBy=" + this.normalizeById;
 
-			this.queryOverlay = L.tileLayer(url).addTo(A.map);
+			this.queryOverlay = L.tileLayer('/tile/query?z={z}&x={x}&y={y}&' + url).addTo(A.map);
+
+			this.$("#legendTitle").html(legendTitle);
+
+			var legendItemTemplate = Handlebars.getTemplate('analysis', 'query-legend-item')
+
+			
+			this.$("#legendData").empty();
+
+			$.getJSON('/api/queryBins?' + url, function(data) {
+
+				for(var i in data) {
+					var lower = _this.numberWithCommas(parseFloat(data[i].lower).toFixed(2));
+					var upper = _this.numberWithCommas(parseFloat(data[i].upper).toFixed(2));
+					var legendItem = {color : data[i].hexColor, label : lower + " - " + upper};
+
+					_this.$("#legendData").append(legendItemTemplate(legendItem));
+				}		  	 
+		    });
+
+
+			this.$("#legend").show();
+
 	  	}	
 	  	else {
 	  		if(A.map.hasLayer(this.queryOverlay))
 				A.map.removeLayer(this.queryOverlay);
 
+			this.$("#legend").hide();
 	  	}
 	  },
 
@@ -299,7 +332,13 @@ var Analyst = Analyst || {};
 			_this.refreshMap();
 		}).data('slider');
 
-      }
+      },
+      numberWithCommas : function(x) {
+		    var parts = x.toString().split(".");
+		    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+		    return parts.join(".");
+		}
+
 
 	});
 

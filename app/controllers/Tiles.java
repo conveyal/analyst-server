@@ -52,7 +52,7 @@ public class Tiles extends Controller {
 
 	private static  Map<String, byte[]> tileCache = new ConcurrentHashMap<String, byte[]>();
 	
-	private static  Map<String, QueryResults> queryResultsCache = new ConcurrentHashMap<String, QueryResults>();
+	public static  Map<String, QueryResults> queryResultsCache = new ConcurrentHashMap<String, QueryResults>();
 	
 	private static TransportIndex transitIndex = new TransportIndex();
 	
