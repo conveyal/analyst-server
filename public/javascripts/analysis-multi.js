@@ -118,7 +118,12 @@ var Analyst = Analyst || {};
 	  events: { 
 
 	  	'click #deleteItem' : 'deleteItem',
-	  	'click #queryCheckbox' : 'clickItem'
+	  	'click #queryCheckbox' : 'clickItem',
+	  	'click #groupCheckbox' : 'groupBy',
+	  	'click #normalizeCheckbox' : 'normalizeBy',
+	  	'change #normalizeBy' : 'refreshMap',
+	  	'change #groupBy' : 'groupBy',
+	  	'click #exportShape' : 'exportShape'
 	  	
 	  },
 
@@ -128,39 +133,130 @@ var Analyst = Analyst || {};
 
 	  initialize : function() {
 	  	var _this = this;
-	  	 this.updateInterval = setInterval(function() {
-        	if(_this.model.get("percent") < 100)
+	  	this.updateInterval = setInterval(function() {
+        	if(_this.model.get("completePoints") < _this.model.get("totalPoints"))
         		_this.model.fetch();
 		}, 1000);
 	  },
 
 	  onClose : function() {
 	  	clearInterval(this.updateInterval);
+
+	  	if(this.queryOverlay && A.map.hasLayer(this.queryOverlay))
+			A.map.removeLayer(this.queryOverlay);
+		
 	  },
 
 	  fieldsChanged: function() {
 	  	this.render();
 	  },
 
+	  serializeData: function() {
+
+	  	var data  = this.model.toJSON();
+
+	  	if(this.isStarting())
+	  		data['starting'] = true;
+	  	else if(this.isComplete())
+	  		data['complete'] = true;
+
+	  	return data;
+
+	  },
+
+	  isStarting : function() {
+	  	return this.model.get("totalPoints") == -1;
+	  },
+
+	  isComplete : function() {
+	  	return this.model.get("totalPoints") == this.model.get("completePoints");
+	  },
+
 	  clickItem : function(evt) {
-
-	 	var target = $(evt.target);
 	  	
-	  	var queryId = target.data("id")
-	  		
-	  	if(target.prop("checked"))
-	  		this.trigger("queryShow", {queryId : queryId});
-	  	else
-	  		this.trigger("queryHide", {queryId : queryId});
+	  	this.refreshMap();
+	  	
+	  },
 
+	  exportShape : function(evt) {
+
+	  	var timeLimit = this.timeSlider.getValue() * 60;
+
+	  	var url = '/gis/query?z={z}&x={x}&y={y}&queryId=' + this.model.id + '&timeLimit=' + timeLimit;
+
+ 		if(this.groupById)
+ 			url = url + "&groupBy=" + this.groupById;
+
+ 		if(this.normalizeById)
+ 			url = url + "&normalizeBy=" + this.normalizeById;
+
+ 		window.open(url);
+
+	  },
+
+	  groupBy : function(evt) {
+
+	  	this.refreshMap();
+	  },
+
+	  normalizeBy : function(evt) {
+	  		
+	  	this.refreshMap();
 	  },
 
 	  deleteItem: function(evt) {
 	  	this.model.destroy();
 	  },
 
+	  refreshMap : function() {
+	  	var target = this.$("#queryCheckbox");
+
+	  	if(this.$("#groupCheckbox").prop('checked')) {
+	  		this.$("#groupBy").prop("disabled", false);
+	  		this.groupById = this.$("#groupBy").val();	
+	  	}
+	  	else  {
+	  		this.groupById = false;
+	  		this.$("#groupBy").prop("disabled", true);
+	  	}
+
+	  	if(this.$("#normalizeCheckbox").prop('checked')) {
+	  		this.$("#normalizeBy").prop("disabled", false);
+	  		this.normalizeById = this.$("#normalizeBy").val();
+	  	}
+	  	else {
+	  		this.$("#normalizeBy").prop("disabled", true);
+	  		this.normalizeById = false;
+
+	  	}
+
+	  	if(target.prop("checked")) {
+	  		if(A.map.hasLayer(this.queryOverlay))
+	 			A.map.removeLayer(this.queryOverlay);
+
+	 		var timeLimit = this.timeSlider.getValue() * 60;
+
+	 		var url = '/tile/query?z={z}&x={x}&y={y}&queryId=' + this.model.id + '&timeLimit=' + timeLimit;
+
+	 		if(this.groupById)
+	 			url = url + "&groupBy=" + this.groupById;
+
+	 		if(this.normalizeById)
+	 			url = url + "&normalizeBy=" + this.normalizeById;
+
+			this.queryOverlay = L.tileLayer(url).addTo(A.map);
+	  	}	
+	  	else {
+	  		if(A.map.hasLayer(this.queryOverlay))
+				A.map.removeLayer(this.queryOverlay);
+
+	  	}
+	  },
+
 	  onRender: function () {
-	  	
+
+	  	var _this = this;
+
         // Get rid of that pesky wrapping-div.
         // Assumes 1 child element present in template.
         this.$el = this.$el.children();
@@ -168,6 +264,41 @@ var Analyst = Analyst || {};
         // nesting elements during re-render.
         this.$el.unwrap();
         this.setElement(this.$el);
+
+        if(this.isComplete()) {
+
+        	this.pointsets = new A.models.PointSets(); 
+
+			this.pointsets.fetch({reset: true, data : {projectId: this.model.get("projectId")}, success: function(collection, response, options) {
+
+				_this.$("#normalizeBy").empty();
+				_this.$("#groupBy").empty();
+
+				for(var i in _this.pointsets.models) {
+					_this.$("#normalizeBy").append('<option value="' + _this.pointsets.models[i].get("id") + '">' + _this.pointsets.models[i].get("name") + '</option>');
+					_this.$("#groupBy").append('<option value="' + _this.pointsets.models[i].get("id") + '">' + _this.pointsets.models[i].get("name") + '</option>');
+				}
+	    			
+
+			}});
+
+			this.$("#normalizeBy").prop("disabled", true);
+			this.$("#groupBy").prop("disabled", true);
+
+			this.$("#settings").show();
+        }
+        else
+        	this.$("#settings").hide();
+
+        this.timeSlider = this.$('#timeSlider').slider({
+			formater: function(value) {
+				return value + " minutes";
+			}
+		}).on('slideStop', function(evt) {
+			_this.$('#timeLimitValue').html(evt.value + " mins");
+			_this.refreshMap();
+		}).data('slider');
+
       }
 
 	});
@@ -183,33 +314,14 @@ var Analyst = Analyst || {};
 			
 		},
 
-		onClose : function() {
-
-			for(var id in this.queryOverlay){
-				if(this.queryOverlay[id] && A.map.hasLayer(this.queryOverlay[id]))
-					A.map.removeLayer(this.queryOverlay[id]);
-			}
+		onShow : function() {
+			
 		},
 
 		appendHtml: function(collectionView, itemView){
 	    	collectionView.$("#queryList").append(itemView.el);
-	    	this.listenTo(itemView, "queryShow", this.queryShow);	
-	    	this.listenTo(itemView, "queryHide", this.queryHide);	
-	 	},
+	 	}
 
-	 	queryShow : function(data) {
-
-	 		if(A.map.hasLayer(this.queryOverlay[data.queryId]))
-	 			A.map.removeLayer(this.queryOverlay[data.queryId ]);
-
-			this.queryOverlay[data.queryId] = L.tileLayer('/tile/query?z={z}&x={x}&y={y}&queryId=' + data.queryId).addTo(A.map);	
-		},
-
-		queryHide : function(data) {
-
-			if(A.map.hasLayer(this.queryOverlay[data.queryId]))
-				A.map.removeLayer(this.queryOverlay[data.queryId ]);
-		}
 	});
 
 

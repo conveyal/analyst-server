@@ -75,3 +75,9 @@ analysis.percent-accessible=Percent Accessible
 
 analysis.create-new-query-name=Query Name
 analysis.run-query=Run Query
+
+analysis.normalize=Normalize
+analysis.dont-normalize=Don't Normalize
+
+analysis.group=Group
+analysis.dont-group=Don't Group 

@@ -119,6 +119,20 @@ public class Shapefile implements Serializable {
 		}
 		
 		@JsonIgnore 
+		public Long getAttributeSum(List<String> attributeIds) {
+			
+			Long sum = 0l;
+			
+			for(String attributeId : attributeIds) {
+				if(attributes.containsKey(attributeId))
+					sum += (Integer)attributes.get(attributeId);
+			}
+			
+			return sum;
+			
+		}
+		
+		@JsonIgnore 
 		transient private Map<String,Sample> graphSampleMap;
 		
 		@JsonIgnore
@@ -144,6 +158,18 @@ public class Shapefile implements Serializable {
 		public int compareTo(ShapeFeature o) {
 			return this.id.compareTo(o.id);
 		}	
+		
+		public Long sum() {
+			Long value = 0l;
+			
+			for(Object o : this.attributes.values()) {
+				if(o != null && o instanceof Integer){
+					value += (Integer)o;
+				}
+			}
+			
+			return value;
+		}
 	}
 	
 	public static class FeatureTime {

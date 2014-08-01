@@ -71,6 +71,16 @@ public class SpatialLayer implements Serializable {
     	attributes.add(attribute);
 	}
 	
+	public List<String> getAttributeIds() {
+		List<String> attributeIds = new ArrayList<String>();
+	
+		for(Attribute attr : attributes) {
+			attributeIds.add(attr.fieldName);
+		}
+		
+		return attributeIds;
+	}
+	
 	public void save() {
 		
 		// assign id at save

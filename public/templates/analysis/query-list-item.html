@@ -3,11 +3,50 @@
 	<input id="queryCheckbox" type="checkbox" data-id="{{id}}"/> <strong>{{name}}</strong> <i style="margin-left: 5px;" id="deleteItem" class="pull-right glyphicon glyphicon-trash"></i>
 
 	<p>
-		<div class="progress" style="margin-bottom: 0px;">
-		  <div class="progress-bar" role="progressbar" aria-valuenow="{{percent}}" aria-valuemin="0" aria-valuemax="100" style="width: {{percent}}%;">
-		    <strong>{{percent}}%</strong>
-		  </div>
-		</div>
-		<small>({{completePoints}} of {{totalPoints}} complete)<small> 
+		{{#unless complete}}
+			<div class="progress" style="margin-bottom: 0px;">
+			  <div class="progress-bar" role="progressbar" aria-valuenow="{{percent}}" aria-valuemin="0" aria-valuemax="100" style="width: {{percent}}%;">
+			    <strong>{{percent}}%</strong>
+			  </div>
+			</div>
+		{{/unless}}
+
+		{{#if starting}}
+			<small>starting up...</smal>
+		{{else}}
+			{{#unless complete}}
+				<small>({{completePoints}} of {{totalPoints}} complete)<small> 
+			{{/unless}}
+		{{/if}}
+
+		<div id="settings">
+			<div class="form-group">
+		        <label>Travel Time Range: <span class="notes" id="timeLimitValue"></span></label>	
+
+		      	<input id="timeSlider" data-slider-id="timeSlider" style="width: 380px;" type="text" data-slider-min="0" data-slider-max="120" data-slider-step="5" data-slider-value="60"/>
+		   	
+				<div class="timeScale"></div>
+				   	
+				<div class="timeScaleLabels">
+					<span class="note pull-right">120 mins</span>
+					<span class="note">0 mins</span>
+				</div>
+			</div>
+
+			<div class="form-group">
+	          <label><input id="normalizeCheckbox" type="checkbox" data-id="{{id}}"/> {{I18n "analysis.normalize"}}</label>
+	          <select id="normalizeBy" class="primary-indicator form-control">
+	          </select>
+	        </div>
+
+	        <div class="form-group">
+	          <label><input id="groupCheckbox" type="checkbox" data-id="{{id}}"/> {{I18n "analysis.group"}}</label>
+	          <select id="groupBy" class="primary-indicator form-control">
+	          </select>
+	        </div>
+	    </div>
+        
+	    <button id="exportShape" type="button" class="btn btn-default">Export Shapefile</button>
+
 	</p>
 </li>

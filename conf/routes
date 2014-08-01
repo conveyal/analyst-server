@@ -41,10 +41,11 @@ DELETE  /api/query/:id					controllers.Api.deleteQuery(id:String)
 
 GET     /tile/spatial                  	controllers.Tiles.spatial(pointSetId:String, x:Integer, y:Integer, z:Integer, selectedAttributes:String	)
 GET     /tile/surface                  	controllers.Tiles.surface(surfaceId:Integer, pointSetId:String, x:Integer, y:Integer, z:Integer, showIso:Boolean ?= false, showPoints:Boolean ?= true, timeLimit:Integer ?= 3600, minTime:Integer ?= null)
-GET     /tile/query	                    controllers.Tiles.query(queryId:String, x:Integer, y:Integer, z:Integer, timeLimit:Integer ?= 3600)
+GET     /tile/query	                    controllers.Tiles.query(queryId:String, x:Integer, y:Integer, z:Integer, timeLimit:Integer ?= 3600, normalizeBy:String ?= null, groupBy:String ?= null)
 GET     /tile/transit                	controllers.Tiles.transit(scenarioId:String, x:Integer, y:Integer, z:Integer)
 GET     /tile/compare                	controllers.Tiles.compare(surfaceId1:Integer, surfaceId2:Integer, spatialId:String, x:Integer, y:Integer, z:Integer, showIso:Boolean ?= false, showPoints:Boolean ?= false, timeLimit:Integer ?= 3600, minTime:Integer ?= null)
 
+GET     /gis/query	                    controllers.Gis.query(queryId:String, timeLimit:Integer ?= 3600, normalizeBy:String ?= null, groupBy:String ?= null)
 
 GET     /api/surface                    controllers.Api.surface(graphId:String, lat:Double, lon:Double, mode:String, bikeSpeed:Double, walkSpeed:Double)
 GET		/api/isochrone					controllers.Api.isochrone(surfaceId:Integer, cutoffs:java.util.List[Integer])

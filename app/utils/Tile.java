@@ -10,6 +10,9 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -100,7 +103,7 @@ public class Tile {
 		
 	}
 	
-	public void renderPolygon(Geometry g, Color c) throws MismatchedDimensionException, TransformException {
+	public void renderPolygon(Geometry g, Color c, Color stroke) throws MismatchedDimensionException, TransformException {
 		
 		if(gr == null)
 			gr = buffer.createGraphics();
@@ -116,7 +119,15 @@ public class Tile {
     	for(Coordinate coord : gTr.getCoordinates())
     		p.addPoint((int)coord.x, (int)coord.y);
     	
-    	gr.fillPolygon(p);       
+    	gr.fillPolygon(p);     
+    	
+    	if(stroke != null) {
+    		gr.setColor(stroke);
+    		gr.setStroke(new BasicStroke(2));
+    		gr.drawPolygon(p);
+    	}
+			
+    	
 	}
 	
 	public void renderLineString(Geometry g, Color c, Integer strokeWidth) throws MismatchedDimensionException, TransformException {

@@ -43,6 +43,7 @@ import com.vividsolutions.jts.index.strtree.STRtree;
 import play.mvc.*;
 import utils.HaltonPoints;
 import utils.QueryResults;
+import utils.QueryResults.QueryResultItem;
 import utils.Tile;
 import utils.TransportIndex;
 import utils.TransportIndex.TransitSegment;
@@ -116,8 +117,9 @@ public class Tiles extends Controller {
 	            	else {
 	            		
 	            		Color color = new Color(0.0f,0.0f,0.0f,0.1f);
+	            		Color stroke = new Color(0.0f,0.0f,0.0f,0.5f);
 	            		
-	            		tile.renderPolygon(feature.geom, color); 		  		
+	            		tile.renderPolygon(feature.geom, color, stroke); 		  		
 	            	}
 	            }
 	            
@@ -189,7 +191,7 @@ public class Tiles extends Controller {
         				}
         		
                      	if(color != null)
-                     		tile.renderPolygon(feature.geom, color);
+                     		tile.renderPolygon(feature.geom, color, null);
                 	}
 	            
 	            	// draw halton points for indicator
@@ -223,7 +225,7 @@ public class Tiles extends Controller {
 	    }
     }
 		
-	public static Result query(String queryId, Integer x, Integer y, Integer z, Integer timeLimit) {
+	public static Result query(String queryId, Integer x, Integer y, Integer z, Integer timeLimit, String normalizeBy, String groupBy) {
     	
 		response().setHeader(CACHE_CONTROL, "no-cache, no-store, must-revalidate");
 		response().setHeader(PRAGMA, "no-cache");
@@ -236,39 +238,95 @@ public class Tiles extends Controller {
 		
 		String tileIdPrefix = "query_" + queryId + "_" + timeLimit;
 		
+		if(normalizeBy != null)
+			tileIdPrefix += "_" + normalizeBy;
+		
+		if(groupBy != null)
+			tileIdPrefix += "_" + groupBy;
+
+		
     	Tile tile = new Tile(tileIdPrefix, x, y, z);
     	
     	try {
 	    	if(!tileCache.containsKey(tile.tileId)) {
 	    		
+	    		String queryKey = queryId + "_" + timeLimit;
+	    		
 	    		QueryResults qr = null;
-	    		if(!queryResultsCache.containsKey(queryId)) {
-	    			qr = new QueryResults(query);
-	    			queryResultsCache.put(queryId, qr);
+	    		
+	    		synchronized(queryResultsCache) {
+	    			if(!queryResultsCache.containsKey(queryKey)) {
+		    			qr = new QueryResults(query, timeLimit);
+		    			queryResultsCache.put(queryKey, qr);
+		    		}
+		    		else
+		    			qr = queryResultsCache.get(queryKey);
 	    		}
-	    		else
-	    			qr = queryResultsCache.get(queryId);
 	    		
 	    		SpatialLayer sd = SpatialLayer.getPointSetCategory(query.pointSetId);
 	    		       
 	            List<ShapeFeature> features = sd.getShapefile().query(tile.envelope);
 	         
-	            for(ShapeFeature feature : features) {
-	            	
-	            	Color color = null;
-	            
-                 	if(qr.items.containsKey(feature.id)) {
-                 		float opacity = (float)((float)qr.items.get(feature.id).value / (float)qr.maxValue);
-                 		color = new Color(0.2f,0.2f,0.9f,opacity);
-                 	}
-    				else {
-    					color = new Color(0.0f,0.0f,0.0f,0.1f);
-    				}
-    		
-                 	if(color != null)
-                 		tile.renderPolygon(feature.geom, color);
+	            if(normalizeBy == null) {
+		            for(ShapeFeature feature : features) {
+		            	
+		            	Color color = null;
+		            
+		            	if(qr.items.containsKey(feature.id)) {
+	                 		color = qr.jenksClassifier.getColorValue(qr.items.get(feature.id).value);
+	                 	}
+		            	
+	    				if(color == null) {
+	    					color = new Color(0.0f,0.0f,0.0f,0.1f);
+	    				}
+	    		
+	                 	if(color != null)
+	                 		tile.renderPolygon(feature.geom, color, null);
+		            	
+		            }
 	            }
-	               
+	            else {
+	            
+	            	QueryResults normalizeQr = qr.normalizeBy(normalizeBy);
+            	
+	            	if(groupBy == null) {
+	            		for(ShapeFeature feature : features) {
+			            	
+			            	Color color = null;
+			            
+			            	if(normalizeQr.items.containsKey(feature.id)) {
+		                 		color = normalizeQr.jenksClassifier.getColorValue(normalizeQr.items.get(feature.id).value);
+		                 	}
+		    				
+			            	if(color == null){
+		    					color = new Color(0.0f,0.0f,0.0f,0.1f);
+		    				}
+		    		
+		                 	if(color != null)
+		                 		tile.renderPolygon(feature.geom, color, null);
+			            	
+			            }
+	            	}
+	            	else {
+	            		QueryResults gruopedQr = normalizeQr.groupBy(groupBy);
+	            		
+	            		for(QueryResultItem item : gruopedQr.items.values()) {
+			            	
+			            	Color color = null;
+			            
+			            	color = gruopedQr.jenksClassifier.getColorValue(item.value);
+	                 	
+			            	if(color == null){
+		    					color = new Color(0.0f,0.0f,0.0f,0.1f);
+		    				}
+			            		
+			            	tile.renderPolygon(item.feature.geom, color, null);
+			            	
+			            }
+	            	}
+		            
+	            }
+		               
 	            tileCache.put(tile.tileId, tile.generateImage());
 			}
 			
@@ -309,8 +367,6 @@ public class Tiles extends Controller {
 	    		}
 	    		STRtree index = transitIndex.getIndexForGraph(scenarioId);
 	    		List<TransitSegment> segments = index.query(tile.envelope);
-	    		
-	    		
 	    		
 	    		for(TransitSegment ts : segments) {
 	    			Color color;
@@ -442,7 +498,7 @@ public class Tiles extends Controller {
         				}
         		
                      	if(color != null)
-                     		tile.renderPolygon(feature.geom, color);
+                     		tile.renderPolygon(feature.geom, color, null);
                 	}
                 		
                  	if(showPoints && (time1 < timeLimit || time2 < timeLimit)) {
