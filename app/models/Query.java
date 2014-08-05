@@ -199,13 +199,7 @@ public class Query implements Serializable {
 					
 					@Override
 					public synchronized void onWorkResult(WorkResult res) {
-						try {
-							Logger.info(res.toJsonString());
-							Query.saveQueryResult(q.id, res.getResult());
-						} catch (IOException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
+						Query.saveQueryResult(q.id, res.getResult());
 					}
 				}
 				

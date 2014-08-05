@@ -425,7 +425,7 @@ A.data = {};
 
 		    values.projectId = this.projectId;
 		    values.scenarioType = this.$('#scenarioType').val();
-
+		    
 		    var scenario = new A.models.Scenario();
 
 		    scenario.save(values, { iframe: true,

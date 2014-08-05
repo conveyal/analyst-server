@@ -49,50 +49,7 @@ public class Application extends Controller {
 	public static final String dataPath = Play.application().configuration().getString("application.data");
 		
 	public static Result cluster(String pointSetId, String graphId) throws Exception  {
-		
-		SpatialLayer sl = SpatialLayer.getPointSetCategory(pointSetId);
-		sl.writeToClusterCache(true);
-		
-		StandaloneCluster cluster = new StandaloneCluster("s3credentials", true, Api.analyst.getGraphService());
-
-		StandaloneExecutive exec = cluster.createExecutive();
-		StandaloneWorker worker = cluster.createWorker();
-		
-		cluster.registerWorker(exec, worker);
-		
-		JobSpec js = new JobSpec(graphId, pointSetId + ".json",  pointSetId + ".json", "2014-06-09", "8:05 AM", "America/New York", "TRANSIT");
-		
-		// plus a callback that registers how many work items have returned
-		class CounterCallback implements JobItemCallback {
-			int jobsBack = 0;
-			String jsonBack = null;
-
-			@Override
-			public synchronized void onWorkResult(WorkResult res) {
-				try {
-					Logger.info(res.toJsonString());
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				
-				jobsBack += 1;
-			}
-		}
-		
-		CounterCallback callback = new CounterCallback();
-		js.setCallback(callback);
-
-		// start the job
-		exec.find(js);
-
-		// stall until a work item returns
-		while (callback.jobsBack < 1000) {
-			Thread.sleep(100);
-		}
-		
-		cluster.stop(worker);
-
+	
 		
 		return ok();
     }

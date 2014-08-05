@@ -171,7 +171,7 @@ public class QueryResults {
 					normalizedTotal += i.nomalizedTotal;
 				}
 				
-				groupItem.value = total / normalizedTotal;
+				groupItem.value = (total / normalizedTotal) / 5838654;
 				
 				values.add(groupItem.value);
 				

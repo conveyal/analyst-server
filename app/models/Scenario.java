@@ -1,8 +1,13 @@
 package models;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -13,9 +18,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.mapdb.Bind;
 import org.mapdb.Fun;
 
@@ -46,10 +53,87 @@ public class Scenario implements Serializable {
 		Scenario scenario = new Scenario();
 		scenario.save();
 		
-		//gtfsFile.renameTo(new File());
-		
-		File newFile = new File(scenario.getScenarioDataPath(), scenario.id + ".zip");
-		FileUtils.copyFile(gtfsFile, newFile);
+		ZipFile zipFile = new ZipFile(gtfsFile);
+
+	    Enumeration<? extends ZipEntry> entries = zipFile.entries();
+
+	    String shpFile = null;
+	    String confFile = null;
+	    
+	    while(entries.hasMoreElements()) {
+	    	
+	        ZipEntry entry = entries.nextElement();
+	        
+	        if(entry.getName().toLowerCase().endsWith("shp"))
+	        	shpFile = entry.getName();
+	        if(entry.getName().toLowerCase().endsWith("json"))
+	        	confFile = entry.getName();
+	    }
+	    
+	    zipFile.close();
+	    File newFile;
+	    
+	    if(confFile != null && shpFile != null) {
+	    
+	    	File outputDirectory = scenario.getTempShapeDirPath();
+	    	zipFile = new ZipFile(gtfsFile);
+			entries = zipFile.entries();
+	    	
+	        while (entries.hasMoreElements()) {
+	        	
+	            ZipEntry entry = entries.nextElement();
+	            File entryDestination = new File(outputDirectory,  entry.getName());
+	            
+	            entryDestination.getParentFile().mkdirs();
+	            
+	            if (entry.isDirectory())
+	                entryDestination.mkdirs();
+	            else {
+	                InputStream in = zipFile.getInputStream(entry);
+	                OutputStream out = new FileOutputStream(entryDestination);
+	                IOUtils.copy(in, out);
+	                IOUtils.closeQuietly(in);
+	                IOUtils.closeQuietly(out);
+	            }
+	        }
+	        
+	        File shapeFile = new File(outputDirectory, shpFile);
+	        File configFile = new File(outputDirectory, confFile);
+	        newFile = new File(scenario.getScenarioDataPath(), HashUtils.hashFile(gtfsFile) + ".zip");
+	        
+	        ProcessBuilder pb = new ProcessBuilder(
+	        		"java","-jar","lib/geom2gtfs.jar",  shapeFile.getAbsolutePath(), configFile.getAbsolutePath(), newFile.getAbsolutePath());
+	        Process p;
+	        try {
+	            p = pb.start();
+	            
+	            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+		        String line;
+		        
+		        try {
+		            while((line = bufferedReader.readLine()) != null){
+		                System.out.println("reading...");
+		                System.out.println(line);
+		            }
+		        } catch (IOException e) {
+		            System.out.println("Failed to read line");
+		        }
+		        
+	        } catch (IOException e) {
+	            System.out.println("Failed to start geom2gtfs");
+	        }
+	       
+	        System.out.println("gtfs " + newFile.getName() + " processed.");
+	        
+	        FileUtils.deleteDirectory(outputDirectory);
+	        zipFile.close();
+	        gtfsFile.delete();
+	    }
+		else  {
+			newFile = new File(scenario.getScenarioDataPath(), scenario.id + ".zip");
+			FileUtils.copyFile(gtfsFile, newFile);
+		}
+			
 			
 		for(File f : Scenario.getScenario("default").getScenarioDataPath().listFiles()) {
 			if((scenarioType != null && scenarioType.equals("augment")) || f.getName().toLowerCase().endsWith(".pbf")) {
@@ -119,7 +203,7 @@ public class Scenario implements Serializable {
 		return scenarioData.getById(id);	
 	}
 	
-	static public Collection<Scenario> getScenarios(String projectId) {
+	static public Collection<Scenario> getScenarios(String projectId) throws IOException {
 		
 		if(projectId == null)
 			return scenarioData.getAll();
@@ -129,7 +213,9 @@ public class Scenario implements Serializable {
 			Collection<Scenario> data = new ArrayList<Scenario>();
 			
 			for(Scenario sd : scenarioData.getAll()) {
-				if(sd.projectId.equals(projectId))
+				if(sd.projectId == null )
+					sd.delete();
+				else if(sd.projectId.equals(projectId))
 					data.add(sd);
 			}
 			
@@ -148,6 +234,15 @@ public class Scenario implements Serializable {
 		}
 		
 	}
-
-
+	
+	@JsonIgnore
+	private File getTempShapeDirPath() {
+		
+		File shapeDirPath = new File(getScenarioDataPath(), "tmp_" + id);
+		
+		shapeDirPath.mkdirs();
+		
+		return shapeDirPath;
+	}
+	
 }
