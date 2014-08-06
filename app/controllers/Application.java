@@ -47,7 +47,9 @@ import views.html.*;
 public class Application extends Controller {
 
 	public static final String dataPath = Play.application().configuration().getString("application.data");
-		
+	public static final String binPath = Play.application().configuration().getString("application.bin");
+	
+	
 	public static Result cluster(String pointSetId, String graphId) throws Exception  {
 	
 		

@@ -16,5 +16,5 @@ dist
 /RUNNING_PID
 /.settings
 /data
-/bin
 s3credentials
+/bin

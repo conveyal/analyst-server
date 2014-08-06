@@ -101,8 +101,8 @@ public class Scenario implements Serializable {
 	        File configFile = new File(outputDirectory, confFile);
 	        newFile = new File(scenario.getScenarioDataPath(), HashUtils.hashFile(gtfsFile) + ".zip");
 	        
-	        ProcessBuilder pb = new ProcessBuilder(
-	        		"java","-jar","lib/geom2gtfs.jar",  shapeFile.getAbsolutePath(), configFile.getAbsolutePath(), newFile.getAbsolutePath());
+	        ProcessBuilder pb = new ProcessBuilder(new File(Application.binPath, "java").getAbsolutePath()
+	        		,"-jar","lib/geom2gtfs.jar",  shapeFile.getAbsolutePath(), configFile.getAbsolutePath(), newFile.getAbsolutePath());
 	        Process p;
 	        try {
 	            p = pb.start();
