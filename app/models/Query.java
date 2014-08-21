@@ -155,27 +155,30 @@ public class Query implements Serializable {
 
 		if(q == null)
 			return;
-		
-		q.getResults().save(rf.id, rf);
-		
-		/*ArrayList<ResultFeature> writeList = null;
+
+		ArrayList<ResultFeature> writeList = null;
 		
 		synchronized(resultsQueue) {
 			if(!resultsQueue.containsKey(id))
 				resultsQueue.put(id, new ArrayList<ResultFeature>());
 			resultsQueue.get(id).add(rf);
 			
-			if(resultsQueue.get(id).size() > 250) {
+			if(resultsQueue.get(id).size() > 500) {
 				writeList = new ArrayList<ResultFeature>(resultsQueue.get(id));
 				resultsQueue.get(id).clear();
+				Logger.info("flushing queue...");
 			}
 			
 		}
 		
-		if(writeList != null)
-			q.getResults().save(rf.id, writeList);*/
-		
-		//Tiles.resetQueryCache(id);
+		if(writeList != null){
+				for(ResultFeature rf1 : writeList)
+					q.getResults().saveWithoutCommit(rf1.id, rf1);
+			
+				q.getResults().commit();
+		}
+					
+		Tiles.resetQueryCache(id);
 	}
 	
 	static void updateStatus(String id, JobStatus js) {
