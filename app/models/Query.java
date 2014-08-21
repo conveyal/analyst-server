@@ -176,9 +176,11 @@ public class Query implements Serializable {
 					q.getResults().saveWithoutCommit(rf1.id, rf1);
 			
 				q.getResults().commit();
+				
+				Tiles.resetQueryCache(id);
 		}
 					
-		Tiles.resetQueryCache(id);
+		
 	}
 	
 	static void updateStatus(String id, JobStatus js) {
