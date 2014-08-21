@@ -1,1 +1,7 @@
-<li class="list-group-item" data-id="{{id}}"><input id="scenarioCheckbox" type="checkbox" data-id="{{id}}"/> {{name}} <i style="margin-left: 5px;" id="deleteItem" class="pull-right glyphicon glyphicon-trash"></i></li>
+<li class="list-group-item" data-id="{{id}}">{{#if built}}<input id="scenarioCheckbox" type="checkbox" data-id="{{id}}"/>{{/if}} <strong>{{name}}</strong> <i style="margin-left: 5px;" id="deleteItem" class="pull-right glyphicon glyphicon-trash"></i>
+
+     {{#unless built}}
+          <p><img src="/assets/images/ajax-loader.gif"/> Building... ({{status}})<p>
+     {{/unless}}
+
+</li>

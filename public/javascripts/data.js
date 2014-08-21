@@ -17,11 +17,9 @@ A.data = {};
 
 			var _this = this;
 
-			this.pointsets = new A.models.PointSets(); 
+			this.pointsets = new A.models.PointSets();
 
-			this.scenarios  = new A.models.Scenarios(); 
-
-			
+			this.scenarios  = new A.models.Scenarios();
 
 		},
 
@@ -29,27 +27,27 @@ A.data = {};
 
 			this.pointSetLayout = new A.data.PointSetLayout({collection: this.pointsets});
 
-			this.listenTo(this.pointSetLayout, "pointsetCreate", this.createPointset);		
-			
+			this.listenTo(this.pointSetLayout, "pointsetCreate", this.createPointset);
+
 			this.spatialData.show(this.pointSetLayout);
 
 			this.scenarioLayout = new A.data.ScenarioLayout({collection: this.scenarios});
 
-			this.listenTo(this.scenarioLayout, "scenarioCreate", this.createScenario);		
-			
+			this.listenTo(this.scenarioLayout, "scenarioCreate", this.createScenario);
+
 			this.scenarioData.show(this.scenarioLayout);
 
-			this.scenarios.fetch({reset: true, data : {projectId: this.model.get("id")}});			
+			this.scenarios.fetch({reset: true, data : {projectId: this.model.get("id")}});
 
 		},
 
 		createPointset : function(evt) {
 
-			var pointSetCreateLayout = new A.data.PointSetCreateView();		
+			var pointSetCreateLayout = new A.data.PointSetCreateView({projectId: this.model.get("id")});
 
 			this.listenTo(pointSetCreateLayout, "pointsetCreate:save", this.saveNewPointset);
 
-			this.listenTo(pointSetCreateLayout, "pointsetCreate:cancel", this.cancelNewPointset);	
+			this.listenTo(pointSetCreateLayout, "pointsetCreate:cancel", this.cancelNewPointset);
 
 			this.spatialData.show(pointSetCreateLayout);
 			this.scenarioData.close();
@@ -72,18 +70,26 @@ A.data = {};
 			this.onShow();
 		},
 
+		cancelNewScenario : function() {
+
+			this.scenarioData.close();
+
+			this.onShow();
+		},
+
+
 		createScenario : function(evt) {
 
 			var _this = this;
 
-			var scenarioCreateLayout = new A.data.ScenarioCreateView({projectId: this.model.get("id")});		
+			var scenarioCreateLayout = new A.data.ScenarioCreateView({projectId: this.model.get("id")});
 
 			this.listenTo(scenarioCreateLayout, "scenarioCreate:save", function() {
 					_this.scenarios.fetch({reset: true, data : {projectId: _this.model.get("id")}});
 					this.onShow();
 				});
 
-			this.listenTo(scenarioCreateLayout, "scenarioCreate:cancel", this.onShow());	
+			this.listenTo(scenarioCreateLayout, "scenarioCreate:cancel", this.cancelNewScenario)	;
 
 			this.spatialData.close();
 			this.scenarioData.show(scenarioCreateLayout);
@@ -107,7 +113,7 @@ A.data = {};
 
 		onShow : function() {
 
-			var pointSetListLayout = new A.data.PointSetListView({collection: this.collection});			
+			var pointSetListLayout = new A.data.PointSetListView({collection: this.collection});
 
 			this.main.show(pointSetListLayout);
 
@@ -117,7 +123,7 @@ A.data = {};
 			this.trigger("pointsetCreate");
 		}
 
-		
+
 
 	});
 
@@ -139,11 +145,15 @@ A.data = {};
 		  'click #pointsetCancel': 'cancelPointSetCreate'
 		},
 
+		initialize : function(options) {
+
+			this.projectId = options.projectId;
+		},
 
 		onShow : function() {
 
 			var _this = this;
-			this.shapefileListView = new A.data.ShapefileListView();			
+			this.shapefileListView = new A.data.ShapefileListView({projectId: this.projectId});
 
 			this.shapefileSelect.show(this.shapefileListView);
 
@@ -225,7 +235,7 @@ A.data = {};
 
 	  template: Handlebars.getTemplate('data', 'data-pointset-list-item'),
 
-	  events: { 
+	  events: {
 
 	  	'click #deleteItem' : 'deleteItem',
 	  	'click #pointsetCheckbox' : 'clickItem',
@@ -250,9 +260,9 @@ A.data = {};
 
 	  clickItem : function(evt) {
 
-	  	
+
 	  	var target = $($(evt.target).closest(".pointset-group"));
-	  	
+
 	  	var pointSetId = $(target.find("#pointsetCheckbox")).data("id")
 	  	var attributeCheckboxes = target.find(".pointsetAttributeCheckbox");
 
@@ -260,9 +270,9 @@ A.data = {};
 	  	attributeCheckboxes.each( function(item) {
 	  		if($(this).prop("checked")) {
 	  			checkedAttributes.push($(this).data("id"));
-	  		}	
+	  		}
 	  	});
-	  		
+
 	  	if($(target.find("#pointsetCheckbox")).prop("checked"))
 	  		this.trigger("pointSetShow", {pointSetId : pointSetId, checkedAttributes: checkedAttributes});
 	  	else
@@ -272,17 +282,18 @@ A.data = {};
 
 	  addAttribute : function(evt) {
 
-	  	this.pointSetAttributeCreateLayout = new A.data.PointSetAttributeCreateView({model: this.model});		
+	  	this.pointSetAttributeCreateLayout = new A.data.PointSetAttributeCreateView({model: this.model});
 
 		this.listenTo(this.pointSetAttributeCreateLayout, "pointSetAttributeCreate:save", this.saveNewAttribute);
 
-		this.listenTo(this.pointSetAttributeCreateLayout, "pointSetAttributeCreate:cancel", this.cancelNewAttribute);	
+		this.listenTo(this.pointSetAttributeCreateLayout, "pointSetAttributeCreate:cancel", this.cancelNewAttribute);
 
 		this.createAttribute.show(this.pointSetAttributeCreateLayout);
 
+		this.$("#noAttributes").hide();
 		this.$("#addAttribute").hide();
 		this.$("#attributeList").hide();
-		  	
+
 	  },
 
 	  saveNewAttribute : function(data) {
@@ -320,7 +331,7 @@ A.data = {};
         // Get rid of that pesky wrapping-div.
         // Assumes 1 child element present in template.
         this.$el = this.$el.children();
-        // Unwrap the element to prevent infinitely 
+        // Unwrap the element to prevent infinitely
         // nesting elements during re-render.
         this.$el.unwrap();
         this.setElement(this.$el);
@@ -328,21 +339,28 @@ A.data = {};
 
 	});
 
+	A.data.PointSetEmptyList = Backbone.Marionette.ItemView.extend({
+
+		template: Handlebars.getTemplate('data', 'data-pointset-empty-list')
+	});
+
+
 	A.data.PointSetListView = Backbone.Marionette.CompositeView.extend({
 
 		template: Handlebars.getTemplate('data', 'data-pointset-list'),
 		itemView: A.data.PointSetListItem,
+		emptyView: A.data.PointSetEmptyList,
 
 		initialize : function() {
 			this.pointSetOverlays = {};
-			
+
 			this.collection.on("reset", function() {
 				$("#loadingPointsets").show();
 			});
 		},
 
 		onShow : function() {
-			this.collection.fetch({reset: true, data : {projectId: A.app.selectedProject.get("id")}, success :function() {	
+			this.collection.fetch({reset: true, data : {projectId: A.app.selectedProject.get("id")}, success :function() {
 				$("#loadingPointsets").hide();
 			}});
 
@@ -359,8 +377,8 @@ A.data = {};
 
 		appendHtml: function(collectionView, itemView){
 	    	collectionView.$("#pointsetList").append(itemView.el);
-	    	this.listenTo(itemView, "pointSetShow", this.pointSetShow);	
-	    	this.listenTo(itemView, "pointSetHide", this.pointSetHide);	
+	    	this.listenTo(itemView, "pointSetShow", this.pointSetShow);
+	    	this.listenTo(itemView, "pointSetHide", this.pointSetHide);
 	 	 },
 
 	 	pointSetShow : function(data) {
@@ -369,14 +387,14 @@ A.data = {};
 	 			A.map.removeLayer(this.pointSetOverlays[data.pointSetId ]);
 
 			var selectedAttributes = data.checkedAttributes.join();
-			this.pointSetOverlays[data.pointSetId] = L.tileLayer('/tile/spatial?z={z}&x={x}&y={y}&pointSetId=' + data.pointSetId + '&selectedAttributes=' + selectedAttributes).addTo(A.map);	
+			this.pointSetOverlays[data.pointSetId] = L.tileLayer('/tile/spatial?z={z}&x={x}&y={y}&pointSetId=' + data.pointSetId + '&selectedAttributes=' + selectedAttributes).addTo(A.map);
 		},
 
 		pointSetHide : function(data) {
 
 			if(A.map.hasLayer(this.pointSetOverlays[data.pointSetId]))
 				A.map.removeLayer(this.pointSetOverlays[data.pointSetId ]);
-	
+
 		}
 
 	});
@@ -425,7 +443,7 @@ A.data = {};
 
 		    values.projectId = this.projectId;
 		    values.scenarioType = this.$('#scenarioType').val();
-		    
+
 		    var scenario = new A.models.Scenario();
 
 		    scenario.save(values, { iframe: true,
@@ -453,7 +471,7 @@ A.data = {};
 
 		onShow : function() {
 
-			var scenarioListLayout = new A.data.ScenarioListView({collection: this.collection});			
+			var scenarioListLayout = new A.data.ScenarioListView({collection: this.collection});
 
 			this.main.show(scenarioListLayout);
 
@@ -469,19 +487,37 @@ A.data = {};
 
 	  template: Handlebars.getTemplate('data', 'data-scenario-list-item'),
 
-	  events: { 
+	  events: {
 
 	  	'click #deleteItem' : 'deleteItem',
 	  	'click #scenarioCheckbox' : 'clickItem'
-	  	
+
 	  },
+
+	  initialize : function() {
+
+		_.bindAll(this, 'refreshModel');
+
+		this.refreshModel();
+	  },
+
+	  refreshModel : function() {
+		if(this.model.get('status') != "BUILT") {
+			this.model.fetch();
+			this.render();
+			setTimeout(this.refreshModel, 5000);
+		}
+		else
+			this.render();
+	  },
+
 
 	  clickItem : function(evt) {
 
 	 	var target = $(evt.target);
-	  	
+
 	  	var scenarioId = target.data("id")
-	  		
+
 	  	if(target.prop("checked"))
 	  		this.trigger("transitShow", {scenarioId : scenarioId});
 	  	else
@@ -493,11 +529,20 @@ A.data = {};
 	  	this.model.destroy();
 	  },
 
+	  templateHelpers: {
+			built : function () {
+				if(this.model.get('status') === "BUILT")
+					return true;
+				else
+					return false;
+			  }
+		},
+
 	  onRender: function () {
         // Get rid of that pesky wrapping-div.
         // Assumes 1 child element present in template.
         this.$el = this.$el.children();
-        // Unwrap the element to prevent infinitely 
+        // Unwrap the element to prevent infinitely
         // nesting elements during re-render.
         this.$el.unwrap();
         this.setElement(this.$el);
@@ -505,14 +550,20 @@ A.data = {};
 
 	});
 
+	A.data.ScenarioEmptyList = Backbone.Marionette.ItemView.extend({
+
+		template: Handlebars.getTemplate('data', 'data-scenario-empty-list')
+	});
+
 	A.data.ScenarioListView = Backbone.Marionette.CompositeView.extend({
 
 		template: Handlebars.getTemplate('data', 'data-scenario-list'),
 		itemView: A.data.ScenarioListItem,
+		emptyView: A.data.ScenarioEmptyList,
 
 		initialize : function() {
 			this.transitOverlays = {};
-			
+
 		},
 
 		onClose : function() {
@@ -526,8 +577,8 @@ A.data = {};
 
 		appendHtml: function(collectionView, itemView){
 	    	collectionView.$("#scenarioList").append(itemView.el);
-	    	this.listenTo(itemView, "transitShow", this.transitShow);	
-	    	this.listenTo(itemView, "transitHide", this.transitHide);	
+	    	this.listenTo(itemView, "transitShow", this.transitShow);
+	    	this.listenTo(itemView, "transitHide", this.transitHide);
 	 	},
 
 	 	transitShow : function(data) {
@@ -535,14 +586,14 @@ A.data = {};
 	 		if(A.map.hasLayer(this.transitOverlays[data.scenarioId]))
 	 			A.map.removeLayer(this.transitOverlays[data.scenarioId ]);
 
-			this.transitOverlays[data.scenarioId] = L.tileLayer('/tile/transit?z={z}&x={x}&y={y}&scenarioId=' + data.scenarioId).addTo(A.map);	
+			this.transitOverlays[data.scenarioId] = L.tileLayer('/tile/transit?z={z}&x={x}&y={y}&scenarioId=' + data.scenarioId).addTo(A.map);
 		},
 
 		transitHide : function(data) {
 
 			if(A.map.hasLayer(this.transitOverlays[data.scenarioId]))
 				A.map.removeLayer(this.transitOverlays[data.scenarioId ]);
-	
+
 		}
 
 	});
@@ -558,7 +609,7 @@ A.data = {};
         // Get rid of that pesky wrapping-div.
         // Assumes 1 child element present in template.
         this.$el = this.$el.children();
-        // Unwrap the element to prevent infinitely 
+        // Unwrap the element to prevent infinitely
         // nesting elements during re-render.
         this.$el.unwrap();
         this.setElement(this.$el);
@@ -578,11 +629,13 @@ A.data = {};
 
 	    initialize : function(options) {
 
-	    	_.bindAll(this, 'shapefileSelectChanged', 'shapefileListUpdated');
+	    		_.bindAll(this, 'shapefileSelectChanged', 'shapefileListUpdated');
 
-	    	this.collection = new A.models.Shapefiles();
+	    		this.collection = new A.models.Shapefiles();
 
-			this.collection.fetch({reset: true, success: this.shapefileListUpdated });
+			this.projectId = options.projectId;
+
+			this.collection.fetch({data: {projectId: this.projectId}, reset: true, success: this.shapefileListUpdated });
 	    },
 
 	    getSelectedShapefileId : function() {
@@ -590,14 +643,14 @@ A.data = {};
 	    	if(this.$("#shapefileSelect").val() != "upload") {
 	    		return this.$("#shapefileSelect").val();
 	    	}
-	    	else 
+	    	else
 	    		return "";
 	    },
 
 	    getSelectedShapefileFieldname : function() {
 
 	    	if(this.getSelectedShapefileId() != "") {
-	    		return this.$("#shapefileFieldSelect").val(); 
+	    		return this.$("#shapefileFieldSelect").val();
 	    	}
 
 	    },
@@ -619,7 +672,7 @@ A.data = {};
 	    	if(this.$("#shapefileSelect").val() == "upload")  {
 	    		this.$("#fieldSelectGroup").hide();
 	    		this.$("#uploadShapefile").show();
-		    		
+
 	    	}
 	    	else {
 	    		this.$("#fieldSelectGroup").show();
@@ -633,7 +686,7 @@ A.data = {};
 
 	 	 uploadFile: function(event) {
 
-	 	 	var _this = this;
+	 	    var _this = this;
 		    var values = {};
 
 		    if(event){ event.preventDefault(); }
@@ -642,14 +695,16 @@ A.data = {};
 		      values[ input.name ] = input.value;
 		    })
 
+		    values.projectId = this.projectId;
+
 		    var shapefile = new A.models.Shapefile();
 
 		    shapefile.save(values, { iframe: true,
 		                              files: this.$('form :file'),
 		                              data: values,
 		                              success: function(){
-		                      
-										_this.collection.fetch({reset: true, success: _this.shapefileListUpdated });
+
+										_this.collection.fetch({reset: true, data: {projectId : _this.projectId}, success: _this.shapefileListUpdated });
 		                              }});
 
 		    this.$("#uploadShapefile").hide();
@@ -659,5 +714,4 @@ A.data = {};
 	});
 
 
-})(Analyst, jQuery);	
-
+})(Analyst, jQuery);

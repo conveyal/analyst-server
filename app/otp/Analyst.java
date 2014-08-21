@@ -16,8 +16,15 @@ import java.util.concurrent.ConcurrentHashMap;
 import models.SpatialLayer;
 
 import org.opentripplanner.analyst.core.Sample;	
+import org.opentripplanner.api.model.TimeSurfaceShort;
+import org.opentripplanner.api.param.LatLon;
+import org.opentripplanner.api.param.YearMonthDay;
 import org.opentripplanner.common.model.GenericLocation;
+import org.opentripplanner.profile.ProfileRequest;
+import org.opentripplanner.profile.ProfileResponse;
+import org.opentripplanner.profile.ProfileRouter;
 import org.opentripplanner.routing.algorithm.EarliestArrivalSPTService;
+import org.opentripplanner.routing.core.TraverseModeSet;
 import org.opentripplanner.routing.error.VertexNotFoundException;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.services.GraphService;
@@ -29,6 +36,7 @@ import com.conveyal.otpac.message.WorkResult;
 import com.conveyal.otpac.standalone.StandaloneCluster;
 import com.conveyal.otpac.standalone.StandaloneExecutive;
 import com.conveyal.otpac.standalone.StandaloneWorker;
+import com.google.common.collect.Lists;
 
 import play.Logger;
 
@@ -93,6 +101,61 @@ public class Analyst {
         }
     }
 	
+	public AnalystProfileRequest buildProfileRequest(String graphId, String mode, LatLon latLon) {
+		
+		// use center of graph extent if no location is specified
+		if(latLon == null) {
+			latLon = new LatLon(null);
+			latLon.lat = this.graphService.getGraph(graphId).getExtent().centre().y;
+			latLon.lon = this.graphService.getGraph(graphId).getExtent().centre().x;
+		}
+		
+		AnalystProfileRequest req = new AnalystProfileRequest();
+		
+		TraverseModeSet modes = new TraverseModeSet();
+		
+		switch(mode) {
+			case "TRANSIT":
+				modes.setWalk(true);
+				modes.setTransit(true);
+				break;
+			case "CAR,TRANSIT,WALK":
+				modes.setCar(true);
+				modes.setTransit(true);
+				modes.setWalk(true);
+				break;	
+			case "BIKE,TRANSIT":
+				modes.setBicycle(true);
+				modes.setTransit(true);
+				break;
+			case "CAR":
+				modes.setCar(true);
+				break;
+			case "BIKE":
+				modes.setBicycle(true);
+				break;
+			case "WALK":
+				modes.setWalk(true);
+				break;
+		}
+	
+		req.modes = modes;
+		req.graphId = graphId;
+        req.from       = latLon;
+        req.to		   = latLon; // not used but required?
+        req.analyst	   = true;
+        req.fromTime   = 7 * 60 * 60;
+        req.toTime     = 9 * 60 * 60;
+        req.walkSpeed  = 1.4f;
+        req.bikeSpeed  = 4.1f;
+        req.streetTime = 90;
+        req.accessTime = 90;
+        req.date       = new YearMonthDay("2014-06-04").toJoda();
+		
+        return req;
+        
+	}
+	
 	public void createJob() throws Exception {
 		
 		// start up cluster
@@ -134,6 +197,10 @@ public class Analyst {
 	
 	public Graph getGraph (String graphId) {
 		return graphService.getGraph(graphId);
+	}
+	
+	public String getGraphStatus (String graphId) {
+		return graphService.getGraphStatus(graphId);
 	}
 	
 	public File getZippedGraph (String graphId) throws IOException {

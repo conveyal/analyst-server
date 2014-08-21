@@ -17,26 +17,40 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
+import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.geotools.geometry.Envelope2D;
 import org.mapdb.Bind;
 import org.mapdb.Fun;
+import org.opentripplanner.gtfs.model.GTFSFeed;
+import org.opentripplanner.gtfs.model.Stop;
+import org.opentripplanner.routing.graph.Graph;
 
 import play.Logger;
+import play.libs.Akka;
+import play.libs.F.Function0;
+import play.libs.F.Promise;
+import scala.concurrent.ExecutionContext;
+import scala.concurrent.duration.Duration;
+import utils.Bounds;
 import utils.DataStore;
 import utils.HashUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.vividsolutions.jts.geom.Geometry;
 
+import controllers.Api;
 import controllers.Application;
 
 public class Scenario implements Serializable {
-	
+
+	private static final long serialVersionUID = 1L;
+
 	static DataStore<Scenario> scenarioData = new DataStore<Scenario>("scenario");
 
 	public String id;
@@ -44,102 +58,33 @@ public class Scenario implements Serializable {
 	public String name;
 	public String description;
 	
+	public Boolean processingGtfs = false;
+	public Boolean processingOsm = false;
+	public Boolean failed = false;
+	
+	public Bounds bounds;
+	
 	public Scenario() {
 		
 	}
 	
-	static public Scenario create(File gtfsFile, String scenarioType) throws IOException {
+	public String getStatus() {
 		
-		Scenario scenario = new Scenario();
+		if(processingGtfs)
+			return "PROCESSSING_GTFS";
+		else if(processingOsm) 
+			return "PROCESSSING_OSM";
+		else 
+			return Api.analyst.getGraphStatus(id);
+		
+	}
+	
+	static public Scenario create(final File gtfsFile, final String scenarioType, final String augmentScenarioId) throws IOException {
+		
+		final Scenario scenario = new Scenario();
 		scenario.save();
 		
-		ZipFile zipFile = new ZipFile(gtfsFile);
-
-	    Enumeration<? extends ZipEntry> entries = zipFile.entries();
-
-	    String shpFile = null;
-	    String confFile = null;
-	    
-	    while(entries.hasMoreElements()) {
-	    	
-	        ZipEntry entry = entries.nextElement();
-	        
-	        if(entry.getName().toLowerCase().endsWith("shp"))
-	        	shpFile = entry.getName();
-	        if(entry.getName().toLowerCase().endsWith("json"))
-	        	confFile = entry.getName();
-	    }
-	    
-	    zipFile.close();
-	    File newFile;
-	    
-	    if(confFile != null && shpFile != null) {
-	    
-	    	File outputDirectory = scenario.getTempShapeDirPath();
-	    	zipFile = new ZipFile(gtfsFile);
-			entries = zipFile.entries();
-	    	
-	        while (entries.hasMoreElements()) {
-	        	
-	            ZipEntry entry = entries.nextElement();
-	            File entryDestination = new File(outputDirectory,  entry.getName());
-	            
-	            entryDestination.getParentFile().mkdirs();
-	            
-	            if (entry.isDirectory())
-	                entryDestination.mkdirs();
-	            else {
-	                InputStream in = zipFile.getInputStream(entry);
-	                OutputStream out = new FileOutputStream(entryDestination);
-	                IOUtils.copy(in, out);
-	                IOUtils.closeQuietly(in);
-	                IOUtils.closeQuietly(out);
-	            }
-	        }
-	        
-	        File shapeFile = new File(outputDirectory, shpFile);
-	        File configFile = new File(outputDirectory, confFile);
-	        newFile = new File(scenario.getScenarioDataPath(), HashUtils.hashFile(gtfsFile) + ".zip");
-	        
-	        ProcessBuilder pb = new ProcessBuilder("java"
-	        		,"-jar",new File(Application.binPath, "geom2gtfs.jar").getAbsolutePath(),  shapeFile.getAbsolutePath(), configFile.getAbsolutePath(), newFile.getAbsolutePath());
-	        Process p;
-	        try {
-	            p = pb.start();
-	            
-	            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(p.getInputStream()));
-		        String line;
-		        
-		        try {
-		            while((line = bufferedReader.readLine()) != null){
-		                System.out.println("reading...");
-		                System.out.println(line);
-		            }
-		        } catch (IOException e) {
-		            System.out.println("Failed to read line");
-		        }
-		        
-	        } catch (IOException e) {
-	            System.out.println("Failed to start geom2gtfs");
-	        }
-	       
-	        System.out.println("gtfs " + newFile.getName() + " processed.");
-	        
-	        FileUtils.deleteDirectory(outputDirectory);
-	        zipFile.close();
-	        gtfsFile.delete();
-	    }
-		else  {
-			newFile = new File(scenario.getScenarioDataPath(), scenario.id + ".zip");
-			FileUtils.copyFile(gtfsFile, newFile);
-		}
-			
-			
-		for(File f : Scenario.getScenario("default").getScenarioDataPath().listFiles()) {
-			if((scenarioType != null && scenarioType.equals("augment")) || f.getName().toLowerCase().endsWith(".pbf")) {
-				FileUtils.copyFileToDirectory(f, scenario.getScenarioDataPath());
-			}
-		}
+		scenario.processGtfs(gtfsFile, scenarioType, augmentScenarioId);
 		
 		return scenario;
 	}
@@ -197,10 +142,210 @@ public class Scenario implements Serializable {
 		
 		Logger.info("delete scenario s" +id);
 	}
+	
+	public void processGtfs(final File gtfsFile, final String scenarioType, final String augmentScenarioId) {
+		ExecutionContext graphBuilderContext = Akka.system().dispatchers().lookup("contexts.graph-builder-analyst-context");
+		
+		final Scenario scenario = this;
+		
+		Akka.system().scheduler().scheduleOnce(
+			        Duration.create(10, TimeUnit.MILLISECONDS),
+			        new Runnable() {
+			            public void run() {
+			            	
+			            	scenario.processingGtfs = true;
+			            	scenario.save();
+		
+			            	try {
+			            		
+								ZipFile zipFile = new ZipFile(gtfsFile);
+						
+							    Enumeration<? extends ZipEntry> entries = zipFile.entries();
+						
+							    String shpFile = null;
+							    String confFile = null;
+							    
+							    while(entries.hasMoreElements()) {
+							    	
+							        ZipEntry entry = entries.nextElement();
+							        
+							        if(entry.getName().toLowerCase().endsWith("shp"))
+							        	shpFile = entry.getName();
+							        if(entry.getName().toLowerCase().endsWith("json"))
+							        	confFile = entry.getName();
+							    }
+							    
+							    zipFile.close();
+							    File newFile;
+							    
+							    if(confFile != null && shpFile != null) {
+							    
+							    	File outputDirectory = scenario.getTempShapeDirPath();
+							    	zipFile = new ZipFile(gtfsFile);
+									entries = zipFile.entries();
+							    	
+							        while (entries.hasMoreElements()) {
+							        	
+							            ZipEntry entry = entries.nextElement();
+							            File entryDestination = new File(outputDirectory,  entry.getName());
+							            
+							            entryDestination.getParentFile().mkdirs();
+							            
+							            if (entry.isDirectory())
+							                entryDestination.mkdirs();
+							            else {
+							                InputStream in = zipFile.getInputStream(entry);
+							                OutputStream out = new FileOutputStream(entryDestination);
+							                IOUtils.copy(in, out);
+							                IOUtils.closeQuietly(in);
+							                IOUtils.closeQuietly(out);
+							            }
+							        }
+							        
+							        File shapeFile = new File(outputDirectory, shpFile);
+							        File configFile = new File(outputDirectory, confFile);
+							        newFile = new File(getScenarioDataPath(), HashUtils.hashFile(gtfsFile) + ".zip");
+							        
+							        ProcessBuilder pb = new ProcessBuilder("java"
+							        		,"-jar",new File(Application.binPath, "geom2gtfs.jar").getAbsolutePath(),  shapeFile.getAbsolutePath(), configFile.getAbsolutePath(), newFile.getAbsolutePath());
+							        Process p;
+							        
+							            p = pb.start();
+							            
+							            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+								        String line;
+								        
+							            while((line = bufferedReader.readLine()) != null){
+							                System.out.println("reading...");
+							                System.out.println(line);
+							            }
+								       
+							        System.out.println("gtfs " + newFile.getName() + " processed.");
+							        
+							        FileUtils.deleteDirectory(outputDirectory);
+							        zipFile.close();
+							        gtfsFile.delete();
+							    }
+								else  {
+									newFile = new File(scenario.getScenarioDataPath(), scenario.id + ".zip");
+									FileUtils.copyFile(gtfsFile, newFile);
+								}
+							    
+							    if((scenarioType != null && augmentScenarioId != null && scenarioType.equals("augment"))) 
+							    {	
+							    	for(File f : Scenario.getScenario(augmentScenarioId).getScenarioDataPath().listFiles()) {
+										if(f.getName().toLowerCase().endsWith(".zip")) {
+											FileUtils.copyFileToDirectory(f, scenario.getScenarioDataPath());
+										}
+									}
+							    }
+							    
+							    Envelope2D envelope = new Envelope2D();
+							    for(File f : scenario.getScenarioDataPath().listFiles()) {
+									if(f.getName().toLowerCase().endsWith(".zip")) {
+										GTFSFeed feed = GTFSFeed.fromFile(f.getAbsolutePath());
+										
+										for(Stop s : feed.stops.values()) {
+											Double lat = Double.parseDouble(s.stop_lat);
+											Double lon = Double.parseDouble(s.stop_lon);
+											
+											envelope.include(lon, lat);
+										}
+									}
+								}
+							    
+							    scenario.bounds = new Bounds(envelope);
+							    scenario.processingGtfs = false;
+				            	scenario.processingOsm = true;
+				            	scenario.save();
+				            					            	
+				            	File osmXmlFile = new File(getScenarioDataPath(), scenario.id + ".osm.xml");
+				            	File osmPbfFile = new File(getScenarioDataPath(), scenario.id + ".osm.pbf");
+				            	
+				            
+				            	
+				            	String bbox = "n=\"" + bounds.north + "\" w=\"" + bounds.west + "\" s=\"" + bounds.south + "\" e=\"" + bounds.east + "\"";
+				            	
+				            	String overpassQuery = "'data=<osm-script><bbox-query " + bbox + "/><print/><query type=\"way\"> <bbox-query " + bbox + "/> </query><print/> <query type=\"relation\"> <bbox-query " + bbox + "/></query><print/></osm-script>'";
+				            	
+				            	System.out.println("downloading xml for " + bbox);
+				            	
+						        ProcessBuilder pb = new ProcessBuilder("wget", "--post-data", overpassQuery, "http://overpass-api.de/api/interpreter/", "-O", osmXmlFile.getAbsolutePath());
+						        	 
+						        Process p = pb.start();
+					            
+					            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+						        String line;
+						        
+					            while((line = bufferedReader.readLine()) != null){
+					                System.out.println("downloading...");
+					            }
+							       
+						        System.out.println("osm xml downloaded");
+						        
+						        pb = new ProcessBuilder(new File(Application.binPath, "osmconvert").getAbsolutePath(), "--out-pbf", "-o=" + osmPbfFile.getAbsolutePath(), osmXmlFile.getAbsolutePath());
+					        	 
+						        p = pb.start();
+					            
+					            bufferedReader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+						        
+					            while((line = bufferedReader.readLine()) != null){
+					                System.out.println("processing...");
+					            }
+							    
+					            osmXmlFile.delete();
+					            
+						        System.out.println("osm xml converted to pbf");
+				            	
+									
+						    } catch (IOException e) {
+						    	e.printStackTrace();
+					            System.out.println("Failed to process gtfs");
+					            
+					            scenario.failed = true;
+				            	scenario.save();
+					            
+					            return;
+					        }
+			            	
+			            	scenario.processingGtfs = false;
+			            	scenario.processingOsm = false;
+			            	scenario.save();
+			            	
+							scenario.build();
+			            }
+			        },
+			        graphBuilderContext
+			);
+	}
+	
+	public void build() {
+		ExecutionContext graphBuilderContext = Akka.system().dispatchers().lookup("contexts.graph-builder-analyst-context");
+
+		final String graphId = id;
+		
+		Akka.system().scheduler().scheduleOnce(
+			        Duration.create(10, TimeUnit.MILLISECONDS),
+			        new Runnable() {
+			            public void run() {
+			            	Api.analyst.getGraph(graphId);
+			            }
+			        },
+			        graphBuilderContext
+			);
+		
+	}
 
 	static public Scenario getScenario(String id) {
 		
 		return scenarioData.getById(id);	
+	}
+	
+	static public void buildAll() throws IOException {
+		
+		for(Scenario s : getScenarios(null)) {
+			s.build();
+		}
 	}
 	
 	static public Collection<Scenario> getScenarios(String projectId) throws IOException {
@@ -218,18 +363,7 @@ public class Scenario implements Serializable {
 				else if(sd.projectId.equals(projectId))
 					data.add(sd);
 			}
-			
-			if(data.isEmpty()) {
-				Scenario defaultScenario = new Scenario();
-				
-				defaultScenario.id = "default";
-				defaultScenario.name = "Default Scenario";
-				defaultScenario.projectId = projectId;
-				defaultScenario.save();
-				
-				data.add(defaultScenario);
-			}
-			
+		
 			return data;
 		}
 		

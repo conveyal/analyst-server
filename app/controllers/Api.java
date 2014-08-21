@@ -42,11 +42,13 @@ import org.opentripplanner.analyst.core.SlippyTile;
 import org.opentripplanner.analyst.request.TileRequest;
 import org.opentripplanner.analyst.request.SampleGridRenderer.WTWD;
 import org.opentripplanner.api.model.TimeSurfaceShort;
+import org.opentripplanner.api.param.LatLon;
 import org.opentripplanner.api.resource.LIsochrone;
 import org.opentripplanner.common.geometry.DelaunayIsolineBuilder;
 import org.opentripplanner.common.model.GenericLocation;
 
 import otp.Analyst;
+import otp.AnalystProfileRequest;
 import otp.AnalystRequest;
 import models.Attribute;
 import models.Project;
@@ -65,19 +67,21 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 
+import play.libs.Akka;
 import play.libs.Json;
 import play.libs.F.Function;
 import play.libs.F.Function0;
 import play.libs.F.Promise;
 import play.mvc.*;
 import play.mvc.Http.MultipartFormData.FilePart;
+import scala.concurrent.ExecutionContext;
+import tiles.Tile;
 import utils.HaltonPoints;
 import utils.QueryResults;
-import utils.Tile;
 import utils.QueryResults.QueryResultItem;
 
 public class Api extends Controller {
-
+	
 	public static int maxTimeLimit = 120; // in minutes
 	
 	public static Analyst analyst = new Analyst();
@@ -105,6 +109,8 @@ public class Api extends Controller {
     
     public static Promise<Result> surface(final String graphId, final Double lat, final Double lon, final String mode, final Double bikeSpeed, final Double walkSpeed) {
     	
+    	ExecutionContext primaryContext = Akka.system().dispatchers().lookup("contexts.primary-analyst-context");
+    	
     	Promise<TimeSurfaceShort> promise = Promise.promise(
 		    new Function0<TimeSurfaceShort>() {
 		      public TimeSurfaceShort apply() {
@@ -119,11 +125,46 @@ public class Api extends Controller {
 	              		
 	              	return request.createSurface();
 		      }
-		    }
+		    }, primaryContext
 		  );
     	return promise.map(
 		    new Function<TimeSurfaceShort, Result>() {
 		      public Result apply(TimeSurfaceShort response) {
+		    	
+		    	if(response == null)
+		    	  return notFound();
+		    	
+		        return ok(Json.toJson(response));
+		      }
+		    }
+		  );
+    	
+    }
+    
+    public static Promise<Result> surfaceProfile(final String graphId, final Double lat, final Double lon, final String mode, final Double bikeSpeed, final Double walkSpeed) {
+    	
+    	Promise<List<TimeSurfaceShort>> promise = Promise.promise(
+		    new Function0<List<TimeSurfaceShort>>() {
+		      public List<TimeSurfaceShort> apply() {
+		    	
+		    	  LatLon latLon = new LatLon(null);
+		    	  latLon.lat = lat;
+		    	  latLon.lon = lon;
+	          	
+	              	AnalystProfileRequest request = analyst.buildProfileRequest(graphId, mode, latLon);
+	              	request.walkSpeed = walkSpeed.floatValue();
+	              	request.bikeSpeed = bikeSpeed.floatValue();
+	              	
+	              	if(request == null)
+	              		return null;
+	       		
+	              	return request.createSurfaces();
+		      }
+		    }
+		  );
+    	return promise.map(
+		    new Function<List<TimeSurfaceShort>, Result>() {
+		      public Result apply(List<TimeSurfaceShort> response) {
 		    	
 		    	if(response == null)
 		    	  return notFound();
@@ -327,8 +368,12 @@ public class Api extends Controller {
     
  // **** shapefile controllers ****
     
+
+    public static Result getShapefileById(String id) {
+    	return getShapefile(id, null);
+    }
     
-    public static Result getShapefile(String id) {
+    public static Result getShapefile(String id, String projectId) {
         
     	try {
     		
@@ -340,7 +385,7 @@ public class Api extends Controller {
                     return notFound();
             }
             else {
-                return ok(Api.toJson(Shapefile.getShapfiles(), false));
+                return ok(Api.toJson(Shapefile.getShapfiles(projectId), false));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -348,7 +393,8 @@ public class Api extends Controller {
         }
 
     }
-    
+
+   
     public static Result createShapefile() throws ZipException, IOException {
     	
     	Http.MultipartFormData body = request().body().asMultipartFormData();
@@ -357,7 +403,7 @@ public class Api extends Controller {
 		          
         if (file != null && file.getFile() != null) {
 
-        	Shapefile s = Shapefile.create(file.getFile());
+        	Shapefile s = Shapefile.create(file.getFile(), body.asFormUrlEncoded().get("projectId")[0]);
         	
         	s.name = body.asFormUrlEncoded().get("name")[0];
         	s.description = body.asFormUrlEncoded().get("description")[0];
@@ -544,7 +590,12 @@ public class Api extends Controller {
 
         	String scenarioType = body.asFormUrlEncoded().get("scenarioType")[0];
         	
-        	Scenario s = Scenario.create(file.getFile(), scenarioType);
+        	String augmentScenarioId = null;
+        	
+        	if(body.asFormUrlEncoded().get("augmentScenarioId") != null)
+        		augmentScenarioId = body.asFormUrlEncoded().get("augmentScenarioId")[0];
+        	
+        	Scenario s = Scenario.create(file.getFile(), scenarioType, augmentScenarioId);
         	
         	s.name = body.asFormUrlEncoded().get("name")[0];
         	s.description = body.asFormUrlEncoded().get("description")[0];

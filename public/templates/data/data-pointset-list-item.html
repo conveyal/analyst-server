@@ -4,12 +4,16 @@
 		{{#each attributes}}
 		  <li class="list-group-item" class="disabled"><input class="pointsetAttributeCheckbox" type="checkbox" data-id="{{fieldName}}" checked/> {{name}} <i style="margin-left: 5px;" id="deleteAttribute" class="pull-right glyphicon glyphicon-trash" data-id="{{fieldName}}"></i><span style="background-color: {{color}};" class="badge">{{fieldName}}</span></li>
 		{{/each}}
+
 	</ul>
+
+	{{#unless attributes}}
+		<p id="noAttributes">No attributes selected for spatial data set.</p>
+	{{/unless}}
 
 	<div id="createAttribute"></div>
 
-	<button id="addAttribute" type="button" class="pull-right btn btn-default btn-xs"><span class="glyphicon glyphicon-plus"></span></button>
+	<button id="addAttribute" type="button" class="pull-right btn btn-default btn-xs">Add Attribute</button>
 	<br clear="all"/>
-	
-</li>
 
+</li>

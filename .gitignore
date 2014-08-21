@@ -17,4 +17,3 @@ dist
 /.settings
 /data
 s3credentials
-/bin

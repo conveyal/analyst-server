@@ -1,10 +1,14 @@
-<h5>{{I18n "data-manager.create-new-scenario"}}</h5>
+<h5>{{I18n "data-manager.create-scenario"}}</h5>
 <form enctype="multipart/form-data">
-      
+
     <div class="form-group">
+         <p>
+              {{I18n "data-manager.scenarios-description"}}
+         </p>
+
       <select id="scenarioType" class="form-control">
-        <option value="augment">Augment Default Scenario</option>
-        <option value="replace">Replace Default Scenario</option>
+           <option value="replace">{{I18n "data-manager.new-scenario"}}</option>
+           <option value="augment">{{I18n "data-manager.augment-scenario"}}</option>
       </select>
     </div>
     <div class="form-group">
@@ -24,7 +28,7 @@
         {{I18n "data-manager.scenario-description"}}
       </label>
       <input name='description' type='text' class="form-control"/>
-    </div>  
+    </div>
 
 <button id="scenarioSave" type="button" class="save btn btn-primary">{{I18n "app.shared.create"}}</button> <button type="button" id="scenarioCancel" class="cancel btn btn-default">{{I18n "app.shared.cancel"}}</button>
 </form>

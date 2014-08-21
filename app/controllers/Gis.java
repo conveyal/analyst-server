@@ -64,12 +64,12 @@ import com.vividsolutions.jts.index.strtree.STRtree;
 import play.Logger;
 import play.Play;
 import play.mvc.*;
+import tiles.Tile;
 import utils.DirectoryZip;
 import utils.HaltonPoints;
 import utils.HashUtils;
 import utils.QueryResults;
 import utils.QueryResults.QueryResultItem;
-import utils.Tile;
 import utils.TransportIndex;
 import utils.TransportIndex.TransitSegment;
 

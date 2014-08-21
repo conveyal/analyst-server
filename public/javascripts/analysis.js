@@ -5,14 +5,14 @@ var Analyst = Analyst || {};
 A.analysis = {};
 
 	A.analysis.AnalysisController = Marionette.Controller.extend({
-	        
+
 	    initialize: function(options){
-	        
+
 	        this.region = options.region;
 
 	        this.project  = options.model;
 	    },
-	    
+
 	    show: function(){
 
 	    	var analysisLayout = new A.analysis.AnalysisLayout({model : this.project});
@@ -32,14 +32,14 @@ A.analysis = {};
 		regions: {
 			analysisDetail: '#detail'
 		},
-		
+
 
 		onRender : function() {
 
 			if(!this.analysisType || this.analysisType == 'single') {
 
 				var analysisSinglePointLayout = new A.analysis.AnalysisSinglePointLayout({model : this.model});
-				
+
 				this.analysisDetail.show(analysisSinglePointLayout);
 
 			}
@@ -62,13 +62,13 @@ A.analysis = {};
 
 		templateHelpers: {
 	     	multiPoint : function () {
-	     		if(this.analysisType == "multi") 
+	     		if(this.analysisType == "multi")
 	     			return true;
 	     		else
 	     			return false;
 	        },
 	        singlePoint : function () {
-	     		if(this.analysisType == "single") 
+	     		if(this.analysisType == "single")
 	     			return true;
 	     		else
 	     			return false;
@@ -77,8 +77,7 @@ A.analysis = {};
 
 	});
 
-	
 
 
-})(Analyst, jQuery);	
 
+})(Analyst, jQuery);

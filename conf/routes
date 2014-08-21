@@ -15,8 +15,8 @@ POST    /api/project/					controllers.Api.createProject()
 PUT     /api/project/:id				controllers.Api.updateProject(id:String)
 DELETE  /api/project/:id				controllers.Api.deleteProject(id:String)
 
-GET     /api/shapefile					controllers.Api.getShapefile(id:String = null)
-GET     /api/shapefile/:id				controllers.Api.getShapefile(id:String)
+GET     /api/shapefile					controllers.Api.getShapefile(id:String ?= null, projectId:String ?= null)
+GET     /api/shapefile/:id				controllers.Api.getShapefileById(id:String)
 POST    /api/shapefile/					controllers.Api.createShapefile()
 PUT     /api/shapefile/:id				controllers.Api.updateShapefile(id:String)
 DELETE  /api/shapfile/:id				controllers.Api.deleteShapefile(id:String)
@@ -50,6 +50,7 @@ GET     /gis/query	                    controllers.Gis.query(queryId:String, tim
 GET     /api/queryBins	                controllers.Api.queryBins(queryId:String, timeLimit:Integer ?= 3600, normalizeBy:String ?= null, groupBy:String ?= null)
 
 GET     /api/surface                    controllers.Api.surface(graphId:String, lat:Double, lon:Double, mode:String, bikeSpeed:Double, walkSpeed:Double)
+GET     /api/surfaceProfile             controllers.Api.surfaceProfile(graphId:String, lat:Double, lon:Double, mode:String, bikeSpeed:Double, walkSpeed:Double)
 GET		/api/isochrone					controllers.Api.isochrone(surfaceId:Integer, cutoffs:java.util.List[Integer])
 GET		/api/result						controllers.Api.result(surfaceId:Integer, pointSetId:String)
 

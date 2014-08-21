@@ -5,27 +5,27 @@ var Analyst = Analyst || {};
 	A.project = {};
 
 	A.project.ProjectController = Marionette.Controller.extend({
-	        
+
 	    initialize: function(options){
-	        
+
 	        this.region = options.region;
 
 	        this.projects  = new A.models.Projects();
-	    
+
 	        this.projects.fetch({reset: true});
 	    },
-	    
+
 	    show: function(){
 
 	    	var projectLayout = new A.project.ProjectLayout({projects: this.projects});
 	    	this.region.show(projectLayout);
-	        
+
 	    }
 	});
 
 
 	A.project.ProjectLayout = Backbone.Marionette.Layout.extend({
-		
+
 		template: Handlebars.getTemplate('project', 'project-layout-template'),
 
 		regions: {
@@ -44,13 +44,14 @@ var Analyst = Analyst || {};
 			this.projectListView = new A.project.ProjectListView({collection: this.projects});
 
 			this.projects.on("add", function(project) {
-				A.app.selectedProject = null;
-
+				A.app.selectedProject = project.id;
 				_this.projectListView.setSelected(project.id);
+				_this.selectProject(project.id);
+				//_this.projectListView.setSelected(project.id);
 			});
 
 		    this.listenTo(this.projectListView, "projectList:createNewProject", this.createNewProject);
-	       	
+
 			this.listenTo(this.projectListView, "projectList:selectProject", this.selectProject);
 
 	       	this.projectList.show(this.projectListView);
@@ -79,11 +80,11 @@ var Analyst = Analyst || {};
 			this.projectDetail.close();
 
 			if(A.app.selectedProject != null) {
-	    
-	    		var projectDetailLayout = new A.project.ProjectDetailLayout({model: A.app.selectedProject});
 
-	    		this.projectDetail.show(projectDetailLayout);
-	    	}
+		    		var projectDetailLayout = new A.project.ProjectDetailLayout({model: A.app.selectedProject});
+
+		    		this.projectDetail.show(projectDetailLayout);
+		    	}
 
 		},
 
@@ -100,49 +101,33 @@ var Analyst = Analyst || {};
 
 					A.map.setView(latlng, zoom);
 				}
-			
-			}
-		},
-
-		saveSelectedMapState  : function() {
-
-			if(this.selectedProject != null) {
-
-				var latlng = A.map.getCenter();
-
-				this.selectedProject.set("defaultLat", latlng.lat);
-				this.selectedProject.set("defaultLon", latlng.lng);
-				this.selectedProject.set("defaultZoom", A.map.getZoom());
-			
-				this.selectedProject.save();
 
 			}
 		},
+
 
 		selectProject : function(id) {
-	    	
-			this.saveSelectedMapState();
 
-	    	A.app.selectedProject = this.projects.get(id);
+		    	A.app.selectedProject = this.projects.get(id);
 
-	    	if(A.app.selectedProject != null) {
+		    	if(A.app.selectedProject != null) {
 
 
-	    		this.projectDetail.close();
+		    		this.projectDetail.close();
 
-	    		var projectDetailLayout = new A.project.ProjectDetailLayout({model: A.app.selectedProject});
+		    		var projectDetailLayout = new A.project.ProjectDetailLayout({model: A.app.selectedProject});
 
-	    		this.projectDetail.show(projectDetailLayout);
-	    	}
+		    		this.projectDetail.show(projectDetailLayout);
+		    	}
 
-	    	this.getSelectedMapState();
-	    }
+		    	this.getSelectedMapState();
+		}
 
 	});
 
 	A.project.ProjectDetailLayout = Backbone.Marionette.Layout.extend({
 
-		template: Handlebars.getTemplate('project', 'project-detail-layout-template'), 
+		template: Handlebars.getTemplate('project', 'project-detail-layout-template'),
 
 		regions: {
 		  projectDetail: 	 "#projectDetail"
@@ -154,6 +139,8 @@ var Analyst = Analyst || {};
 
 		initialize : function () {
 			_.bindAll(this, 'tabClick');
+
+			this.activeTab = "data";
 		},
 
 		onRender : function() {
@@ -184,7 +171,7 @@ var Analyst = Analyst || {};
 			$(window).resize(function() {
 			    $('#projectDetail').height($(window).height() - 300);
 			});
-			
+
 
 		},
 
@@ -201,29 +188,29 @@ var Analyst = Analyst || {};
 
 		templateHelpers: {
 	     	dataActive : function () {
-	     		if(this.activeTab == "data") 
+	     		if(this.activeTab == "data")
 	     			return true;
 	     		else
 	     			return false;
 	        },
 	        analysisActive : function () {
-	     		if(this.activeTab == "analysis") 
+	     		if(this.activeTab == "analysis")
 	     			return true;
 	     		else
 	     			return false;
 	        },
 	        settingsActive : function () {
-	     		if(this.activeTab == "settings") 
+	     		if(this.activeTab == "settings")
 	     			return true;
 	     		else
 	     			return false;
 	        },
       }
-		
-	}); 
+
+	});
 
 	A.project.ProjectCreateView = Backbone.Marionette.ItemView.extend({
-		
+
 		template: Handlebars.getTemplate('project', 'project-create-template'),
 
 		ui: {
@@ -233,7 +220,8 @@ var Analyst = Analyst || {};
 
 		events: {
 		  'click .save': 'saveProject',
-		  'click .cancel': 'cancelProject'
+		  'click .cancel': 'cancelProject',
+		  'click #setLocation' : "setLocation"
 		},
 
 		cancelProject : function(evt) {
@@ -247,13 +235,34 @@ var Analyst = Analyst || {};
 			evt.preventDefault();
 			var data = Backbone.Syphon.serialize(this);
 
-			var latlng = A.map.getCenter();
+			if(!this.defaultLat) {
+				var latlng = A.map.getCenter();
 
-			data.defaultLat = latlng.lat;
-			data.defaultLon = latlng.lng;
-			data.defaultZoom = A.map.getZoom();
+				data.defaultLat = latlng.lat;
+				data.defaultLon = latlng.lng;
+				data.defaultZoom = A.map.getZoom();
+			}
+			else {
+				data.defaultLat = this.defaultLat;
+				data.defaultLon = this.defaultLon;
+				data.defaultZoom = this.defaultZoom;
+			}
 
 			this.trigger("projectCreate:save", data);
+
+		},
+
+		setLocation : function(evt) {
+
+			var latlng = A.map.getCenter();
+
+			this.defaultLat = latlng.lat;
+			this.defaultLon = latlng.lng;
+			this.defaultZoom = A.map.getZoom();
+
+			var locationString = this.defaultLat.toFixed(3) + ", "  + this.defaultLon.toFixed(3) + " (z" + this.defaultZoom + ")";
+
+			this.$('#projectLocation').html(locationString);
 
 		}
 
@@ -263,12 +272,29 @@ var Analyst = Analyst || {};
 	 	template: Handlebars.getTemplate('project', 'project-settings-template'),
 
 	 	ui: {
-			name: 			'#name',
+			name: 		'#name',
 			description:  	'#description'
 		},
 
 		events: {
-		  'click .save': 'saveProject'
+		  'click .save': 'saveProject',
+		  'click #setLocation' : "setLocation"
+		},
+
+		onShow : function() {
+
+			var latlng = A.map.getCenter();
+
+			var data = {};
+
+			data.defaultLat = latlng.lat;
+			data.defaultLon = latlng.lng;
+			data.defaultZoom = A.map.getZoom();
+
+			var locationString = data.defaultLat.toFixed(3) + ", "  + data.defaultLon.toFixed(3) + " (z" + data.defaultZoom + ")";
+
+			this.$('#projectLocation').html(locationString);
+
 		},
 
 		saveProject : function(evt) {
@@ -276,13 +302,27 @@ var Analyst = Analyst || {};
 			evt.preventDefault();
 			var data = Backbone.Syphon.serialize(this);
 
+			this.model.set(data);
+
+			this.model.save();
+
+		},
+
+		setLocation : function(evt) {
+
 			var latlng = A.map.getCenter();
+
+			var data = {};
 
 			data.defaultLat = latlng.lat;
 			data.defaultLon = latlng.lng;
 			data.defaultZoom = A.map.getZoom();
 
-			this.trigger("projectCreate:save", data);
+			this.model.set(data);
+
+			var locationString = data.defaultLat.toFixed(3) + ", "  + data.defaultLon.toFixed(3) + " (z" + data.defaultZoom + ")";
+
+			this.$('#projectLocation').html(locationString);
 
 		}
 	});
@@ -292,17 +332,17 @@ var Analyst = Analyst || {};
 	  tagName: 'li',
 
 	  initialize: function () {
-		
+
 		this.model.on('change', this.render);
 	  }
 
 	});
 
 	A.project.ProjectListView = Backbone.Marionette.CompositeView.extend({
-	  
+
 	  template: Handlebars.getTemplate('project', 'project-list-template'),
 	  itemView: A.project.ProjectListItemView,
-	 
+
 	  triggers : {
 			'click #createNewProject' : 'projectList:createNewProject'
 	  },
@@ -313,11 +353,11 @@ var Analyst = Analyst || {};
 
 	  templateHelpers: {
      	selectedProject : function () {
-     		var selectedProject = this.collection.get(this.selectedId);
+     		var selectedProject = this.collection.get(A.app.selectProject);
      		if(selectedProject != null)
-            	return selectedProject.get("name");
-            else
-            	return false;
+            		return selectedProject.get("name");
+            	else
+            		return false;
         }
       },
 
@@ -332,12 +372,10 @@ var Analyst = Analyst || {};
 	  },
 
 	  setSelected : function(id) {
-
-	  	this.selectedId = id;
+	  	A.app.selectProject = id;
 	  	this.render();
 	  }
 
 	});
 
-})(Analyst, jQuery);	
-
+})(Analyst, jQuery);

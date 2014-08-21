@@ -61,9 +61,7 @@ public class AnalystRequest extends RoutingRequest{
         sptService.setMaxDuration(60 * cutoffMinutes);
         
         ShortestPathTree spt = sptService.getShortestPathTree(this);
-        
-        
-        
+       
         this.cleanup();
         
         if (spt != null) {

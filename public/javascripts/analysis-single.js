@@ -61,8 +61,8 @@ var Analyst = Analyst || {};
 
 	  		A.map.on('click', this.onMapClick);
 
-			this.pointsets = new A.models.PointSets(); 
-			this.scenarios = new A.models.Scenarios(); 
+			this.pointsets = new A.models.PointSets();
+			this.scenarios = new A.models.Scenarios();
 
 			this.timeSlider = this.$('#timeSlider1').slider({
 					formater: function(value) {
@@ -103,7 +103,7 @@ var Analyst = Analyst || {};
 			this.mode1 = 'TRANSIT';
 			this.mode2 = 'TRANSIT';
 
-			
+
 			this.$('input[name=mode1]:radio').on('change', function(event) {
 				_this.mode1 = _this.$('input:radio[name=mode1]:checked').val();
 				_this.createSurface();
@@ -132,9 +132,9 @@ var Analyst = Analyst || {};
 						_this.$(".scenario-list").append('<option selected value="' + _this.scenarios.models[i].get("id") + '">' + _this.scenarios.models[i].get("name") + '</option>');
 					else
 						_this.$(".scenario-list").append('<option value="' + _this.scenarios.models[i].get("id") + '">' + _this.scenarios.models[i].get("name") + '</option>');
-						
+
 				}
-	    			
+
 			}});
 
 			this.$('#comparisonChart').hide();
@@ -157,7 +157,7 @@ var Analyst = Analyst || {};
 				if(this.transitOverlays[id] && A.map.hasLayer(this.transitOverlays[id]))
 					A.map.removeLayer(this.transitOverlays[id]);
 			}
-		  	
+
 		  	A.map.off('click', this.onMapClick);
 
 		  	A.map.marker = false;
@@ -184,18 +184,18 @@ var Analyst = Analyst || {};
 		  	this.maxChartValue = 0;
 
 		  	this.resetCharts();
-		  		
+
 		  	if(this.comparisonType == 'compare') {
 		  		this.$('#comparisonChart').show();
 		  		this.$('#compareLegend').show();
 		  		this.$('#legend').hide();
-		  	}	
+		  	}
 		  	else {
 		  		this.$('#comparisonChart').hide();
 		  		this.$('#compareLegend').hide();
 		  		this.$('#legend').show();
-		  	} 	
-		  		
+		  	}
+
 
 		  	var bikeSpeed = (this.bikeSpeedSlider.getValue() * 1000 / 60 / 60 );
 		  	var walkSpeed = (this.walkSpeedSlider.getValue() * 1000 / 60 / 60 );
@@ -203,17 +203,17 @@ var Analyst = Analyst || {};
  			var graphId1 = this.$('#scenario1').val();
 
 			var _this = this;
-			
+
 			var surfaceUrl1 = '/api/surface?graphId=' + graphId1 + '&lat=' + A.map.marker.getLatLng().lat + '&lon=' + A.map.marker.getLatLng().lng + '&mode=' + this.mode1 + '&bikeSpeed=' + bikeSpeed + '&walkSpeed=' + walkSpeed;
 		    $.getJSON(surfaceUrl1, function(data) {
 
 		  	  _this.surfaceId1 = data.id;
-		  	  
+
 		  	  if(!this.comparisonType || _this.surfaceId2) {
 		  	 	_this.updateMap();
 		  	 	_this.updateResults();
 		  	  }
-		  	 
+
 		    });
 
 		    if(this.comparisonType == 'compare') {
@@ -224,12 +224,12 @@ var Analyst = Analyst || {};
 		    	$.getJSON(surfaceUrl2, function(data) {
 
 			  	  _this.surfaceId2 = data.id;
-			  	 
+
 			  	  if(_this.surfaceId1) {
 			  	  	_this.updateMap();
 			  	  	_this.updateResults();
 			  	  }
-			  	  
+
 			    });
 
 		    }
@@ -238,18 +238,18 @@ var Analyst = Analyst || {};
 		updateResults : function (timeUpdateOnly) {
 
 			var _this = this;
-	
+
 			this.comparisonType = this.$('.scenario-comparison').val();
 
-			if(this.comparisonType == 'compare') { 
-				
+			if(this.comparisonType == 'compare') {
+
 				if(this.surfaceId1) {
 					$.getJSON('/api/result?&pointSetId=' + this.$("#primaryIndicator").val() + '&surfaceId=' + this.surfaceId1, function(res) {
 
 						_this.scenario1Data = res;
 						_this.drawChart(res, 1, "#barChart1", 175);
 
-					});	
+					});
 				}
 
 				if(this.surfaceId2) {
@@ -258,15 +258,15 @@ var Analyst = Analyst || {};
 						_this.scenario2Data = res;
 						_this.drawChart(res, 2, "#barChart2", 175);
 
-					});	
+					});
 				}
-			}	
+			}
 			else {
 				$.getJSON('/api/result?&pointSetId=' + this.$("#primaryIndicator").val() + '&surfaceId=' + this.surfaceId1, function(res) {
 
 					_this.drawChart(res, 1, "#barChart1", 175);
 
-				});	
+				});
 			}
 		},
 
@@ -278,7 +278,7 @@ var Analyst = Analyst || {};
 			this.comparisonType = this.$('.scenario-comparison').val();
 
 			if(showTransit) {
-				if(this.comparisonType == 'compare') { 
+				if(this.comparisonType == 'compare') {
 
 					var scenarioId = this.$('#scenario1').val();
 
@@ -314,9 +314,9 @@ var Analyst = Analyst || {};
 				}
 
 			}
-	
+
 			if(!this.$("#primaryIndicator").val() ||  !this.surfaceId1)
-				return;	
+				return;
 
 			$('#results1').hide();
 			$('#results2').hide();
@@ -327,7 +327,7 @@ var Analyst = Analyst || {};
 			var showIso =  this.$('#showIso').prop('checked');
 			var showPoints = this.$('#showPoints').prop('checked');
 
-			if(this.comparisonType == 'compare') { 
+			if(this.comparisonType == 'compare') {
 
 				if(!this.surfaceId1 || !this.surfaceId2)
 					return;
@@ -340,12 +340,12 @@ var Analyst = Analyst || {};
 
 			}
 			else {
-				
+
 				if(A.map.tileOverlay && A.map.hasLayer(A.map.tileOverlay))
 		  			A.map.removeLayer(A.map.tileOverlay);
-			  				
+
 				A.map.tileOverlay = L.tileLayer('/tile/surface?z={z}&x={x}&y={y}&pointSetId=' +  this.$("#primaryIndicator").val() + '&minTime=' + minTime + '&timeLimit=' + timeLimit + '&showPoints=' + showPoints + '&showIso=' + showIso + '&surfaceId=' + this.surfaceId1, {
-					
+
 					}).addTo(A.map);
 
 			}
@@ -408,7 +408,7 @@ var Analyst = Analyst || {};
 						item[id[i]] = item[id[i]] +  parseInt(value[i][v]);
 					}
 				}
-				
+
 				minute++;
 			}
 
@@ -416,7 +416,7 @@ var Analyst = Analyst || {};
 				if(maxVals[v] > this.maxChartValue)
 					this.maxChartValue = maxVals[v];
 			}
-			
+
 			var minuteDimension;
 
 			if(barChart == 1) {
@@ -426,7 +426,7 @@ var Analyst = Analyst || {};
 					return d.min;
 				});
 				barChart = this.barChart1;
-			}		
+			}
 			else if(barChart == 2) {
 				this.barChart2 = dc.barChart(divSelector);
 				this.cfData2 = crossfilter(transformedData);
@@ -435,7 +435,7 @@ var Analyst = Analyst || {};
 				});
 				barChart = this.barChart2;
 			}
-				
+
 
 			barChart
                 .width(400)
@@ -458,7 +458,7 @@ var Analyst = Analyst || {};
             	else
             		barChart.stack(group, label[i])
             }
-             
+
             barChart.x(d3.scale.linear().domain([0, 120]))
                 .renderHorizontalGridLines(true)
                 .centerBar(true)
@@ -485,17 +485,17 @@ var Analyst = Analyst || {};
 				this.barChart1.y(d3.scale.linear().domain([0, this.maxChartValue]));
 
 			if(this.barChart2)
-				this.barChart2.y(d3.scale.linear().domain([0, this.maxChartValue])); 
+				this.barChart2.y(d3.scale.linear().domain([0, this.maxChartValue]));
 		},
 
 		resetCharts : function() {
 
 			if(this.cfData1) {
-				this.cfData1.remove();	
+				this.cfData1.remove();
 			}
 
 			if(this.cfData2) {
-				this.cfData2.remove();	
+				this.cfData2.remove();
 			}
 
 			dc.renderAll();
@@ -503,7 +503,7 @@ var Analyst = Analyst || {};
 		},
 
 		onRender : function() {
-			
+
 			if(A.map.tileOverlay && A.map.hasLayer(A.map.tileOverlay))
 	  			A.map.removeLayer(A.map.tileOverlay);
 
@@ -518,16 +518,16 @@ var Analyst = Analyst || {};
 
 		onMapClick : function(evt) {
 
-  			if(A.map.marker && A.map.hasLayer(A.map.marker))
-  				A.map.removeLayer(A.map.marker);
+	  		if(A.map.marker && A.map.hasLayer(A.map.marker))
+	  			return;
+				
+	  		A.map.marker = new L.marker(evt.latlng, {draggable:'true'});
 
-  			A.map.marker = new L.marker(evt.latlng, {draggable:'true'});
+	  		A.map.marker.on('dragend', this.createSurface);
 
-  			A.map.marker.on('dragend', this.createSurface);
+		    	A.map.addLayer(A.map.marker);
 
-	    	A.map.addLayer(A.map.marker);
-
-	    	this.createSurface();  
+	    		this.createSurface();
 
 		},
 
@@ -546,5 +546,4 @@ var Analyst = Analyst || {};
 		}
 	});
 
-})(Analyst, jQuery);	
-
+})(Analyst, jQuery);

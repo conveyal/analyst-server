@@ -6,7 +6,7 @@ var Analyst = Analyst || {};
 
 	A.models.Project = Backbone.Model.extend({
 	    urlRoot: '/api/project/',
-	    
+
 	    defaults: {
 	      id: null,
 	      name: null,
@@ -14,14 +14,21 @@ var Analyst = Analyst || {};
 	      boundary: null,
 	      defaultLat: null,
 	      defaultLon: null,
-	      defaultZoom: null
-	    }
+	      defaultZoom: null,
+		 defaultScenario: null
+		},
+
+		selectedProject : function(evt) {
+			return id === A.app.selectedProject;
+		}
+
 	  });
 
 	A.models.Projects = Backbone.Collection.extend({
 	  type: 'Projects',
 	  model: A.models.Project,
-	  url: '/api/project'
+	  url: '/api/project',
+	  comparator: 'name'
 
 	});
 
@@ -35,7 +42,7 @@ var Analyst = Analyst || {};
 			shapeFileId: null,
 			projectId: null,
 			attributes: []
-		},	
+		},
 
 		addAttribute : function (name, description, color, fieldName) {
 
@@ -77,7 +84,7 @@ var Analyst = Analyst || {};
 			name: null,
 			description: null,
 			fieldnames: []
-		}	
+		}
 
 	});
 
@@ -95,9 +102,9 @@ var Analyst = Analyst || {};
 			id: null,
 			name: null,
 			description: null,
-			filenames: []
-		}	
-
+			filenames: [],
+			status: null
+		}
 	});
 
 	A.models.Scenarios = Backbone.Collection.extend({
@@ -118,7 +125,7 @@ var Analyst = Analyst || {};
 			status: null,
 			totalPoints: null,
 			completePoints: null
-		},	
+		},
 
 		updateStatus : function() {
 
@@ -127,7 +134,7 @@ var Analyst = Analyst || {};
 		getPoints : function() {
 
 		}
- 
+
 	});
 
 	A.models.Queries = Backbone.Collection.extend({
@@ -136,4 +143,4 @@ var Analyst = Analyst || {};
 	  url: '/api/query'
 	});
 
-})(Analyst, jQuery);	
+})(Analyst, jQuery);

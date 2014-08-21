@@ -24,7 +24,10 @@ public class Project implements Serializable {
 
 	public Double defaultLat;
 	public Double defaultLon;
-	public Integer defaultZoom ;
+	public Integer defaultZoom;
+	
+	public String defaultScenario;
+	
 	
 	public Project() {
 		

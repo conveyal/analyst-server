@@ -69,6 +69,8 @@ public class Shapefile implements Serializable {
 	public String name;
 	public String description;
 	
+	public String projectId;
+	
 	public ArrayList<String> fieldnames = new ArrayList<String>();
 	
 	
@@ -254,23 +256,26 @@ public class Shapefile implements Serializable {
 		
 	}
 	
-	public static Shapefile create(File originalShapefileZip) throws ZipException, IOException {
+	public static Shapefile create(File originalShapefileZip, String projectId) throws ZipException, IOException {
 		
 		String shapefileHash = HashUtils.hashFile(originalShapefileZip);
 		
-		if(shapefilesData.getById(shapefileHash) != null) {
+		String shapefileId = projectId + "_" + shapefileHash;
+		
+		if(shapefilesData.getById(shapefileId) != null) {
 			
-			Logger.info("loading shapefile " + shapefileHash);
+			Logger.info("loading shapefile " + shapefileId);
 			
 			originalShapefileZip.delete();
-			return shapefilesData.getById(shapefileHash);
+			return shapefilesData.getById(shapefileId);
 		}
 		
-		Logger.info("creating shapefile " + shapefileHash);
+		Logger.info("creating shapefile " + shapefileId);
 		
 		Shapefile shapefile = new Shapefile();
 		
-		shapefile.id = shapefileHash;
+		shapefile.id = shapefileId;
+		shapefile.projectId = projectId;
 		
 		ZipFile zipFile = new ZipFile(originalShapefileZip);
 
@@ -294,10 +299,10 @@ public class Shapefile implements Serializable {
 	    if(hasShp && hasDbf) {
 	    	// move shape to perm location
 	    	
-	    	shapefile.file = new File(Shapefile.getShapeDataPath(),  shapefileHash + ".zip");
+	    	shapefile.file = new File(Shapefile.getShapeDataPath(),  shapefileId + ".zip");
 	    	FileUtils.copyFile(originalShapefileZip, shapefile.file);
 	    
-	    	Logger.info("loading shapefile " + shapefileHash);
+	    	Logger.info("loading shapefile " + shapefileId);
 	    	List<Fun.Tuple2<String,ShapeFeature>> features = shapefile.getShapeFeatures();
 	    	Logger.info("saving " + features.size() + " features...");
 	    	
@@ -305,7 +310,7 @@ public class Shapefile implements Serializable {
 
 	    	shapefile.save();
 	    	
-	    	Logger.info("done loading shapefile " + shapefileHash);
+	    	Logger.info("done loading shapefile " + shapefileId);
 	    }
 	    else 
 	    	shapefile = null;
@@ -483,10 +488,25 @@ public class Shapefile implements Serializable {
 		return shapefilesData.getById(id);	
 	}
 	
-	static public Collection<Shapefile> getShapfiles() {
+	static public Collection<Shapefile> getShapfiles(String projectId) {
 		
-		return shapefilesData.getAll();
+		if(projectId == null)
+			return shapefilesData.getAll();
 		
+		else {
+			
+			Collection<Shapefile> data = new ArrayList<Shapefile>();
+			
+			for(Shapefile sf : shapefilesData.getAll()) {
+				if(sf.projectId == null )
+					sf.delete();
+				else if(sf.projectId.equals(projectId))
+					data.add(sf);
+			}
+		
+			return data;
+		}
+
 	}
 
 }
