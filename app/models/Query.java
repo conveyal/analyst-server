@@ -156,7 +156,9 @@ public class Query implements Serializable {
 		if(q == null)
 			return;
 		
-		ArrayList<ResultFeature> writeList = null;
+		q.getResults().save(rf.id, rf);
+		
+		/*ArrayList<ResultFeature> writeList = null;
 		
 		synchronized(resultsQueue) {
 			if(!resultsQueue.containsKey(id))
@@ -171,9 +173,9 @@ public class Query implements Serializable {
 		}
 		
 		if(writeList != null)
-			q.getResults().save(rf.id, writeList);
+			q.getResults().save(rf.id, writeList);*/
 		
-		Tiles.resetQueryCache(id);
+		//Tiles.resetQueryCache(id);
 	}
 	
 	static void updateStatus(String id, JobStatus js) {
