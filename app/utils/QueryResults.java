@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.opentripplanner.analyst.ResultFeature;
@@ -17,6 +18,9 @@ import models.SpatialLayer;
 import models.Shapefile.ShapeFeature;
 
 public class QueryResults {
+
+	public static  Map<String, QueryResults> queryResultsCache = new ConcurrentHashMap<String, QueryResults>();
+
 	
 	public Double minValue = -1.0;
 	public Double maxValue = 0.0;

@@ -110,6 +110,12 @@ public class DataStore<T> {
 		db.commit();
 	}
 	
+	public void save(String id, List<T> objs) {
+		for(T obj : objs)
+			map.put(id, obj);
+		db.commit();
+	}
+	
 	public void delete(String id) {
 		map.remove(id);
 		db.commit();

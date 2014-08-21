@@ -6,6 +6,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 import org.opentripplanner.analyst.ResultFeature;
@@ -36,6 +37,8 @@ import controllers.Tiles;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Query implements Serializable {
 
+	private static HashMap<String, List<ResultFeature>> resultsQueue = new HashMap<String, List<ResultFeature>>();
+	
 	private static final long serialVersionUID = 1L;
 
 	static DataStore<Query> queryData = new DataStore<Query>("queries");
@@ -149,11 +152,26 @@ public class Query implements Serializable {
 	static void saveQueryResult(String id, ResultFeature rf) {
 		
 		Query q = getQuery(id);
-		
+
 		if(q == null)
 			return;
 		
-		q.getResults().save(rf.id, rf);
+		ArrayList<ResultFeature> writeList = null;
+		
+		synchronized(resultsQueue) {
+			if(!resultsQueue.containsKey(id))
+				resultsQueue.put(id, new ArrayList<ResultFeature>());
+			resultsQueue.get(id).add(rf);
+			
+			if(resultsQueue.get(id).size() > 250) {
+				writeList = new ArrayList<ResultFeature>(resultsQueue.get(id));
+				resultsQueue.get(id).clear();
+			}
+			
+		}
+		
+		if(writeList != null)
+			q.getResults().save(rf.id, writeList);
 		
 		Tiles.resetQueryCache(id);
 	}

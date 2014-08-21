@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import models.Attribute;
+import models.Query;
 import models.Shapefile.ShapeFeature;
 import models.SpatialLayer;
 
@@ -17,6 +18,8 @@ import org.opentripplanner.analyst.TimeSurface;
 
 import otp.AnalystRequest;
 import utils.HaltonPoints;
+import utils.QueryResults;
+import utils.QueryResults.QueryResultItem;
 import utils.TransportIndex;
 import utils.TransportIndex.TransitSegment;
 
@@ -91,6 +94,65 @@ public abstract class AnalystTileRequest {
 				} catch (MismatchedDimensionException | TransformException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
+				}
+    		}
+    		
+    		try {
+				return tile.generateImage();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return null;
+			}
+			
+		}
+	}
+	
+	public static class TransitComparisonTile extends AnalystTileRequest {
+		
+		final String scenario1Id;
+		final String scenario2Id;
+		
+		public TransitComparisonTile(String scenario1Id, String scenario2Id, Integer x, Integer y, Integer z) {
+			super(x, y, z, "transitComparison");
+			
+			this.scenario1Id = scenario1Id;
+			this.scenario2Id = scenario2Id;
+		}
+		
+		public String getId() {
+			return super.getId() + "_" + scenario1Id  + "_" + scenario2Id;
+		}
+		
+		public byte[] render(){
+			
+			Tile tile = new Tile(this);
+			
+			HashSet<String> defaultEdges = new HashSet<String>();
+
+			STRtree index1 = transitIndex.getIndexForGraph(scenario1Id);
+			List<TransitSegment> segments1 = index1.query(tile.envelope);
+
+			for(TransitSegment ts : segments1) {
+				defaultEdges.add(ts.edgeId);
+			}
+    		
+    		STRtree index2 = transitIndex.getIndexForGraph(scenario2Id);
+    		List<TransitSegment> segments2 = index2.query(tile.envelope);
+
+    		for(TransitSegment ts : segments2) {
+    			Color color;
+
+				if(!defaultEdges.contains(ts.edgeId)) {
+					color = new Color(0.6f,0.8f,0.6f,0.75f);
+
+	    			try {
+						tile.renderLineString(ts.geom, color, 5);
+					} catch (MismatchedDimensionException
+							| TransformException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
     		}
     		
@@ -410,54 +472,136 @@ public abstract class AnalystTileRequest {
     		}
     }
     	
-   
-    public static class TransitComparisonTile extends AnalystTileRequest {
+    
+public static class QueryTile extends AnalystTileRequest {
 		
-		final String scenario1Id;
-		final String scenario2Id;
+		final String queryId;
+		final Integer timeLimit;
+		final String normalizeBy;
+		final String groupBy;
 		
-		public TransitComparisonTile(String scenario1Id, String scenario2Id, Integer x, Integer y, Integer z) {
-			super(x, y, z, "transitComparison");
+		public QueryTile(String queryId, Integer x, Integer y, Integer z, Integer timeLimit, String normalizeBy, String groupBy) {
+			super(x, y, z, "transit");
 			
-			this.scenario1Id = scenario1Id;
-			this.scenario2Id = scenario2Id;
+			this.queryId = queryId;
+			this.timeLimit = timeLimit;
+			this.normalizeBy = normalizeBy;
+			this.groupBy = groupBy;
 		}
 		
 		public String getId() {
-			return super.getId() + "_" + scenario1Id  + "_" + scenario2Id;
+			return super.getId() + "_" + queryId;
 		}
 		
 		public byte[] render(){
 			
 			Tile tile = new Tile(this);
 			
-			HashSet<String> defaultEdges = new HashSet<String>();
+			Query query = Query.getQuery(queryId);
+			
+			if(query == null)
+				return null;
 
-			STRtree index1 = transitIndex.getIndexForGraph(scenario1Id);
-			List<TransitSegment> segments1 = index1.query(tile.envelope);
 
-			for(TransitSegment ts : segments1) {
-				defaultEdges.add(ts.edgeId);
-			}
-    		
-    		STRtree index2 = transitIndex.getIndexForGraph(scenario2Id);
-    		List<TransitSegment> segments2 = index2.query(tile.envelope);
+    		String queryKey = queryId + "_" + timeLimit;
+			
+			QueryResults qr = null;
 
-    		for(TransitSegment ts : segments2) {
-    			Color color;
-
-				if(!defaultEdges.contains(ts.edgeId)) {
-					color = new Color(0.6f,0.8f,0.6f,0.75f);
-
-	    			try {
-						tile.renderLineString(ts.geom, color, 5);
-					} catch (MismatchedDimensionException
-							| TransformException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
+			synchronized(QueryResults.queryResultsCache) {
+				if(!QueryResults.queryResultsCache.containsKey(queryKey)) {
+					qr = new QueryResults(query, timeLimit);
+					QueryResults.queryResultsCache.put(queryKey, qr);
 				}
-    		}
+				else
+					qr = QueryResults.queryResultsCache.get(queryKey);
+			}
+
+			SpatialLayer sd = SpatialLayer.getPointSetCategory(query.pointSetId);
+
+		    List<ShapeFeature> features = sd.getShapefile().query(tile.envelope);
+
+		    if(normalizeBy == null) {
+		        for(ShapeFeature feature : features) {
+
+		        	Color color = null;
+
+		        	if(qr.items.containsKey(feature.id)) {
+		         		color = qr.jenksClassifier.getColorValue(qr.items.get(feature.id).value);
+		         	}
+
+					if(color == null) {
+						color = new Color(0.0f,0.0f,0.0f,0.1f);
+					}
+
+		         	if(color != null)
+						try {
+							tile.renderPolygon(feature.geom, color, null);
+						} catch (MismatchedDimensionException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (TransformException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+
+		        }
+		    }
+		    else {
+
+		    	QueryResults normalizeQr = qr.normalizeBy(normalizeBy);
+
+		    	if(groupBy == null) {
+		    		for(ShapeFeature feature : features) {
+
+		            	Color color = null;
+
+		            	if(normalizeQr.items.containsKey(feature.id)) {
+		             		color = normalizeQr.jenksClassifier.getColorValue(normalizeQr.items.get(feature.id).value);
+		             	}
+
+		            	if(color == null){
+							color = new Color(0.0f,0.0f,0.0f,0.1f);
+						}
+
+		             	if(color != null)
+							try {
+								tile.renderPolygon(feature.geom, color, null);
+							} catch (MismatchedDimensionException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							} catch (TransformException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+
+		            }
+		    	}
+		    	else {
+		    		QueryResults gruopedQr = normalizeQr.groupBy(groupBy);
+
+		    		for(QueryResultItem item : gruopedQr.items.values()) {
+
+		            	Color color = null;
+
+		            	color = gruopedQr.jenksClassifier.getColorValue(item.value);
+
+		            	if(color == null){
+							color = new Color(0.0f,0.0f,0.0f,0.1f);
+						}
+
+		            	try {
+							tile.renderPolygon(item.feature.geom, color, null);
+						} catch (MismatchedDimensionException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (TransformException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+
+		            }
+		    	}
+		    }
     		
     		try {
 				return tile.generateImage();
@@ -469,4 +613,5 @@ public abstract class AnalystTileRequest {
 			
 		}
 	}
+ 
 }

@@ -257,13 +257,13 @@ public class Api extends Controller {
     		
     		QueryResults qr = null;
     		
-    		synchronized(Tiles.queryResultsCache) {
-    			if(!Tiles.queryResultsCache.containsKey(queryKey)) {
+    		synchronized(QueryResults.queryResultsCache) {
+    			if(!QueryResults.queryResultsCache.containsKey(queryKey)) {
 	    			qr = new QueryResults(query, timeLimit);
-	    			Tiles.queryResultsCache.put(queryKey, qr);
+	    			QueryResults.queryResultsCache.put(queryKey, qr);
 	    		}
 	    		else
-	    			qr = Tiles.queryResultsCache.get(queryKey);
+	    			qr = QueryResults.queryResultsCache.get(queryKey);
     		}
     		
             if(normalizeBy == null) {

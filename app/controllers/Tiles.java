@@ -35,6 +35,7 @@ import tiles.AnalystTileRequest.TransitTile;
 import tiles.AnalystTileRequest.SpatialTile;
 import tiles.AnalystTileRequest.SurfaceTile;
 import tiles.AnalystTileRequest.SurfaceCompareTile;
+import tiles.AnalystTileRequest.QueryTile;
 import tiles.TileCache;
 import utils.HaltonPoints;
 import utils.QueryResults;
@@ -46,14 +47,12 @@ public class Tiles extends Controller {
 	
 	private static TileCache tileCache = new TileCache();
 
-	public static  Map<String, QueryResults> queryResultsCache = new ConcurrentHashMap<String, QueryResults>();
-
 	public static void resetTileCache() {
 		tileCache.clear();
 	}
 
 	public static void resetQueryCache(String queryId) {
-		queryResultsCache.remove(queryId);
+		QueryResults.queryResultsCache.remove(queryId);
 		tileCache.clear();
 	}
 
@@ -112,120 +111,10 @@ public class Tiles extends Controller {
 		return tileBuilder(tileRequest);
     }
 
-	public static Result query(String queryId, Integer x, Integer y, Integer z, Integer timeLimit, String normalizeBy, String groupBy) {
+	public static Promise<Result> query(String queryId, Integer x, Integer y, Integer z, Integer timeLimit, String normalizeBy, String groupBy) {
 
-		/* response().setHeader(CACHE_CONTROL, "no-cache, no-store, must-revalidate");
-		response().setHeader(PRAGMA, "no-cache");
-		response().setHeader(EXPIRES, "0");
-
-		Query query = Query.getQuery(queryId);
-
-		if(query == null)
-			return badRequest();
-
-		String tileIdPrefix = "query_" + queryId + "_" + timeLimit;
-
-		if(normalizeBy != null)
-			tileIdPrefix += "_" + normalizeBy;
-
-		if(groupBy != null)
-			tileIdPrefix += "_" + groupBy;
-
-
-    	Tile tile = new Tile(tileIdPrefix, x, y, z);
-
-    	try {
-	    	if(!tileCache.containsKey(tile.tileId)) {
-
-	    		String queryKey = queryId + "_" + timeLimit;
-
-	    		QueryResults qr = null;
-
-	    		synchronized(queryResultsCache) {
-	    			if(!queryResultsCache.containsKey(queryKey)) {
-		    			qr = new QueryResults(query, timeLimit);
-		    			queryResultsCache.put(queryKey, qr);
-		    		}
-		    		else
-		    			qr = queryResultsCache.get(queryKey);
-	    		}
-
-	    		SpatialLayer sd = SpatialLayer.getPointSetCategory(query.pointSetId);
-
-	            List<ShapeFeature> features = sd.getShapefile().query(tile.envelope);
-
-	            if(normalizeBy == null) {
-		            for(ShapeFeature feature : features) {
-
-		            	Color color = null;
-
-		            	if(qr.items.containsKey(feature.id)) {
-	                 		color = qr.jenksClassifier.getColorValue(qr.items.get(feature.id).value);
-	                 	}
-
-	    				if(color == null) {
-	    					color = new Color(0.0f,0.0f,0.0f,0.1f);
-	    				}
-
-	                 	if(color != null)
-	                 		tile.renderPolygon(feature.geom, color, null);
-
-		            }
-	            }
-	            else {
-
-	            	QueryResults normalizeQr = qr.normalizeBy(normalizeBy);
-
-	            	if(groupBy == null) {
-	            		for(ShapeFeature feature : features) {
-
-			            	Color color = null;
-
-			            	if(normalizeQr.items.containsKey(feature.id)) {
-		                 		color = normalizeQr.jenksClassifier.getColorValue(normalizeQr.items.get(feature.id).value);
-		                 	}
-
-			            	if(color == null){
-		    					color = new Color(0.0f,0.0f,0.0f,0.1f);
-		    				}
-
-		                 	if(color != null)
-		                 		tile.renderPolygon(feature.geom, color, null);
-
-			            }
-	            	}
-	            	else {
-	            		QueryResults gruopedQr = normalizeQr.groupBy(groupBy);
-
-	            		for(QueryResultItem item : gruopedQr.items.values()) {
-
-			            	Color color = null;
-
-			            	color = gruopedQr.jenksClassifier.getColorValue(item.value);
-
-			            	if(color == null){
-		    					color = new Color(0.0f,0.0f,0.0f,0.1f);
-		    				}
-
-			            	tile.renderPolygon(item.feature.geom, color, null);
-
-			            }
-	            	}
-
-	            }
-
-	            tileCache.put(tile.tileId, tile.generateImage());
-			}
-
-			ByteArrayInputStream bais = new ByteArrayInputStream(tileCache.get(tile.tileId));
-		    response().setContentType("image/png");
-			return ok(bais);
-
-    	} catch (Exception e) {
-	    	e.printStackTrace();
-	    	return badRequest();
-	    } */
-		return ok();
+		AnalystTileRequest tileRequest = new QueryTile(queryId, x, y, z, timeLimit, normalizeBy, groupBy);
+		return tileBuilder(tileRequest);
     }
 
 

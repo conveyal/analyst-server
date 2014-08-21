@@ -414,13 +414,41 @@ A.data = {};
 
 		events: {
 		  'click #scenarioSave': 'saveScenarioCreate',
-		  'click #scenarioCancel': 'cancelScenarioCreate'
+		  'click #scenarioCancel': 'cancelScenarioCreate',
+		  'change #scenarioType' : 'scenarioTypeChange'
 		},
 
 		initialize : function(options) {
 
 
 			this.projectId = options.projectId;
+		},
+
+		onShow : function() {
+
+			var _this = this;
+
+			this.scenarios = new A.models.Scenarios();
+
+			this.scenarios.fetch({reset: true, data : {projectId: this.projectId}, success: function(collection, response, options){
+
+				_this.$("#augmentScenarioId").empty();
+
+				for(var i in _this.scenarios.models) {
+					_this.$("#augmentScenarioId").append('<option value="' + _this.scenarios.models[i].get("id") + '">' + _this.scenarios.models[i].get("name") + '</option>');
+				}
+
+			}});
+
+			this.$("#augmentScenarioId").hide();
+		},
+
+		scenarioTypeChange : function(evt) {
+
+			if(this.$('#scenarioType').val() === "augment")
+				this.$("#augmentScenarioId").show();
+			else
+				this.$("#augmentScenarioId").hide();
 		},
 
 		cancelScenarioCreate : function(evt) {
@@ -443,6 +471,9 @@ A.data = {};
 
 		    values.projectId = this.projectId;
 		    values.scenarioType = this.$('#scenarioType').val();
+
+		    if(values.scenarioType === "augment")
+			values.augmentScenarioId = this.$('#augmentScenarioId').val();
 
 		    var scenario = new A.models.Scenario();
 
