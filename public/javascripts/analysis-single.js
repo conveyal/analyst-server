@@ -280,19 +280,21 @@ var Analyst = Analyst || {};
 			if(showTransit) {
 				if(this.comparisonType == 'compare') {
 
-					var scenarioId = this.$('#scenario1').val();
+					var scenarioId1 = this.$('#scenario1').val();
 
-					if(A.map.hasLayer(this.transitOverlays[scenarioId]))
-			 			A.map.removeLayer(this.transitOverlays[scenarioId]);
+					if(A.map.hasLayer(this.transitOverlays[scenarioId1]))
+			 			A.map.removeLayer(this.transitOverlays[scenarioId1]);
 
-					this.transitOverlays[scenarioId] = L.tileLayer('/tile/transit?z={z}&x={x}&y={y}&scenarioId=' + scenarioId).addTo(A.map);
+					this.transitOverlays[scenarioId1] = L.tileLayer('/tile/transit?z={z}&x={x}&y={y}&scenarioId=' + scenarioId1).addTo(A.map);
 
-					scenarioId = this.$('#scenario2').val();
+					var scenarioId2 = this.$('#scenario2').val();
 
-					if(A.map.hasLayer(this.transitOverlays[scenarioId]))
-			 			A.map.removeLayer(this.transitOverlays[scenarioId]);
+					var compareKey = scenarioId1 + "_ " + scenarioId2;
 
-					this.transitOverlays[scenarioId] = L.tileLayer('/tile/transit?z={z}&x={x}&y={y}&scenarioId=' + scenarioId).addTo(A.map);
+					if(A.map.hasLayer(this.transitOverlays[compareKey]))
+			 			A.map.removeLayer(this.transitOverlays[compareKey]);
+
+					this.transitOverlays[compareKey] = L.tileLayer('/tile/transitComparison?z={z}&x={x}&y={y}&scenarioId1=' + scenarioId1 + '&scenarioId2=' + scenarioId2).addTo(A.map);
 
 				}
 				else {
@@ -520,7 +522,7 @@ var Analyst = Analyst || {};
 
 	  		if(A.map.marker && A.map.hasLayer(A.map.marker))
 	  			return;
-				
+
 	  		A.map.marker = new L.marker(evt.latlng, {draggable:'true'});
 
 	  		A.map.marker.on('dragend', this.createSurface);

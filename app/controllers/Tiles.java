@@ -32,6 +32,7 @@ import scala.concurrent.ExecutionContext;
 import tiles.Tile;
 import tiles.AnalystTileRequest;
 import tiles.AnalystTileRequest.TransitTile;
+import tiles.AnalystTileRequest.TransitComparisonTile;
 import tiles.AnalystTileRequest.SpatialTile;
 import tiles.AnalystTileRequest.SurfaceTile;
 import tiles.AnalystTileRequest.SurfaceCompareTile;
@@ -121,6 +122,13 @@ public class Tiles extends Controller {
 	public static Promise<Result> transit(final String scenarioId, final Integer x, final Integer y, final Integer z) {
 	
 		AnalystTileRequest tileRequest = new TransitTile(scenarioId, x, y, z);
+		return tileBuilder(tileRequest);
+		
+	}
+	
+	public static Promise<Result> transitComparison(String scenarioId1, String scenarioId2, Integer x, Integer y, Integer z) {
+		
+		AnalystTileRequest tileRequest = new TransitComparisonTile(scenarioId1, scenarioId2, x, y, z);
 		return tileBuilder(tileRequest);
 		
 	}

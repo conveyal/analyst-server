@@ -175,12 +175,12 @@ public class Gis extends Controller {
                 	
                 	for(ShapeFeature feature : features) {
     	            	
-                		if(normalizeQr.items.containsKey(feature.id)) {
+                		if(gruopedQr.items.containsKey(feature.id)) {
 	                		GisShapeFeature gf = new GisShapeFeature();
 	                		gf.geom = feature.geom;
 	                		gf.id = feature.id;
 	                		
-	                		gf.fields.add(normalizeQr.items.get(feature.id).value);
+	                		gf.fields.add(gruopedQr.items.get(feature.id).value);
 	                		
 	                		gisFeatures.add(gf);
     	            	}
