@@ -320,6 +320,12 @@ public class Scenario implements Serializable {
 	}
 	
 	public void build() {
+		
+		this.processingGtfs = false;
+    	this.processingOsm = false;
+    	this.failed = false;
+    	this.save();
+	
 		ExecutionContext graphBuilderContext = Akka.system().dispatchers().lookup("contexts.graph-builder-analyst-context");
 
 		final String graphId = id;
@@ -328,6 +334,7 @@ public class Scenario implements Serializable {
 			        Duration.create(10, TimeUnit.MILLISECONDS),
 			        new Runnable() {
 			            public void run() {
+			            	
 			            	Api.analyst.getGraph(graphId);
 			            }
 			        },
