@@ -270,10 +270,14 @@ public class Scenario implements Serializable {
 				            	
 				            	System.out.println("downloading xml for " + bbox);
 				            	
+				            	System.out.println("wget" + "--post-data" + overpassQuery + "http://overpass-api.de/api/interpreter/" + "-O" + osmXmlFile.getAbsolutePath());
+				            	
 						        ProcessBuilder pb = new ProcessBuilder("wget", "--post-data", overpassQuery, "http://overpass-api.de/api/interpreter/", "-O", osmXmlFile.getAbsolutePath());
-						        	 
+						        
 						        Process p = pb.start();
 					            
+						        p.waitFor();
+						        
 					            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(p.getInputStream()));
 						        String line;
 						        
@@ -298,7 +302,7 @@ public class Scenario implements Serializable {
 						        System.out.println("osm xml converted to pbf");
 				            	
 									
-						    } catch (IOException e) {
+						    } catch (IOException | InterruptedException e) {
 						    	e.printStackTrace();
 					            System.out.println("Failed to process gtfs");
 					            
