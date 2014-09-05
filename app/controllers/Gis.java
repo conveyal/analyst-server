@@ -183,7 +183,7 @@ public class Gis extends Controller {
                 	
                 	ArrayList<GisShapeFeature> gisFeatures = new ArrayList<GisShapeFeature>();
                 	
-                	for(ShapeFeature feature : features) {
+                	for(ShapeFeature feature : sdGroup.getShapefile().getShapeFeatureStore().getAll()) {
     	            	
                 		if(gruopedQr.items.containsKey(feature.id)) {
 	                		GisShapeFeature gf = new GisShapeFeature();
