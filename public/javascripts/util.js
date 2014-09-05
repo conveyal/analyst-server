@@ -23,15 +23,27 @@ Backbone.Marionette.View.prototype.mixinTemplateHelpers = function (target) {
     return _.extend(target, result);
 };
 
-Handlebars.getTemplate = function(module, name) {
+Handlebars.getTemplate = function(module, name, lang) {
     if (Handlebars.templates === undefined || Handlebars.templates[name] === undefined) {
+
+        var langStr = "";
+
+        if(lang)
+             langStr = "." + lang;
+
         $.ajax({
-            url : Analyst.config.templatePath + '/' + module + '/' + name + '.html',
+            url : Analyst.config.templatePath + '/' + module + '/' + name + langStr + '.html',
             success : function(data) {
                 if (Handlebars.templates === undefined) {
                     Handlebars.templates = {};
                 }
                 Handlebars.templates[name] = Handlebars.compile(data);
+            },
+            error : function() {
+
+                 // fall back to lang-less url reuqest
+                 if(lang)
+                    Handlebars.getTemplate(module, name, false);
             },
             async : false
         });

@@ -4,32 +4,12 @@ var Analyst = Analyst || {};
 
 	A.project = {};
 
-	A.project.ProjectController = Marionette.Controller.extend({
-
-	    initialize: function(options){
-
-	        this.region = options.region;
-
-	        this.projects  = new A.models.Projects();
-
-	        this.projects.fetch({reset: true});
-	    },
-
-	    show: function(){
-
-	    	var projectLayout = new A.project.ProjectLayout({projects: this.projects});
-	    	this.region.show(projectLayout);
-
-	    }
-	});
-
-
 	A.project.ProjectLayout = Backbone.Marionette.Layout.extend({
 
 		template: Handlebars.getTemplate('project', 'project-layout-template'),
 
 		regions: {
-		  projectList: 	 "#projectList",
+		  projectList:   "#projectList",
 		  projectDetail: "#main"
 		},
 
@@ -152,9 +132,17 @@ var Analyst = Analyst || {};
 				this.projectDetail.show(projectSettings);
 			}
 
-			if(this.activeTab == "data") {
+			if(this.activeTab == "spatial-data") {
 
-				var dataLayout = new A.data.DataLayout({model: this.model});
+				var dataLayout = new A.data.PointSetLayout({model: this.model});
+
+				this.projectDetail.show(dataLayout);
+			}
+
+
+			if(this.activeTab == "transport-data") {
+
+				var dataLayout = new A.transportData.ScenarioLayout({model: this.model});
 
 				this.projectDetail.show(dataLayout);
 			}
@@ -184,28 +172,7 @@ var Analyst = Analyst || {};
 
 				this.render();
 			}
-		},
-
-		templateHelpers: {
-	     	dataActive : function () {
-	     		if(this.activeTab == "data")
-	     			return true;
-	     		else
-	     			return false;
-	        },
-	        analysisActive : function () {
-	     		if(this.activeTab == "analysis")
-	     			return true;
-	     		else
-	     			return false;
-	        },
-	        settingsActive : function () {
-	     		if(this.activeTab == "settings")
-	     			return true;
-	     		else
-	     			return false;
-	        },
-      }
+		}
 
 	});
 
@@ -327,55 +294,5 @@ var Analyst = Analyst || {};
 		}
 	});
 
-	A.project.ProjectListItemView = Backbone.Marionette.ItemView.extend({
-	  template: Handlebars.getTemplate('project', 'project-list-item-template'),
-	  tagName: 'li',
-
-	  initialize: function () {
-
-		this.model.on('change', this.render);
-	  }
-
-	});
-
-	A.project.ProjectListView = Backbone.Marionette.CompositeView.extend({
-
-	  template: Handlebars.getTemplate('project', 'project-list-template'),
-	  itemView: A.project.ProjectListItemView,
-
-	  triggers : {
-			'click #createNewProject' : 'projectList:createNewProject'
-	  },
-
-	  events : {
-	  	'click .selectProject': 'selectProject'
-	  },
-
-	  templateHelpers: {
-     	selectedProject : function () {
-     		var selectedProject = this.collection.get(A.app.selectProject);
-     		if(selectedProject != null)
-            		return selectedProject.get("name");
-            	else
-            		return false;
-        }
-      },
-
-	  selectProject : function(evt) {
-	  	var id = $(evt.target).data("id");
-	  	this.setSelected(id);
-	  	this.trigger("projectList:selectProject", id);
-	  },
-
-	  appendHtml: function(collectionView, itemView){
-	    collectionView.$("ul").prepend(itemView.el);
-	  },
-
-	  setSelected : function(id) {
-	  	A.app.selectProject = id;
-	  	this.render();
-	  }
-
-	});
 
 })(Analyst, jQuery);

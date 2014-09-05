@@ -1,12 +1,12 @@
-html, body, #map {
+html, body,  #app, #app-map,#app-body {
   height: 100%;
   width: 100%;
   overflow: hidden;
   padding: 0px;
-  margin: 0px;  
+  margin: 0px;
 }
 
-#app {
+#app-panel {
 	z-index: 2000;
 	position: fixed;
 	top: 10px;
@@ -14,19 +14,28 @@ html, body, #map {
 	width: 450px;
 }
 
+#center-panel {
+     z-index: 2000;
+     position: fixed;
+     top: 10px;
+     right: 470px;
+     width: 500px;
+}
+
+
 .glyphicon {
 	color: #98b8eb;
   	cursor: pointer;
 }
 
 .title {
-	
+
 }
 
 .container {
 	padding-left: 0px;
 	padding-right: 0px;
-	background: rgba(255,255,255,0.75);	
+	background: rgba(255,255,255,0.75);
 }
 
 .panel-title {
@@ -76,22 +85,22 @@ label {
 }
 
 .legend-item-text {
-	margin-left: 15px;	
+	margin-left: 15px;
 }
 
 div.legend-item {
-	
+
 	cursor: pointer;
 }
 
 .legend-item-text {
-	margin-left: 15px;	
+	margin-left: 15px;
 }
-  
+
 .indicator_box {
 	width:100%;
 	margin-top: 10px;
-} 
+}
 
 .isochrone-scale {
 	background: rgb(30,87,153); /* Old browsers */
@@ -104,7 +113,7 @@ div.legend-item {
 	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#1e5799', endColorstr='#7db9e8',GradientType=1 ); /* IE6-9 */
 }
 
-.colorbox {   
+.colorbox {
     float: left;
     width: 17px;
     height: 18px;
@@ -114,6 +123,3 @@ div.legend-item {
     border-style: solid;
     border-color: #b3b3b3;
 }
-
-
-

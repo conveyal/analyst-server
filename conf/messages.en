@@ -12,9 +12,12 @@ app.projects=Projects
 app.no-project-selected=No project selected
 app.create-new-project=Create new project
 
+app.account.loggout=Loggout
+app.account.change-password=Change Password
 
 
-app.data=Data
+app.transport-data=Transport Data
+app.spatial-data=Spatial Data
 app.analysis=Analysis
 app.project-settings=Settings
 
