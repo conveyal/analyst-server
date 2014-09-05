@@ -94,7 +94,17 @@ public class Gis extends Controller {
 	    
     		String queryKey = queryId + "_" + timeLimit;
     		
-    		QueryResults qr = new QueryResults(query, timeLimit);
+			QueryResults qr = null;
+
+			synchronized(QueryResults.queryResultsCache) {
+				if(!QueryResults.queryResultsCache.containsKey(queryKey)) {
+					qr = new QueryResults(query, timeLimit);
+					QueryResults.queryResultsCache.put(queryKey, qr);
+				}
+				else
+					qr = QueryResults.queryResultsCache.get(queryKey);
+			}
+    		
     		
     		SpatialLayer sd = SpatialLayer.getPointSetCategory(query.pointSetId);
     		       

@@ -1,7 +1,9 @@
 package tiles;
 
+import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Composite;
 import java.awt.Graphics2D;
 import java.awt.Polygon;
 import java.awt.RenderingHints;
@@ -108,29 +110,71 @@ public class Tile {
 	
 	public void renderPolygon(Geometry g, Color c, Color stroke) throws MismatchedDimensionException, TransformException {
 		
-		if(gr == null)
-			gr = buffer.createGraphics();
-		
-		gr.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-                RenderingHints.VALUE_ANTIALIAS_ON);
-		
-		Geometry gTr  = JTS.transform(g, tr);
-        
-		gr.setColor(c);
-		
-    	Polygon p = new Polygon();
-    	for(Coordinate coord : gTr.getCoordinates())
-    		p.addPoint((int)coord.x, (int)coord.y);
-    	
-    	gr.fillPolygon(p);     
-    	
-    	if(stroke != null) {
-    		gr.setColor(stroke);
-    		gr.setStroke(new BasicStroke(2));
-    		gr.drawPolygon(p);
-    	}
+		if(g instanceof com.vividsolutions.jts.geom.MultiPolygon) {
+			com.vividsolutions.jts.geom.MultiPolygon gM = ((com.vividsolutions.jts.geom.MultiPolygon)g);
+			for(int nGm = 0; nGm < gM.getNumGeometries(); nGm++) {
+				renderPolygon(gM.getGeometryN(nGm), c, stroke);	
+			}
+		}
+		else {
+			if(gr == null)
+				gr = buffer.createGraphics();
 			
-    	
+			gr.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+	                RenderingHints.VALUE_ANTIALIAS_ON);
+			
+			Geometry gTr  = JTS.transform(g, tr);
+	        
+			Coordinate[] coords;
+			
+			if(gTr instanceof com.vividsolutions.jts.geom.Polygon) {
+				com.vividsolutions.jts.geom.Polygon pTr = (com.vividsolutions.jts.geom.Polygon)gTr;
+				coords = pTr.getExteriorRing().getCoordinates();
+			}
+			else
+				coords = gTr.getCoordinates();
+			
+			gr.setColor(c);
+			
+	    	Polygon p = new Polygon();
+	    	for(Coordinate coord : coords)
+	    		p.addPoint((int)coord.x, (int)coord.y);
+	    	
+	    	gr.fillPolygon(p);     
+	    	
+	    	if(stroke != null) {
+	    		gr.setColor(stroke);
+	    		gr.setStroke(new BasicStroke(2));
+	    		gr.drawPolygon(p);
+	    	}
+	    	
+	    	if(gTr instanceof com.vividsolutions.jts.geom.Polygon) {
+				com.vividsolutions.jts.geom.Polygon pTr = (com.vividsolutions.jts.geom.Polygon)gTr;
+				
+				Color hColor = new Color(1.0f,1.0f,1.0f,0.0f);
+				
+				for(int nIr = 0; nIr < pTr.getNumInteriorRing(); nIr++) {
+					coords = pTr.getInteriorRingN(nIr).getCoordinates();
+					
+					
+					p = new Polygon();
+			    	for(Coordinate coord : coords)
+			    		p.addPoint((int)coord.x, (int)coord.y);
+			    	gr.setComposite(AlphaComposite.Clear);
+			    	gr.setColor(hColor);
+			    	gr.fillPolygon(p);     
+			    	
+			    	gr.setComposite(AlphaComposite.SrcOver);
+			    	
+			    	if(stroke != null) {
+			    		gr.setColor(stroke);
+			    		gr.setStroke(new BasicStroke(2));
+			    		gr.drawPolygon(p);
+			    	}
+				}
+			}
+		}
+		
 	}
 	
 	public void renderLineString(Geometry g, Color c, Integer strokeWidth) throws MismatchedDimensionException, TransformException {
