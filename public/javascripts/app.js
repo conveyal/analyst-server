@@ -2,7 +2,9 @@ var Analyst = Analyst || {};
 
 (function(A, $) {
 
-	A.app = new Backbone.Marionette.Application();
+	A.app = {};
+
+	A.app.instance = new Backbone.Marionette.Application();
 
 	A.app.addRegions({
 		appRegion: "#app"
@@ -17,8 +19,14 @@ var Analyst = Analyst || {};
 
 	});
 
-	A.app.controller = Marionette.Controller.extend({
+	A.app.Router = Marionette.AppRouter.extend({
+  		appRoutes: {
+    			'': 'index',
+    			':namespace(/*subroute)': 'invokeSubRoute'
+  		}
+	});
 
+	A.app.AppController = Marionette.Controller.extend({
 		initialize: function(options) {
 			this.stuff = options.stuff;
 		},
@@ -42,6 +50,7 @@ var Analyst = Analyst || {};
 		initialize : function() {
 
 			this.projects  = new A.models.Projects();
+
 
 			this.projects.fetch({reset: true});
 		},
@@ -149,9 +158,117 @@ var Analyst = Analyst || {};
 
 			this.model.on('change', this.render);
 		}
+>>>>>>> Stashed changes
+
+		onRender : function() {
+
+			// Get rid of that pesky wrapping-div.
+    			// Assumes 1 child element present in template.
+    			this.$el = this.$el.children();
+
+			this.$el.unwrap();
+			this.setElement(this.$el);
+
+			A.app.nav = new A.app.Nav();
+
+			this.appNav.show(A.app.nav);
+
+		},
+
+		setSelectedProject : function(projectId) {
+			A.app.selectProject = projectId;
+
+			A.app.nav.render();
+		},
+
+		onShow: function() {
+
+			A.map = L.map(this.$("#app-map")[0], { loadingControl: true,  zoomControl: false }).setView([0, -80.00], 4);
+
+			L.tileLayer('http://{s}.tiles.mapbox.com/v3/conveyal.hml987j0/{z}/{x}/{y}.png', {
+					attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
+					maxZoom: 18
+				}).addTo(A.map);
+
+			new L.control.zoom({position: 'bottomleft'}).addTo(A.map);
+		}
+	});
+
+<<<<<<< Updated upstream
+	A.app.Nav = Marionette.Layout.extend({
+
+		template: Handlebars.getTemplate('app', 'app-nav'),
+
+		regions : {
+			projectDropdown: "#projectDropdown"
+		},
+
+		onShow : function() {
+
+		},
+
+		onRender : function() {
+
+			// Get rid of that pesky wrapping-div.
+			// Assumes 1 child element present in template.
+			this.$el = this.$el.children();
+
+			this.$el.unwrap();
+			this.setElement(this.$el);
+
+			var projectDropdownView = new A.app.ProjectListView({collection: A.app.instance.projects});
+
+			this.projectDropdown.show(projectDropdownView);
+		},
+
+		templateHelpers: {
+			selectedProject : function () {
+				if(A.app.selectProject != null)
+					return true;
+				else
+					return false;
+			},
+			transportDataActive : function () {
+					if(this.activeTab == "transport-data")
+						return true;
+					else
+						return false;
+			},
+			spatialDataActive : function () {
+					if(this.activeTab == "spatial-data")
+						return true;
+					else
+						return false;
+			},
+			analysisActive : function () {
+					if(this.activeTab == "analysis")
+						return true;
+					else
+						return false;
+			},
+			settingsActive : function () {
+					if(this.activeTab == "settings")
+						return true;
+					else
+						return false;
+			},
+		}
+	});
+
+	A.app.ProjectListItemView = Backbone.Marionette.ItemView.extend({
+
+		template: Handlebars.getTemplate('project', 'project-list-item-template'),
+		tagName: 'li',
+
+		initialize: function () {
+
+			this.model.on('change', this.render);
+		}
 
 	});
 
+=======
+>>>>>>> Stashed changes
 	A.app.ProjectListView = Backbone.Marionette.CompositeView.extend({
 
 		template: Handlebars.getTemplate('project', 'project-list-template'),
