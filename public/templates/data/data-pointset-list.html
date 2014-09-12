@@ -1,7 +1,17 @@
-
-<div id="loadingPointsets" style="margin-left: 15px; display: none;">
-	<img src="/assets/images/ajax-loader.gif"/> {{I18n "app.shared.loading"}}
+<div class="pannel-header">
+	<button id="createPointset" type="button" class="btn btn-default btn-xs pull-right">{{I18n "app.shared.add"}} Data Set</button>
+	<span class="glyphicon glyphicon-globe"></span> {{I18n "data-manager.spaitial-data-sets"}}
 </div>
 
-<ul class="list-group" id="pointsetList">
-</ul>
+<div id="main" style="padding: 10px;">
+
+	<p>{{I18n "data-manager.pointset-description"}}</p>
+
+	<div id="loadingPointsets" style="margin-left: 15px; display: none;">
+		<img src="/assets/images/ajax-loader.gif"/> {{I18n "app.shared.loading"}}
+	</div>
+
+	<ul class="list-group" id="pointsetList">
+	</ul>
+
+</div>

@@ -6,20 +6,34 @@ html, body,  #app, #app-map,#app-body {
   margin: 0px;
 }
 
-#app-panel {
+#app-side-panel {
 	z-index: 2000;
 	position: fixed;
-	top: 10px;
+	bottom: 10px;
 	right: 10px;
 	width: 450px;
+     overflow: scroll;
+     max-height: 800px;
 }
 
-#center-panel {
+.panel-body{
+     padding: 0px;
+}
+
+#app-center-panel {
      z-index: 2000;
      position: fixed;
-     top: 10px;
-     right: 470px;
+     top: -50px;
+     left: -10px;
      width: 500px;
+}
+
+.pannel-header {
+     margin: 0px;
+     padding: 10px;
+     font-size: 14px;
+     background: rgba(183, 183, 183, 0.25);
+     color: #777777;
 }
 
 

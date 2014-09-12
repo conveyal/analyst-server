@@ -9,15 +9,12 @@ A.transportData = {};
 		template: Handlebars.getTemplate('data', 'data-layout'),
 
 		regions: {
-		  spatialData 	: "#spatial",
-		  scenarioData 	: "#scenario"
+		  scenarioData : "#main"
 		},
 
 		initialize : function(options) {
 
 			var _this = this;
-
-			this.pointsets = new A.models.PointSets();
 
 			this.scenarios  = new A.models.Scenarios();
 
@@ -25,49 +22,21 @@ A.transportData = {};
 
 		onShow : function() {
 
-			this.pointSetLayout = new A.data.PointSetLayout({collection: this.pointsets});
-
-			this.listenTo(this.pointSetLayout, "pointsetCreate", this.createPointset);
-
-			this.spatialData.show(this.pointSetLayout);
-
-			this.scenarioLayout = new A.data.ScenarioLayout({collection: this.scenarios});
+			this.scenarioLayout = new A.transportData.ScenarioLayout({collection: this.scenarios});
 
 			this.listenTo(this.scenarioLayout, "scenarioCreate", this.createScenario);
 
 			this.scenarioData.show(this.scenarioLayout);
 
-			this.scenarios.fetch({reset: true, data : {projectId: this.model.get("id")}});
+			this.scenarios.fetch({reset: true, data : {projectId: A.app.selectedProject}});
 
-		},
+			var _this = this;
 
-		createPointset : function(evt) {
+			A.app.instance.vent.on("setSelectedProject", function() {
+				_this.scenarios.fetch({reset: true, data : {projectId: A.app.selectedProject}});
+				_this.render();
+			});
 
-			var pointSetCreateLayout = new A.data.PointSetCreateView({projectId: this.model.get("id")});
-
-			this.listenTo(pointSetCreateLayout, "pointsetCreate:save", this.saveNewPointset);
-
-			this.listenTo(pointSetCreateLayout, "pointsetCreate:cancel", this.cancelNewPointset);
-
-			this.spatialData.show(pointSetCreateLayout);
-			this.scenarioData.close();
-
-		},
-
-		saveNewPointset: function(data) {
-
-			data.projectId = this.model.get("id");
-			this.pointsets.create(data, {wait: true});
-			this.spatialData.close();
-
-			this.onShow();
-		},
-
-		cancelNewPointset : function() {
-
-			this.spatialData.close();
-
-			this.onShow();
 		},
 
 		cancelNewScenario : function() {
@@ -82,16 +51,15 @@ A.transportData = {};
 
 			var _this = this;
 
-			var scenarioCreateLayout = new A.data.ScenarioCreateView({projectId: this.model.get("id")});
+			var scenarioCreateLayout = new A.transportData.ScenarioCreateView({projectId: A.app.selectedProject});
 
 			this.listenTo(scenarioCreateLayout, "scenarioCreate:save", function() {
-					_this.scenarios.fetch({reset: true, data : {projectId: _this.model.get("id")}});
+					_this.scenarios.fetch({reset: true, data : {projectId: A.app.selectedProject}});
 					this.onShow();
 				});
 
 			this.listenTo(scenarioCreateLayout, "scenarioCreate:cancel", this.cancelNewScenario)	;
 
-			this.spatialData.close();
 			this.scenarioData.show(scenarioCreateLayout);
 
 		},

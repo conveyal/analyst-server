@@ -5,7 +5,7 @@
       <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
         <span class="sr-only">Toggle navigation</span>
       </button>
-      <a class="navbar-brand" href="#">
+      <a class="navbar-brand" href="#home">
           <strong><span style="color: #98b8eb;"><img src="/assets/images/logo.png" style="height: 30px; margin-top: -5px; margin-right: 5px;"/>Transport</span></strong> Analyst
       </a>
     </div>
@@ -16,7 +16,7 @@
       {{#if selectedProject}}
 
           <ul class="nav navbar-nav">
-             <li id="transportDataTab" class="{{#if transportDataActive}}active{{/if}}"><a href="#"><span class="glyphicon glyphicon-road"></span> Transport Data</a></li>
+             <li id="transportDataTab" class="{{#if transportDataActive}}active{{/if}}"><a  href="#"><span class="glyphicon glyphicon-road"></span> Transport Data</a></li>
              <li id="spatialDataTab" class="dropdown {{#if spatialDataActive}}active{{/if}}">
                <a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-globe"></span> Spatial Data <span class="caret"></span></a>
                <ul class="dropdown-menu" role="menu">
@@ -31,7 +31,7 @@
                          <li id="analysisTabRegional"><a href="#">Regional Analysis</a></li>
                     </ul>
              </li>
-             <li class="{{#if settingsActive}}active{{/if}}"><a href="#"><span class="glyphicon glyphicon-wrench"></span> Project Settings</a></li>
+             <li id="#projectSettingsTab" class="{{#if settingsActive}}active{{/if}}"><a href="#"><span class="glyphicon glyphicon-wrench"></span> Project Settings</a></li>
            </ul>
 
       {{/if}}
@@ -41,11 +41,21 @@
 
           </div>
           <div id="userDropdown" class="nav navbar-nav">
-               <li class="dropdown {{#if transportDataActive}}active{{/if}}">
+               <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-user" ></span> {{userName}}<span class="caret"></span></a>
                     <ul class="dropdown-menu" role="menu">
                          <li id="userDropdownLoggout"><a href="#">{{I18n "app.account.loggout"}}</a></li>
                          <li id="userDropdownChangePassword"><a href="#">{{I18n "app.account.change-password"}}</a></li>
+                    </ul>
+               </li>
+          </div>
+
+          <div id="helpDropdown" class="nav navbar-nav">
+               <li class="dropdown">
+                    <a href="#home" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-question-sign" ></span><span class="caret"></span></a>
+                    <ul class="dropdown-menu" role="menu">
+                         <li id="helpWelcome"><a href="#home">{{I18n "app.welcome"}}</a></li>
+                         <li id="helpTutorial"><a href="#">{{I18n "app.tutorial"}}</a></li>
                     </ul>
                </li>
           </div>

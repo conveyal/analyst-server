@@ -2,16 +2,20 @@ var Analyst = Analyst || {};
 
 (function(A, $) {
 
-A.data = {};
+A.spatialData = {};
 
-	A.data.DataLayout = Backbone.Marionette.Layout.extend({
+	A.spatialData.PointSetDataLayout = Backbone.Marionette.Layout.extend({
 
 		template: Handlebars.getTemplate('data', 'data-layout'),
 
 		regions: {
-		  spatialData 	: "#spatial",
-		  scenarioData 	: "#scenario"
+		  spatialData 	: "#main"
 		},
+
+		events:  {
+			'click #createPointset' : 'createPointset'
+		},
+
 
 		initialize : function(options) {
 
@@ -19,39 +23,26 @@ A.data = {};
 
 			this.pointsets = new A.models.PointSets();
 
-			this.scenarios  = new A.models.Scenarios();
-
 		},
 
 		onShow : function() {
 
-			this.pointSetLayout = new A.data.PointSetLayout({collection: this.pointsets});
+			this.pointSetLayout = new A.spatialData.PointSetListView({collection: this.pointsets});
 
 			this.listenTo(this.pointSetLayout, "pointsetCreate", this.createPointset);
 
 			this.spatialData.show(this.pointSetLayout);
-
-			this.scenarioLayout = new A.data.ScenarioLayout({collection: this.scenarios});
-
-			this.listenTo(this.scenarioLayout, "scenarioCreate", this.createScenario);
-
-			this.scenarioData.show(this.scenarioLayout);
-
-			this.scenarios.fetch({reset: true, data : {projectId: this.model.get("id")}});
-
 		},
 
 		createPointset : function(evt) {
 
-			var pointSetCreateLayout = new A.data.PointSetCreateView({projectId: this.model.get("id")});
+			var pointSetCreateLayout = new A.spatialData.PointSetCreateView({projectId: A.app.selectedProject});
 
 			this.listenTo(pointSetCreateLayout, "pointsetCreate:save", this.saveNewPointset);
 
 			this.listenTo(pointSetCreateLayout, "pointsetCreate:cancel", this.cancelNewPointset);
 
 			this.spatialData.show(pointSetCreateLayout);
-			this.scenarioData.close();
-
 		},
 
 		saveNewPointset: function(data) {
@@ -68,44 +59,13 @@ A.data = {};
 			this.spatialData.close();
 
 			this.onShow();
-		},
-
-		cancelNewScenario : function() {
-
-			this.scenarioData.close();
-
-			this.onShow();
-		},
-
-
-		createScenario : function(evt) {
-
-			var _this = this;
-
-			var scenarioCreateLayout = new A.data.ScenarioCreateView({projectId: this.model.get("id")});
-
-			this.listenTo(scenarioCreateLayout, "scenarioCreate:save", function() {
-					_this.scenarios.fetch({reset: true, data : {projectId: _this.model.get("id")}});
-					this.onShow();
-				});
-
-			this.listenTo(scenarioCreateLayout, "scenarioCreate:cancel", this.cancelNewScenario)	;
-
-			this.spatialData.close();
-			this.scenarioData.show(scenarioCreateLayout);
-
-		},
-
-
+		}
 	});
 
-	A.data.PointSetLayout = Marionette.Layout.extend({
+	A.spatialData.PointSetLayout = Marionette.Layout.extend({
 
 		template: Handlebars.getTemplate('data', 'data-pointset-layout'),
 
-		events:  {
-			'click #createPointset' : 'createPointset'
-		},
 
 		regions: {
 		  main 	: "#main"
@@ -113,7 +73,7 @@ A.data = {};
 
 		onShow : function() {
 
-			var pointSetListLayout = new A.data.PointSetListView({collection: this.collection});
+			var pointSetListLayout = new A.spatialData.PointSetListView({collection: this.collection});
 
 			this.main.show(pointSetListLayout);
 
@@ -127,7 +87,7 @@ A.data = {};
 
 	});
 
-	A.data.PointSetCreateView = Backbone.Marionette.Layout.extend({
+	A.spatialData.PointSetCreateView = Backbone.Marionette.Layout.extend({
 
 		template: Handlebars.getTemplate('data', 'data-pointset-create-form'),
 
@@ -153,7 +113,7 @@ A.data = {};
 		onShow : function() {
 
 			var _this = this;
-			this.shapefileListView = new A.data.ShapefileListView({projectId: this.projectId});
+			this.shapefileListView = new A.spatialData.ShapefileListView({projectId: this.projectId});
 
 			this.shapefileSelect.show(this.shapefileListView);
 
@@ -178,7 +138,7 @@ A.data = {};
 
 	});
 
-	A.data.PointSetAttributeCreateView = Backbone.Marionette.Layout.extend({
+	A.spatialData.PointSetAttributeCreateView = Backbone.Marionette.Layout.extend({
 
 		template: Handlebars.getTemplate('data', 'data-pointset-attribute-create-form'),
 
@@ -231,7 +191,7 @@ A.data = {};
 
 	});
 
-	A.data.PointSetListItem = Backbone.Marionette.Layout.extend({
+	A.spatialData.PointSetListItem = Backbone.Marionette.Layout.extend({
 
 	  template: Handlebars.getTemplate('data', 'data-pointset-list-item'),
 
@@ -282,7 +242,7 @@ A.data = {};
 
 	  addAttribute : function(evt) {
 
-	  	this.pointSetAttributeCreateLayout = new A.data.PointSetAttributeCreateView({model: this.model});
+	  	this.pointSetAttributeCreateLayout = new A.spatialData.PointSetAttributeCreateView({model: this.model});
 
 		this.listenTo(this.pointSetAttributeCreateLayout, "pointSetAttributeCreate:save", this.saveNewAttribute);
 
@@ -339,17 +299,17 @@ A.data = {};
 
 	});
 
-	A.data.PointSetEmptyList = Backbone.Marionette.ItemView.extend({
+	A.spatialData.PointSetEmptyList = Backbone.Marionette.ItemView.extend({
 
 		template: Handlebars.getTemplate('data', 'data-pointset-empty-list')
 	});
 
 
-	A.data.PointSetListView = Backbone.Marionette.CompositeView.extend({
+	A.spatialData.PointSetListView = Backbone.Marionette.CompositeView.extend({
 
 		template: Handlebars.getTemplate('data', 'data-pointset-list'),
-		itemView: A.data.PointSetListItem,
-		emptyView: A.data.PointSetEmptyList,
+		itemView: A.spatialData.PointSetListItem,
+		emptyView: A.spatialData.PointSetEmptyList,
 
 		initialize : function() {
 			this.pointSetOverlays = {};
@@ -360,7 +320,7 @@ A.data = {};
 		},
 
 		onShow : function() {
-			this.collection.fetch({reset: true, data : {projectId: A.app.selectedProject.get("id")}, success :function() {
+			this.collection.fetch({reset: true, data : {projectId: A.app.selectedProject}, success :function() {
 				$("#loadingPointsets").hide();
 			}});
 
@@ -399,7 +359,7 @@ A.data = {};
 
 	});
 
-	A.data.ShapefileListItem = Backbone.Marionette.ItemView.extend({
+	A.spatialData.ShapefileListItem = Backbone.Marionette.ItemView.extend({
 
 	  template: Handlebars.getTemplate('data', 'data-shapefile-select-list-item'),
 
@@ -415,10 +375,10 @@ A.data = {};
 
 	});
 
-	A.data.ShapefileListView = Backbone.Marionette.CompositeView.extend({
+	A.spatialData.ShapefileListView = Backbone.Marionette.CompositeView.extend({
 
 		template: Handlebars.getTemplate('data', 'data-shapefile-select-list'),
-	    itemView: A.data.ShapefileListItem,
+	    itemView: A.spatialData.ShapefileListItem,
 
 	    events: {
     		'change #shapefileSelect' : 'shapefileSelectChanged',

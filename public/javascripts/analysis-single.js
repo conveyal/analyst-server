@@ -114,7 +114,7 @@ var Analyst = Analyst || {};
 				_this.createSurface();
 		    });
 
-			this.pointsets.fetch({reset: true, data : {projectId: this.model.get("id")}, success: function(collection, response, options){
+			this.pointsets.fetch({reset: true, data : {projectId: A.app.selectedProject}, success: function(collection, response, options){
 
 				_this.$("#primaryIndicator").empty();
 
@@ -123,7 +123,7 @@ var Analyst = Analyst || {};
 
 			}});
 
-			this.scenarios.fetch({reset: true, data : {projectId: this.model.get("id")}, success: function(collection, response, options){
+			this.scenarios.fetch({reset: true, data : {projectId: A.app.selectedProject}, success: function(collection, response, options){
 
 				_this.$(".scenario-list").empty();
 
