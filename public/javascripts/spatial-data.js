@@ -47,7 +47,7 @@ A.spatialData = {};
 
 		saveNewPointset: function(data) {
 
-			data.projectId = this.model.get("id");
+			data.projectId = A.app.selectedProject;
 			this.pointsets.create(data, {wait: true});
 			this.spatialData.close();
 
@@ -62,30 +62,6 @@ A.spatialData = {};
 		}
 	});
 
-	A.spatialData.PointSetLayout = Marionette.Layout.extend({
-
-		template: Handlebars.getTemplate('data', 'data-pointset-layout'),
-
-
-		regions: {
-		  main 	: "#main"
-		},
-
-		onShow : function() {
-
-			var pointSetListLayout = new A.spatialData.PointSetListView({collection: this.collection});
-
-			this.main.show(pointSetListLayout);
-
-		},
-
-		createPointset : function(evt) {
-			this.trigger("pointsetCreate");
-		}
-
-
-
-	});
 
 	A.spatialData.PointSetCreateView = Backbone.Marionette.Layout.extend({
 
@@ -113,10 +89,9 @@ A.spatialData = {};
 		onShow : function() {
 
 			var _this = this;
-			this.shapefileListView = new A.spatialData.ShapefileListView({projectId: this.projectId});
+			this.shapefileListView = new A.spatialData.ShapefileSelectListView({projectId: this.projectId});
 
 			this.shapefileSelect.show(this.shapefileListView);
-
 		},
 
 		cancelPointSetCreate : function(evt) {
@@ -359,117 +334,227 @@ A.spatialData = {};
 
 	});
 
-	A.spatialData.ShapefileListItem = Backbone.Marionette.ItemView.extend({
+
+	A.spatialData.ShapefileSelectListItem = Backbone.Marionette.ItemView.extend({
 
 	  template: Handlebars.getTemplate('data', 'data-shapefile-select-list-item'),
 
+
 	  onRender: function () {
-        // Get rid of that pesky wrapping-div.
-        // Assumes 1 child element present in template.
-        this.$el = this.$el.children();
-        // Unwrap the element to prevent infinitely
-        // nesting elements during re-render.
-        this.$el.unwrap();
-        this.setElement(this.$el);
+		// Get rid of that pesky wrapping-div
+		// Assumes 1 child element present in template.
+		this.$el = this.$el.children();
+		// Unwrap the element to prevent infinitely
+		// nesting elements during re-render.
+		this.$el.unwrap();
+		this.setElement(this.$el);
       }
 
 	});
 
-	A.spatialData.ShapefileListView = Backbone.Marionette.CompositeView.extend({
+	A.spatialData.ShapefileSelectEmptyList = Backbone.Marionette.ItemView.extend({
 
-		template: Handlebars.getTemplate('data', 'data-shapefile-select-list'),
-	    itemView: A.spatialData.ShapefileListItem,
+		template: Handlebars.getTemplate('data', 'data-shapefile-empty-select-list')
+	});
 
-	    events: {
-    		'change #shapefileSelect' : 'shapefileSelectChanged',
-    		'click #uploadShapefileButton'  : 'uploadFile'
-   		},
+
+	A.spatialData.ShapefileSelectListView = Backbone.Marionette.CompositeView.extend({
+
+	    template: Handlebars.getTemplate('data', 'data-shapefile-select-list'),
+	    itemView: A.spatialData.ShapefileSelectListItem,
+	    emptyView: A.spatialData.ShapefileSelectEmptyList,
+
 
 	    initialize : function(options) {
-
-	    		_.bindAll(this, 'shapefileSelectChanged', 'shapefileListUpdated');
 
 	    		this.collection = new A.models.Shapefiles();
 
 			this.projectId = options.projectId;
+	 	},
 
-			this.collection.fetch({data: {projectId: this.projectId}, reset: true, success: this.shapefileListUpdated });
-	    },
+		onShow : function() {
+			this.collection.fetch({data: {projectId: this.projectId}, reset: true});
+		},
 
-	    getSelectedShapefileId : function() {
+	    appendHtml: function(collectionView, itemView) {
+		   	collectionView.$("#shapefileSelect").prepend(itemView.el);
+		}
+	});
 
-	    	if(this.$("#shapefileSelect").val() != "upload") {
-	    		return this.$("#shapefileSelect").val();
-	    	}
-	    	else
-	    		return "";
-	    },
+	A.spatialData.ShapefileDataLayout = Backbone.Marionette.Layout.extend({
 
-	    getSelectedShapefileFieldname : function() {
+		template: Handlebars.getTemplate('data', 'data-layout'),
 
-	    	if(this.getSelectedShapefileId() != "") {
-	    		return this.$("#shapefileFieldSelect").val();
-	    	}
+		regions: {
+		spatialData 	: "#main"
+		},
 
-	    },
+		events:  {
+			'click #uploadShapefile' : 'uploadShapefile'
+		},
 
-	    shapefileListUpdated : function(collection, response, options) {
 
-	    	this.$("#uploadingShapefile").hide();
+		initialize : function(options) {
 
-	    	if(collection.length > 0) {
-				this.$("#shapefileSelect").val(collection.at(0).get("id"));
-			}
+			var _this = this;
 
-			this.shapefileSelectChanged();
+			this.pointsets = new A.models.PointSets();
 
-	    },
+		},
 
-	    shapefileSelectChanged : function(evt) {
+		onShow : function() {
 
-	    	if(this.$("#shapefileSelect").val() == "upload")  {
-	    		this.$("#fieldSelectGroup").hide();
-	    		this.$("#uploadShapefile").show();
+			this.pointSetLayout = new A.spatialData.ShapefileListView({collection: this.pointsets});
 
-	    	}
-	    	else {
-	    		this.$("#fieldSelectGroup").show();
-	    		this.$("#uploadShapefile").hide();
-	    	}
-	    },
+			this.listenTo(this.pointSetLayout, "pointsetCreate", this.createPointset);
 
-		appendHtml: function(collectionView, itemView){
-	    	collectionView.$("#shapefileSelect").prepend(itemView.el);
-	 	 },
+			this.spatialData.show(this.pointSetLayout);
+		},
 
-	 	 uploadFile: function(event) {
+		uploadShapefile : function(evt) {
 
-	 	    var _this = this;
-		    var values = {};
+			var pointSetCreateLayout = new A.spatialData.ShapefileUpload({projectId: A.app.selectedProject});
 
-		    if(event){ event.preventDefault(); }
+			this.listenTo(pointSetCreateLayout, "pointsetCreate:save", this.saveNewPointset);
 
-		    _.each(this.$('form').serializeArray(), function(input){
-		      values[ input.name ] = input.value;
-		    })
+			this.listenTo(pointSetCreateLayout, "pointsetCreate:cancel", this.cancelNewPointset);
 
-		    values.projectId = this.projectId;
+			this.spatialData.show(pointSetCreateLayout);
+		},
 
-		    var shapefile = new A.models.Shapefile();
+		saveNewPointset: function(data) {
 
-		    shapefile.save(values, { iframe: true,
-		                              files: this.$('form :file'),
-		                              data: values,
-		                              success: function(){
+			data.projectId = A.app.selectedProject;
+			this.pointsets.create(data, {wait: true});
+			this.spatialData.close();
 
-										_this.collection.fetch({reset: true, data: {projectId : _this.projectId}, success: _this.shapefileListUpdated });
-		                              }});
+			this.onShow();
+		},
 
-		    this.$("#uploadShapefile").hide();
-		    this.$("#uploadingShapefile").show();
+		cancelNewPointset : function() {
+
+			this.spatialData.close();
+
+			this.onShow();
+		}
+	});
+
+
+
+	A.spatialData.ShapefileListItem = Backbone.Marionette.ItemView.extend({
+
+		template: Handlebars.getTemplate('data', 'data-shapefile-select-list-item'),
+
+
+		onRender: function () {
+			// Get rid of that pesky wrapping-div
+			// Assumes 1 child element present in template.
+			this.$el = this.$el.children();
+			// Unwrap the element to prevent infinitely
+			// nesting elements during re-render.
+			this.$el.unwrap();
+			this.setElement(this.$el);
 		}
 
 	});
+
+
+	A.spatialData.ShapefileListView = Backbone.Marionette.CompositeView.extend({
+
+		template: Handlebars.getTemplate('data', 'data-shapefile-list'),
+		itemView: A.spatialData.ShapefileListItem,
+
+		events: {
+			'change #shapefileSelect' : 'shapefileSelectChanged',
+			'click #uploadShapefileButton'  : 'uploadFile'
+		},
+
+		initialize : function(options) {
+
+				_.bindAll(this, 'shapefileSelectChanged', 'shapefileListUpdated');
+
+				this.collection = new A.models.Shapefiles();
+
+				this.projectId =  A.app.selectedProject;
+
+				this.collection.fetch({data: {projectId: this.projectId}, reset: true, success: this.shapefileListUpdated });
+		},
+
+		getSelectedShapefileId : function() {
+
+			if(this.$("#shapefileSelect").val() != "upload") {
+				return this.$("#shapefileSelect").val();
+			}
+			else
+				return "";
+		},
+
+		getSelectedShapefileFieldname : function() {
+
+			if(this.getSelectedShapefileId() != "") {
+				return this.$("#shapefileFieldSelect").val();
+			}
+
+		},
+
+		shapefileListUpdated : function(collection, response, options) {
+
+			this.$("#uploadingShapefile").hide();
+
+			if(collection.length > 0) {
+					this.$("#shapefileSelect").val(collection.at(0).get("id"));
+				}
+
+				this.shapefileSelectChanged();
+
+		},
+
+		shapefileSelectChanged : function(evt) {
+
+			if(this.$("#shapefileSelect").val() == "upload")  {
+				this.$("#fieldSelectGroup").hide();
+				this.$("#uploadShapefile").show();
+
+			}
+			else {
+				this.$("#fieldSelectGroup").show();
+				this.$("#uploadShapefile").hide();
+			}
+		},
+
+			appendHtml: function(collectionView, itemView){
+			collectionView.$("#shapefileSelect").prepend(itemView.el);
+			},
+
+			uploadFile: function(event) {
+
+				var _this = this;
+			var values = {};
+
+			if(event){ event.preventDefault(); }
+
+			_.each(this.$('form').serializeArray(), function(input){
+				values[ input.name ] = input.value;
+			})
+
+			values.projectId = this.projectId;
+
+			var shapefile = new A.models.Shapefile();
+
+			shapefile.save(values, { iframe: true,
+									files: this.$('form :file'),
+									data: values,
+									success: function(){
+
+											_this.collection.fetch({reset: true, data: {projectId : _this.projectId}, success: _this.shapefileListUpdated });
+									}});
+
+			this.$("#uploadShapefile").hide();
+			this.$("#uploadingShapefile").show();
+		}
+
+	});
+
 
 
 })(Analyst, jQuery);

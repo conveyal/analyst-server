@@ -1,3 +1,7 @@
+::-webkit-scrollbar {
+    display: none;
+}
+
 html, body,  #app, #app-map,#app-body {
   height: 100%;
   width: 100%;
@@ -12,8 +16,8 @@ html, body,  #app, #app-map,#app-body {
 	bottom: 10px;
 	right: 10px;
 	width: 450px;
-     overflow: scroll;
      max-height: 800px;
+     overflow: scroll;
 }
 
 .panel-body{

@@ -141,8 +141,9 @@ public class Query implements Serializable {
 			Collection<Query> data = new ArrayList<Query>();
 			
 			for(Query sd : queryData.getAll()) {
-				if(sd.projectId.equals(projectId))
+				if(sd.projectId != null && sd.projectId.equals(projectId))
 					data.add(sd);
+				
 			}
 				
 			return data;

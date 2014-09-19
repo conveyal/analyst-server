@@ -110,6 +110,10 @@ var Analyst = Analyst || {};
 				var pointSetDataPanel = new A.spatialData.PointSetDataLayout();
 				A.app.main.showSidePanel(pointSetDataPanel);
 			}
+			else if(this.selectedTab == "spatial-data-shapefiles") {
+				var pointSetDataPanel = new A.spatialData.ShapefileListView();
+				A.app.main.showSidePanel(pointSetDataPanel);
+			}
 			else if(this.selectedTab == "analysis-single") {
 				var analaysisPanel = new A.analysis.AnalysisSinglePointLayout;
 				A.app.main.showSidePanel(analaysisPanel);
