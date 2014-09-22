@@ -56,6 +56,10 @@ public class SpatialLayer implements Serializable {
 	}
 
 	public Integer getFeatureCount() {
+		
+		if(getShapefile() == null)
+			return 0;
+		
 		if(featureCount == null)
 			featureCount = getShapefile().getShapeFeatureStore().size();
 		
