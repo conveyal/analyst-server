@@ -1,6 +1,7 @@
 package models;
 
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -46,9 +47,7 @@ public class User implements Serializable {
 		
 		try {
 			
-			byte[] bytesOfMessage = (password + Play.application().configuration().getString("application.secret")).getBytes("UTF-8");	
-			
-			this.passwordHash = DigestUtils.shaHex(bytesOfMessage);
+			this.passwordHash = getPasswordHash(password);
 			
 		}
 		catch(Exception e) {
@@ -85,11 +84,7 @@ public class User implements Serializable {
 	public Boolean checkPassword(String password) {	
 		try {
 			
-			byte[] bytesOfMessage = (password + Play.application().configuration().getString("application.secret")).getBytes("UTF-8");	
-			
-			String pHash = DigestUtils.shaHex(bytesOfMessage);
-			
-			return pHash.equals(this.passwordHash);
+			return this.passwordHash.equals(getPasswordHash(password));
 			
 		}
 		catch(Exception e) {
@@ -100,6 +95,12 @@ public class User implements Serializable {
 	
 	static public String getUserId(String username) {
 		return HashUtils.hashString("u_" + username);
+	}
+	
+	static public String getPasswordHash(String password) throws UnsupportedEncodingException {
+		byte[] bytesOfMessage = (password + Play.application().configuration().getString("application.secret")).getBytes("UTF-8");	
+		
+		return DigestUtils.shaHex(bytesOfMessage);
 	}
 
 	static public User getUser(String id) {
