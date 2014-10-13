@@ -72,7 +72,8 @@ var Analyst = Analyst || {};
 	A.models.PointSets = Backbone.Collection.extend({
 	  type: 'PointSets',
 	  model: A.models.PointSet,
-	  url: '/api/pointset'
+	  url: '/api/pointset',
+	  comparator: 'name'
 
 	});
 
@@ -91,7 +92,8 @@ var Analyst = Analyst || {};
 	A.models.Shapefiles = Backbone.Collection.extend({
 	  type: 'Shapefiles',
 	  model: A.models.Shapefile,
-	  url: '/api/shapefile'
+	  url: '/api/shapefile',
+	  comparator: 'name'
 
 	});
 

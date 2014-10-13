@@ -8,8 +8,6 @@ import org.geotools.geometry.jts.JTSFactoryFinder;
 import org.opentripplanner.routing.core.TraverseMode;
 import org.opentripplanner.routing.edgetype.PatternHop;
 import org.opentripplanner.routing.edgetype.TripPattern;
-import org.opentripplanner.routing.graph.Edge;
-import org.opentripplanner.routing.edgetype.PlainStreetEdge;
 
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LineString;

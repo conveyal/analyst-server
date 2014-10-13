@@ -16,7 +16,7 @@ import org.opentripplanner.analyst.ResultFeatureDelta;
 import org.opentripplanner.analyst.ResultFeatureWithTimes;
 import org.opentripplanner.analyst.TimeSurface;
 
-import otp.AnalystRequest;
+import otp.AnalystProfileRequest;
 import utils.HaltonPoints;
 import utils.QueryResults;
 import utils.QueryResults.QueryResultItem;
@@ -250,6 +250,58 @@ public abstract class AnalystTileRequest {
 		}
 	}
 	
+	public static class ShapefileTile extends AnalystTileRequest {
+		
+		final String shapefileId;
+		
+		public ShapefileTile(String shapefileId, Integer x, Integer y, Integer z) {
+			super(x, y, z, "spatial");
+			
+			this.shapefileId = shapefileId;
+		}
+		
+		public String getId() {
+			return super.getId() + "_" + shapefileId;
+		}
+		
+		public byte[] render(){
+			
+			Tile tile = new Tile(this);
+
+			SpatialLayer sd = SpatialLayer.getPointSetCategory(shapefileId);
+
+			if(sd == null)
+				return null;
+
+    	    List<ShapeFeature> features = sd.getShapefile().query(tile.envelope);
+
+            for(ShapeFeature feature : features) {
+
+            	Color color = new Color(0.0f,0.0f,0.0f,0.1f);
+        		Color stroke = new Color(0.0f,0.0f,0.0f,0.5f);
+
+        		try {
+					tile.renderPolygon(feature.geom, color, stroke);
+				} catch (MismatchedDimensionException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (TransformException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+            }
+		           
+    		try {
+				return tile.generateImage();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return null;
+			}
+			
+		}
+	}
+	
 	
 	public static class SurfaceCompareTile extends AnalystTileRequest {
 		
@@ -286,8 +338,8 @@ public abstract class AnalystTileRequest {
 			if(sd == null)
 				return null;
 			
-			final TimeSurface surf1 = AnalystRequest.getSurface(surfaceId1);
-			final TimeSurface surf2 = AnalystRequest.getSurface(surfaceId2);
+			final TimeSurface surf1 = AnalystProfileRequest.getSurface(surfaceId1);
+			final TimeSurface surf2 = AnalystProfileRequest.getSurface(surfaceId2);
 
 			if(surf1 == null || surf2 == null)
 				return null;
@@ -401,12 +453,12 @@ public abstract class AnalystTileRequest {
     			if(sd == null)
     				return null;
 
-    			final TimeSurface surface = AnalystRequest.getSurface(surfaceId);
+    			final TimeSurface surface = AnalystProfileRequest.getSurface(surfaceId);
 
     			if(surface == null)
     				return null;
 
-	    		ResultFeatureWithTimes result = AnalystRequest.getResultWithTimes(surfaceId, pointSetId);
+	    		ResultFeatureWithTimes result = AnalystProfileRequest.getResultWithTimes(surfaceId, pointSetId);
 
 	            List<ShapeFeature> features = sd.getShapefile().query(tile.envelope);
 

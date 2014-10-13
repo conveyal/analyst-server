@@ -1,17 +1,21 @@
-<hr/>
-<h5>{{I18n "app.create-new-project"}}</h5>
-<form role="form">
-  <div class="form-group">
-    <label for="projectName">{{I18n "app.shared.name"}}</label>
-    <input type="text" class="form-control" id="name" name="name" placeholder="{{I18n "app.shared.name"}}" value="{{name}}">
-  </div>
-  <div class="form-group">
-    <label for="projectDescription">{{I18n "app.shared.description"}}</label>
-    <input type="text" class="form-control" id="description" name="description" placeholder="{{I18n "app.shared.description"}}" value="{{description}}">
-  </div>
-  <div class="form-group">
-    <button id="setLocation" type="button" class="btn btn-default btn-xs pull-right">{{I18n "project-settings.set-project-location"}}</button>
-    <label>{{I18n "project-settings.project-location"}}: <span id="projectLocation">--</span></label>
-  </div>
-  <button type="button" class="save btn btn-primary">{{I18n "app.shared.create"}}</button> <button type="button" id="" class="cancel btn btn-default">{{I18n "app.shared.cancel"}}</button>
-</form>
+<div class="pannel-header">
+     <span class="glyphicon glyphicon-wrench"></span> {{I18n "app.create-new-project"}}
+</div>
+
+<div id="main" style="padding: 10px;">
+     <form role="form">
+       <div class="form-group">
+         <label for="projectName">{{I18n "app.shared.name"}}</label>
+         <input type="text" class="form-control" id="name" name="name" placeholder="{{I18n "app.shared.name"}}" value="{{name}}">
+       </div>
+       <div class="form-group">
+         <label for="projectDescription">{{I18n "app.shared.description"}}</label>
+         <input type="text" class="form-control" id="description" name="description" placeholder="{{I18n "app.shared.description"}}" value="{{description}}">
+       </div>
+       <div class="form-group">
+         <button id="setLocation" type="button" class="btn btn-default btn-xs pull-right">{{I18n "project-settings.set-project-location"}}</button>
+         <label>{{I18n "project-settings.project-location"}}: <span id="projectLocation">--</span></label>
+       </div>
+       <button type="button" class="save btn btn-primary">{{I18n "app.shared.create"}}</button> <button type="button" id="" class="cancel btn btn-default">{{I18n "app.shared.cancel"}}</button>
+     </form>
+</div>

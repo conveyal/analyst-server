@@ -2,7 +2,6 @@ package tiles;
 
 import java.util.concurrent.ExecutionException;
 
-import lombok.Setter;
 import play.libs.Akka;
 import play.libs.F.Function0;
 import play.libs.F.Promise;
@@ -16,8 +15,8 @@ public class TileCache extends CacheLoader<AnalystTileRequest, byte[]> {
 	
 	 private LoadingCache<AnalystTileRequest, byte[]> tileCache;
 
-	 @Setter private int size = 200;
-	 @Setter private int concurrency = 16;
+	 private int size = 200;
+	 private int concurrency = 16;
 	 
 	 public TileCache() {
 		 

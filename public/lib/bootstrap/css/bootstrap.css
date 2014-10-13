@@ -5,8 +5,8 @@
  */
 
 /*!
- * Generated using the Bootstrap Customizer (http://getbootstrap.com/customize/?id=6767f0004f0a453321c3)
- * Config saved to config.json and https://gist.github.com/6767f0004f0a453321c3
+ * Generated using the Bootstrap Customizer (http://getbootstrap.com/customize/?id=b82f3c903b84bcdceb03)
+ * Config saved to config.json and https://gist.github.com/b82f3c903b84bcdceb03
  */
 /*! normalize.css v3.0.1 | MIT License | git.io/normalize */
 html {
@@ -3132,9 +3132,9 @@ tbody.collapse.in {
   list-style: none;
   font-size: 14px;
   text-align: left;
-  background-color: rgba(150, 150, 150, 0.25);
+  background-color: rgba(150, 150, 150, 0.45);
   border: 1px solid #cccccc;
-  border: 1px solid rgba(137, 137, 137, 0.25);
+  border: 1px solid rgba(137, 137, 137, 0.45);
   border-radius: 2px;
   -webkit-box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
@@ -4081,8 +4081,8 @@ select[multiple].input-group-sm > .input-group-btn > .btn {
   }
 }
 .navbar-default {
-  background-color: rgba(200, 200, 200, 0.25);
-  border-color: rgba(183, 183, 183, 0.25);
+  background-color: rgba(200, 200, 200, 0.45);
+  border-color: rgba(183, 183, 183, 0.45);
 }
 .navbar-default .navbar-brand {
   color: #777777;
@@ -4093,7 +4093,7 @@ select[multiple].input-group-sm > .input-group-btn > .btn {
   background-color: transparent;
 }
 .navbar-default .navbar-text {
-  color: rgba(200, 200, 200, 0.25);
+  color: rgba(200, 200, 200, 0.45);
 }
 .navbar-default .navbar-nav > li > a {
   color: #777777;
@@ -4101,13 +4101,13 @@ select[multiple].input-group-sm > .input-group-btn > .btn {
 .navbar-default .navbar-nav > li > a:hover,
 .navbar-default .navbar-nav > li > a:focus {
   color: #333333;
-  background-color: rgba(183, 183, 183, 0.25);
+  background-color: rgba(183, 183, 183, 0.45);
 }
 .navbar-default .navbar-nav > .active > a,
 .navbar-default .navbar-nav > .active > a:hover,
 .navbar-default .navbar-nav > .active > a:focus {
   color: #555555;
-  background-color: rgba(183, 183, 183, 0.25);
+  background-color: rgba(183, 183, 183, 0.45);
 }
 .navbar-default .navbar-nav > .disabled > a,
 .navbar-default .navbar-nav > .disabled > a:hover,
@@ -4127,12 +4127,12 @@ select[multiple].input-group-sm > .input-group-btn > .btn {
 }
 .navbar-default .navbar-collapse,
 .navbar-default .navbar-form {
-  border-color: rgba(183, 183, 183, 0.25);
+  border-color: rgba(183, 183, 183, 0.45);
 }
 .navbar-default .navbar-nav > .open > a,
 .navbar-default .navbar-nav > .open > a:hover,
 .navbar-default .navbar-nav > .open > a:focus {
-  background-color: rgba(183, 183, 183, 0.25);
+  background-color: rgba(183, 183, 183, 0.45);
   color: #555555;
 }
 @media (max-width: 767px) {
@@ -4142,13 +4142,13 @@ select[multiple].input-group-sm > .input-group-btn > .btn {
   .navbar-default .navbar-nav .open .dropdown-menu > li > a:hover,
   .navbar-default .navbar-nav .open .dropdown-menu > li > a:focus {
     color: #333333;
-    background-color: rgba(183, 183, 183, 0.25);
+    background-color: rgba(183, 183, 183, 0.45);
   }
   .navbar-default .navbar-nav .open .dropdown-menu > .active > a,
   .navbar-default .navbar-nav .open .dropdown-menu > .active > a:hover,
   .navbar-default .navbar-nav .open .dropdown-menu > .active > a:focus {
     color: #555555;
-    background-color: rgba(183, 183, 183, 0.25);
+    background-color: rgba(183, 183, 183, 0.45);
   }
   .navbar-default .navbar-nav .open .dropdown-menu > .disabled > a,
   .navbar-default .navbar-nav .open .dropdown-menu > .disabled > a:hover,

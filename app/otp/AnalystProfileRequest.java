@@ -27,6 +27,7 @@ public class AnalystProfileRequest extends ProfileRequest{
 	private static final long serialVersionUID = 1L;
 
 	private static SurfaceCache surfaceCache = new SurfaceCache(100);
+
 	private static  Map<String, ResultFeature> resultCache = new ConcurrentHashMap<String, ResultFeature>();
 
 	public int cutoffMinutes;
@@ -39,6 +40,7 @@ public class AnalystProfileRequest extends ProfileRequest{
 		request.analyst = true;
 		request.cutoffMinutes = cutoffMinutes;
 		request.graphId = graphId;
+		request.accessTime = 15;
 	
 		request.to = latLon;
         
@@ -48,7 +50,6 @@ public class AnalystProfileRequest extends ProfileRequest{
 	public List<TimeSurfaceShort> createSurfaces() {
 		
 		ProfileRouter router = new ProfileRouter(Api.analyst.getGraph(graphId), this);
-		
 		List<TimeSurfaceShort> surfaceShorts = null;
 		
         try {
@@ -56,7 +57,13 @@ public class AnalystProfileRequest extends ProfileRequest{
         	surfaceShorts = Lists.newArrayList();
             surfaceShorts.add(new TimeSurfaceShort(router.minSurface));
             surfaceShorts.add(new TimeSurfaceShort(router.maxSurface));
-  
+            
+            router.minSurface.cutoffMinutes = cutoffMinutes;
+            surfaceCache.add(router.minSurface);
+            
+            router.maxSurface.cutoffMinutes = cutoffMinutes;
+            surfaceCache.add(router.maxSurface);
+
         }
         catch (Exception e) {
         	e.printStackTrace();
@@ -109,4 +116,5 @@ public class AnalystProfileRequest extends ProfileRequest{
 	public static TimeSurface getSurface(Integer surfaceId) {
 		return surfaceCache.get(surfaceId);
 	}
+
 }

@@ -258,40 +258,25 @@ public class Scenario implements Serializable {
 							    scenario.processingGtfs = false;
 				            	scenario.processingOsm = true;
 				            	scenario.save();
-				            					            	
+				               	
 				            	File osmXmlFile = new File(getScenarioDataPath(), scenario.id + ".osm.xml");
 				            	File osmPbfFile = new File(getScenarioDataPath(), scenario.id + ".osm.pbf");
-				            	
 				            
+				            	// hard-coding vex osm integration (for now)
 				            	
-				            	String bbox = "n=\"" + bounds.north + "\" w=\"" + bounds.west + "\" s=\"" + bounds.south + "\" e=\"" + bounds.east + "\"";
+				            	Double minLat = scenario.bounds.north < scenario.bounds.south ? scenario.bounds.north : scenario.bounds.south;
+				            	Double minLon = scenario.bounds.east < scenario.bounds.west ? scenario.bounds.east : scenario.bounds.west;
+				            	Double maxLat = scenario.bounds.north > scenario.bounds.south ? scenario.bounds.north : scenario.bounds.south;
+				            	Double maxLon = scenario.bounds.east > scenario.bounds.west ? scenario.bounds.east : scenario.bounds.west;
 				            	
-				            	String overpassQuery = "'data=<osm-script><bbox-query " + bbox + "/><print/><query type=\"way\"> <bbox-query " + bbox + "/> </query><print/> <query type=\"relation\"> <bbox-query " + bbox + "/></query><print/></osm-script>'";
-				            	
-				            	System.out.println("downloading xml for " + bbox);
-				            	
-				            	System.out.println("wget" + "--post-data" + overpassQuery + "http://overpass-api.de/api/interpreter/" + "-O" + osmXmlFile.getAbsolutePath());
-				            	
-						        ProcessBuilder pb = new ProcessBuilder("wget", "--post-data", overpassQuery, "http://overpass-api.de/api/interpreter/", "-O", osmXmlFile.getAbsolutePath());
-						        
+				                ProcessBuilder pb = new ProcessBuilder(new File(Application.binPath, "vex").getAbsolutePath(), "/mnt/db/", minLat.toString(), minLon.toString(), maxLat.toString(), maxLon.toString());
+					        	
+				                pb.directory(scenario.getScenarioDataPath());
+				                
 						        Process p = pb.start();
 					            
-						        p.waitFor();
-						        
-					            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+						        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(p.getInputStream()));
 						        String line;
-						        
-					            while((line = bufferedReader.readLine()) != null){
-					                System.out.println("downloading...");
-					            }
-							       
-						        System.out.println("osm xml downloaded");
-						        
-						        pb = new ProcessBuilder(new File(Application.binPath, "osmconvert").getAbsolutePath(), "--out-pbf", "-o=" + osmPbfFile.getAbsolutePath(), osmXmlFile.getAbsolutePath());
-					        	 
-						        p = pb.start();
-					            
-					            bufferedReader = new BufferedReader(new InputStreamReader(p.getInputStream()));
 						        
 					            while((line = bufferedReader.readLine()) != null){
 					                System.out.println("processing...");
@@ -302,7 +287,7 @@ public class Scenario implements Serializable {
 						        System.out.println("osm xml converted to pbf");
 				            	
 									
-						    } catch (IOException | InterruptedException e) {
+						    } catch (IOException e) {
 						    	e.printStackTrace();
 					            System.out.println("Failed to process gtfs");
 					            

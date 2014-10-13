@@ -28,7 +28,9 @@ var Analyst = Analyst || {};
 	A.app.Router = Marionette.AppRouter.extend({
   		appRoutes: {
     			':project/:x/:y/:z(/:namespace/*subroute)': 'invokeSubRoute',
-			'home': 'index'
+			'create-project': 'invokeSubRoute',
+			'home': 'index',
+			'': 'index'
 		}
 	});
 
@@ -86,7 +88,6 @@ var Analyst = Analyst || {};
 				var p = A.app.projects.get(project);
 				if(p) {
 					this.setMap(p.get('defaultLon'), p.get('defaultLat'), p.get('defaultZoom'));
-					return;
 				}
 			}
 
@@ -111,14 +112,21 @@ var Analyst = Analyst || {};
 				A.app.main.showSidePanel(pointSetDataPanel);
 			}
 			else if(this.selectedTab == "spatial-data-shapefiles") {
-				var pointSetDataPanel = new A.spatialData.ShapefileListView();
+				var pointSetDataPanel = new A.spatialData.ShapefileDataLayout();
 				A.app.main.showSidePanel(pointSetDataPanel);
 			}
 			else if(this.selectedTab == "analysis-single") {
-				var analaysisPanel = new A.analysis.AnalysisSinglePointLayout;
+				var analaysisPanel = new A.analysis.AnalysisSinglePointLayout();
 				A.app.main.showSidePanel(analaysisPanel);
 			}
-
+			else if(this.selectedTab == "create-project") {
+				var createProjectPanel = new A.project.ProjectCreateView();
+				A.app.main.showSidePanel(createProjectPanel);
+			}
+			else if(this.selectedTab == "project-settings") {
+				var createProjectPanel = new A.project.ProjectSettingsView();
+				A.app.main.showSidePanel(createProjectPanel);
+			}
 
 		},
 
@@ -215,7 +223,8 @@ var Analyst = Analyst || {};
 			'click #spatialDataTabShapefilesListItem' : 'clickSpatialDataTabShapefilesListItem',
 			'click #spatialDataTabPointSetsListItem' : 'clickSpatialDataTabPointSetsListItem',
 			'click #analysisTabSinglePoint' : 'clickAnalysisTabSinglePoint',
-			'click #analysisTabRegional' : 'clickAnalysisTabRegional'
+			'click #analysisTabRegional' : 'clickAnalysisTabRegional',
+			'click #projectSettingsTab' : 'clickProjectSettings'
 		},
 
 		initialize : function() {
@@ -269,6 +278,11 @@ var Analyst = Analyst || {};
 			A.app.controller.setTab("analysis-regional");
 		},
 
+		clickProjectSettings : function(evt) {
+			evt.preventDefault();
+			A.app.controller.setTab("project-settings");
+		},
+
 		templateHelpers: {
 			selectedProject : function () {
 				if(A.app.selectedProject != null)
@@ -295,7 +309,7 @@ var Analyst = Analyst || {};
 						return false;
 			},
 			settingsActive : function () {
-					if(this.activeTab == "settings")
+					if(this.activeTab == "project-settings")
 						return true;
 					else
 						return false;
@@ -323,12 +337,9 @@ var Analyst = Analyst || {};
 		template: Handlebars.getTemplate('project', 'project-list-template'),
 		itemView: A.app.ProjectListItemView,
 
-		triggers : {
-				'click #createNewProject' : 'projectList:createNewProject'
-		},
-
 		events : {
-			'click .selectProject': 'selectProject'
+			'click .selectProject': 'selectProject',
+			'click #createNewProject' : 'createNewProject'
 		},
 
 		initialize : function() {
@@ -354,8 +365,14 @@ var Analyst = Analyst || {};
 		},
 
 		selectProject : function(evt) {
+			evt.preventDefault();
 			var id = $(evt.target).data("id");
 			A.app.controller.setProject(id);
+		},
+
+		createNewProject : function(evt) {
+			evt.preventDefault();
+			A.app.controller.setTab("create-project");
 		},
 
 		appendHtml: function(collectionView, itemView){
@@ -370,8 +387,6 @@ var Analyst = Analyst || {};
 		regions: {
 			main : '#main'
 		},
-
-
 
 		initialize : function (options) {
 

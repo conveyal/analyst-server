@@ -34,7 +34,6 @@ A.transportData = {};
 
 			A.app.instance.vent.on("setSelectedProject", function() {
 				_this.scenarios.fetch({reset: true, data : {projectId: A.app.selectedProject}});
-				_this.render();
 			});
 
 		},

@@ -149,7 +149,7 @@ public class Analyst {
         req.walkSpeed  = 1.4f;
         req.bikeSpeed  = 4.1f;
         req.streetTime = 90;
-        req.accessTime = 90;
+        req.accessTime = 15;
         req.date       = new YearMonthDay("2014-06-04").toJoda();
 		
         return req;

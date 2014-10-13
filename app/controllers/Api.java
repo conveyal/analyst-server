@@ -114,16 +114,16 @@ public class Api extends Controller {
     	Promise<TimeSurfaceShort> promise = Promise.promise(
 		    new Function0<TimeSurfaceShort>() {
 		      public TimeSurfaceShort apply() {
-		    	  GenericLocation latLon = new GenericLocation(lat, lon);
+		    	  LatLon latLon = new LatLon(null);
+		    	  latLon.lat = lat;
+		    	  latLon.lon = lon;
 	          	
-	              	AnalystRequest request = analyst.buildRequest(graphId, latLon, mode, maxTimeLimit);
-	              	request.setBikeSpeed(bikeSpeed);
-	              	request.setWalkSpeed(walkSpeed);
+		    	  AnalystProfileRequest request = analyst.buildProfileRequest(graphId, "TRANSIT", latLon);
 	              	
 	              	if(request == null)
 	              		return null;
 	              		
-	              	return request.createSurface();
+	              	return request.createSurfaces().get(1);
 		      }
 		    }, primaryContext
 		  );
@@ -200,7 +200,7 @@ public class Api extends Controller {
     }
     
     public static Result result(Integer surfaceId, String pointSetId) {
-    	final TimeSurface surf = AnalystRequest.getSurface(surfaceId);
+    	final TimeSurface surf = AnalystProfileRequest.getSurface(surfaceId);
     	
     	final SpatialLayer ps = SpatialLayer.getPointSetCategory(pointSetId);
     	

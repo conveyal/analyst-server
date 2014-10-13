@@ -7,8 +7,6 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import lombok.Setter;
-
 import org.opentripplanner.api.model.TimeSurfaceShort;
 import org.opentripplanner.common.model.GenericLocation;
 import org.opentripplanner.graph_builder.GraphBuilderTask;
@@ -34,8 +32,8 @@ public class AnaylstGraphCache extends CacheLoader<String, Graph> {
 	 
 	 private HashSet<String> graphsBuilding = new HashSet<String>();
 
-	 @Setter private int size = 200;
-	 @Setter private int concurrency = 4;
+	 private int size = 200;
+	 private int concurrency = 4;
 	 
 	 public AnaylstGraphCache() {
 		 
@@ -119,7 +117,7 @@ public class AnaylstGraphCache extends CacheLoader<String, Graph> {
  		 gbt.run();
  		 
  		 Graph g = gbt.getGraph();
- 		 g.setRouterId(graphId);
+ 		 g.routerId = graphId;
  		 
  		 graphsBuilding.remove(graphId);
  	

@@ -48,9 +48,9 @@ public class AnalystRequest extends RoutingRequest{
 		request.routerId = graphId;
 	
         if (request.arriveBy)
-            request.setTo(latLon);
+            request.to = latLon;
         else
-            request.setFrom(latLon);
+            request.from = latLon;
         
 		return request;
 	}
@@ -58,7 +58,7 @@ public class AnalystRequest extends RoutingRequest{
 	public TimeSurfaceShort createSurface() {
 		
 		EarliestArrivalSPTService sptService = new EarliestArrivalSPTService();
-        sptService.setMaxDuration(60 * cutoffMinutes);
+        sptService.maxDuration = 60 * cutoffMinutes;
         
         ShortestPathTree spt = sptService.getShortestPathTree(this);
        

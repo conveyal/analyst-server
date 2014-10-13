@@ -346,7 +346,7 @@ var Analyst = Analyst || {};
 				if(A.map.tileOverlay && A.map.hasLayer(A.map.tileOverlay))
 		  			A.map.removeLayer(A.map.tileOverlay);
 
-				A.map.tileOverlay = L.tileLayer('/tile/surface?z={z}&x={x}&y={y}&pointSetId=' +  this.$("#primaryIndicator").val() + '&minTime=' + minTime + '&timeLimit=' + timeLimit + '&showPoints=' + showPoints + '&showIso=' + showIso + '&surfaceId=' + this.surfaceId1, {
+				A.map.tileOverlay = L.tileLayer('/tile/compare?z={z}&x={x}&y={y}&spatialId=' +  this.$("#primaryIndicator").val() + '&minTime=' + minTime + '&timeLimit=' + timeLimit + '&showPoints=' + showPoints + '&showIso=' + showIso + '&surfaceId1=' + this.surfaceId1 + '&surfaceId2=' + (parseInt(this.surfaceId1) - 1), {
 
 					}).addTo(A.map);
 

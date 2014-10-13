@@ -19,7 +19,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.imageio.ImageIO;
 
-import lombok.Synchronized;
 import models.Query;
 import models.Shapefile.ShapeFeature;
 import models.SpatialLayer;

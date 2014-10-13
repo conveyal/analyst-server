@@ -37,6 +37,7 @@ import tiles.AnalystTileRequest.SpatialTile;
 import tiles.AnalystTileRequest.SurfaceTile;
 import tiles.AnalystTileRequest.SurfaceCompareTile;
 import tiles.AnalystTileRequest.QueryTile;
+import tiles.AnalystTileRequest.ShapefileTile;
 import tiles.TileCache;
 import utils.HaltonPoints;
 import utils.QueryResults;
@@ -97,8 +98,13 @@ public class Tiles extends Controller {
 		AnalystTileRequest tileRequest = new SpatialTile(pointSetId, x, y, z, selectedAttributes);
 		return tileBuilder(tileRequest);
     }
-
-
+	
+	public static Promise<Result> shape(String shapefileId, Integer x, Integer y, Integer z) {
+		
+		AnalystTileRequest tileRequest = new ShapefileTile(shapefileId, x, y, z);
+		return tileBuilder(tileRequest);
+    }
+	
 	public static Promise<Result> surface(Integer surfaceId, String pointSetId, Integer x, Integer y, Integer z, Boolean showIso, Boolean showPoints, Integer timeLimit, Integer minTime) {
 
 		AnalystTileRequest tileRequest = new SurfaceTile( surfaceId, pointSetId, x, y, z, showIso, showPoints, timeLimit, minTime);

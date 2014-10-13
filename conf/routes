@@ -39,6 +39,7 @@ POST    /api/query/						controllers.Api.createQuery()
 PUT     /api/query/:id					controllers.Api.updateQuery(id:String)
 DELETE  /api/query/:id					controllers.Api.deleteQuery(id:String)
 
+GET     /tile/shapefile                 controllers.Tiles.shape(shapefileId:String, x:Integer, y:Integer, z:Integer)
 GET     /tile/spatial                  	controllers.Tiles.spatial(pointSetId:String, x:Integer, y:Integer, z:Integer, selectedAttributes:String	)
 GET     /tile/surface                  	controllers.Tiles.surface(surfaceId:Integer, pointSetId:String, x:Integer, y:Integer, z:Integer, showIso:Boolean ?= false, showPoints:Boolean ?= true, timeLimit:Integer ?= 3600, minTime:Integer ?= null)
 GET     /tile/query	                    controllers.Tiles.query(queryId:String, x:Integer, y:Integer, z:Integer, timeLimit:Integer ?= 3600, normalizeBy:String ?= null, groupBy:String ?= null)
