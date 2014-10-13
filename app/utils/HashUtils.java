@@ -25,6 +25,7 @@ public class HashUtils {
 			return "";
 		}
 	}
+
 	
 	public static String hashFile(File file)  {
 		
