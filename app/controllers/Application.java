@@ -12,6 +12,7 @@ import java.util.concurrent.ConcurrentNavigableMap;
 import models.Project;
 import models.Shapefile;
 import models.SpatialLayer;
+import models.User;
 
 import org.geotools.data.DataStore;
 import org.geotools.data.DataStoreFinder;
@@ -60,8 +61,29 @@ public class Application extends Controller {
 		return ok(login.render());	
     }
 	
+	public static Result doLogin() throws IOException  {
+	
+		String username = request().body().asFormUrlEncoded().get("username")[0];
+		String password = request().body().asFormUrlEncoded().get("password")[0];
+		
+		User user = User.getUserByUsername(username);
+		
+		if(user == null)
+			return notFound();
+		
+		if(user.checkPassword(password)) {
+			session().put("username", user.username);
+			return ok();
+		}
+		else {
+			return unauthorized();
+		}
+
+	}
+	
 	public static Result logout() throws IOException  {
-		return ok(logout.render());	
+		session().clear();
+		return redirect(routes.Application.login());	
     }
 	
 	public static Result jsMessages() {

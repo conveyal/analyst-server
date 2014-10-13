@@ -4,6 +4,7 @@
 GET     /		                controllers.Application.index()
 
 GET     /login		            controllers.Application.login()
+POST    /doLogin		        controllers.Application.doLogin()
 GET     /logout		            controllers.Application.logout()
 
 GET		/messages				controllers.Application.jsMessages()

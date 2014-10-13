@@ -13,14 +13,31 @@ var Analyst = Analyst || {};
 
 	A.login.instance.addInitializer(function(options){
 
+		A.login.instance.appRegion.show(new A.login.Login());
 
 	});
 
+	A.login.Login = Marionette.Layout.extend({
+		template: Handlebars.getTemplate('auth', 'auth-login'),
 
-	A.app.Main = Marionette.Layout.extend({
+		events : {
+			"click .login" : "doLogin"
+		},
 
-		template: Handlebars.getTemplate('auth', 'auth-login')
-	});
+		initialize : function () {
+			_.bindAll(this, "doLogin")
+		},
+
+		doLogin : function() {
+
+			$.post('/doLogin', {username: this.$('#username').val(), password: this.$('#password').val()}, function() {
+				alert("success");
+			}).fail(function() {
+				alert('failure');
+			});
+
+		}
+ 	});
 
 
 })(Analyst, jQuery);

@@ -19,6 +19,13 @@ html, body,  #app, #app-map,#app-body {
      padding: 0px;
 }
 
+.login-body{
+     position: fixed;
+     top: 250px;
+     left: 100px;
+     width: 300px;
+}
+
 .list-group {
      overflow: scroll;
      max-height: 300px;

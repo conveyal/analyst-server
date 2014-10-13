@@ -7,6 +7,11 @@ app.shared.cancel=Cancel
 app.shared.name=Name
 app.shared.description=Description
 app.shared.loading=Loading...
+app.shared.username=Username
+app.shared.password=Password
+app.shared.login=Login
+
+
 
 app.projects=Projects
 app.no-project-selected=No project selected

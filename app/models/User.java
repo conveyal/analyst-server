@@ -46,7 +46,7 @@ public class User implements Serializable {
 		this.admin = false;
 		
 		try {
-			
+				
 			this.passwordHash = getPasswordHash(password);
 			
 		}
@@ -55,8 +55,6 @@ public class User implements Serializable {
 			this.active = false;
 			this.passwordHash = "";
 		}
-	
-		
 	}
 	
 	public void save() {

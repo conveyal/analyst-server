@@ -1,6 +1,7 @@
 import java.io.IOException;
 
 import models.Scenario;
+import models.User;
 import controllers.Api;
 import play.Application;
 import play.GlobalSettings;
@@ -16,6 +17,7 @@ public class Global extends GlobalSettings {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+				
 	}  
 
 }
