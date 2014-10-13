@@ -80,6 +80,7 @@ import utils.HaltonPoints;
 import utils.QueryResults;
 import utils.QueryResults.QueryResultItem;
 
+@Security.Authenticated(Secured.class)
 public class Api extends Controller {
 	
 	public static int maxTimeLimit = 120; // in minutes

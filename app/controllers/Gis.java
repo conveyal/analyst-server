@@ -72,6 +72,7 @@ import utils.QueryResults.QueryResultItem;
 import utils.TransportIndex;
 import utils.TransportIndex.TransitSegment;
 
+@Security.Authenticated(Secured.class)
 public class Gis extends Controller {
 	
 	static File TMP_PATH = new File("tmp/");

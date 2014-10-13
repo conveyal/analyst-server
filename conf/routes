@@ -3,9 +3,10 @@
 # ~~~~
 GET     /		                controllers.Application.index()
 
-GET		/messages				controllers.Application.jsMessages()
+GET     /login		            controllers.Application.login()
+GET     /logout		            controllers.Application.logout()
 
-GET		/cluster				controllers.Application.cluster(pointSetId:String, graphId:String)
+GET		/messages				controllers.Application.jsMessages()
 
 # data api
 

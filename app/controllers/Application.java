@@ -48,18 +48,20 @@ public class Application extends Controller {
 
 	public static final String dataPath = Play.application().configuration().getString("application.data");
 	public static final String binPath = Play.application().configuration().getString("application.bin");
-	
-	
-	public static Result cluster(String pointSetId, String graphId) throws Exception  {
-	
-		
-		return ok();
-    }
-	
+
 	final static jsmessages.JsMessages messages = jsmessages.JsMessages.create(play.Play.application());
 
+	@Security.Authenticated(Secured.class)
 	public static Result index() throws IOException  {
 		return ok(index.render());	
+    }
+
+	public static Result login() throws IOException  {
+		return ok(login.render());	
+    }
+	
+	public static Result logout() throws IOException  {
+		return ok(logout.render());	
     }
 	
 	public static Result jsMessages() {
