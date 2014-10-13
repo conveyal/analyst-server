@@ -9,6 +9,7 @@ import java.util.List;
 import org.apache.commons.codec.digest.DigestUtils;
 
 import play.Logger;
+import play.Play;
 import utils.DataStore;
 import utils.HashUtils;
 
@@ -31,16 +32,21 @@ public class User implements Serializable {
 	
 	public ArrayList<ProjectPermissions> projectPermissions;
 
-	public User(String username, String password, String email) {
+	public User(String username, String password, String email) throws Exception {
 		
 		this.username = username.toLowerCase();
+		
+		// check for duplicate usernames
+		if(userData.getById(getUserId(this.username)) != null)
+				throw new Exception("Username " + this.username + " already exists"); 
+		
 		this.email = email;
 		this.active = true;
 		this.admin = false;
 		
 		try {
 			
-			byte[] bytesOfMessage = password.getBytes("UTF-8");	
+			byte[] bytesOfMessage = (password + Play.application().configuration().getString("application.secret")).getBytes("UTF-8");	
 			
 			this.passwordHash = DigestUtils.shaHex(bytesOfMessage);
 			
@@ -50,6 +56,7 @@ public class User implements Serializable {
 			this.active = false;
 			this.passwordHash = "";
 		}
+	
 		
 	}
 	
@@ -78,7 +85,7 @@ public class User implements Serializable {
 	public Boolean checkPassword(String password) {	
 		try {
 			
-			byte[] bytesOfMessage = password.getBytes("UTF-8");	
+			byte[] bytesOfMessage = (password + Play.application().configuration().getString("application.secret")).getBytes("UTF-8");	
 			
 			String pHash = DigestUtils.shaHex(bytesOfMessage);
 			
