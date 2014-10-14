@@ -9,6 +9,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.Serializable;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -56,6 +57,7 @@ import models.Query;
 import models.Scenario;
 import models.Shapefile;
 import models.SpatialLayer;
+import models.User;
 import models.Shapefile.ShapeFeature;
 
 import com.fasterxml.jackson.core.JsonFactory;
@@ -102,6 +104,7 @@ public class Api extends Controller {
         mapper.writeValue(jg, pojo);
         return sw.toString();
     }
+
     
     private static class AccesibilitySummary {
     	public Long total = 0l;
@@ -293,6 +296,89 @@ public class Api extends Controller {
     }
     
 	
+// **** user controllers ****
+    
+    public static Result getUser(String id) {
+        
+    	try {
+    		
+            if(id != null) {
+            	
+            	User u = null;
+            	
+            	if(id.toLowerCase().equals("self")) {
+            		u = User.getUserByUsername(session().get("username"));
+            	}
+            	else {
+            		 u = User.getUser(id);
+            	}
+            	
+                if(u != null)
+                    return ok(Api.toJson(u, false));
+                else
+                    return notFound();
+            }
+            else {
+                return ok(Api.toJson(User.getUsers(), false));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return badRequest();
+        }
+
+    }
+    
+    public static Result createUser() {
+        User u;
+
+        try {
+        
+        	u = mapper.readValue(request().body().asJson().traverse(), User.class);
+            u.save();
+
+            return ok(Api.toJson(u, false));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return badRequest();
+        }
+    }
+    
+    public static Result updateUser(String id) {
+        
+    	User u;
+
+        try {
+        	
+        	u = mapper.readValue(request().body().asJson().traverse(), User.class);
+        	
+        	if(u.id == null || User.getUser(u.id) == null)
+                return badRequest();
+        	
+        	u.save();
+
+            return ok(Api.toJson(u, false));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return badRequest();
+        }
+    }
+
+
+    public static Result deleteUser(String id) {
+        if(id == null)
+            return badRequest();
+
+        User u = User.getUser(id);
+
+        if(u == null)
+        	return badRequest();
+
+        u.delete();
+
+        return ok();
+    }
+    
+    
 	// **** project controllers ****
     
     public static Result getProject(String id) {

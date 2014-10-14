@@ -17,9 +17,9 @@ app.projects=Projects
 app.no-project-selected=No project selected
 app.create-new-project=Create new project
 
-app.account.loggout=Loggout
+app.account.logout=Logout
 app.account.change-password=Change Password
-
+app.manage-users=Manage Users
 
 app.transport-data=Transport Data
 app.spatial-data=Spatial Data

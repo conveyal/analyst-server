@@ -14,6 +14,7 @@ import play.Play;
 import utils.DataStore;
 import utils.HashUtils;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.vividsolutions.jts.geom.Geometry;
 
 
@@ -25,14 +26,16 @@ public class User implements Serializable {
 	
 	public String id;
 	public String username;
-	public String passwordHash;
 	public String email;
 	
 	public Boolean active;
 	public Boolean admin;
-	
-	public ArrayList<ProjectPermissions> projectPermissions;
 
+	public ArrayList<ProjectPermissions> projectPermissions;
+	
+	@JsonIgnore
+	public String passwordHash;
+	
 	public User(String username, String password, String email) throws Exception {
 		
 		this.username = username.toLowerCase();
@@ -111,7 +114,7 @@ public class User implements Serializable {
 		return userData.getById(getUserId(username));	
 	}
 	
-	static public Collection<User> getProjects() {
+	static public Collection<User> getUsers() {
 		
 		return userData.getAll();
 		
@@ -119,10 +122,10 @@ public class User implements Serializable {
 	
 	static class ProjectPermissions {
 		
-		String project_id;
-		Boolean read;
-		Boolean write;
-		Boolean admin;
+		public String project_id;
+		public Boolean read;
+		public Boolean write;
+		public Boolean admin;
 		
 	}
 

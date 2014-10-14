@@ -4,12 +4,19 @@
 GET     /		                controllers.Application.index()
 
 GET     /login		            controllers.Application.login()
-POST    /doLogin		        controllers.Application.doLogin()
 GET     /logout		            controllers.Application.logout()
+
+POST    /doLogin		        controllers.Application.doLogin()
 
 GET		/messages				controllers.Application.jsMessages()
 
 # data api
+
+GET     /api/user					controllers.Api.getUser(id:String = null)
+GET     /api/user/:id				controllers.Api.getUser(id:String)
+POST    /api/user/					controllers.Api.createUser()
+PUT     /api/user/:id				controllers.Api.updateUser(id:String)
+DELETE  /api/user/:id				controllers.Api.deleteUser(id:String)
 
 GET     /api/project					controllers.Api.getProject(id:String = null)
 GET     /api/project/:id				controllers.Api.getProject(id:String)

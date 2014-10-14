@@ -145,4 +145,26 @@ var Analyst = Analyst || {};
 	  url: '/api/query'
 	});
 
+
+	A.models.User = Backbone.Model.extend({
+		urlRoot: '/api/user/',
+
+		defaults: {
+			id: null,
+			name: null,
+			email: null,
+			projectPermissions: null
+		},
+
+	});
+
+	A.models.Queries = Backbone.Collection.extend({
+		type: 'Users',
+		model: A.models.User,
+		url: '/api/user'
+	});
+
+
+
+
 })(Analyst, jQuery);

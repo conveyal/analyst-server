@@ -30,10 +30,14 @@ var Analyst = Analyst || {};
 
 		doLogin : function() {
 
+			var _this = this;
+
+			_this.$("#invalidLogin").addClass("hidden");
+
 			$.post('/doLogin', {username: this.$('#username').val(), password: this.$('#password').val()}, function() {
-				alert("success");
+				window.location.href = "/";
 			}).fail(function() {
-				alert('failure');
+				_this.$("#invalidLogin").removeClass("hidden");
 			});
 
 		}

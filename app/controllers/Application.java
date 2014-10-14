@@ -62,7 +62,7 @@ public class Application extends Controller {
     }
 	
 	public static Result doLogin() throws IOException  {
-	
+    	
 		String username = request().body().asFormUrlEncoded().get("username")[0];
 		String password = request().body().asFormUrlEncoded().get("password")[0];
 		
@@ -79,7 +79,7 @@ public class Application extends Controller {
 			return unauthorized();
 		}
 
-	}
+	}	
 	
 	public static Result logout() throws IOException  {
 		session().clear();
