@@ -164,7 +164,7 @@ public class Query implements Serializable {
 				resultsQueue.put(id, new ArrayList<ResultFeature>());
 			resultsQueue.get(id).add(rf);
 			
-			if(resultsQueue.get(id).size() > 500) {
+			if(resultsQueue.get(id).size() > 10) {
 				writeList = new ArrayList<ResultFeature>(resultsQueue.get(id));
 				resultsQueue.get(id).clear();
 				Logger.info("flushing queue...");
@@ -218,7 +218,7 @@ public class Query implements Serializable {
 				
 				cluster.registerWorker(exec, worker);
 				
-				JobSpec js = new JobSpec(q.scenarioId, q.pointSetId + ".json",  q.pointSetId + ".json", "2014-06-09", "10:05 AM", "America/New York", q.mode, null);
+				JobSpec js = new JobSpec(q.scenarioId, q.pointSetId + ".json",  q.pointSetId + ".json", "2014-06-09", "8:05 AM", "Africa/Nairobi", q.mode, null);
 				
 				// plus a callback that registers how many work items have returned
 				class CounterCallback implements JobItemCallback {

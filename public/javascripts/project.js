@@ -16,12 +16,22 @@ var Analyst = Analyst || {};
 		events: {
 		  'click .save': 'saveProject',
 		  'click .cancel': 'cancelProject',
-		  'click #setLocation' : "setLocation"
+		  'click #setLocation' : "setLocation",
+		  'click #deleteProject' : 'deleteProject'
+		},
+
+		initialize : function(options) {
+
+			if(options.id) {
+				this.model = new A.models.Project({id: options.id});
+				this.model.fetch();
+				this.model.on('change', this.render);
+			}
 		},
 
 		cancelProject : function(evt) {
 
-			this.trigger("projectCreate:cancel");
+			A.app.instance.vent.trigger("closeSidePanel");
 
 		},
 
@@ -43,11 +53,30 @@ var Analyst = Analyst || {};
 				data.defaultZoom = this.defaultZoom;
 			}
 
-			var project = new A.models.Project();
+			var project;
+
+			if(this.model)
+				project = this.model;
+			else
+				project = new A.models.Project();
+
 			project.save(data, {success: function(model){
 					A.app.controller.setProject(model.id)
 					A.app.projects.fetch({reset: true, success: A.app.controller.initProjects});
 			}});
+
+			A.app.instance.vent.trigger("closeSidePanel");
+		},
+
+		deleteProject : function(evt) {
+
+			if(this.model) {
+				this.model.destroy({success: function(model){
+					A.app.projects.fetch({reset: true, success: A.app.controller.initProjects});
+				}});
+			}
+
+			A.app.instance.vent.trigger("closeSidePanel");
 		},
 
 		setLocation : function(evt) {
@@ -67,7 +96,7 @@ var Analyst = Analyst || {};
 	});
 
 	A.project.ProjectSettingsView = Backbone.Marionette.ItemView.extend({
-	 	template: Handlebars.getTemplate('project', 'project-settings-template'),
+	 	template: Handlebars.getTemplate('project', 'project-create-template'),
 
 	 	ui: {
 			name: 		'#name',

@@ -158,7 +158,7 @@ var Analyst = Analyst || {};
 
 	});
 
-	A.models.Queries = Backbone.Collection.extend({
+	A.models.Users = Backbone.Collection.extend({
 		type: 'Users',
 		model: A.models.User,
 		url: '/api/user'

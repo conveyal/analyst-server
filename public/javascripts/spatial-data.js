@@ -384,6 +384,9 @@ A.spatialData = {};
 		itemView: A.spatialData.ShapefileSelectListItem,
 		emptyView: A.spatialData.ShapefileSelectEmptyList,
 
+
+
+
 		initialize : function(options) {
 			this.collection = new A.models.Shapefiles();
 
@@ -421,13 +424,14 @@ A.spatialData = {};
 			this.shapefiles = new A.models.Shapefiles();
 
 
-
 			A.app.instance.vent.on("setSelectedProject", function() {
 				_this.shapefiles.fetch({reset: true, data : {projectId: A.app.selectedProject}});
 			});
 		},
 
 		onShow : function() {
+
+			this.shapefiles.fetch({reset: true, data : {projectId: A.app.selectedProject}});
 
 			this.shapefileListView = new A.spatialData.ShapefileListView({collection: this.shapefiles});
 
@@ -555,6 +559,11 @@ A.spatialData = {};
 		events: {
 			'change #shapefileSelect' : 'shapefileSelectChanged',
 			'click #uploadShapefileButton'  : 'uploadFile'
+		},
+
+		modelEvents : {
+			"change" : "render",
+
 		},
 
 		initialize : function(options) {

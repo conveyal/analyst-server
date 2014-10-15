@@ -122,12 +122,16 @@ var Analyst = Analyst || {};
 				var analaysisPanel = new A.analysis.AnalysisSinglePointLayout();
 				A.app.main.showSidePanel(analaysisPanel);
 			}
+			else if(this.selectedTab == "analysis-regional") {
+				var analaysisPanel = new A.analysis.AnalysisMultiPointLayout();
+				A.app.main.showSidePanel(analaysisPanel);
+			}
 			else if(this.selectedTab == "create-project") {
 				var createProjectPanel = new A.project.ProjectCreateView();
 				A.app.main.showSidePanel(createProjectPanel);
 			}
 			else if(this.selectedTab == "project-settings") {
-				var createProjectPanel = new A.project.ProjectSettingsView();
+				var createProjectPanel = new A.project.ProjectCreateView({id: A.app.selectedProject});
 				A.app.main.showSidePanel(createProjectPanel);
 			}
 			else if(this.selectedTab == "manage-users") {
@@ -163,6 +167,11 @@ var Analyst = Analyst || {};
 		},
 
 		initialize : function() {
+			var _this = this;
+
+			A.app.instance.vent.on("closeSidePanel", function(){
+				_this.closeSidePanel();
+			});
 
 		},
 
@@ -372,7 +381,17 @@ var Analyst = Analyst || {};
 		initialize: function () {
 
 			this.model.on('change', this.render);
-		}
+		},
+
+		onRender: function () {
+		// Get rid of that pesky wrapping-div
+		// Assumes 1 child element present in template.
+		this.$el = this.$el.children();
+		// Unwrap the element to prevent infinitely
+		// nesting elements during re-render.
+		this.$el.unwrap();
+		this.setElement(this.$el);
+	}
 
 	});
 
@@ -383,7 +402,8 @@ var Analyst = Analyst || {};
 
 		initialize: function () {
 
-			this.model.on('change', this.render);
+			this.collection = new A.models.Users();
+			this.collection.fetch();
 		}
 
 	});
@@ -483,18 +503,15 @@ var Analyst = Analyst || {};
 		startTour : function(evt) {
 			A.app.tour = new Tour({
 
-			steps: [
-				{
+			steps: [ {
 					element: "#transportDataTab",
 					title: "Build Transport Scenarios",
 					content: "Create a transport scenario by clicking \"Add\" above and uploading a GTFS feed, or create a GTFS feed using TransitMix or TransitWand."
-				},
-				{
+				}, {
 					element: "#spatialDataTab",
 					title: "Manage Spatial Data",
 					content: "Spatial data sets allow measurement of access to spatially distributed characteristics like population or jobs. Create one by clicking \"Add\" above and upload a Shapefile."
-				}
-			]});
+			}]});
 
 			// Initialize the tour
 			A.app.tour.init();

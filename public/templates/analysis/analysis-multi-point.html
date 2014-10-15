@@ -1,54 +1,59 @@
-<button id="newQuery" type="button" class="btn btn-default btn-xs pull-right"><span class="glyphicon glyphicon-plus"></span></button>
-<h5>Multi-Point Queries</h5>
-
-<div style="margin-top: 10px;" class="panel-group" id="createQueryForm">
-  <div class="panel panel-default">
-    <div class="panel-heading">
-      <h5 class="panel-title">
-          Create Query          
-      </h5>
-    </div>
-    <div id="collapseOne" class="panel-collapse collapse in">
-      <div class="panel-body">
-        <div class="form-group">
-          <label for="name">{{I18n "analysis.create-new-query-name"}}</label>
-          <input type="text" class="form-control" id="name" name="name" placeholder="{{I18n "analysis.create-new-query-name"}}" value="">
-        </div>
-
-        <div class="form-group">
-          <label>{{I18n "analysis.primary-indicator"}}</label>
-          <select id="primaryIndicator" class="primary-indicator form-control">
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label>{{I18n "analysis.scenario"}}</label>
-          <select id="scenario1" class="scenario-list form-control">
-          </select>
-        
-          <div style="margin-top: 10px;" class="btn-group mode-selector" data-toggle="buttons">
-            <label class="btn btn-default">
-              <input type="radio" name="mode1" id="modeCar" value="CAR"><span class="icon icon-car"></span>
-            </label>
-            <label class="btn btn-default active">
-              <input type="radio" name="mode1" id="modeBus" value="TRANSIT"><span class="icon icon-pedestrian"></span> + <span class="icon icon-bus"></span>
-            </label>
-            <label class="btn btn-default">
-                <input type="radio" name="mode1" id="modeBus" value="BIKE,TRANSIT"><span class="icon icon-bike"></span> + <span class="icon icon-bus"></span>
-              </label>
-            <label class="btn btn-default">
-              <input type="radio" name="mode1" id="modeBike" value="BIKE"><span class="icon icon-bike"></span>
-            </label>
-            <label class="btn btn-default">
-              <input type="radio" name="mode1" id="modePed" value="WALK"><span class="icon icon-pedestrian"></span>
-            </label>
-          </div>
-        </div>
-
-        <button class="btn btn-primary" id="createQuery">{{I18n "analysis.run-query"}}</button> <button class="btn btn-default" id="cancelQuery">{{I18n "app.shared.cancel"}}</button>
-      </div>      
-    </div>
-  </div>
+<div class="pannel-header">
+     <button id="newQuery" type="button" class="btn btn-default btn-xs pull-right"><span class="glyphicon glyphicon-plus"></span></button>
+     <span class="glyphicon glyphicon-cog"></span> Regional Analysis
 </div>
 
-<div id="main"></div>
+<div id="detail" style="padding: 10px;">
+
+     <div style="margin-top: 10px;" class="panel-group" id="createQueryForm">
+       <div class="panel panel-default">
+         <div class="panel-heading">
+           <h5 class="panel-title">
+               Create Query
+           </h5>
+         </div>
+         <div id="collapseOne" class="panel-collapse collapse in">
+           <div class="panel-body">
+             <div class="form-group">
+               <label for="name">{{I18n "analysis.create-new-query-name"}}</label>
+               <input type="text" class="form-control" id="name" name="name" placeholder="{{I18n "analysis.create-new-query-name"}}" value="">
+             </div>
+
+             <div class="form-group">
+               <label>{{I18n "analysis.primary-indicator"}}</label>
+               <select id="primaryIndicator" class="primary-indicator form-control">
+               </select>
+             </div>
+
+             <div class="form-group">
+               <label>{{I18n "analysis.scenario"}}</label>
+               <select id="scenario1" class="scenario-list form-control">
+               </select>
+
+               <div style="margin-top: 10px;" class="btn-group mode-selector" data-toggle="buttons">
+                 <label class="btn btn-default">
+                   <input type="radio" name="mode1" id="modeCar" value="CAR"><span class="icon icon-car"></span>
+                 </label>
+                 <label class="btn btn-default active">
+                   <input type="radio" name="mode1" id="modeBus" value="TRANSIT"><span class="icon icon-pedestrian"></span> + <span class="icon icon-bus"></span>
+                 </label>
+                 <label class="btn btn-default">
+                     <input type="radio" name="mode1" id="modeBus" value="BIKE,TRANSIT"><span class="icon icon-bike"></span> + <span class="icon icon-bus"></span>
+                   </label>
+                 <label class="btn btn-default">
+                   <input type="radio" name="mode1" id="modeBike" value="BIKE"><span class="icon icon-bike"></span>
+                 </label>
+                 <label class="btn btn-default">
+                   <input type="radio" name="mode1" id="modePed" value="WALK"><span class="icon icon-pedestrian"></span>
+                 </label>
+               </div>
+             </div>
+
+             <button class="btn btn-primary" id="createQuery">{{I18n "analysis.run-query"}}</button> <button class="btn btn-default" id="cancelQuery">{{I18n "app.shared.cancel"}}</button>
+           </div>
+         </div>
+       </div>
+     </div>
+
+     <div id="main"></div>
+</div>

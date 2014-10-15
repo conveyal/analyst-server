@@ -10,7 +10,7 @@ var Analyst = Analyst || {};
 		  'change .scenario-comparison': 'selectComparisonType',
 		  'click #createQuery' : 'createQuery',
 		  'click #cancelQuery' : 'cancelQuery',
-		  'click #newQuery' : 'newQuery' 
+		  'click #newQuery' : 'newQuery'
 		},
 
 		regions: {
@@ -43,11 +43,11 @@ var Analyst = Analyst || {};
 
 			var _this = this;
 
-			this.pointsets = new A.models.PointSets(); 
-			this.scenarios = new A.models.Scenarios(); 
-			this.queries = new A.models.Queries(); 
+			this.pointsets = new A.models.PointSets();
+			this.scenarios = new A.models.Scenarios();
+			this.queries = new A.models.Queries();
 
-			this.pointsets.fetch({reset: true, data : {projectId: this.model.get("id")}, success: function(collection, response, options) {
+			this.pointsets.fetch({reset: true, data : {projectId: A.app.selectedProject}, success: function(collection, response, options) {
 
 				_this.$("#primaryIndicator").empty();
 
@@ -56,7 +56,7 @@ var Analyst = Analyst || {};
 
 			}});
 
-			this.scenarios.fetch({reset: true, data : {projectId: this.model.get("id")}, success: function(collection, response, options){
+			this.scenarios.fetch({reset: true, data : {projectId: A.app.selectedProject}, success: function(collection, response, options){
 
 				_this.$(".scenario-list").empty();
 
@@ -65,13 +65,13 @@ var Analyst = Analyst || {};
 						_this.$(".scenario-list").append('<option selected value="' + _this.scenarios.models[i].get("id") + '">' + _this.scenarios.models[i].get("name") + '</option>');
 					else
 						_this.$(".scenario-list").append('<option value="' + _this.scenarios.models[i].get("id") + '">' + _this.scenarios.models[i].get("name") + '</option>');
-						
+
 				}
-	    			
+
 			}});
 
-			this.queries.fetch({reset: true, data : {projectId: this.model.get("id")}, success: function(collection, response, options){
-	    			
+			this.queries.fetch({reset: true, data : {projectId: A.app.selectedProject}, success: function(collection, response, options){
+
 			}});
 
 			this.mode = "TRANSIT";
@@ -82,18 +82,18 @@ var Analyst = Analyst || {};
 
 		    this.$("#createQueryForm").hide();
 
-		    var queryListLayout = new A.analysis.QueryList({collection: this.queries});			
+		    var queryListLayout = new A.analysis.QueryList({collection: this.queries});
 
 			this.main.show(queryListLayout);
 		},
 
 		createQuery : function(evt) {
 
-			var data = {name: this.$("#name").val(), 
-						mode: this.mode, 
-						pointSetId: this.$("#primaryIndicator").val(), 
+			var data = {name: this.$("#name").val(),
+						mode: this.mode,
+						pointSetId: this.$("#primaryIndicator").val(),
 						scenarioId: this.$('#scenario1').val(),
-						projectId: this.model.get("id")};
+						projectId: A.app.selectedProject};
 
 			var query = new A.models.Query(data);
 			query.save();
@@ -108,14 +108,14 @@ var Analyst = Analyst || {};
 		newQuery : function(evt) {
 			this.$("#createQueryForm").show();
 		}
- 
+
 	});
 
 	A.analysis.QueryListItem = Backbone.Marionette.ItemView.extend({
 
 	  template: Handlebars.getTemplate('analysis', 'query-list-item'),
 
-	  events: { 
+	  events: {
 
 	  	'click #deleteItem' : 'deleteItem',
 	  	'click #queryCheckbox' : 'clickItem',
@@ -124,7 +124,7 @@ var Analyst = Analyst || {};
 	  	'change #normalizeBy' : 'refreshMap',
 	  	'change #groupBy' : 'groupBy',
 	  	'click #exportShape' : 'exportShape'
-	  	
+
 	  },
 
 	  modelEvents: {
@@ -144,7 +144,7 @@ var Analyst = Analyst || {};
 
 	  	if(this.queryOverlay && A.map.hasLayer(this.queryOverlay))
 			A.map.removeLayer(this.queryOverlay);
-		
+
 	  },
 
 	  fieldsChanged: function() {
@@ -173,9 +173,9 @@ var Analyst = Analyst || {};
 	  },
 
 	  clickItem : function(evt) {
-	  	
+
 	  	this.refreshMap();
-	  	
+
 	  },
 
 	  exportShape : function(evt) {
@@ -200,7 +200,7 @@ var Analyst = Analyst || {};
 	  },
 
 	  normalizeBy : function(evt) {
-	  		
+
 	  	this.refreshMap();
 	  },
 
@@ -230,7 +230,7 @@ var Analyst = Analyst || {};
 
 	  	if(this.$("#groupCheckbox").prop('checked')) {
 	  		this.$("#groupBy").prop("disabled", false);
-	  		this.groupById = this.$("#groupBy").val();	
+	  		this.groupById = this.$("#groupBy").val();
 
 	  		legendTitle = legendTitle + " grouped by " + $("#groupBy option:selected").text();
 	  	}
@@ -260,7 +260,7 @@ var Analyst = Analyst || {};
 
 			var legendItemTemplate = Handlebars.getTemplate('analysis', 'query-legend-item')
 
-			
+
 			this.$("#legendData").empty();
 
 			$.getJSON('/api/queryBins?' + url, function(data) {
@@ -271,13 +271,13 @@ var Analyst = Analyst || {};
 					var legendItem = {color : data[i].hexColor, label : lower + " - " + upper};
 
 					_this.$("#legendData").append(legendItemTemplate(legendItem));
-				}		  	 
+				}
 		    });
 
 
 			this.$("#legend").show();
 
-	  	}	
+	  	}
 	  	else {
 	  		if(A.map.hasLayer(this.queryOverlay))
 				A.map.removeLayer(this.queryOverlay);
@@ -293,14 +293,14 @@ var Analyst = Analyst || {};
         // Get rid of that pesky wrapping-div.
         // Assumes 1 child element present in template.
         this.$el = this.$el.children();
-        // Unwrap the element to prevent infinitely 
+        // Unwrap the element to prevent infinitely
         // nesting elements during re-render.
         this.$el.unwrap();
         this.setElement(this.$el);
 
         if(this.isComplete()) {
 
-        	this.pointsets = new A.models.PointSets(); 
+        	this.pointsets = new A.models.PointSets();
 
 			this.pointsets.fetch({reset: true, data : {projectId: this.model.get("projectId")}, success: function(collection, response, options) {
 
@@ -311,7 +311,7 @@ var Analyst = Analyst || {};
 					_this.$("#normalizeBy").append('<option value="' + _this.pointsets.models[i].get("id") + '">' + _this.pointsets.models[i].get("name") + '</option>');
 					_this.$("#groupBy").append('<option value="' + _this.pointsets.models[i].get("id") + '">' + _this.pointsets.models[i].get("name") + '</option>');
 				}
-	    			
+
 
 			}});
 
@@ -350,11 +350,11 @@ var Analyst = Analyst || {};
 
 		initialize : function() {
 			this.queryOverlay = {};
-			
+
 		},
 
 		onShow : function() {
-			
+
 		},
 
 		appendHtml: function(collectionView, itemView){
@@ -364,5 +364,4 @@ var Analyst = Analyst || {};
 	});
 
 
-})(Analyst, jQuery);	
-
+})(Analyst, jQuery);

@@ -1,5 +1,17 @@
 <div class="pannel-header">
-     <span class="glyphicon glyphicon-wrench"></span> {{I18n "app.create-new-project"}}
+
+     {{#if id}}
+          <button id="deleteProject" type="button" class="btn btn-default btn-xs pull-right">{{I18n "app.shared.delete"}} project</button>
+     {{/if}}
+
+     <span class="glyphicon glyphicon-wrench"></span>
+
+     {{#if id}}
+          {{I18n "app.project-settings"}}
+     {{else}}
+          {{I18n "app.create-new-project"}}
+     {{/if}}
+     
 </div>
 
 <div id="main" style="padding: 10px;">
