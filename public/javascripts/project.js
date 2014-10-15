@@ -22,7 +22,7 @@ var Analyst = Analyst || {};
 
 		initialize : function(options) {
 
-			if(options.id) {
+			if(options && options.id) {
 				this.model = new A.models.Project({id: options.id});
 				this.model.fetch();
 				this.model.on('change', this.render);
