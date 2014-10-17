@@ -6,6 +6,9 @@ GET     /		                controllers.Application.index()
 GET     /login		            controllers.Application.login()
 GET     /logout		            controllers.Application.logout()
 
+GET     /createUser		        controllers.Application.createUser(username:String, password:String, email:String)
+GET     /linkUser		        controllers.Application.linkUserProject(username:String, projectId:String)
+
 POST    /doLogin		        controllers.Application.doLogin()
 
 GET		/messages				controllers.Application.jsMessages()

@@ -393,7 +393,10 @@ public class Api extends Controller {
                     return notFound();
             }
             else {
-                return ok(Api.toJson(Project.getProjects(), false));
+            	
+            	User u = User.getUserByUsername(session().get("username"));
+            	
+                return ok(Api.toJson(Project.getProjectsByUser(u), false));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -409,6 +412,11 @@ public class Api extends Controller {
         
         	p = mapper.readValue(request().body().asJson().traverse(), Project.class);
             p.save();
+            
+            // add newly created project to user permission
+            User u = User.getUserByUsername(session().get("username"));
+            u.addProjectPermission(p.id);
+            u.save();
 
             return ok(Api.toJson(p, false));
         } catch (Exception e) {

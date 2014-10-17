@@ -41,7 +41,7 @@ public class AnalystProfileRequest extends ProfileRequest{
 		request.cutoffMinutes = cutoffMinutes;
 		request.graphId = graphId;
 		request.accessTime = 15;
-	
+
 		request.to = latLon;
         
 		return request;

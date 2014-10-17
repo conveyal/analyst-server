@@ -1,6 +1,7 @@
 package models;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 
@@ -64,6 +65,19 @@ public class Project implements Serializable {
 		
 		return projectData.getAll();
 		
+	}
+	
+	static public Collection<Project> getProjectsByUser(User u) {
+		
+		Collection<Project> projectsByUser = new ArrayList<Project>();
+		
+		for(Project p : projectData.getAll()) {
+			if(u.hasPermission(p)) {
+				projectsByUser.add(p);
+			}
+		}
+		
+		return projectsByUser;
 	}
 
 }

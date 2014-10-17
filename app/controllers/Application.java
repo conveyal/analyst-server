@@ -81,6 +81,28 @@ public class Application extends Controller {
 
 	}	
 	
+	public static Result createUser(String username, String password, String email) {
+		
+		User u;
+		try {
+			u = new User(username, password, email);
+			u.save();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return ok();
+	}
+	
+	public static Result linkUserProject(String username, String projectId) {
+				
+		User u = User.getUserByUsername(username);
+		u.addProjectPermission(projectId);
+		u.save();
+		return ok();
+	}
+	
 	public static Result logout() throws IOException  {
 		session().clear();
 		return redirect(routes.Application.login());	

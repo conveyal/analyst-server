@@ -31,7 +31,7 @@ public class User implements Serializable {
 	public Boolean active;
 	public Boolean admin;
 
-	public ArrayList<ProjectPermissions> projectPermissions;
+	public ArrayList<ProjectPermissions> projectPermissions = new ArrayList<ProjectPermissions>();
 	
 	@JsonIgnore
 	public String passwordHash;
@@ -81,6 +81,41 @@ public class User implements Serializable {
 		
 		Logger.info("delete user u " +id);
 	}
+	
+	public void addProjectPermission(String projectId) {
+		
+		if(projectPermissions == null) {
+			projectPermissions = new ArrayList<ProjectPermissions>();
+		}
+		
+		ProjectPermissions pp = null;
+		
+		for(ProjectPermissions pp1 : projectPermissions) {
+			
+			if(pp1.projectId.equals(projectId))
+				pp = new ProjectPermissions();
+		}
+		
+		if(pp == null) {
+			pp = new ProjectPermissions();
+			pp.projectId = projectId;
+			projectPermissions.add(pp);
+		}
+			
+		pp.read = true;
+		pp.write = true;
+		pp.admin = true;
+		
+	}
+	
+	public Boolean hasPermission(Project p) {
+		for(ProjectPermissions pp : projectPermissions) {
+			if(pp.projectId.equals(p.id) && pp.read)
+				return true;
+		}
+		
+		return false;
+	}
 
 	public Boolean checkPassword(String password) {	
 		try {
@@ -120,9 +155,10 @@ public class User implements Serializable {
 		
 	}
 	
-	static class ProjectPermissions {
-		
-		public String project_id;
+	static class ProjectPermissions implements Serializable {
+
+		private static final long serialVersionUID = 1L;
+		public String projectId;
 		public Boolean read;
 		public Boolean write;
 		public Boolean admin;

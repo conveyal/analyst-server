@@ -207,18 +207,19 @@ public class Query implements Serializable {
 			if (message instanceof Query) {
 				
 				final Query q = (Query)message;
-			
+	
 				SpatialLayer sl = SpatialLayer.getPointSetCategory(q.pointSetId);
 				sl.writeToClusterCache(true);
 				
 				StandaloneCluster cluster = new StandaloneCluster("s3credentials", true, Api.analyst.getGraphService());
-
+				
 				StandaloneExecutive exec = cluster.createExecutive();
 				StandaloneWorker worker = cluster.createWorker();
 				
 				cluster.registerWorker(exec, worker);
+				String graphTimeZone = Api.analyst.getGraphService().getGraph(q.scenarioId).getTimeZone().getID();
 				
-				JobSpec js = new JobSpec(q.scenarioId, q.pointSetId + ".json",  q.pointSetId + ".json", "2014-06-09", "8:05 AM", "Africa/Nairobi", q.mode, null);
+				JobSpec js = new JobSpec(q.scenarioId, q.pointSetId + ".json",  q.pointSetId + ".json", "2014-06-09", "8:05 AM", graphTimeZone, q.mode, null);
 				
 				// plus a callback that registers how many work items have returned
 				class CounterCallback implements JobItemCallback {

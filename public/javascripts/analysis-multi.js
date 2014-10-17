@@ -89,14 +89,20 @@ var Analyst = Analyst || {};
 
 		createQuery : function(evt) {
 
+			var _this = this;
+
 			var data = {name: this.$("#name").val(),
 						mode: this.mode,
 						pointSetId: this.$("#primaryIndicator").val(),
 						scenarioId: this.$('#scenario1').val(),
 						projectId: A.app.selectedProject};
 
-			var query = new A.models.Query(data);
-			query.save();
+			var query = new A.models.Query();
+			query.save(data, {success: function() {
+				_this.queries.fetch({reset: true, data : {projectId: A.app.selectedProject}, success: function(collection, response, options){
+
+				}});
+			}});
 
 			this.$("#createQueryForm").hide();
 		},
@@ -352,6 +358,11 @@ var Analyst = Analyst || {};
 			this.queryOverlay = {};
 
 		},
+
+		modelEvents: {
+			'change': 'render'
+		},
+
 
 		onShow : function() {
 

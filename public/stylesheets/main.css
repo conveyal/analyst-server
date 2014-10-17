@@ -12,7 +12,8 @@ html, body,  #app, #app-map,#app-body {
 	bottom: 10px;
 	right: 10px;
 	width: 450px;
-
+     max-height: 600px;
+     overflow: scroll;
 }
 
 .panel-body{
