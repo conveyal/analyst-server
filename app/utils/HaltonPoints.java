@@ -6,6 +6,8 @@ import org.opengis.referencing.operation.TransformException;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.MultiPolygon;
+import com.vividsolutions.jts.geom.Polygon;
 
 public class HaltonPoints {
 		
@@ -24,7 +26,10 @@ public class HaltonPoints {
 		
 		coords = new double[numberPoints*2];
 		
-		boundaryPoints = geom.getCoordinates();
+		if(geom instanceof Polygon)
+			boundaryPoints = ((Polygon)geom).getExteriorRing().getCoordinates();
+		else
+			boundaryPoints = geom.getCoordinates();
 		
 		if(numPoints > 0) {
 				
