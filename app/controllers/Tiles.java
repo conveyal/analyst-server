@@ -35,7 +35,7 @@ import tiles.AnalystTileRequest.TransitTile;
 import tiles.AnalystTileRequest.TransitComparisonTile;
 import tiles.AnalystTileRequest.SpatialTile;
 import tiles.AnalystTileRequest.SurfaceTile;
-import tiles.AnalystTileRequest.SurfaceCompareTile;
+import tiles.AnalystTileRequest.SurfaceComparisonTile;
 import tiles.AnalystTileRequest.QueryTile;
 import tiles.AnalystTileRequest.ShapefileTile;
 import tiles.TileCache;
@@ -106,16 +106,22 @@ public class Tiles extends Controller {
 		return tileBuilder(tileRequest);
     }
 	
-	public static Promise<Result> surface(Integer surfaceId, String pointSetId, Integer x, Integer y, Integer z, Boolean showIso, Boolean showPoints, Integer timeLimit, Integer minTime) {
+	public static Promise<Result> surface(Integer surfaceId, String pointSetId, Integer x, Integer y, Integer z, Boolean showIso, Boolean showPoints, Integer timeLimit, Integer minTime, String show) {
 
-		AnalystTileRequest tileRequest = new SurfaceTile( surfaceId, pointSetId, x, y, z, showIso, showPoints, timeLimit, minTime);
+		if(show == null)
+    		show = "min";
+		
+		AnalystTileRequest tileRequest = new SurfaceTile( surfaceId, pointSetId, x, y, z, showIso, showPoints, timeLimit, minTime, show);
 		return tileBuilder(tileRequest);
 		
     }
 	
-	public static Promise<Result> compare(Integer surfaceId1, Integer surfaceId2, String spatialId, Integer x, Integer y, Integer z, Boolean showIso, Boolean showPoints, Integer timeLimit, Integer minTime) {
+	public static Promise<Result> surfaceComparison(Integer surfaceId1, Integer surfaceId2, String spatialId, Integer x, Integer y, Integer z, Boolean showIso, Boolean showPoints, Integer timeLimit, Integer minTime, String show) {
 
-		AnalystTileRequest tileRequest = new SurfaceCompareTile(surfaceId1, surfaceId2, spatialId, x, y, z, showIso, showPoints, timeLimit, minTime);
+		if(show == null)
+    		show = "min";
+		
+		AnalystTileRequest tileRequest = new SurfaceComparisonTile(surfaceId1, surfaceId2, spatialId, x, y, z, showIso, showPoints, timeLimit, minTime, show);
 		return tileBuilder(tileRequest);
     }
 

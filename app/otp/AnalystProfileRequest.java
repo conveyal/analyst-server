@@ -26,43 +26,26 @@ public class AnalystProfileRequest extends ProfileRequest{
 	
 	private static final long serialVersionUID = 1L;
 
-	private static SurfaceCache surfaceCache = new SurfaceCache(100);
+	private static ProfileResultCache profileResultCache = new ProfileResultCache(100);
 
 	private static  Map<String, ResultFeature> resultCache = new ConcurrentHashMap<String, ResultFeature>();
 
 	public int cutoffMinutes;
 	public String graphId;
 	
-	static public AnalystProfileRequest create(String graphId, LatLon latLon, int cutoffMinutes) throws IOException, NoSuchAlgorithmException {
-		
-		AnalystProfileRequest request = new AnalystProfileRequest();
-		
-		request.analyst = true;
-		request.cutoffMinutes = cutoffMinutes;
-		request.graphId = graphId;
-		request.accessTime = 15;
-
-		request.to = latLon;
-        
-		return request;
-	}
-	
-	public List<TimeSurfaceShort> createSurfaces() {
+	public TimeSurfaceShort createSurfaces() {
 		
 		ProfileRouter router = new ProfileRouter(Api.analyst.getGraph(graphId), this);
-		List<TimeSurfaceShort> surfaceShorts = null;
 		
         try {
         	ProfileResponse response = router.route();
-        	surfaceShorts = Lists.newArrayList();
-            surfaceShorts.add(new TimeSurfaceShort(router.minSurface));
-            surfaceShorts.add(new TimeSurfaceShort(router.maxSurface));
-            
+    
             router.minSurface.cutoffMinutes = cutoffMinutes;
-            surfaceCache.add(router.minSurface);
-            
             router.maxSurface.cutoffMinutes = cutoffMinutes;
-            surfaceCache.add(router.maxSurface);
+            
+            ProfileResult result = new ProfileResult(router.minSurface.id, router.minSurface, router.maxSurface);
+            
+            profileResultCache.add(result);
 
         }
         catch (Exception e) {
@@ -72,12 +55,12 @@ public class AnalystProfileRequest extends ProfileRequest{
             router.cleanup(); // destroy routing contexts even when an exception happens
         }
         
-        return surfaceShorts;
-	}
+        return new TimeSurfaceShort(router.minSurface);
+  	}
 	
-	public static ResultFeature getResult(Integer surfaceId, String pointSetId) {
+	public static ResultFeature getResult(Integer surfaceId, String pointSetId, String show) {
 		
-		String resultId = "resultId_" + surfaceId + "_" + pointSetId;
+		String resultId = "resultId_" + surfaceId + "_" + pointSetId + "_" + show;
     	
 		ResultFeature result;
     	
@@ -85,7 +68,14 @@ public class AnalystProfileRequest extends ProfileRequest{
     		if(resultCache.containsKey(resultId))
     			result = resultCache.get(resultId);
         	else {
-        		TimeSurface surf =getSurface(surfaceId);
+        		ProfileResult profileResult =getSurface(surfaceId);
+        		
+        		TimeSurface surf = null;
+        		if(show.equals("min"))
+        			surf = profileResult.min;
+        		if(show.equals("max"))
+        			surf = profileResult.max;
+        		
         		result = new ResultFeature(SpatialLayer.getPointSetCategory(pointSetId).getPointSet().getSampleSet(surf.routerId), surf);;
         		resultCache.put(resultId, result);
         	}
@@ -94,9 +84,9 @@ public class AnalystProfileRequest extends ProfileRequest{
     	return result;
 	}
 	
-	public static ResultFeatureWithTimes getResultWithTimes(Integer surfaceId, String pointSetId) {
+	public static ResultFeatureWithTimes getResultWithTimes(Integer surfaceId, String pointSetId, String show) {
 		
-		String resultId = "resultWIthTimesId_" + surfaceId + "_" + pointSetId;
+		String resultId = "resultWithTimesId_" + surfaceId + "_" + pointSetId + "_" + show;
     	
 		ResultFeatureWithTimes resultWithTimes;
     	
@@ -104,7 +94,14 @@ public class AnalystProfileRequest extends ProfileRequest{
     		if(resultCache.containsKey(resultId))
     			resultWithTimes = (ResultFeatureWithTimes)resultCache.get(resultId);
         	else {
-        		TimeSurface surf =getSurface(surfaceId);
+        		ProfileResult profileResult =getSurface(surfaceId);
+        		
+        		TimeSurface surf = null;
+        		if(show.equals("min"))
+        			surf = profileResult.min;
+        		if(show.equals("max"))
+        			surf = profileResult.max;
+        			
         		resultWithTimes = new ResultFeatureWithTimes(SpatialLayer.getPointSetCategory(pointSetId).getPointSet().getSampleSet(surf.routerId), surf);
         		resultCache.put(resultId, resultWithTimes);
         	}
@@ -113,8 +110,8 @@ public class AnalystProfileRequest extends ProfileRequest{
     	return resultWithTimes;
 	}
 	
-	public static TimeSurface getSurface(Integer surfaceId) {
-		return surfaceCache.get(surfaceId);
+	public static ProfileResult getSurface(Integer surfaceId) {
+		return profileResultCache.get(surfaceId);
 	}
 
 }

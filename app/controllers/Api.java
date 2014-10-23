@@ -51,6 +51,7 @@ import org.opentripplanner.common.model.GenericLocation;
 import otp.Analyst;
 import otp.AnalystProfileRequest;
 import otp.AnalystRequest;
+import otp.ProfileResult;
 import models.Attribute;
 import models.Project;
 import models.Query;
@@ -113,74 +114,42 @@ public class Api extends Controller {
     
     public static Promise<Result> surface(final String graphId, final Double lat, final Double lon, final String mode, final Double bikeSpeed, final Double walkSpeed) {
     	
-    	ExecutionContext primaryContext = Akka.system().dispatchers().lookup("contexts.primary-analyst-context");
-    	
+		
     	Promise<TimeSurfaceShort> promise = Promise.promise(
 		    new Function0<TimeSurfaceShort>() {
 		      public TimeSurfaceShort apply() {
-		    	  LatLon latLon = new LatLon(null);
-		    	  latLon.lat = lat;
-		    	  latLon.lon = lon;
-	          	
-		    	  AnalystProfileRequest request = analyst.buildProfileRequest(graphId, "TRANSIT", latLon);
-	              	
-	              	if(request == null)
-	              		return null;
-	              		
-	              	return request.createSurfaces().get(1);
+		    	  	LatLon latLon = new LatLon(null);
+		  	  		latLon.lat = lat;
+		  	  		latLon.lon = lon;
+		  	    	
+		  	  		AnalystProfileRequest request = analyst.buildProfileRequest(graphId, "TRANSIT", latLon);
+		  	        	
+		  	  		if(request == null)
+		  	  			return null;
+		  	  		
+		  	  	return request.createSurfaces();
+	        	
+		    	
+		        
 		      }
-		    }, primaryContext
+		    }
 		  );
     	return promise.map(
 		    new Function<TimeSurfaceShort, Result>() {
 		      public Result apply(TimeSurfaceShort response) {
 		    	
-		    	if(response == null)
-		    	  return notFound();
+		    	  if(response == null)
+			    	  return notFound();
+			    	
+		 
+			      return ok(Json.toJson(response));
 		    	
-		        return ok(Json.toJson(response));
 		      }
 		    }
-		  );
+		  ); 
     	
     }
-    
-    public static Promise<Result> surfaceProfile(final String graphId, final Double lat, final Double lon, final String mode, final Double bikeSpeed, final Double walkSpeed) {
-    	
-    	Promise<List<TimeSurfaceShort>> promise = Promise.promise(
-		    new Function0<List<TimeSurfaceShort>>() {
-		      public List<TimeSurfaceShort> apply() {
-		    	
-		    	  LatLon latLon = new LatLon(null);
-		    	  latLon.lat = lat;
-		    	  latLon.lon = lon;
-	          	
-	              	AnalystProfileRequest request = analyst.buildProfileRequest(graphId, mode, latLon);
-	              	request.walkSpeed = walkSpeed.floatValue();
-	              	request.bikeSpeed = bikeSpeed.floatValue();
-	              	
-	              	if(request == null)
-	              		return null;
-	       		
-	              	return request.createSurfaces();
-		      }
-		    }
-		  );
-    	return promise.map(
-		    new Function<List<TimeSurfaceShort>, Result>() {
-		      public Result apply(List<TimeSurfaceShort> response) {
-		    	
-		    	if(response == null)
-		    	  return notFound();
-		    	
-		        return ok(Json.toJson(response));
-		      }
-		    }
-		  );
-    	
-    }
-    
-    
+        
     public static Result isochrone(Integer surfaceId, List<Integer> cutoffs) throws IOException {
     	
     	 final TimeSurface surf = AnalystRequest.getSurface(surfaceId);
@@ -203,13 +172,13 @@ public class Api extends Controller {
          return ok(fcString);
     }
     
-    public static Result result(Integer surfaceId, String pointSetId) {
-    	final TimeSurface surf = AnalystProfileRequest.getSurface(surfaceId);
+    public static Result result(Integer surfaceId, String pointSetId, String show) {
+    	
+    	if(show == null)
+    		show = "min";
     	
     	final SpatialLayer ps = SpatialLayer.getPointSetCategory(pointSetId);
-    	
-    	final ResultFeature result = new ResultFeature(ps.getPointSet().getSampleSet(surf.routerId), surf);
- 
+    	final ResultFeature result = AnalystProfileRequest.getResult(surfaceId, pointSetId, show);
     	
     	ByteArrayOutputStream baos = new ByteArrayOutputStream();
     	result.writeJson(baos, ps.getPointSet());    

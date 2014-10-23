@@ -49,7 +49,7 @@ public class Analyst {
 		
 	}
 	 
-	public AnalystRequest buildRequest(String graphId, GenericLocation latLon, String mode, int cutoffMinutes) {
+	/*public AnalystRequest buildRequest(String graphId, GenericLocation latLon, String mode, int cutoffMinutes) {
 		
 		// use center of graph extent if no location is specified
 		if(latLon == null)
@@ -99,7 +99,7 @@ public class Analyst {
             //Logger.info("no vertex could be created near the origin point");
             return null;
         }
-    }
+    } */
 	
 	public AnalystProfileRequest buildProfileRequest(String graphId, String mode, LatLon latLon) {
 		

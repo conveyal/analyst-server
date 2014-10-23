@@ -17,6 +17,7 @@ import org.opentripplanner.analyst.ResultFeatureWithTimes;
 import org.opentripplanner.analyst.TimeSurface;
 
 import otp.AnalystProfileRequest;
+import otp.ProfileResult;
 import utils.HaltonPoints;
 import utils.QueryResults;
 import utils.QueryResults.QueryResultItem;
@@ -303,7 +304,7 @@ public abstract class AnalystTileRequest {
 	}
 	
 	
-	public static class SurfaceCompareTile extends AnalystTileRequest {
+	public static class SurfaceComparisonTile extends AnalystTileRequest {
 		
 		final String spatialId;
 		final Integer surfaceId1;
@@ -312,8 +313,9 @@ public abstract class AnalystTileRequest {
 		final Boolean showPoints;
 		final Integer timeLimit;
 		final Integer minTime;
+		final String show;
 		
-		public SurfaceCompareTile(Integer surfaceId1, Integer surfaceId2, String spatialId, Integer x, Integer y, Integer z, Boolean showIso, Boolean showPoints, Integer timeLimit, Integer minTime) {
+		public SurfaceComparisonTile(Integer surfaceId1, Integer surfaceId2, String spatialId, Integer x, Integer y, Integer z, Boolean showIso, Boolean showPoints, Integer timeLimit, Integer minTime, String show) {
 			super(x, y, z, "surface");
 			
 			this.spatialId = spatialId;
@@ -323,10 +325,11 @@ public abstract class AnalystTileRequest {
 			this.showPoints = showPoints;
 			this.timeLimit = timeLimit;
 			this.minTime = minTime;
+			this.show = show;
 		}
 		
 		public String getId() {
-			return super.getId() + "_" + spatialId + "_" + surfaceId1 + "_" + surfaceId2 + "_" + showIso + "_" + showPoints + "_" + timeLimit + "_" + minTime;
+			return super.getId() + "_" + spatialId + "_" + surfaceId1 + "_" + surfaceId2 + "_" + showIso + "_" + showPoints + "_" + timeLimit + "_" + minTime + "_" + show;
 		}
 		
 		public byte[] render(){
@@ -338,12 +341,27 @@ public abstract class AnalystTileRequest {
 			if(sd == null)
 				return null;
 			
-			final TimeSurface surf1 = AnalystProfileRequest.getSurface(surfaceId1);
-			final TimeSurface surf2 = AnalystProfileRequest.getSurface(surfaceId2);
+			final ProfileResult res1 = AnalystProfileRequest.getSurface(surfaceId1);
+			final ProfileResult res2 = AnalystProfileRequest.getSurface(surfaceId2);
 
-			if(surf1 == null || surf2 == null)
+			if(res1 == null || res2 == null)
 				return null;
-
+			
+			TimeSurface surf1 = null;
+			TimeSurface surf2 = null;
+			
+			if(show.equals("min")) {
+				surf1 = res1.min;
+				surf2 = res2.min;
+			}
+			else {
+				surf1 = res1.max;
+				surf2 = res2.max;
+			}
+	
+			
+			
+			
 			ResultFeatureDelta resultDelta = new ResultFeatureDelta(sd.getPointSet().getSampleSet(surf1.routerId), sd.getPointSet().getSampleSet(surf2.routerId),  surf1, surf2);
 
 			List<ShapeFeature> features = sd.getShapefile().query(tile.envelope);
@@ -428,8 +446,9 @@ public abstract class AnalystTileRequest {
     		final Boolean showPoints;
     		final Integer timeLimit;
     		final Integer minTime;
+    		final String show;
     		
-    		public SurfaceTile(Integer surfaceId, String pointSetId, Integer x, Integer y, Integer z, Boolean showIso, Boolean showPoints, Integer timeLimit, Integer minTime) {
+    		public SurfaceTile(Integer surfaceId, String pointSetId, Integer x, Integer y, Integer z, Boolean showIso, Boolean showPoints, Integer timeLimit, Integer minTime, String show) {
     			super(x, y, z, "surface");
     			
     			this.pointSetId = pointSetId;
@@ -438,10 +457,11 @@ public abstract class AnalystTileRequest {
     			this.showPoints = showPoints;
     			this.timeLimit = timeLimit;
     			this.minTime = minTime;
+    			this.show = show;
     		}
     		
     		public String getId() {
-    			return super.getId() + "_" + pointSetId + "_" + surfaceId + "_" + showIso + "_" + showPoints + "_" + timeLimit + "_" + minTime;
+    			return super.getId() + "_" + pointSetId + "_" + surfaceId + "_" + showIso + "_" + showPoints + "_" + timeLimit + "_" + minTime + "_" + show;
     		}
     		
     		public byte[] render(){
@@ -453,12 +473,8 @@ public abstract class AnalystTileRequest {
     			if(sd == null)
     				return null;
 
-    			final TimeSurface surface = AnalystProfileRequest.getSurface(surfaceId);
 
-    			if(surface == null)
-    				return null;
-
-	    		ResultFeatureWithTimes result = AnalystProfileRequest.getResultWithTimes(surfaceId, pointSetId);
+	    		ResultFeatureWithTimes result = AnalystProfileRequest.getResultWithTimes(surfaceId, pointSetId, show);
 
 	            List<ShapeFeature> features = sd.getShapefile().query(tile.envelope);
 
