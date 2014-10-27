@@ -247,7 +247,7 @@ public class Query implements Serializable {
 					if(status != null)
 						Query.updateStatus(q.id, status);
 					
-				} while(status != null && !status.isComplete());
+				} while(!status.isComplete());
 					
 				cluster.stop(worker);
 				
