@@ -241,11 +241,18 @@ public class Query implements Serializable {
 				// wait for job to complete
 				do {
 					Thread.sleep(500);
-			
-					status = exec.getJobStatus().get(0);
-			
-					if(status != null)
-						Query.updateStatus(q.id, status);
+					try {
+						status = exec.getJobStatus().get(0);
+						
+						if(status != null)
+							Query.updateStatus(q.id, status);
+						else
+							Logger.debug("waiting for job status messages, incomplete");
+					}
+					catch (Exception e) {
+						Logger.debug("waiting for job status messages");
+					}
+					
 					
 				} while(status == null || !status.isComplete());
 					
