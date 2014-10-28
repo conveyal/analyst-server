@@ -192,8 +192,8 @@ public class Query implements Serializable {
 			return;
 		
 		synchronized(q) {
-			q.totalPoints = js.total;
-			q.completePoints = js.complete;
+			q.totalPoints = (int)js.total;
+			q.completePoints = (int)js.complete;
 			q.jobId = js.curJobId;
 			q.save();
 		}

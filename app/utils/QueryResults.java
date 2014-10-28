@@ -148,7 +148,7 @@ public class QueryResults {
 			STRtree groupItemIndex = new STRtree(items.values().size());
 			
 			for(QueryResultItem item : this.items.values()) {
-				groupItemIndex.insert(item.feature.geom.getCentroid().getEnvelopeInternal(), item);
+				groupItemIndex.insert(item.feature.geom.getEnvelopeInternal(), item);
 			}
 			
 			ArrayList<Double> values = new ArrayList<Double>();
