@@ -161,7 +161,7 @@ public class Gis extends Controller {
 	                		
 	                		gf.fields.add(normalizeQr.items.get(feature.id).value);
 	                		gf.fields.add(normalizeQr.items.get(feature.id).original);
-	                		gf.fields.add(normalizeQr.items.get(feature.id).nomalizedTotal);
+	                		gf.fields.add(normalizeQr.items.get(feature.id).normalizedTotal);
 	                		
 	                		gisFeatures.add(gf);
     	            	}
@@ -251,7 +251,13 @@ public class Gis extends Controller {
 			
 			int fieldPosition = 0;
 			for(String fieldName : fieldNames) {
-				featureDefinition += "," + fieldName + ":";
+
+				String shortFieldName = fieldName;
+				
+				if(fieldName.length() > 10)
+					shortFieldName = fieldName.substring(0, 10);
+				
+				featureDefinition += "," + shortFieldName + ":";
 				if(features.get(0).fields.get(fieldPosition) instanceof String)
 					featureDefinition += "String";
 				if(features.get(0).fields.get(fieldPosition) instanceof Number)

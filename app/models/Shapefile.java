@@ -49,7 +49,10 @@ import play.Logger;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Point;
+import com.vividsolutions.jts.geom.Polygon;
+import com.vividsolutions.jts.geom.prep.PreparedPolygon;
 import com.vividsolutions.jts.index.strtree.STRtree;
 
 import controllers.Api;
@@ -90,7 +93,37 @@ public class Shapefile implements Serializable {
 		public Geometry geom;
 		
 		@JsonIgnore 
+		transient private List<PreparedPolygon> preparedPolygons;
+		
+		@JsonIgnore 
 		transient private Map<String,HaltonPoints> haltonPointMap;
+		
+		@JsonIgnore 
+		public List<PreparedPolygon> getPreparedPolygons() {
+			
+			if(preparedPolygons == null) {
+				preparedPolygons = new ArrayList<PreparedPolygon>();
+			
+				if(geom instanceof Polygon) {
+					
+					PreparedPolygon pp = new PreparedPolygon((Polygon)geom);
+					preparedPolygons.add(pp);
+					
+				}
+				else if(geom instanceof MultiPolygon) {
+					
+					for(int i = 0; i < ((MultiPolygon)geom).getNumGeometries(); i++) {
+						Polygon p = (Polygon)((MultiPolygon)geom).getGeometryN(i);
+						
+						PreparedPolygon pp = new PreparedPolygon(p);
+						preparedPolygons.add(pp);
+					}
+				
+				}
+			}
+			
+			return preparedPolygons;
+		}
 		
 		@JsonIgnore
 		public HaltonPoints getHaltonPoints(String attributeId) {

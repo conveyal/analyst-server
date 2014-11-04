@@ -15,18 +15,18 @@
 			<small>starting up...</smal>
 		{{else}}
 			{{#unless complete}}
-				<small>({{completePoints}} of {{totalPoints}} complete)<small> 
+				<small>({{completePoints}} of {{totalPoints}} complete)<small>
 			{{/unless}}
 		{{/if}}
 
 		<div id="settings">
 			<div class="form-group">
-		        <label>Travel Time Range: <span class="notes" id="timeLimitValue"></span></label>	
+		        <label>Travel Time Range: <span class="notes" id="timeLimitValue"></span></label>
 
 		      	<input id="timeSlider" data-slider-id="timeSlider" style="width: 380px;" type="text" data-slider-min="0" data-slider-max="120" data-slider-step="5" data-slider-value="60"/>
-		   	
+
 				<div class="timeScale"></div>
-				   	
+
 				<div class="timeScaleLabels">
 					<span class="note pull-right">120 mins</span>
 					<span class="note">0 mins</span>
@@ -51,11 +51,15 @@
 
 
 				</div>
+
+				<div id="updatingMap" style="margin-left: 15px; display: none;">
+						<img src="/assets/images/ajax-loader.gif"/> Calculating...
+				</div>
 			</div>
-			 <button id="exportShape" type="button" class="btn btn-default">Export Shapefile</button>
+			 <button id="updateMap" type="button" class="btn btn-primary">Update Map</button> <button id="exportShape" type="button" class="btn btn-default">Export Shapefile</button>
 		</div>
-        
-	   
+
+
 
 	</p>
 </li>

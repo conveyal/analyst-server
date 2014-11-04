@@ -3,6 +3,7 @@ package utils;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -11,6 +12,7 @@ import org.opentripplanner.analyst.ResultFeature;
 
 import utils.NaturalBreaksClassifier.Bin;
 
+import com.vividsolutions.jts.geom.prep.PreparedPolygon;
 import com.vividsolutions.jts.index.strtree.STRtree;
 
 import models.Query;
@@ -39,7 +41,7 @@ public class QueryResults {
 	public QueryResults(Query q, Integer timeLimit) {
 	   SpatialLayer sd = SpatialLayer.getPointSetCategory(q.pointSetId);
 	       
-	   ArrayList<Double> values = new ArrayList<Double>();
+	   HashSet<Double> values = new HashSet<Double>();
 	   
        for(ResultFeature feature : q.getResults().getAll()) {
         	
@@ -54,15 +56,19 @@ public class QueryResults {
         	
         	item.value = value;
         	
-        	values.add(value);
+        	values.add(((Math.round(value.floatValue()) / 100)) * 100.0);
         	
         	item.feature = sd.getShapefile().getShapeFeatureStore().getById(feature.id);
         	
         	items.put(feature.id, item);
        }
        
+       ArrayList<Double> valuesArray = new ArrayList<Double>();
+       
+       valuesArray.addAll(values);
+       
        //linearClassifier = new LinearClassifier(values, new Color(0.5f, 0.5f, 1.0f, 0.5f), new Color(0.0f, 0.0f, 1.0f, 0.5f));
-       jenksClassifier = new NaturalBreaksClassifier(values, 10, new Color(1.0f, 1.0f, 1.0f, 0.25f), new Color(0.0f, 0.0f, 1.0f, 0.5f));
+       jenksClassifier = new NaturalBreaksClassifier(valuesArray, 10, new Color(1.0f, 1.0f, 1.0f, 0.25f), new Color(0.0f, 0.0f, 1.0f, 0.5f));
 		
 	}
 	
@@ -91,16 +97,20 @@ public class QueryResults {
 		
 			QueryResults normalizedQr = new QueryResults();
 			
-			ArrayList<Double> values = new ArrayList<Double>();
+			 HashSet<Double> values = new HashSet<Double>();
 			
 			for(QueryResultItem item : items.values()) {
 				
 				List<ShapeFeature> normalizerMatches = new ArrayList<ShapeFeature>();
 				
 				for(Object o : normalizerItemIndex.query(item.feature.geom.getEnvelopeInternal())) {
-					if(o instanceof ShapeFeature && item.feature.geom.contains(((ShapeFeature)o).geom.getCentroid())){
-						normalizerMatches.add((ShapeFeature)o);
-					}
+		
+					for(PreparedPolygon pp : item.feature.getPreparedPolygons()) {
+						if(o instanceof ShapeFeature && ((ShapeFeature)o).geom != null && pp.contains(((ShapeFeature)o).geom.getCentroid())) {
+
+							normalizerMatches.add((ShapeFeature)o);
+						}
+					}	
 				}
 				
 				QueryResultItem i = new QueryResultItem();
@@ -108,13 +118,13 @@ public class QueryResults {
 				i.feature = item.feature;
 	
 				for(ShapeFeature sf : normalizerMatches) {
-					i.nomalizedTotal += sf.getAttributeSum(sd.getAttributeIds());
+					i.normalizedTotal += sf.getAttributeSum(sd.getAttributeIds());
 				}
 				
-				if(item.value > 0 && i.nomalizedTotal > 0)
-					i.value = item.value / i.nomalizedTotal;
+				if(item.value > 0 && i.normalizedTotal > 0)
+					i.value = item.value / i.normalizedTotal;
 				
-				values.add(i.value);
+				values.add(((Math.round(i.value.floatValue()) / 100)) * 100.0);
 				
 				i.original = item.value;
 				
@@ -128,7 +138,13 @@ public class QueryResults {
 				
 			}
 			
-			normalizedQr.jenksClassifier = new NaturalBreaksClassifier(values, 10, new Color(1.0f, 1.0f, 1.0f, 0.5f), new Color(0.0f, 0.0f, 1.0f, 0.5f));
+			ArrayList<Double> valuesArray = new ArrayList<Double>();
+		       
+		    valuesArray.addAll(values);
+			
+			normalizedQr.jenksClassifier = new NaturalBreaksClassifier(valuesArray, 10, new Color(1.0f, 1.0f, 1.0f, 0.5f), new Color(0.0f, 0.0f, 1.0f, 0.5f));
+			//normalizedQr.linearClassifier = new LinearClassifier(values, new Color(0.5f, 0.5f, 1.0f, 0.5f), new Color(0.0f, 0.0f, 1.0f, 0.5f));
+			  
 			
 			normalized.put(pointSetId, normalizedQr);
 		
@@ -148,10 +164,10 @@ public class QueryResults {
 			STRtree groupItemIndex = new STRtree(items.values().size());
 			
 			for(QueryResultItem item : this.items.values()) {
-				groupItemIndex.insert(item.feature.geom.getEnvelopeInternal(), item);
+				groupItemIndex.insert(item.feature.geom.getCentroid().getEnvelopeInternal(), item);
 			}
 			
-			ArrayList<Double> values = new ArrayList<Double>();
+			HashSet<Double> values = new HashSet<Double>();
 			
 			QueryResults groupedQr = new QueryResults();
 			
@@ -160,9 +176,11 @@ public class QueryResults {
 				List<QueryResultItem> groupedMatches = new ArrayList<QueryResultItem>();
 				
 				for(Object o : groupItemIndex.query(item.geom.getEnvelopeInternal())) {
-					if(o instanceof QueryResultItem && item.geom.contains(((QueryResultItem)o).feature.geom.getCentroid())) {
-						groupedMatches.add((QueryResultItem)o);
-					}
+					for(PreparedPolygon pp : item.getPreparedPolygons()) {
+						if(o instanceof QueryResultItem && ((QueryResultItem)o).feature.geom != null && pp.contains(((QueryResultItem)o).feature.geom.getCentroid())) {
+							groupedMatches.add((QueryResultItem)o);
+						}
+					}	
 				}
 				
 				QueryResultItem groupItem = new QueryResultItem();
@@ -171,13 +189,16 @@ public class QueryResults {
 				Double total = 0.0;
 				Double normalizedTotal = 0.0;
 				for(QueryResultItem i : groupedMatches) {
-					total += i.original * i.nomalizedTotal;
-					normalizedTotal += i.nomalizedTotal;
+					total += i.original * i.normalizedTotal;
+					normalizedTotal += i.normalizedTotal;
 				}
 				
 				groupItem.value = (total / normalizedTotal);
 				
-				values.add(groupItem.value);
+				if(groupItem.value.isNaN())
+					groupItem.value = 0.0;
+
+	        	values.add(((Math.round(groupItem.value.floatValue()) / 100)) * 100.0);
 				
 				if(groupItem.value > groupedQr.maxValue)
 					groupedQr.maxValue = groupItem.value;
@@ -188,8 +209,12 @@ public class QueryResults {
 				
 			}
 			
-			groupedQr.jenksClassifier = new NaturalBreaksClassifier(values, 10, new Color(1.0f, 1.0f, 1.0f, 0.5f), new Color(0.0f, 0.0f, 1.0f, 0.5f));
+			ArrayList<Double> valuesArray = new ArrayList<Double>();
+		       
+		    valuesArray.addAll(values);
 			
+			groupedQr.jenksClassifier = new NaturalBreaksClassifier(valuesArray, 10, new Color(1.0f, 1.0f, 1.0f, 0.5f), new Color(0.0f, 0.0f, 1.0f, 0.5f));
+			//groupedQr.linearClassifier = new LinearClassifier(values, new Color(0.5f, 0.5f, 1.0f, 0.5f), new Color(0.0f, 0.0f, 1.0f, 0.5f));
 			
 			gruoped.put(pointSetId, groupedQr);
 			
@@ -201,7 +226,7 @@ public class QueryResults {
 	public class QueryResultItem {
 		public ShapeFeature feature;
 		public Double value = 0.0;
-		public Double nomalizedTotal = 0.0;
+		public Double normalizedTotal = 0.0;
 		public Double original = 0.0;
 	}
 }

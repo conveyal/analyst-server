@@ -127,9 +127,8 @@ var Analyst = Analyst || {};
 	  	'click #queryCheckbox' : 'clickItem',
 	  	'click #groupCheckbox' : 'groupBy',
 	  	'click #normalizeCheckbox' : 'normalizeBy',
-	  	'change #normalizeBy' : 'refreshMap',
-	  	'change #groupBy' : 'groupBy',
-	  	'click #exportShape' : 'exportShape'
+	  	'click #exportShape' : 'exportShape',
+			'click #updateMap' : 'updateMap'
 
 	  },
 
@@ -200,14 +199,37 @@ var Analyst = Analyst || {};
 
 	  },
 
+		updateMap : function(evt) {
+			this.refreshMap();
+		},
+
 	  groupBy : function(evt) {
 
-	  	this.refreshMap();
+	  	if(this.$("#groupCheckbox").prop('checked')) {
+				this.$("#groupBy").prop("disabled", false);
+				this.groupById = this.$("#groupBy").val();
+
+				legendTitle = legendTitle + " grouped by " + $("#groupBy option:selected").text();
+			}
+			else  {
+				this.groupById = false;
+				this.$("#groupBy").prop("disabled", true);
+			}
 	  },
 
 	  normalizeBy : function(evt) {
 
-	  	this.refreshMap();
+	  	if(this.$("#normalizeCheckbox").prop('checked')) {
+				this.$("#normalizeBy").prop("disabled", false);
+				this.normalizeById = this.$("#normalizeBy").val();
+
+				legendTitle = legendTitle + " normalized by " + $("#normalizeBy option:selected").text();
+			}
+			else {
+				this.$("#normalizeBy").prop("disabled", true);
+				this.normalizeById = false;
+
+			}
 	  },
 
 	  deleteItem: function(evt) {
@@ -260,26 +282,33 @@ var Analyst = Analyst || {};
 	 		if(this.normalizeById)
 	 			url = url + "&normalizeBy=" + this.normalizeById;
 
-			this.queryOverlay = L.tileLayer('/tile/query?z={z}&x={x}&y={y}&' + url).addTo(A.map);
-
 			this.$("#legendTitle").html(legendTitle);
 
 			var legendItemTemplate = Handlebars.getTemplate('analysis', 'query-legend-item')
 
 
 			this.$("#legendData").empty();
+			this.$("#updatingMap").show();
+
+			var _map = A.map;
 
 			$.getJSON('/api/queryBins?' + url, function(data) {
 
+				_this.queryOverlay = L.tileLayer('/tile/query?z={z}&x={x}&y={y}&' + url).addTo(_map);
+
+				_this.$("#updatingMap").hide();
+
 				for(var i in data) {
+
 					var lower = _this.numberWithCommas(parseFloat(data[i].lower).toFixed(2));
 					var upper = _this.numberWithCommas(parseFloat(data[i].upper).toFixed(2));
 					var legendItem = {color : data[i].hexColor, label : lower + " - " + upper};
 
 					_this.$("#legendData").append(legendItemTemplate(legendItem));
-				}
-		    });
 
+
+				}
+			});
 
 			this.$("#legend").show();
 
@@ -335,7 +364,6 @@ var Analyst = Analyst || {};
 			}
 		}).on('slideStop', function(evt) {
 			_this.$('#timeLimitValue').html(evt.value + " mins");
-			_this.refreshMap();
 		}).data('slider');
 
       },
