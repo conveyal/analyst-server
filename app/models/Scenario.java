@@ -9,6 +9,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -32,6 +34,7 @@ import org.opentripplanner.gtfs.model.Stop;
 import org.opentripplanner.routing.graph.Graph;
 
 import play.Logger;
+import play.Play;
 import play.libs.Akka;
 import play.libs.F.Function0;
 import play.libs.F.Promise;
@@ -42,6 +45,7 @@ import utils.DataStore;
 import utils.HashUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.io.ByteStreams;
 import com.vividsolutions.jts.geom.Geometry;
 
 import controllers.Api;
@@ -259,32 +263,38 @@ public class Scenario implements Serializable {
 				            	scenario.processingOsm = true;
 				            	scenario.save();
 				               	
-				            	File osmXmlFile = new File(getScenarioDataPath(), scenario.id + ".osm.xml");
 				            	File osmPbfFile = new File(getScenarioDataPath(), scenario.id + ".osm.pbf");
 				            
 				            	// hard-coding vex osm integration (for now)
 				            	
-				            	Double minLat = scenario.bounds.north < scenario.bounds.south ? scenario.bounds.north : scenario.bounds.south;
-				            	Double minLon = scenario.bounds.east < scenario.bounds.west ? scenario.bounds.east : scenario.bounds.west;
-				            	Double maxLat = scenario.bounds.north > scenario.bounds.south ? scenario.bounds.north : scenario.bounds.south;
-				            	Double maxLon = scenario.bounds.east > scenario.bounds.west ? scenario.bounds.east : scenario.bounds.west;
+				            	Double south = scenario.bounds.north < scenario.bounds.south ? scenario.bounds.north : scenario.bounds.south;
+				            	Double west = scenario.bounds.east < scenario.bounds.west ? scenario.bounds.east : scenario.bounds.west;
+				            	Double north = scenario.bounds.north > scenario.bounds.south ? scenario.bounds.north : scenario.bounds.south;
+				            	Double east = scenario.bounds.east > scenario.bounds.west ? scenario.bounds.east : scenario.bounds.west;
 				            	
-				                ProcessBuilder pb = new ProcessBuilder(new File(Application.binPath, "vex").getAbsolutePath(), "/mnt/db/", minLat.toString(), minLon.toString(), maxLat.toString(), maxLon.toString());
-					        	
-				                pb.directory(scenario.getScenarioDataPath());
+				                String vexUrl = Play.application().configuration().getString("application.vex");
 				                
-						        Process p = pb.start();
+				                if (!vexUrl.endsWith("/"))
+				                	vexUrl += "/";
+				                
+				                vexUrl += String.format("?n=%s&s=%s&e=%s&w=%s", north, south, east, west);
+				                
+				                HttpURLConnection conn = (HttpURLConnection) new URL(vexUrl).openConnection();
+				                
+				                conn.connect();
+				                
+				                if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
+				                	System.err.println("Received response code " +
+				                			conn.getResponseCode() + " from vex server");
+				                	scenario.failed = true;
+				                	scenario.save();
+				                	return;
+				                }
+				                
+				                // download the file
+				                ByteStreams.copy(conn.getInputStream(), new FileOutputStream(osmPbfFile));
 					            
-						        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(p.getInputStream()));
-						        String line;
-						        
-					            while((line = bufferedReader.readLine()) != null){
-					                System.out.println("processing...");
-					            }
-							    
-					            osmXmlFile.delete();
-					            
-						        System.out.println("osm xml converted to pbf");
+						        System.out.println("osm pbf retrieved");
 				            	
 									
 						    } catch (IOException e) {
