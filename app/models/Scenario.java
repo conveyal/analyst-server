@@ -24,6 +24,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
+import jobs.ProcessTransitScenarioJob;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.geotools.geometry.Envelope2D;
@@ -130,7 +132,7 @@ public class Scenario implements Serializable {
 	}
 	
 	@JsonIgnore
-	private File getScenarioDataPath() {
+	public File getScenarioDataPath() {
 		
 		File scenarioDataPath = new File(getScenarioDir(), id);
 		
@@ -154,166 +156,7 @@ public class Scenario implements Serializable {
 		
 		Akka.system().scheduler().scheduleOnce(
 			        Duration.create(10, TimeUnit.MILLISECONDS),
-			        new Runnable() {
-			            public void run() {
-			            	
-			            	scenario.processingGtfs = true;
-			            	scenario.save();
-		
-			            	try {
-			            		
-								ZipFile zipFile = new ZipFile(gtfsFile);
-						
-							    Enumeration<? extends ZipEntry> entries = zipFile.entries();
-						
-							    String shpFile = null;
-							    String confFile = null;
-							    
-							    while(entries.hasMoreElements()) {
-							    	
-							        ZipEntry entry = entries.nextElement();
-							        
-							        if(entry.getName().toLowerCase().endsWith("shp"))
-							        	shpFile = entry.getName();
-							        if(entry.getName().toLowerCase().endsWith("json"))
-							        	confFile = entry.getName();
-							    }
-							    
-							    zipFile.close();
-							    File newFile;
-							    
-							    if(confFile != null && shpFile != null) {
-							    
-							    	File outputDirectory = scenario.getTempShapeDirPath();
-							    	zipFile = new ZipFile(gtfsFile);
-									entries = zipFile.entries();
-							    	
-							        while (entries.hasMoreElements()) {
-							        	
-							            ZipEntry entry = entries.nextElement();
-							            File entryDestination = new File(outputDirectory,  entry.getName());
-							            
-							            entryDestination.getParentFile().mkdirs();
-							            
-							            if (entry.isDirectory())
-							                entryDestination.mkdirs();
-							            else {
-							                InputStream in = zipFile.getInputStream(entry);
-							                OutputStream out = new FileOutputStream(entryDestination);
-							                IOUtils.copy(in, out);
-							                IOUtils.closeQuietly(in);
-							                IOUtils.closeQuietly(out);
-							            }
-							        }
-							        
-							        File shapeFile = new File(outputDirectory, shpFile);
-							        File configFile = new File(outputDirectory, confFile);
-							        newFile = new File(getScenarioDataPath(), HashUtils.hashFile(gtfsFile) + ".zip");
-							        
-							        ProcessBuilder pb = new ProcessBuilder("java"
-							        		,"-jar",new File(Application.binPath, "geom2gtfs.jar").getAbsolutePath(),  shapeFile.getAbsolutePath(), configFile.getAbsolutePath(), newFile.getAbsolutePath());
-							        Process p;
-							        
-							            p = pb.start();
-							            
-							            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(p.getInputStream()));
-								        String line;
-								        
-							            while((line = bufferedReader.readLine()) != null){
-							                System.out.println("reading...");
-							                System.out.println(line);
-							            }
-								       
-							        System.out.println("gtfs " + newFile.getName() + " processed.");
-							        
-							        FileUtils.deleteDirectory(outputDirectory);
-							        zipFile.close();
-							        gtfsFile.delete();
-							    }
-								else  {
-									newFile = new File(scenario.getScenarioDataPath(), scenario.id + ".zip");
-									FileUtils.copyFile(gtfsFile, newFile);
-								}
-							    
-							    if((scenarioType != null && augmentScenarioId != null && scenarioType.equals("augment"))) 
-							    {	
-							    	for(File f : Scenario.getScenario(augmentScenarioId).getScenarioDataPath().listFiles()) {
-										if(f.getName().toLowerCase().endsWith(".zip")) {
-											FileUtils.copyFileToDirectory(f, scenario.getScenarioDataPath());
-										}
-									}
-							    }
-							    
-							    Envelope2D envelope = new Envelope2D();
-							    for(File f : scenario.getScenarioDataPath().listFiles()) {
-									if(f.getName().toLowerCase().endsWith(".zip")) {
-										GTFSFeed feed = GTFSFeed.fromFile(f.getAbsolutePath());
-										
-										for(Stop s : feed.stops.values()) {
-											Double lat = Double.parseDouble(s.stop_lat);
-											Double lon = Double.parseDouble(s.stop_lon);
-											
-											envelope.include(lon, lat);
-										}
-									}
-								}
-							    
-							    scenario.bounds = new Bounds(envelope);
-							    scenario.processingGtfs = false;
-				            	scenario.processingOsm = true;
-				            	scenario.save();
-				               	
-				            	File osmPbfFile = new File(getScenarioDataPath(), scenario.id + ".osm.pbf");
-				            
-				            	// hard-coding vex osm integration (for now)
-				            	
-				            	Double south = scenario.bounds.north < scenario.bounds.south ? scenario.bounds.north : scenario.bounds.south;
-				            	Double west = scenario.bounds.east < scenario.bounds.west ? scenario.bounds.east : scenario.bounds.west;
-				            	Double north = scenario.bounds.north > scenario.bounds.south ? scenario.bounds.north : scenario.bounds.south;
-				            	Double east = scenario.bounds.east > scenario.bounds.west ? scenario.bounds.east : scenario.bounds.west;
-				            	
-				                String vexUrl = Play.application().configuration().getString("application.vex");
-				                
-				                if (!vexUrl.endsWith("/"))
-				                	vexUrl += "/";
-				                
-				                vexUrl += String.format("?n=%s&s=%s&e=%s&w=%s", north, south, east, west);
-				                
-				                HttpURLConnection conn = (HttpURLConnection) new URL(vexUrl).openConnection();
-				                
-				                conn.connect();
-				                
-				                if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
-				                	System.err.println("Received response code " +
-				                			conn.getResponseCode() + " from vex server");
-				                	scenario.failed = true;
-				                	scenario.save();
-				                	return;
-				                }
-				                
-				                // download the file
-				                ByteStreams.copy(conn.getInputStream(), new FileOutputStream(osmPbfFile));
-					            
-						        System.out.println("osm pbf retrieved");
-				            	
-									
-						    } catch (IOException e) {
-						    	e.printStackTrace();
-					            System.out.println("Failed to process gtfs");
-					            
-					            scenario.failed = true;
-				            	scenario.save();
-					            
-					            return;
-					        }
-			            	
-			            	scenario.processingGtfs = false;
-			            	scenario.processingOsm = false;
-			            	scenario.save();
-			            	
-							scenario.build();
-			            }
-			        },
+			        new ProcessTransitScenarioJob(this, gtfsFile, scenarioType, augmentScenarioId),
 			        graphBuilderContext
 			);
 	}
@@ -376,7 +219,7 @@ public class Scenario implements Serializable {
 	}
 	
 	@JsonIgnore
-	private File getTempShapeDirPath() {
+	public File getTempShapeDirPath() {
 		
 		File shapeDirPath = new File(getScenarioDataPath(), "tmp_" + id);
 		
