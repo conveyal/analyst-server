@@ -219,7 +219,7 @@ public class Query implements Serializable {
 				cluster.registerWorker(exec, worker);
 				String graphTimeZone = Api.analyst.getGraphService().getGraph(q.scenarioId).getTimeZone().getID();
 				
-				JobSpec js = new JobSpec(q.scenarioId, q.pointSetId + ".json",  q.pointSetId + ".json", "2014-06-09", "8:05 AM", graphTimeZone, q.mode, null);
+				JobSpec js = new JobSpec(q.scenarioId, q.pointSetId + ".json",  q.pointSetId + ".json", "2014-12-04", "8:05 AM", graphTimeZone, q.mode, null);
 				
 				// plus a callback that registers how many work items have returned
 				class CounterCallback implements JobItemCallback {
