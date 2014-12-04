@@ -10,6 +10,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Enumeration;
+import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -17,6 +18,7 @@ import models.Scenario;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.text.StrSubstitutor;
 import org.geotools.geometry.Envelope2D;
 import org.opentripplanner.gtfs.model.GTFSFeed;
 import org.opentripplanner.gtfs.model.Stop;
@@ -24,7 +26,9 @@ import org.opentripplanner.gtfs.model.Stop;
 import play.Play;
 import utils.Bounds;
 import utils.HashUtils;
+import utils.ZipUtils;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteStreams;
 
 import controllers.Application;
@@ -64,58 +68,29 @@ public class ProcessTransitScenarioJob implements Runnable {
 
 				ZipEntry entry = entries.nextElement();
 
-				if(entry.getName().toLowerCase().endsWith("shp"))
+				if(entry.getName().toLowerCase().endsWith(".shp"))
 					shpFile = entry.getName();
-				if(entry.getName().toLowerCase().endsWith("json"))
+				if(entry.getName().toLowerCase().endsWith(".json"))
 					confFile = entry.getName();
 			}
 
 			zipFile.close();
 			File newFile;
 
-			if(confFile != null && shpFile != null) {
-
-				File outputDirectory = scenario.getTempShapeDirPath();
+			File outputDirectory = scenario.getTempShapeDirPath();
+			
+			// TODO: abstract this code; it needs to be re-run each time the frequency is changed
+			// and cannot be run until a frequency is set.
+			if (confFile != null && shpFile != null) {				
 				zipFile = new ZipFile(uploadFile);
-				entries = zipFile.entries();
 
-				while (entries.hasMoreElements()) {
-
-					ZipEntry entry = entries.nextElement();
-					File entryDestination = new File(outputDirectory,  entry.getName());
-
-					entryDestination.getParentFile().mkdirs();
-
-					if (entry.isDirectory())
-						entryDestination.mkdirs();
-					else {
-						InputStream in = zipFile.getInputStream(entry);
-						OutputStream out = new FileOutputStream(entryDestination);
-						IOUtils.copy(in, out);
-						IOUtils.closeQuietly(in);
-						IOUtils.closeQuietly(out);
-					}
-				}
+				ZipUtils.unzip(zipFile, outputDirectory);
 
 				File shapeFile = new File(outputDirectory, shpFile);
 				File configFile = new File(outputDirectory, confFile);
+				
 				newFile = new File(scenario.getScenarioDataPath(), HashUtils.hashFile(uploadFile) + ".zip");
-
-				ProcessBuilder pb = new ProcessBuilder("java"
-						,"-jar",new File(Application.binPath, "geom2gtfs.jar").getAbsolutePath(),  shapeFile.getAbsolutePath(), configFile.getAbsolutePath(), newFile.getAbsolutePath());
-				Process p;
-
-				p = pb.start();
-
-				BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(p.getInputStream()));
-				String line;
-
-				while((line = bufferedReader.readLine()) != null){
-					System.out.println("reading...");
-					System.out.println(line);
-				}
-
-				System.out.println("gtfs " + newFile.getName() + " processed.");
+				new Geom2GtfsJob(scenario, configFile, shapeFile, newFile).run();
 
 				FileUtils.deleteDirectory(outputDirectory);
 				zipFile.close();
