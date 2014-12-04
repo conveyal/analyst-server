@@ -53,6 +53,7 @@ Handlebars.getTemplate = function(module, name, lang) {
 
 Handlebars.registerHelper('I18n',
   function(str){
-    return (Messages != undefined && Messages.messages[str] != undefined ? Messages.messages[str] : str);
+    var args = [].slice.call(arguments, 0, -1);
+    return (Messages != undefined && Messages.messages[str] != undefined ? Messages.apply(window, args) : str);
   }
 );

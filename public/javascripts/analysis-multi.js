@@ -125,7 +125,6 @@ var Analyst = Analyst || {};
 
 	  	'click #deleteItem' : 'deleteItem',
 	  	'click #queryCheckbox' : 'clickItem',
-	  	'click #groupCheckbox' : 'groupBy',
 	  	'click #normalizeCheckbox' : 'normalizeBy',
 	  	'click #exportShape' : 'exportShape',
 			'click #updateMap' : 'updateMap'
@@ -192,8 +191,8 @@ var Analyst = Analyst || {};
  		if(this.groupById)
  			url = url + "&groupBy=" + this.groupById;
 
- 		if(this.normalizeById)
- 			url = url + "&normalizeBy=" + this.normalizeById;
+ 		if(this.weightById)
+ 			url = url + "&weightBy=" + this.weightById;
 
  		window.open(url);
 
@@ -203,32 +202,27 @@ var Analyst = Analyst || {};
 			this.refreshMap();
 		},
 
-	  groupBy : function(evt) {
-
-	  	if(this.$("#groupCheckbox").prop('checked')) {
-				this.$("#groupBy").prop("disabled", false);
-				this.groupById = this.$("#groupBy").val();
-
-				legendTitle = legendTitle + " grouped by " + $("#groupBy option:selected").text();
-			}
-			else  {
-				this.groupById = false;
-				this.$("#groupBy").prop("disabled", true);
-			}
-	  },
-
 	  normalizeBy : function(evt) {
 
 	  	if(this.$("#normalizeCheckbox").prop('checked')) {
-				this.$("#normalizeBy").prop("disabled", false);
-				this.normalizeById = this.$("#normalizeBy").val();
+				this.$("#weightBy").prop("disabled", false);
+				this.$("#groupBy").prop("disabled", false);
+				this.$('#aggregation-controls').slideDown();
 
-				legendTitle = legendTitle + " normalized by " + $("#normalizeBy option:selected").text();
+				this.weightById = this.$("#weightBy").val();
+				this.groupById = this.$('#groupBy').val();
+
+				legendTitle = legendTitle + " weighted by " + $("#weightBy option:selected").text() +
+						" grouped by " + $("#groupBy option:selected").text();
 			}
 			else {
-				this.$("#normalizeBy").prop("disabled", true);
-				this.normalizeById = false;
+				this.$("#weightBy").prop("disabled", true);
+				this.weightById = false;
 
+				this.groupById = false;
+				this.$("#groupBy").prop("disabled", true);
+
+				this.$('#aggregation-controls').slideUp();
 			}
 	  },
 
@@ -244,29 +238,7 @@ var Analyst = Analyst || {};
 	  	var _this = this;
 
 
-	  	if(this.$("#normalizeCheckbox").prop('checked')) {
-	  		this.$("#normalizeBy").prop("disabled", false);
-	  		this.normalizeById = this.$("#normalizeBy").val();
-
-	  		legendTitle = legendTitle + " normalized by " + $("#normalizeBy option:selected").text();
-	  	}
-	  	else {
-	  		this.$("#normalizeBy").prop("disabled", true);
-	  		this.normalizeById = false;
-
-	  	}
-
-	  	if(this.$("#groupCheckbox").prop('checked')) {
-	  		this.$("#groupBy").prop("disabled", false);
-	  		this.groupById = this.$("#groupBy").val();
-
-	  		legendTitle = legendTitle + " grouped by " + $("#groupBy option:selected").text();
-	  	}
-	  	else  {
-	  		this.groupById = false;
-	  		this.$("#groupBy").prop("disabled", true);
-	  	}
-
+	  	this.normalizeBy();
 
 	  	if(target.prop("checked")) {
 	  		if(A.map.hasLayer(this.queryOverlay))
@@ -279,8 +251,8 @@ var Analyst = Analyst || {};
 	 		if(this.groupById)
 	 			url = url + "&groupBy=" + this.groupById;
 
-	 		if(this.normalizeById)
-	 			url = url + "&normalizeBy=" + this.normalizeById;
+	 		if(this.weightById)
+	 			url = url + "&normalizeBy=" + this.weightById;
 
 			this.$("#legendTitle").html(legendTitle);
 
@@ -339,18 +311,18 @@ var Analyst = Analyst || {};
 
 			this.pointsets.fetch({reset: true, data : {projectId: this.model.get("projectId")}, success: function(collection, response, options) {
 
-				_this.$("#normalizeBy").empty();
+				_this.$("#weightBy").empty();
 				_this.$("#groupBy").empty();
 
 				for(var i in _this.pointsets.models) {
-					_this.$("#normalizeBy").append('<option value="' + _this.pointsets.models[i].get("id") + '">' + _this.pointsets.models[i].get("name") + '</option>');
+					_this.$("#weightBy").append('<option value="' + _this.pointsets.models[i].get("id") + '">' + _this.pointsets.models[i].get("name") + '</option>');
 					_this.$("#groupBy").append('<option value="' + _this.pointsets.models[i].get("id") + '">' + _this.pointsets.models[i].get("name") + '</option>');
 				}
 
 
 			}});
 
-			this.$("#normalizeBy").prop("disabled", true);
+			this.$("#weightBy").prop("disabled", true);
 			this.$("#groupBy").prop("disabled", true);
 
 			this.$("#settings").show();
