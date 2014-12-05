@@ -615,9 +615,6 @@ public static class QueryTile extends AnalystTileRequest {
 		        }
 		    }
 		    else {
-
-		    	QueryResults normalizeQr = qr.normalizeBy(normalizeBy);
-
 		    	if(groupBy == null) {
 		    		// It doesn't make sense to weight/normalize without also aggregating.
 		    		// Suppose you are weighting job access by population. Then the weighted
@@ -625,7 +622,7 @@ public static class QueryTile extends AnalystTileRequest {
 		    		throw new UnsupportedOperationException("Cannot specify normalization/weighting without specifying grouping/aggregation");
 		    	}
 		    	else {
-		    		QueryResults groupedQr = normalizeQr.groupBy(groupBy);
+		    		QueryResults groupedQr = qr.normalizeBy(normalizeBy).groupBy(groupBy);
 
 		    		for(QueryResultItem item : groupedQr.items.values()) {
 
