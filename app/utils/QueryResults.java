@@ -198,6 +198,8 @@ public class QueryResults {
 				if(groupItem.value.isNaN())
 					groupItem.value = 0.0;
 
+				// These are the values for the classifier
+				// TODO: move rounding into classifier
 	        	values.add(((Math.round(groupItem.value.floatValue()) / 100)) * 100.0);
 				
 				if(groupItem.value > groupedQr.maxValue)
