@@ -30,6 +30,13 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import controllers.Api;
 
+/**
+ * A SpatialLayer corresponds to an OTP PointSet. It can have multiple attributes which are summed.
+ * So a SpatialLayer Jobs might have components retail jobs, professional jobs, service jobs, other jobs,
+ * which summed represent all jobs.
+ *  
+ * @author mattwigway
+ */
 public class SpatialLayer implements Serializable {
 	
 	private static final long serialVersionUID = 1L;
