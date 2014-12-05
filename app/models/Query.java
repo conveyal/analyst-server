@@ -74,6 +74,18 @@ public class Query implements Serializable {
 		return query;
 	}
 	
+	/**
+	 * Get the pointset name. This is used in the UI so that we can display the name of the pointset.
+	 */
+	public String getPointSetName () {
+		SpatialLayer l = SpatialLayer.getPointSetCategory(pointSetId);
+		
+		if (l == null)
+			return null;
+		
+		return l.name;
+	}
+	
 	public void save() {
 		
 		// assign id at save
