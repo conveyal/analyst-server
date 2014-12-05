@@ -339,41 +339,44 @@ var Analyst = Analyst || {};
 
         this.pointsets = new A.models.PointSets();
 
-				// Set up weight and group by select boxes
-				// we weight by PointSets (which have values attached to them), and we group by shapefiles,
-				// which do not and need not.
+        // Set up weight and group by select boxes
+        // we weight by PointSets (which have values attached to them), and we group by shapefiles,
+        // which do not and need not.
         this.pointsets.fetch({
-          reset: true,
-          data: {
-            projectId: this.model.get("projectId")
-          }})
+            reset: true,
+            data: {
+              projectId: this.model.get("projectId")
+            }
+          })
           .done(function() {
 
             _this.$("#weightBy").empty();
 
-						_this.pointsets.each(function (pointset) {
-							$('<option>')
-							.attr('value', pointset.id)
-							.text(pointset.get('name'))
-							.appendTo(_this.$('#weightBy'));
-						});
+            _this.pointsets.each(function(pointset) {
+              $('<option>')
+                .attr('value', pointset.id)
+                .text(pointset.get('name'))
+                .appendTo(_this.$('#weightBy'));
+            });
 
           });
 
+        this.shapefiles = new A.models.Shapefiles();
+        this.shapefiles.fetch({
+            data: {
+              projectId: this.model.get("projectId")
+            }
+          })
+          .done(function() {
+            _this.$('#groupBy').empty();
 
-				this.shapefiles = new A.models.Shapefiles();
-				this.shapefiles.fetch({data: {projectId: this.model.get("projectId")}})
-					.done(function () {
-						_this.$('#groupBy').empty();
-
-						_this.shapefiles.each(function (shapefile) {
-							$('<option>')
-								.attr('value', shapefile.id)
-								.text(shapefile.get('name'))
-								.appendTo(_this.$('#groupBy'));
-						});
-				});
-
+            _this.shapefiles.each(function(shapefile) {
+              $('<option>')
+                .attr('value', shapefile.id)
+                .text(shapefile.get('name'))
+                .appendTo(_this.$('#groupBy'));
+            });
+          });
 
         this.$("#weightBy").prop("disabled", true);
         this.$("#groupBy").prop("disabled", true);
