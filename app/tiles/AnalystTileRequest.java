@@ -619,39 +619,19 @@ public static class QueryTile extends AnalystTileRequest {
 		    	QueryResults normalizeQr = qr.normalizeBy(normalizeBy);
 
 		    	if(groupBy == null) {
-		    		for(ShapeFeature feature : features) {
-
-		            	Color color = null;
-
-		            	if(normalizeQr.items.containsKey(feature.id)) {
-		             		color = normalizeQr.jenksClassifier.getColorValue(normalizeQr.items.get(feature.id).value);
-		             	}
-
-		            	if(color == null){
-							color = new Color(0.0f,0.0f,0.0f,0.1f);
-						}
-
-		             	if(color != null)
-							try {
-								tile.renderPolygon(feature.geom, color, null);
-							} catch (MismatchedDimensionException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							} catch (TransformException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
-
-		            }
+		    		// It doesn't make sense to weight/normalize without also aggregating.
+		    		// Suppose you are weighting job access by population. Then the weighted
+		    		// unaggregated figures are in person-jobs, which is not a meaningful unit.
+		    		throw new UnsupportedOperationException("Cannot specify normalization/weighting without specifying grouping/aggregation");
 		    	}
 		    	else {
-		    		QueryResults gruopedQr = normalizeQr.groupBy(groupBy);
+		    		QueryResults groupedQr = normalizeQr.groupBy(groupBy);
 
-		    		for(QueryResultItem item : gruopedQr.items.values()) {
+		    		for(QueryResultItem item : groupedQr.items.values()) {
 
 		            	Color color = null;
 
-		            	color = gruopedQr.jenksClassifier.getColorValue(item.value);
+		            	color = groupedQr.jenksClassifier.getColorValue(item.value);
 
 		            	if(color == null){
 							color = new Color(0.0f,0.0f,0.0f,0.1f);
