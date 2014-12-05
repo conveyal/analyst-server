@@ -243,17 +243,9 @@ public class Api extends Controller {
             	return ok(Json.toJson(qr.jenksClassifier.bins));
             }
             else {
-            
-            	QueryResults normalizeQr = qr.normalizeBy(normalizeBy);
-        	
-            	if(groupBy == null) {
-            		return ok(Json.toJson(normalizeQr.jenksClassifier.bins));
-            	}
-            	else {
-            		QueryResults gruopedQr = normalizeQr.groupBy(groupBy);
-            		
-            		return ok(Json.toJson(gruopedQr.jenksClassifier.bins));
-            	}
+            	Shapefile aggregateTo = Shapefile.getShapefile(groupBy);
+            	SpatialLayer weightBy = SpatialLayer.getPointSetCategory(normalizeBy);
+            	return ok(Json.toJson(qr.aggregate(aggregateTo, weightBy).jenksClassifier.bins));
 	            
             }
 

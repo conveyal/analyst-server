@@ -7,6 +7,7 @@ import java.util.List;
 
 import models.Attribute;
 import models.Query;
+import models.Shapefile;
 import models.Shapefile.ShapeFeature;
 import models.SpatialLayer;
 
@@ -622,8 +623,13 @@ public static class QueryTile extends AnalystTileRequest {
 		    		throw new UnsupportedOperationException("Cannot specify normalization/weighting without specifying grouping/aggregation");
 		    	}
 		    	else {
-		    		QueryResults groupedQr = qr.normalizeBy(normalizeBy).groupBy(groupBy);
+		    		Shapefile aggregateTo = Shapefile.getShapefile(groupBy);
+		    		SpatialLayer weightBy = SpatialLayer.getPointSetCategory(normalizeBy); 
+		    		QueryResults groupedQr = qr.aggregate(aggregateTo, weightBy);
+		    		
+		    		//QueryResults groupedQr = qr.normalizeBy(normalizeBy).groupBy(groupBy);
 
+		    		// TODO: don't loop over everything here, only the items in this tile
 		    		for(QueryResultItem item : groupedQr.items.values()) {
 
 		            	Color color = null;
