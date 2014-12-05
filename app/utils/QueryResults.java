@@ -69,7 +69,7 @@ public class QueryResults {
        valuesArray.addAll(values);
        
        //linearClassifier = new LinearClassifier(values, new Color(0.5f, 0.5f, 1.0f, 0.5f), new Color(0.0f, 0.0f, 1.0f, 0.5f));
-       jenksClassifier = new NaturalBreaksClassifier(valuesArray, 10, new Color(1.0f, 1.0f, 1.0f, 0.25f), new Color(0.0f, 0.0f, 1.0f, 0.5f));
+       jenksClassifier = new NaturalBreaksClassifier(this, 10, new Color(1.0f, 1.0f, 1.0f, 0.25f), new Color(0.0f, 0.0f, 1.0f, 0.5f));
 		
 	}
 	
@@ -104,6 +104,9 @@ public class QueryResults {
 				
 				List<ShapeFeature> normalizerMatches = new ArrayList<ShapeFeature>();
 				
+				
+				// We probably don't need to be looping over the shapefile, as the query results contain
+				// a reference to the feature.
 				for(Object o : normalizerItemIndex.query(item.feature.geom.getEnvelopeInternal())) {
 		
 					for(PreparedPolygon pp : item.feature.getPreparedPolygons()) {
@@ -122,6 +125,11 @@ public class QueryResults {
 					i.normalizedTotal += sf.getAttributeSum(sd.getAttributeIds());
 				}
 				
+				// The value of the normalized item is value / weight. This isn't really a 
+				// meaningful number, unless I misunderstand something, as changing the size of the original
+				// areal unit changes the weight (normalizedTotal) a lot but does not change the value
+				// substantially. This number is never exposed to the UI and should probably be removed,
+				// unless there is something I am misunderstanding.
 				if(item.value > 0 && i.normalizedTotal > 0)
 					i.value = item.value / i.normalizedTotal;
 				
@@ -143,7 +151,7 @@ public class QueryResults {
 		       
 		    valuesArray.addAll(values);
 			
-			normalizedQr.jenksClassifier = new NaturalBreaksClassifier(valuesArray, 10, new Color(1.0f, 1.0f, 1.0f, 0.5f), new Color(0.0f, 0.0f, 1.0f, 0.5f));
+			normalizedQr.jenksClassifier = new NaturalBreaksClassifier(normalizedQr, 10, new Color(1.0f, 1.0f, 1.0f, 0.5f), new Color(0.0f, 0.0f, 1.0f, 0.5f));
 			//normalizedQr.linearClassifier = new LinearClassifier(values, new Color(0.5f, 0.5f, 1.0f, 0.5f), new Color(0.0f, 0.0f, 1.0f, 0.5f));
 			  
 			
@@ -216,7 +224,7 @@ public class QueryResults {
 		       
 		    valuesArray.addAll(values);
 			
-			groupedQr.jenksClassifier = new NaturalBreaksClassifier(valuesArray, 10, new Color(1.0f, 1.0f, 1.0f, 0.5f), new Color(0.0f, 0.0f, 1.0f, 0.5f));
+			groupedQr.jenksClassifier = new NaturalBreaksClassifier(groupedQr, 10, new Color(1.0f, 1.0f, 1.0f, 0.5f), new Color(0.0f, 0.0f, 1.0f, 0.5f));
 			//groupedQr.linearClassifier = new LinearClassifier(values, new Color(0.5f, 0.5f, 1.0f, 0.5f), new Color(0.0f, 0.0f, 1.0f, 0.5f));
 			
 			grouped.put(shapefileId, groupedQr);

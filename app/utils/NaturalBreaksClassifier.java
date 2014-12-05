@@ -1,31 +1,48 @@
 package utils;
 
 import java.awt.Color;
-
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
+
+import utils.QueryResults.QueryResultItem;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class NaturalBreaksClassifier {
 	
 	public List<Bin> bins = new ArrayList<Bin>();
 	
-	public NaturalBreaksClassifier(ArrayList<Double> list, int numCategories, Color color1, Color color2) {
+	public NaturalBreaksClassifier(QueryResults qr, int numCategories, Color color1, Color color2) {
 		
-		Collections.sort(list);
+		double[] qrVals = new double[qr.items.size()];
+		short[] projected = new short[qr.items.size()];
 		
-		int[] values = buildJenksBreaks(list, numCategories);
+		Iterator<QueryResultItem> qrIt = qr.items.values().iterator();
+		for (int i = 0; i < qrVals.length; i++) {
+			QueryResultItem item = qrIt.next();
+			qrVals[i] = item.value;
+		}
+		
+		Arrays.sort(qrVals);
+		
+		for (int i = 0; i < qrVals.length; i++) {
+			projected[i] = project(qrVals[i], qr.maxValue, qr.minValue);
+		}
+		
+		int[] values = buildJenksBreaks(projected, numCategories);
 		
 		if(values.length == 0)
 			return;
 		
-		double min = list.get(0);
+		double min = qrVals[0];
         double next;
         double last = min;
 		
-		int span = (int) (Math.ceil((double) list.size() / (double)numCategories));
+		int span = (int) (Math.ceil((double) qrVals.length / (double)numCategories));
 		
 		Bin bin;	
 		
@@ -36,26 +53,30 @@ public class NaturalBreaksClassifier {
 			
 			if(i==numCategories) {
                 active = values[numCategories - 1];
-                next = ((Double)list.get(active)).doubleValue();
+                next = qrVals[active];
                 System.out.println("val "+(i*span)+":"+last+":"+next);
 
                 bin = new Bin(last, next+0.0000001, c);
             }
             else {
                 active = values[i - 1];
-                next = ((Double)list.get(active)).doubleValue();
+                next = qrVals[active];
                 bin = new Bin(last,next, c);
             }
             
             last = next;
             bins.add(bin);
         }
-		
-		// avoid roundoff errors by expanding lower and upper classes
-		bins.get(0).lower -= 100;
-		bins.get(bins.size() - 1).upper += 100;
 	}
 	
+	/**
+	 * Project value to a short, using the full range of short, for a scale between minValue and maxValue.
+	 */
+	private short project(double value, double maxValue, double minValue) {
+		double frac = (value - minValue) / (maxValue - minValue);
+		return (short) Math.round(frac * ((int) Short.MAX_VALUE - (int) Short.MIN_VALUE) + Short.MIN_VALUE); 
+	}
+
 	public Color getColorValue(Double v) {
 		for(Bin b : bins) {
 			if(b.lower <= v && b.upper > v)
@@ -65,42 +86,54 @@ public class NaturalBreaksClassifier {
 		return null;
 	}
 
-	private int[] buildJenksBreaks(ArrayList<Double> list, int numclass) {
+	/**
+	 * Calculate Jenks breaks for a list of shorts. We use integers to make math fast; see the
+	 * project() and unproject() functions
+	 * @returns indices of the breaks in the data 
+	 */
+	private int[] buildJenksBreaks(short[] list, int numclass) {
 		try {
 			
 			//int numclass;
-			int numdata = list.size();
-				        
-			double[][] mat1 = new double[numdata + 1][numclass + 1];
-			double[][] mat2 = new double[numdata + 1][numclass + 1];
+			int numdata = list.length;
+
+			long[][] mat1 = new long[numdata + 1][numclass + 1];
+			long[][] mat2 = new long[numdata + 1][numclass + 1];
 				        
 			for (int i = 1; i <= numclass; i++) {
 				mat1[1][i] = 1;
 				mat2[1][i] = 0;
 				for (int j = 2; j <= numdata; j++)
-					mat2[j][i] = Double.MAX_VALUE;
+					mat2[j][i] = Long.MAX_VALUE;
 			}
 			
-			double v = 0;
+			long v = 0;
 			
+			long s1, s2, w, val;
+			int i3, i4;
 			for (int l = 2; l <= numdata; l++) {
 				
-				double s1 = 0;
-				double s2 = 0;
-				double w = 0;
+				s1 = 0;
+				s2 = 0;
+				w = 0;
 				
 				for (int m = 1; m <= l; m++) {
 					
-					int i3 = l - m + 1;
-					double val = ((Double)list.get(i3-1)).doubleValue();
+					i3 = l - m + 1;
+					val = list[i3-1];
 	
 					s2 += val * val;
 					s1 += val;
 					
 					w++;
+					
+					// there is a divide sign here and all of the variables involved are integers.
+					// this should cause good programmers everywhere to shudder, however it is fine
+					// because s1^2 has to be a multiple of w, because s1 has to be a multiple of w,
+					// because an integer has been added to s1 each time w has been incremented  
 					v = s2 - (s1 * s1) / w;
 					
-					int i4 = i3 - 1;
+					i4 = i3 - 1;
 					
 					if (i4 != 0) {
 						for (int j = 2; j <= numclass; j++) {
@@ -119,7 +152,8 @@ public class NaturalBreaksClassifier {
 			int k = numdata;
 			int[] kclass = new int[numclass];
 			
-			kclass[numclass - 1] = list.size() - 1;
+			// set the highest break to the maximum data value
+			kclass[numclass - 1] = list.length - 1;
 			
 			for (int j = numclass; j >= 2; j--) {
 			
