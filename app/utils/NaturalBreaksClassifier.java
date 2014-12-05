@@ -1,6 +1,7 @@
 package utils;
 
 import java.awt.Color;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -49,6 +50,10 @@ public class NaturalBreaksClassifier {
             last = next;
             bins.add(bin);
         }
+		
+		// avoid roundoff errors by expanding lower and upper classes
+		bins.get(0).lower -= 100;
+		bins.get(bins.size() - 1).upper += 100;
 	}
 	
 	public Color getColorValue(Double v) {
