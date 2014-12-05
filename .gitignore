@@ -17,3 +17,5 @@ dist
 /.settings
 /data
 s3credentials
+*.class
+conf/application.conf
