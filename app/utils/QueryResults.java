@@ -29,7 +29,7 @@ public class QueryResults {
 
 	public ConcurrentHashMap<String, QueryResultItem> items = new ConcurrentHashMap<String, QueryResultItem>();
 	public ConcurrentHashMap<String, QueryResults> normalized = new ConcurrentHashMap<String, QueryResults>();
-	public ConcurrentHashMap<String, QueryResults> gruoped = new ConcurrentHashMap<String, QueryResults>();
+	public ConcurrentHashMap<String, QueryResults> grouped = new ConcurrentHashMap<String, QueryResults>();
 	
 	public LinearClassifier linearClassifier;
 	public NaturalBreaksClassifier jenksClassifier;
@@ -154,10 +154,10 @@ public class QueryResults {
 	}
 	
 	public QueryResults groupBy(String pointSetId) {
-		synchronized(gruoped) {
+		synchronized(grouped) {
 			
-			if(gruoped.containsKey(pointSetId))
-				return gruoped.get(pointSetId);
+			if(grouped.containsKey(pointSetId))
+				return grouped.get(pointSetId);
 			
 			SpatialLayer sd = SpatialLayer.getPointSetCategory(pointSetId);
 			
@@ -218,7 +218,7 @@ public class QueryResults {
 			groupedQr.jenksClassifier = new NaturalBreaksClassifier(valuesArray, 10, new Color(1.0f, 1.0f, 1.0f, 0.5f), new Color(0.0f, 0.0f, 1.0f, 0.5f));
 			//groupedQr.linearClassifier = new LinearClassifier(values, new Color(0.5f, 0.5f, 1.0f, 0.5f), new Color(0.0f, 0.0f, 1.0f, 0.5f));
 			
-			gruoped.put(pointSetId, groupedQr);
+			grouped.put(pointSetId, groupedQr);
 			
 			return groupedQr;
 		}
