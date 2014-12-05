@@ -16,10 +16,11 @@ public class NaturalBreaksClassifier {
 	
 	public List<Bin> bins = new ArrayList<Bin>();
 	
-	public NaturalBreaksClassifier(QueryResults qr, int numCategories, Color color1, Color color2) {
-		
+	public NaturalBreaksClassifier(QueryResults qr, int numCategories, Color color1, Color color2) {		
 		double[] qrVals = new double[qr.items.size()];
 		short[] projected = new short[qr.items.size()];
+		
+		System.err.println("starting natural breaks classification with " + qrVals.length + " values");
 		
 		Iterator<QueryResultItem> qrIt = qr.items.values().iterator();
 		for (int i = 0; i < qrVals.length; i++) {
@@ -54,7 +55,6 @@ public class NaturalBreaksClassifier {
 			if(i==numCategories) {
                 active = values[numCategories - 1];
                 next = qrVals[active];
-                System.out.println("val "+(i*span)+":"+last+":"+next);
 
                 bin = new Bin(last, next+0.0000001, c);
             }
@@ -67,6 +67,8 @@ public class NaturalBreaksClassifier {
             last = next;
             bins.add(bin);
         }
+		
+		System.out.println("finished natural breaks classification");
 	}
 	
 	/**
