@@ -148,7 +148,7 @@ public class Analyst {
         req.toTime     = 9 * 60 * 60;
         req.walkSpeed  = 1.4f;
         req.bikeSpeed  = 4.1f;
-        req.streetTime = 90;
+        req.streetTime = 15;
         req.accessTime = 15;
         req.date       = new YearMonthDay("2014-12-04").toJoda();
 		
