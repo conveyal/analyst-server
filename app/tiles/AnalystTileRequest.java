@@ -3,6 +3,7 @@ package tiles;
 import java.awt.Color;
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 
 import models.Attribute;
@@ -626,8 +627,6 @@ public static class QueryTile extends AnalystTileRequest {
 		    		Shapefile aggregateTo = Shapefile.getShapefile(groupBy);
 		    		SpatialLayer weightBy = SpatialLayer.getPointSetCategory(normalizeBy); 
 		    		QueryResults groupedQr = qr.aggregate(aggregateTo, weightBy);
-		    		
-		    		//QueryResults groupedQr = qr.normalizeBy(normalizeBy).groupBy(groupBy);
 
 		    		// TODO: don't loop over everything here, only the items in this tile
 		    		for(QueryResultItem item : groupedQr.items.values()) {
