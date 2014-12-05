@@ -16,6 +16,7 @@ import com.vividsolutions.jts.geom.prep.PreparedPolygon;
 import com.vividsolutions.jts.index.strtree.STRtree;
 
 import models.Query;
+import models.Shapefile;
 import models.SpatialLayer;
 import models.Shapefile.ShapeFeature;
 
@@ -153,13 +154,13 @@ public class QueryResults {
 		
 	}
 	
-	public QueryResults groupBy(String pointSetId) {
+	public QueryResults groupBy(String shapefileId) {
 		synchronized(grouped) {
 			
-			if(grouped.containsKey(pointSetId))
-				return grouped.get(pointSetId);
+			if(grouped.containsKey(shapefileId))
+				return grouped.get(shapefileId);
 			
-			SpatialLayer sd = SpatialLayer.getPointSetCategory(pointSetId);
+			Shapefile shp = Shapefile.getShapefile(shapefileId);
 			
 			STRtree groupItemIndex = new STRtree(items.values().size());
 			
@@ -171,7 +172,7 @@ public class QueryResults {
 			
 			QueryResults groupedQr = new QueryResults();
 			
-			for(ShapeFeature item : sd.getShapefile().getShapeFeatureStore().getAll()) {
+			for(ShapeFeature item : shp.getShapeFeatureStore().getAll()) {
 			
 				List<QueryResultItem> groupedMatches = new ArrayList<QueryResultItem>();
 				
@@ -218,7 +219,7 @@ public class QueryResults {
 			groupedQr.jenksClassifier = new NaturalBreaksClassifier(valuesArray, 10, new Color(1.0f, 1.0f, 1.0f, 0.5f), new Color(0.0f, 0.0f, 1.0f, 0.5f));
 			//groupedQr.linearClassifier = new LinearClassifier(values, new Color(0.5f, 0.5f, 1.0f, 0.5f), new Color(0.0f, 0.0f, 1.0f, 0.5f));
 			
-			grouped.put(pointSetId, groupedQr);
+			grouped.put(shapefileId, groupedQr);
 			
 			return groupedQr;
 		}
