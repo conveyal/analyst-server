@@ -16,69 +16,61 @@ public class NaturalBreaksClassifier {
 	
 	public List<Bin> bins = new ArrayList<Bin>();
 	
-	public NaturalBreaksClassifier(QueryResults qr, int numCategories, Color color1, Color color2) {		
-		double[] qrVals = new double[qr.items.size()];
-		short[] projected = new short[qr.items.size()];
-		
-		System.err.println("starting natural breaks classification with " + qrVals.length + " values");
+	public NaturalBreaksClassifier(QueryResults qr, int numCategories, Color color1, Color color2) {
+		double[] list = new double[qr.items.size()];
 		
 		Iterator<QueryResultItem> qrIt = qr.items.values().iterator();
-		for (int i = 0; i < qrVals.length; i++) {
-			QueryResultItem item = qrIt.next();
-			qrVals[i] = item.value;
+		
+		for (int i = 0; i < list.length; i++) {
+			list[i] = qrIt.next().value;
 		}
 		
-		Arrays.sort(qrVals);
+		Arrays.sort(list);
 		
-		for (int i = 0; i < qrVals.length; i++) {
-			projected[i] = project(qrVals[i], qr.maxValue, qr.minValue);
+		// If there are more than 2000 values, take a systematic sample
+		// This is what is done by QGIS:
+		// https://github.com/qgis/QGIS/blob/d4f64d9bde43c05458e867d04e73bc804435e7b6/src/core/symbology-ng/qgsgraduatedsymbolrendererv2.cpp#L832
+		// QGIS also takes a 10% sample if that is larger, but that's not really necessary because
+		// the central limit theorem states that confidence intervals around statistics are based
+		// on the sample size, not the population size.
+		
+		// We use a systematic sample so that the renderer is deterministic. We take it after sorting
+		// so that it is not influenced by the order of the input. The systematic sample should
+		// approximate a random sample because it is taken over the entire range of input data
+		if (list.length > 2000) {
+			// figure out the increment to get ~2000 values
+			int increment = (int) Math.floor(list.length / 2000D);
+			
+			// and how many values will that generate?
+			// we add two because we also use the minimum and the maximum
+			int sampleSize = (int) Math.floor(list.length / (double) increment) + 2;
+			
+			double[] sample = new double[sampleSize];
+			
+			// Make sure the min and the max values get in there.
+			// maintain the array in sorted order though.
+			sample[0] = qr.minValue;
+			sample[sampleSize - 1] = qr.maxValue;
+			
+			for (int i = 0; i < sampleSize - 2; i++) {
+				sample[i + 1] = list[i * increment];
+			}
+			
+			list = sample;
 		}
 		
-		int[] values = buildJenksBreaks(projected, numCategories);
+		double[] breaks = buildJenksBreaks(list, numCategories);
 		
-		if(values.length == 0)
+		if(breaks.length == 0)
 			return;
 		
-		double min = qrVals[0];
-        double next;
-        double last = min;
-		
-		int span = (int) (Math.ceil((double) qrVals.length / (double)numCategories));
-		
-		Bin bin;	
-		
-		for(int i = 1; i <= numCategories; i++) {
-			int active;
-			
-			Color c = interpolateColor(color1, color2, (float)((float)i / (float)numCategories));
-			
-			if(i==numCategories) {
-                active = values[numCategories - 1];
-                next = qrVals[active];
-
-                bin = new Bin(last, next+0.0000001, c);
-            }
-            else {
-                active = values[i - 1];
-                next = qrVals[active];
-                bin = new Bin(last,next, c);
-            }
-            
-            last = next;
-            bins.add(bin);
-        }
-		
-		System.out.println("finished natural breaks classification");
+		for (int i = 0; i < numCategories; i++) {
+			// numcategories - 1: fencepost problem. The highest value should get color2
+			Color c = interpolateColor(color1, color2, (float)((float)i / (float) (numCategories - 1)));
+			bins.add(new Bin(breaks[i], breaks[i + 1], c));
+		}
 	}
 	
-	/**
-	 * Project value to a short, using the full range of short, for a scale between minValue and maxValue.
-	 */
-	private short project(double value, double maxValue, double minValue) {
-		double frac = (value - minValue) / (maxValue - minValue);
-		return (short) Math.round(frac * ((int) Short.MAX_VALUE - (int) Short.MIN_VALUE) + Short.MIN_VALUE); 
-	}
-
 	public Color getColorValue(Double v) {
 		for(Bin b : bins) {
 			if(b.lower <= v && b.upper > v)
@@ -88,54 +80,42 @@ public class NaturalBreaksClassifier {
 		return null;
 	}
 
-	/**
-	 * Calculate Jenks breaks for a list of shorts. We use integers to make math fast; see the
-	 * project() and unproject() functions
-	 * @returns indices of the breaks in the data 
-	 */
-	private int[] buildJenksBreaks(short[] list, int numclass) {
+	private double[] buildJenksBreaks(double[] list, int numclass) {
 		try {
 			
 			//int numclass;
 			int numdata = list.length;
-
-			long[][] mat1 = new long[numdata + 1][numclass + 1];
-			long[][] mat2 = new long[numdata + 1][numclass + 1];
+				        
+			double[][] mat1 = new double[numdata + 1][numclass + 1];
+			double[][] mat2 = new double[numdata + 1][numclass + 1];
 				        
 			for (int i = 1; i <= numclass; i++) {
 				mat1[1][i] = 1;
 				mat2[1][i] = 0;
 				for (int j = 2; j <= numdata; j++)
-					mat2[j][i] = Long.MAX_VALUE;
+					mat2[j][i] = Double.MAX_VALUE;
 			}
 			
-			long v = 0;
+			double v = 0;
 			
-			long s1, s2, w, val;
-			int i3, i4;
 			for (int l = 2; l <= numdata; l++) {
 				
-				s1 = 0;
-				s2 = 0;
-				w = 0;
+				double s1 = 0;
+				double s2 = 0;
+				double w = 0;
 				
 				for (int m = 1; m <= l; m++) {
 					
-					i3 = l - m + 1;
-					val = list[i3-1];
+					int i3 = l - m + 1;
+					double val = ((Double)list[i3-1]).doubleValue();
 	
 					s2 += val * val;
 					s1 += val;
 					
 					w++;
-					
-					// there is a divide sign here and all of the variables involved are integers.
-					// this should cause good programmers everywhere to shudder, however it is fine
-					// because s1^2 has to be a multiple of w, because s1 has to be a multiple of w,
-					// because an integer has been added to s1 each time w has been incremented  
 					v = s2 - (s1 * s1) / w;
 					
-					i4 = i3 - 1;
+					int i4 = i3 - 1;
 					
 					if (i4 != 0) {
 						for (int j = 2; j <= numclass; j++) {
@@ -152,10 +132,11 @@ public class NaturalBreaksClassifier {
 			}
 	
 			int k = numdata;
-			int[] kclass = new int[numclass];
+			double[] breaks = new double[numclass + 1];
 			
-			// set the highest break to the maximum data value
-			kclass[numclass - 1] = list.length - 1;
+			// list is sorted, first and last breaks are min and max
+			breaks[numclass] = list[numdata - 1] + 0.0000001;
+			breaks[0] = list[0] - 0.0000001;
 			
 			for (int j = numclass; j >= 2; j--) {
 			
@@ -165,17 +146,17 @@ public class NaturalBreaksClassifier {
 					
 					//System.out.println(mat2[k][j]);
 					
-					kclass[j - 2] = id;
+					breaks[j - 1] = list[id];
 	
 					k = (int) mat1[k][j] - 1;
 				
 				
 			}
 			
-			return kclass;
+			return breaks;
 		}
 		catch(Exception e) {
-		 return new int[0];	
+			return new double[0];
 		}
 	}
 
