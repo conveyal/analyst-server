@@ -17,6 +17,7 @@ import utils.NaturalBreaksClassifier.Bin;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.vividsolutions.jts.geom.Envelope;
+import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.prep.PreparedPolygon;
 import com.vividsolutions.jts.index.strtree.STRtree;
@@ -113,15 +114,22 @@ public class QueryResults {
 			Tuple2<String, String> key = new Tuple2<String, String> (aggregateTo.id, weightBy.id);
 			if (aggregated.containsKey(key))
 				return aggregated.get(key);
+						
+			// Do the features come from the same shapefile?
+			boolean sameShapefile = shapeFileId.equals(weightBy.shapeFileId);
 			
+			// if they don't come from the same shapefile, create the weights pycnoplactically
+			// we'll need a spatial index for that
+			STRtree weightIdx = null;
+			DataStore<ShapeFeature> weightStore = null;
 			
-			DataStore<ShapeFeature> weightStore = weightBy.getShapefile().getShapeFeatureStore();
-			
-			// TODO: should we allow weighting by information from another shapefile? It could
-			// be useful, but also has the potential to introduce error.
-			if (!shapeFileId.equals(weightBy.shapeFileId)) {
-				System.err.println("Cannot weight by attribute of other shapefile!");
-				return null;
+			if (!sameShapefile) {
+				// get the spatial index
+				weightIdx = weightBy.getShapefile().getSpatialIndex();
+			}
+			else {
+				// just use the id -> feature mapping directly
+				weightStore = weightBy.getShapefile().getShapeFeatureStore();
 			}
 			
 			// build a spatial index for the features of this queryresult
@@ -169,10 +177,39 @@ public class QueryResults {
 				// aggregate geography
 				double sumOfWeights = 0.0;
 				
-				for (QueryResultItem i : actualMatches) {
+				for (QueryResultItem item : actualMatches) {
 					// calculate the weight of this geography
-					double weight = weightStore.getById(i.feature.id).getAttributeSum(weightBy.getAttributeIds());
-					weightedVal += i.value * weight;
+					double weight;
+					
+					if (sameShapefile) {
+						weight = weightStore.getById(item.feature.id).getAttributeSum(weightBy.getAttributeIds());
+					}
+					else {
+						weight = 0;
+						
+						// query the spatial index
+						List<ShapeFeature> potentialWeights =
+								weightIdx.query(item.feature.geom.getEnvelopeInternal());
+						
+						for (ShapeFeature weightFeature : potentialWeights) {
+							// calculate the weight of the entire item geometry that we are weighting by
+							double totalWeight = weightFeature.getAttributeSum(weightBy.getAttributeIds()); 
+						
+							// figure out how much of this weight should be assigned to the original geometry
+							double weightArea = GeoUtils.getArea(weightFeature.geom);
+							
+							Geometry overlap = weightFeature.geom.intersection(item.feature.geom);
+							if (overlap.isEmpty())
+								continue;
+							
+							double overlapArea = GeoUtils.getArea(overlap);
+							
+							weight += totalWeight * (overlapArea / weightArea);
+								
+						}
+					}
+					
+					weightedVal += item.value * weight;
 					sumOfWeights += weight;
 				}
 				
