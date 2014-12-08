@@ -78,7 +78,7 @@ public class Gis extends Controller {
 	
 	static File TMP_PATH = new File("tmp/");
 	
-	public static Result query(String queryId, Integer timeLimit, String normalizeBy, String groupBy) {
+	public static Result query(String queryId, Integer timeLimit, String weightBy, String groupBy) {
     	
 		response().setHeader(CACHE_CONTROL, "no-cache, no-store, must-revalidate");
 		response().setHeader(PRAGMA, "no-cache");
@@ -111,7 +111,7 @@ public class Gis extends Controller {
     		       
             Collection<ShapeFeature> features = sd.getShapefile().getShapeFeatureStore().getAll();
          
-            if(normalizeBy == null) {
+            if(weightBy == null) {
 	            
             	ArrayList<String> fields = new ArrayList<String>();
             	
@@ -143,16 +143,16 @@ public class Gis extends Controller {
         	
             	if(groupBy == null) {
             		
-            		return badRequest("Must specify a group by clause when specifying a normalize by clause!");
+            		return badRequest("Must specify a weight by clause when specifying a normalize by clause!");
             
             	}
             	else {
             		
                 	
-                	SpatialLayer sdNorm = SpatialLayer.getPointSetCategory(normalizeBy);
-                	Shapefile aggregateTo = Shapefile.getShapefile(groupBy);
+                	SpatialLayer sdNorm = SpatialLayer.getPointSetCategory(weightBy);
+                	Shapefile aggregateToSf = Shapefile.getShapefile(groupBy);
                 	
-            		QueryResults groupedQr = qr.aggregate(aggregateTo, sdNorm);
+            		QueryResults groupedQr = qr.aggregate(aggregateToSf, sdNorm);
             		            		
             		ArrayList<String> fields = new ArrayList<String>();
 
@@ -161,7 +161,7 @@ public class Gis extends Controller {
                 	ArrayList<GisShapeFeature> gisFeatures = new ArrayList<GisShapeFeature>();
                 	
                 	
-                	for(ShapeFeature feature : aggregateTo.getShapeFeatureStore().getAll()) {
+                	for(ShapeFeature feature : aggregateToSf.getShapeFeatureStore().getAll()) {
     	            	
                 		if(groupedQr.items.containsKey(feature.id)) {
 	                		GisShapeFeature gf = new GisShapeFeature();
@@ -174,7 +174,7 @@ public class Gis extends Controller {
     	            	}
                 	}
                 	
-                	shapeName += "_" + sd.name.replaceAll("\\W+", "") + "_norm_" + sdNorm.name.replaceAll("\\W+", "") + "_group_" + aggregateTo.name.replaceAll("\\W+", "").toLowerCase();
+                	shapeName += "_" + sd.name.replaceAll("\\W+", "") + "_norm_" + sdNorm.name.replaceAll("\\W+", "") + "_group_" + aggregateToSf.name.replaceAll("\\W+", "").toLowerCase();
                 	
                 	return ok(generateZippedShapefile(shapeName, fields, gisFeatures));
             	}
