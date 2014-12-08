@@ -21,6 +21,7 @@ import javax.imageio.ImageIO;
 
 import models.Query;
 import models.Shapefile.ShapeFeature;
+import models.Shapefile;
 import models.SpatialLayer;
 import models.Attribute;
 
@@ -138,45 +139,21 @@ public class Gis extends Controller {
             }
             else {
             
-            	QueryResults normalizeQr = qr.normalizeBy(normalizeBy);
-            	
-            	SpatialLayer sdNorm = SpatialLayer.getPointSetCategory(normalizeBy);
+
         	
             	if(groupBy == null) {
             		
-            		ArrayList<String> fields = new ArrayList<String>();
-                	
-            		fields.add("normval");
-                	fields.add(sd.name.replaceAll("\\W+", ""));
-                	fields.add(sdNorm.name.replaceAll("\\W+", ""));
-                	
-                	ArrayList<GisShapeFeature> gisFeatures = new ArrayList<GisShapeFeature>();
-                	
-                	for(ShapeFeature feature : features) {
-    	            	
-                		if(normalizeQr.items.containsKey(feature.id)) {
-	                		GisShapeFeature gf = new GisShapeFeature();
-	                		gf.geom = feature.geom;
-	                		gf.id = feature.id;
-	                		
-	                		gf.fields.add(normalizeQr.items.get(feature.id).value);
-	                		gf.fields.add(normalizeQr.items.get(feature.id).original);
-	                		gf.fields.add(normalizeQr.items.get(feature.id).normalizedTotal);
-	                		
-	                		gisFeatures.add(gf);
-    	            	}
-                	}
-                	shapeName += "_" + sd.name.replaceAll("\\W+", "") + "_norm_" + sdNorm.name.replaceAll("\\W+", "").toLowerCase();
-                	
-                	return ok(generateZippedShapefile(shapeName, fields, gisFeatures));
+            		return badRequest("Must specify a group by clause when specifying a normalize by clause!");
             
             	}
             	else {
             		
-            		QueryResults gruopedQr = normalizeQr.groupBy(groupBy);
-            		
-            		SpatialLayer sdGroup = SpatialLayer.getPointSetCategory(groupBy);
-            		
+                	
+                	SpatialLayer sdNorm = SpatialLayer.getPointSetCategory(normalizeBy);
+                	Shapefile aggregateTo = Shapefile.getShapefile(groupBy);
+                	
+            		QueryResults groupedQr = qr.aggregate(aggregateTo, sdNorm);
+            		            		
             		ArrayList<String> fields = new ArrayList<String>();
 
                 	fields.add("groupval");
@@ -184,20 +161,20 @@ public class Gis extends Controller {
                 	ArrayList<GisShapeFeature> gisFeatures = new ArrayList<GisShapeFeature>();
                 	
                 	
-                	for(ShapeFeature feature : sdGroup.getShapefile().getShapeFeatureStore().getAll()) {
+                	for(ShapeFeature feature : aggregateTo.getShapeFeatureStore().getAll()) {
     	            	
-                		if(gruopedQr.items.containsKey(feature.id)) {
+                		if(groupedQr.items.containsKey(feature.id)) {
 	                		GisShapeFeature gf = new GisShapeFeature();
 	                		gf.geom = feature.geom;
 	                		gf.id = feature.id;
 	                		
-	                		gf.fields.add(gruopedQr.items.get(feature.id).value);
+	                		gf.fields.add(groupedQr.items.get(feature.id).value);
 	                		
 	                		gisFeatures.add(gf);
     	            	}
                 	}
                 	
-                	shapeName += "_" + sd.name.replaceAll("\\W+", "") + "_norm_" + sdNorm.name.replaceAll("\\W+", "") + "_group_" + sdGroup.name.replaceAll("\\W+", "").toLowerCase();
+                	shapeName += "_" + sd.name.replaceAll("\\W+", "") + "_norm_" + sdNorm.name.replaceAll("\\W+", "") + "_group_" + aggregateTo.name.replaceAll("\\W+", "").toLowerCase();
                 	
                 	return ok(generateZippedShapefile(shapeName, fields, gisFeatures));
             	}
