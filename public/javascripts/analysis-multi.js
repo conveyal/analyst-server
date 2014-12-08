@@ -242,15 +242,17 @@ var Analyst = Analyst || {};
         this.$('#aggregation-controls').slideDown();
 
         this.weightById = this.$("#weightBy").val();
-        this.groupById = this.$('#groupBy').val();
+        this.weightByName = this.$('#weightBy :selected').text();
 
-        legendTitle = legendTitle + " weighted by " + $("#weightBy option:selected").text() +
-          " grouped by " + $("#groupBy option:selected").text();
+        this.groupById = this.$('#groupBy').val();
+        this.groupByName = this.$('#groupBy :selected').text();
       } else {
         this.$("#weightBy").prop("disabled", true);
         this.weightById = false;
+        this.weightByName = '';
 
         this.groupById = false;
+        this.groupByName = '';
         this.$("#groupBy").prop("disabled", true);
 
         this.$('#aggregation-controls').slideUp();
@@ -263,12 +265,20 @@ var Analyst = Analyst || {};
 
     refreshMap: function() {
       var target = this.$("#queryCheckbox");
-
-      var legendTitle = this.model.get("name");
-
       var _this = this;
 
       this.normalizeBy();
+
+      var legendTitle;
+      if (this.groupById) {
+        legendTitle = Messages('analysis.aggregated-title',
+          this.model.get("name"),
+          this.groupByName,
+          this.weightByName
+        );
+      } else {
+        legendTitle = Messages('analysis.accessibility-to', this.model.get("name"));
+      }
 
       if (target.prop("checked")) {
         if (A.map.hasLayer(this.queryOverlay))
@@ -284,7 +294,7 @@ var Analyst = Analyst || {};
         if (this.weightById)
           url = url + "&normalizeBy=" + this.weightById;
 
-        this.$("#legendTitle").html(legendTitle);
+        this.$(".legendTitle").text(legendTitle);
 
         var legendItemTemplate = Handlebars.getTemplate('analysis', 'query-legend-item')
 

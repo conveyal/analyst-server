@@ -109,6 +109,7 @@ analysis.aggregate-to=Aggregate to
 analysis.weight-by=Weighted by
 # {0} is replaced with the name of an indicator
 analysis.accessibility-to=Accessibility to {0}
+analysis.aggregated-title=Accessibility to {0} aggregated to {1} weighted by {2}
 
 analysis.group=Group
 analysis.dont-group=Don't Group

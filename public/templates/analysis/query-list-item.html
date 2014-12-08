@@ -20,7 +20,8 @@
 		{{/if}}
 
 		<div id="settings">
-			{{ I18n "analysis.accessibility-to" pointSetName }}
+			<!-- preinitialize to no aggregation -->
+			<div class="legendTitle">{{ I18n "analysis.accessibility-to" pointSetName }}</div>
 
 			<div class="form-group">
 		        <label>Travel Time Range: <span class="notes" id="timeLimitValue"></span></label>
@@ -53,7 +54,7 @@
 	        </div>
 
 	        <div id="legend" style="margin-top: 20px; margin-bottom: 20px;">
-	        	<h5 id="legendTitle"></h5>
+	        	<h5 class="legendTitle"></h5>
 		        <div id="legendData" class="indicator_box">
 
 
