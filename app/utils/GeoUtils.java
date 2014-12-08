@@ -47,7 +47,7 @@ public class GeoUtils {
    public static GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(),4326);
    public static GeometryFactory projectedGeometryFactory = new GeometryFactory(new PrecisionModel());
 
-   private static MathTransform ceaTransform = null;
+   private static MathTransform aeaTransform = null;
    
    /**
     * From
@@ -126,19 +126,18 @@ public class GeoUtils {
    }
    
    /**
-    * Get the area of a geometry, in square meters, by transforming to an equal-area projection.
+    * Get the area of a geometry, in undefined units, by transforming to an equal-area projection.
     * 
-    * http://epsg.io/3975 has a comment that equal-area properties are not maintained
-	* due to issues with cylindrical/ellipsoidal math, but I don't think that is
-	* correct. It's not the only place we use cylindrical math anyhow, and since we're using this
-	* to create ratios of small areas at similar latitudes it should be fine.			   
+    * The units are undefined because the scale varies across the map. However, two calls to getArea yield
+    * units that are comparable.
     */
    public static double getArea (Geometry geom) {
 	   // project the geometry to a cylindrical equal-area projection
-	   if (ceaTransform == null) {
+	   if (aeaTransform == null) {
 		   try {
-			   CoordinateReferenceSystem cea = CRS.decode("epsg:3975");
-			   ceaTransform = CRS.findMathTransform(DefaultGeographicCRS.WGS84, cea);
+			   CoordinateReferenceSystem aea = CRS.parseWKT("PROJCS[\"unnamed\",GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9108\"]],AUTHORITY[\"EPSG\",\"4326\"]],PROJECTION[\"Albers_Conic_Equal_Area\"],PARAMETER[\"standard_parallel_1\",0],PARAMETER[\"standard_parallel_2\",30],PARAMETER[\"latitude_of_center\",0],PARAMETER[\"longitude_of_center\",0],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"Meter\",1]]");
+
+			   aeaTransform = CRS.findMathTransform(DefaultGeographicCRS.WGS84, aea);
 		   } catch (Exception e) {
 			   throw new RuntimeException(e);
 		   }
@@ -146,7 +145,7 @@ public class GeoUtils {
 	   
 	   // perform the transformation
 	   try {
-		   Geometry newGeom = JTS.transform(geom, ceaTransform);
+		   Geometry newGeom = JTS.transform(geom, aeaTransform);
 		   return newGeom.getArea();
 	   } catch (Exception e) {
 		   throw new RuntimeException(e);

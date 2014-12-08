@@ -20,6 +20,7 @@ import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.prep.PreparedPolygon;
+import com.vividsolutions.jts.index.SpatialIndex;
 import com.vividsolutions.jts.index.strtree.STRtree;
 
 import models.Query;
@@ -49,6 +50,9 @@ public class QueryResults {
 	
 	public LinearClassifier linearClassifier;
 	public NaturalBreaksClassifier jenksClassifier;
+	
+	/** Cache the spatial index */
+	private transient SpatialIndex spIdx = null;
 	
 	public QueryResults() {
 		
@@ -120,7 +124,7 @@ public class QueryResults {
 			
 			// if they don't come from the same shapefile, create the weights pycnoplactically
 			// we'll need a spatial index for that
-			STRtree weightIdx = null;
+			SpatialIndex weightIdx = null;
 			DataStore<ShapeFeature> weightStore = null;
 			
 			if (!sameShapefile) {
@@ -133,41 +137,22 @@ public class QueryResults {
 			}
 			
 			// build a spatial index for the features of this queryresult
-			// TODO: cache spatial index
-			STRtree spIdx = new STRtree(items.values().size());
-			
-			for (QueryResultItem i : this.items.values()) {
-				// TODO: we should be indexing the envelopes not the centroids
-				spIdx.insert(i.feature.geom.getCentroid().getEnvelopeInternal(), i);
-			}
+			SpatialIndex spIdx = getSpatialIndex();
 			
 			QueryResults out = new QueryResults();
 			
 			// this does not actually load all the features into memory; this is a MapDB, and
 			// DataStore is delegating to MapDB's map values() function, which returns a disk-backed
 			// collection
-			for (final ShapeFeature f : aggregateTo.getShapeFeatureStore().getAll()) {
+			for (final ShapeFeature aggregateFeature : aggregateTo.getShapeFeatureStore().getAll()) {
 				// TODO: this should be moved into Akka actors and parallelized
 				// TODO: ensure STRtree is threadsafe. There is some debate on this point.
-				Envelope env = f.geom.getEnvelopeInternal();
+				Envelope env = aggregateFeature.geom.getEnvelopeInternal();
 				
 				// find all of the items that could overlap this geometry
 				List<QueryResultItem> potentialMatches = spIdx.query(env);
 				
-				// TODO: this is mapping each original geography to exactly one aggregate geography
-				// we should split original geographies and aggregate pycnoplactically.
-				Collection<QueryResultItem> actualMatches =
-						Collections2.filter(potentialMatches, new Predicate<QueryResultItem> () {
-					@Override
-					public boolean apply(QueryResultItem potentialMatch) {
-						Point centroid = potentialMatch.feature.geom.getCentroid();
-						for (PreparedPolygon p : f.getPreparedPolygons()) {
-							if (p.contains(centroid))
-								return true;
-						}
-						return false;
-					}
-				});
+				
 				
 				// this is the weighted value of all of the original geographies within this
 				// aggregate geography
@@ -177,19 +162,19 @@ public class QueryResults {
 				// aggregate geography
 				double sumOfWeights = 0.0;
 				
-				for (QueryResultItem item : actualMatches) {
-					// calculate the weight of this geography
+				for (QueryResultItem match : potentialMatches) {
+					// calculate the weight of this geography in the aggregate geography
 					double weight;
 					
 					if (sameShapefile) {
-						weight = weightStore.getById(item.feature.id).getAttributeSum(weightBy.getAttributeIds());
+						weight = weightStore.getById(match.feature.id).getAttributeSum(weightBy.getAttributeIds());
 					}
 					else {
 						weight = 0;
 						
 						// query the spatial index
 						List<ShapeFeature> potentialWeights =
-								weightIdx.query(item.feature.geom.getEnvelopeInternal());
+								weightIdx.query(match.feature.geom.getEnvelopeInternal());
 						
 						for (ShapeFeature weightFeature : potentialWeights) {
 							// calculate the weight of the entire item geometry that we are weighting by
@@ -198,7 +183,7 @@ public class QueryResults {
 							// figure out how much of this weight should be assigned to the original geometry
 							double weightArea = GeoUtils.getArea(weightFeature.geom);
 							
-							Geometry overlap = weightFeature.geom.intersection(item.feature.geom);
+							Geometry overlap = weightFeature.geom.intersection(match.feature.geom);
 							if (overlap.isEmpty())
 								continue;
 							
@@ -209,7 +194,17 @@ public class QueryResults {
 						}
 					}
 					
-					weightedVal += item.value * weight;
+					// this aggregate geography may not completely contain the original geography.
+					// discount weight to account for that.
+					
+					Geometry overlap = match.feature.geom.intersection(aggregateFeature.geom);
+					
+					if (overlap.isEmpty())
+						continue;
+					
+					weight *= GeoUtils.getArea(overlap) / GeoUtils.getArea(match.feature.geom);
+					
+					weightedVal += match.value * weight;
 					sumOfWeights += weight;
 				}
 				
@@ -217,8 +212,8 @@ public class QueryResults {
 				QueryResultItem item = new QueryResultItem();
 				// don't divide by zero
 				item.value = sumOfWeights > 0.0000001 ? weightedVal / sumOfWeights : 0;
-				item.feature = f;
-				out.items.put(f.id, item);
+				item.feature = aggregateFeature;
+				out.items.put(aggregateFeature.id, item);
 				out.shapeFileId = aggregateTo.id;
 				
 				if (out.maxValue == null || item.value > out.maxValue)
@@ -236,7 +231,30 @@ public class QueryResults {
 			return out;
 		}
 	}	
-       
+    
+	/** Get a spatial index for the items of this queryresults */
+	public SpatialIndex getSpatialIndex () {
+		return getSpatialIndex(false);
+	}
+	
+	/**
+	 * Get a spatial index for the items of this queryresults.
+	 * @param forceRebuild force the spatial index to be rebuilt.
+	 * Should be set to true if the items of the result have changed in number or
+	 * geography (if they've changed in value there is no need to rebuild).
+	 */
+	public SpatialIndex getSpatialIndex (boolean forceRebuild) {
+		if (forceRebuild || spIdx == null) {
+			spIdx = new STRtree(items.size());
+			
+			for (QueryResultItem i : this.items.values()) {
+				spIdx.insert(i.feature.geom.getEnvelopeInternal(), i);
+			}
+		}
+		
+		return spIdx;
+	}
+
 	public class QueryResultItem {
 		public ShapeFeature feature;
 		public Double value = 0.0;
