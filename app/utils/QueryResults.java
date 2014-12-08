@@ -40,6 +40,11 @@ public class QueryResults {
 	public Double maxValue = null;
 	
 	/**
+	 * Number of classes to display on the map. 
+	 */
+	public static final int nClasses = 6;
+	
+	/**
 	 * From whence do the geometries of this QueryResults come?
 	 */
 	public String shapeFileId;
@@ -82,7 +87,7 @@ public class QueryResults {
        shapeFileId = sd.shapeFileId;
        
        //linearClassifier = new LinearClassifier(values, new Color(0.5f, 0.5f, 1.0f, 0.5f), new Color(0.0f, 0.0f, 1.0f, 0.5f));
-       jenksClassifier = new NaturalBreaksClassifier(this, 10, new Color(1.0f, 1.0f, 1.0f, 0.25f), new Color(0.0f, 0.0f, 1.0f, 0.5f));
+       jenksClassifier = new NaturalBreaksClassifier(this, nClasses, new Color(1.0f, 1.0f, 1.0f, 0.25f), new Color(0.0f, 0.0f, 1.0f, 0.5f));
 		
 	}
 	
@@ -223,7 +228,7 @@ public class QueryResults {
 	        		out.minValue = item.value;
         	}
 			
-			out.jenksClassifier = new NaturalBreaksClassifier(out, 10, new Color(1.0f, 1.0f, 1.0f, 0.5f), new Color(0.0f, 0.0f, 1.0f, 0.5f));
+			out.jenksClassifier = new NaturalBreaksClassifier(out, nClasses, new Color(1.0f, 1.0f, 1.0f, 0.5f), new Color(0.0f, 0.0f, 1.0f, 0.5f));
 			out.shapeFileId = aggregateTo.id;
 			
 			aggregated.put(key, out);
