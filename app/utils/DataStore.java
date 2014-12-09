@@ -135,4 +135,8 @@ public class DataStore<T> {
 		return map.keySet().size();
 	}
 	
+	public boolean contains (String id) {
+		return map.containsKey(id);
+	}
+	
 }
