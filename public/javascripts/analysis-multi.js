@@ -94,7 +94,7 @@ var Analyst = Analyst || {};
         }
       });
 
-      this.mode = "TRANSIT";
+      this.mode = "WALK,TRANSIT";
 
       this.$('input[name=mode1]:radio').on('change', function(event) {
         _this.mode = _this.$('input:radio[name=mode1]:checked').val();

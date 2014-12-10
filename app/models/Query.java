@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.opentripplanner.analyst.ResultSet;
 import org.opentripplanner.profile.ProfileRequest;
+import org.opentripplanner.routing.core.TraverseModeSet;
 
 import otp.Analyst;
 import otp.AnalystProfileRequest;

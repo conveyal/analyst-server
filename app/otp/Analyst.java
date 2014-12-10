@@ -20,6 +20,7 @@ import org.opentripplanner.api.model.TimeSurfaceShort;
 import org.opentripplanner.api.param.LatLon;
 import org.opentripplanner.api.param.YearMonthDay;
 import org.opentripplanner.common.model.GenericLocation;
+import org.opentripplanner.profile.Option;
 import org.opentripplanner.profile.ProfileRequest;
 import org.opentripplanner.profile.ProfileResponse;
 import org.opentripplanner.profile.ProfileRouter;
@@ -132,8 +133,21 @@ public class Analyst {
         req.toTime     = 9 * 60 * 60;
         req.walkSpeed  = 1.4f;
         req.bikeSpeed  = 4.1f;
-        req.streetTime = 90;
+        req.carSpeed   = 20f;
+        req.streetTime = 10;
         req.date       = new YearMonthDay("2014-12-04").toJoda();
+		
+        req.maxWalkTime = 20;
+		req.maxBikeTime = 20;
+		req.maxCarTime  = 20;
+		req.minBikeTime = 5;
+		req.minCarTime  = 5;
+		
+		req.limit       = 10;
+		req.suboptimalMinutes = 5;
+		
+		// doesn't matter for analyst requests
+		req.orderBy = Option.SortOrder.AVG;
 		
         return req;
         
