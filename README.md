@@ -1,23 +1,20 @@
-analyst-server
-==============
+# Analyst Server
 
-A web-based data management and query design user interface for OTP Analyst. Allows users to create transport accessibility measures using OpenStreetMap, GTFS and custom spatial data inputs (e.g. jobs, schools, hospitals). 
+Analyst Server is a graphical user interface-driven, web-based tool for accessibility analysis of transportation networks:
 
-Currently released as an alpha version supporting functionality for single-point queries.
+<img src="splash.png" alt="Analyst Server performing accessibility analysis in Portland, Ore." />
 
-*REQUIRES*
+Its current focus is on public transportation systems, but that is not a design goal; that is simply what has been implemented
+so far. It allows the user to upload a representation of a transit network (real or hypothetical) and perform analysis
+against it almost immediately.
 
-+ Java 7 JRE (for use)
+## Installation
 
-+ Play Framework 2.2 (for development)
-+ Java 7 JDK (for development)
+First, clone the repository locally. The only external dependency is a copy of [Play](http://www.playframework.com) and
+a [vanilla extract](https://github.com/conveyal/vanilla-extract.git) server, which may be local or remote; configure its
+URL in conf/application.conf.
 
+Start the program by typing `activator run -mem <large number>`. The number is in megabytes, and should be as much as
+you can spare; I typically use 8GB (8192), although you should be able to get by with less. Create the first user by going to http://localhost:9000/createUser?username=...&password=...&email=...
 
-*INSTALL*
-
-Download and unzip a binary distibution [here](https://dl.dropboxusercontent.com/u/620583/analyst-server-alpha1-SNAPSHOT.zip). 
-
-On Mac or Linux run the bin/analyst-server application. On Windows run bin/analyst-server.bat. 
-
-Once started visit http://localhost:9000 using a web browser.
-
+Finally, browse to [http://localhost:9000](http://localhost:9000) to log in and start the tutorial.
