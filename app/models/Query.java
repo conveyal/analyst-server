@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.opentripplanner.analyst.ResultSet;
 import org.opentripplanner.profile.ProfileRequest;
+import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.TraverseModeSet;
 
 import otp.Analyst;
@@ -237,7 +238,16 @@ public class Query implements Serializable {
 				// create a profile request
 				ProfileRequest pr = Api.analyst.buildProfileRequest(q.scenarioId, q.mode, null);
 				
-				JobSpec js = new JobSpec(q.scenarioId, q.pointSetId + ".json",  q.pointSetId + ".json", pr);
+				JobSpec js;
+				
+				if (pr.transitModes.getMask() == 0) {
+					// this is not a transit request, no need for computationally-expensive profile routing 
+					RoutingRequest rr = Api.analyst.buildRequest(q.scenarioId, null, q.mode, 120);
+					js = new JobSpec(q.scenarioId, q.pointSetId + ".json",  q.pointSetId + ".json", rr);
+				}
+				else {
+					js = new JobSpec(q.scenarioId, q.pointSetId + ".json",  q.pointSetId + ".json", pr);
+				}
 
 				// plus a callback that registers how many work items have returned
 				class CounterCallback implements JobItemCallback {

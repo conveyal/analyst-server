@@ -51,7 +51,7 @@ public class Analyst {
 		
 	}
 	 
-	/*public AnalystRequest buildRequest(String graphId, GenericLocation latLon, String mode, int cutoffMinutes) {
+	public AnalystRequest buildRequest(String graphId, GenericLocation latLon, String mode, int cutoffMinutes) {
 		
 		// use center of graph extent if no location is specified
 		if(latLon == null)
@@ -67,20 +67,23 @@ public class Analyst {
 		}
 		req.modes.clear();
 		switch(mode) {
-			case "TRANSIT":
+			case "WALK,TRANSIT":
 				req.modes.setWalk(true);
 				req.modes.setTransit(true);
+				Logger.warn("Building a non-profile transit routing request, this probably shouldn't be happening.");
 				break;
 			case "CAR,TRANSIT,WALK":
 				req.modes.setCar(true);
 				req.modes.setTransit(true);
 				req.modes.setWalk(true);
 				req.kissAndRide = true;
+				Logger.warn("Building a non-profile transit routing request, this probably shouldn't be happening.");
 				req.walkReluctance = 1.0;
 				break;	
 			case "BIKE,TRANSIT":
 				req.modes.setBicycle(true);
 				req.modes.setTransit(true);
+				Logger.warn("Building a non-profile transit routing request, this probably shouldn't be happening.");
 				break;
 			case "CAR":
 				req.modes.setCar(true);
@@ -92,16 +95,10 @@ public class Analyst {
 				req.modes.setWalk(true);
 				break;
 		}
-	
-		
-        try {
-            req.setRoutingContext(this.graphService.getGraph(graphId));
-            return req;
-        } catch (VertexNotFoundException vnfe) {
-            //Logger.info("no vertex could be created near the origin point");
-            return null;
-        }
-    } */
+
+
+		return req;
+    }
 	
 	public AnalystProfileRequest buildProfileRequest(String graphId, String mode, LatLon latLon) {
 		
