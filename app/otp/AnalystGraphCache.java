@@ -28,7 +28,7 @@ import com.google.common.cache.LoadingCache;
 
 import controllers.Application;
 
-public class AnaylstGraphCache extends CacheLoader<String, Graph> {
+public class AnalystGraphCache extends CacheLoader<String, Graph> {
 	 private LoadingCache<String, Graph> graphCache;
 	 
 	 private HashSet<String> graphsBuilding = new HashSet<String>();
@@ -36,7 +36,7 @@ public class AnaylstGraphCache extends CacheLoader<String, Graph> {
 	 private int size = 200;
 	 private int concurrency = 4;
 	 
-	 public AnaylstGraphCache() {
+	 public AnalystGraphCache() {
 		 
 		 this.graphCache = CacheBuilder.newBuilder()
 				 .concurrencyLevel(concurrency)

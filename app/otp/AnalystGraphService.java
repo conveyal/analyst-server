@@ -19,7 +19,7 @@ import controllers.Application;
 
 
 public class AnalystGraphService implements GraphService { 
-	AnaylstGraphCache graphCache = new AnaylstGraphCache();
+	AnalystGraphCache graphCache = new AnalystGraphCache();
 	
 	public Graph getGraph(String graphId) {
 		return graphCache.get(graphId);
