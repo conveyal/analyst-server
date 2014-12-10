@@ -254,9 +254,8 @@ public class Query implements Serializable {
 					
 					@Override
 					public synchronized void onWorkResult(WorkResult res) {
-						// TODO: profile needs to save not only the maximum
-						// this is the maximum *time* to each point in the graph, so worst-case
-						Query.saveQueryResult(q.id, res.profile ? res.getMinimum() : res.getResult());
+						// TODO: profile needs to save not only the best case but all cases
+						Query.saveQueryResult(q.id, res.profile ? res.getBestCase() : res.getResult());
 					}
 				}
 				
