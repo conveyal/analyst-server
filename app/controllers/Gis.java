@@ -69,6 +69,7 @@ import utils.DirectoryZip;
 import utils.HaltonPoints;
 import utils.HashUtils;
 import utils.QueryResults;
+import utils.ResultEnvelope;
 import utils.QueryResults.QueryResultItem;
 import utils.TransportIndex;
 import utils.TransportIndex.TransitSegment;
@@ -78,28 +79,37 @@ public class Gis extends Controller {
 	
 	static File TMP_PATH = new File("tmp/");
 	
-	public static Result query(String queryId, Integer timeLimit, String weightBy, String groupBy) {
+	public static Result query(String queryId, Integer timeLimit, String weightBy, String groupBy,
+			String which) {
     	
 		response().setHeader(CACHE_CONTROL, "no-cache, no-store, must-revalidate");
 		response().setHeader(PRAGMA, "no-cache");
 		response().setHeader(EXPIRES, "0");
+		
+		ResultEnvelope.Which whichEnum;
+		try {
+			whichEnum = ResultEnvelope.Which.valueOf(which);
+		} catch (Exception e) {
+			// no need to pollute the console with a stack trace
+			return badRequest("Invalid value for which parameter");
+		}
 		
 		Query query = Query.getQuery(queryId);
 		
 		if(query == null)
 			return badRequest();
 		
-		String shapeName = (timeLimit / 60) + "_mins_";
+		String shapeName = (timeLimit / 60) + "_mins_" + whichEnum.toString().toLowerCase() + "_";
     	
     	try {
 	    
-    		String queryKey = queryId + "_" + timeLimit;
+    		String queryKey = queryId + "_" + timeLimit + "_" + which;
     		
 			QueryResults qr = null;
 
 			synchronized(QueryResults.queryResultsCache) {
 				if(!QueryResults.queryResultsCache.containsKey(queryKey)) {
-					qr = new QueryResults(query, timeLimit);
+					qr = new QueryResults(query, timeLimit, whichEnum);
 					QueryResults.queryResultsCache.put(queryKey, qr);
 				}
 				else

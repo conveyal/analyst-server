@@ -226,6 +226,8 @@ var Analyst = Analyst || {};
       if (this.weightById)
         url = url + "&weightBy=" + this.weightById;
 
+      url += '&which=' + this.$('#whichMulti').val();
+
       window.open(url);
 
     },
@@ -269,16 +271,35 @@ var Analyst = Analyst || {};
 
       this.normalizeBy();
 
+      this.which = this.$('#whichMulti').val();
+
       var legendTitle;
       if (this.groupById) {
         legendTitle = Messages('analysis.aggregated-title',
-          this.model.get("name"),
+          this.model.get("pointSetName"),
           this.groupByName,
           this.weightByName
         );
       } else {
-        legendTitle = Messages('analysis.accessibility-to', this.model.get("name"));
+        legendTitle = Messages('analysis.accessibility-to', this.model.get("pointSetName"));
       }
+
+      // add the suffix, e.g. (best case)
+      legendTitle += ' ';
+
+      if (this.which == 'POINT_ESTIMATE')
+        legendTitle += window.Messages('analysis.point-estimate-suffix');
+
+      else if (this.which == 'LOWER_BOUND')
+        legendTitle += window.Messages('analysis.lower-bound-suffix');
+
+      else if (this.which == 'UPPER_BOUND')
+        legendTitle += window.Messages('analysis.upper-bound-suffix');
+
+      else if (this.which == 'SPREAD')
+        legendTitle += window.Messages('analysis.spread-suffix');
+
+
 
       if (target.prop("checked")) {
         if (A.map.hasLayer(this.queryOverlay))
@@ -293,6 +314,8 @@ var Analyst = Analyst || {};
 
         if (this.weightById)
           url = url + "&normalizeBy=" + this.weightById;
+
+        url += '&which=' + this.which;
 
         this.$(".legendTitle").text(legendTitle);
 
@@ -370,6 +393,17 @@ var Analyst = Analyst || {};
             });
 
           });
+
+        if (this.model.get('transit')) {
+          // we have transit modes, so it's a profile request
+          this.$('#whichMulti option[value="POINT_ESTIMATE"]').remove();
+          this.$('#whichMulti option[value="SPREAD"]').remove();
+        } else {
+          // it's a stock/vanilla request
+          this.$('#whichMulti option[value="LOWER_BOUND"]').remove();
+          this.$('#whichMulti option[value="UPPER_BOUND"]').remove();
+          this.$('#whichMulti option[value="SPREAD"]').remove();
+        }
 
         this.shapefiles = new A.models.Shapefiles();
         this.shapefiles.fetch({

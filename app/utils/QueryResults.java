@@ -13,6 +13,7 @@ import org.mapdb.Fun.Tuple2;
 import org.opentripplanner.analyst.ResultSet;
 
 import utils.NaturalBreaksClassifier.Bin;
+import utils.ResultEnvelope.Which;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
@@ -58,18 +59,41 @@ public class QueryResults {
 	
 	/** Cache the spatial index */
 	private transient SpatialIndex spIdx = null;
+
+	/** Is this the point estimate, lower bound, etc.? */
+	private ResultEnvelope.Which which;
 	
 	public QueryResults() {
 		
 	}
 	
-	public QueryResults(Query q, Integer timeLimit) {
+	public QueryResults(Query q, Integer timeLimit, ResultEnvelope.Which which) {
 	   SpatialLayer sd = SpatialLayer.getPointSetCategory(q.pointSetId);
+	   this.which = which;
 
        double value;
 
-       for(ResultSet feature : q.getResults().getAll()) {
-        	
+       for(ResultEnvelope env : q.getResults().getAll()) {
+    	   
+    	   ResultSet feature;
+    	   
+    	   switch(which) {
+    	   case LOWER_BOUND:
+    		   feature = env.lowerBound;
+    		   break;
+    	   case UPPER_BOUND:
+    		   feature = env.upperBound;
+    		   break;
+    	   case POINT_ESTIMATE:
+    		   feature = env.pointEstimate;
+    		   break;
+    	   case SPREAD:
+    		   feature = env.spread;
+    		   break;
+    	   default:
+    	    	throw new RuntimeException("Unhandled envelope type"); 
+    	   }
+    	   
            value = (double) feature.sum(timeLimit);
         	
         	if(maxValue == null || value > maxValue)

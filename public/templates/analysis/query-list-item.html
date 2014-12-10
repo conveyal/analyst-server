@@ -36,6 +36,16 @@
 				</div>
 			</div>
 
+			<div clas="form-group">
+				<label for="whichMulti">{{ I18n "analysis.statistic" }}</label>
+				<select id="whichMulti" name="which" class="form-control">
+					<option value="POINT_ESTIMATE">{{ I18n "analysis.point-estimate-option" }}</option>
+					<option value="LOWER_BOUND">{{ I18n "analysis.lower-bound-option" }}</option>
+					<option value="UPPER_BOUND">{{ I18n "analysis.upper-bound-option" }}</option>
+					<option value="SPREAD">{{ I18n "analysis.spread-option" }}</option>
+				</select>
+			</div>
+
 			<div class="form-group">
 					<input id="normalizeCheckbox" type="checkbox" data-id="{{id}}"/>
 					<label for="normalizeCheckbox">{{ I18n "analysis.aggregate" }}</label>

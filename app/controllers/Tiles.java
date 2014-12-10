@@ -42,6 +42,7 @@ import tiles.TileCache;
 import utils.HaltonPoints;
 import utils.QueryResults;
 import utils.QueryResults.QueryResultItem;
+import utils.ResultEnvelope;
 import utils.TransportIndex;
 import utils.TransportIndex.TransitSegment;
 
@@ -125,9 +126,23 @@ public class Tiles extends Controller {
 		return tileBuilder(tileRequest);
     }
 
-	public static Promise<Result> query(String queryId, Integer x, Integer y, Integer z, Integer timeLimit, String normalizeBy, String groupBy) {
+	public static Promise<Result> query(String queryId, Integer x, Integer y, Integer z,
+			Integer timeLimit, String normalizeBy, String groupBy, String which) {
+		
+		ResultEnvelope.Which whichEnum;
+		try {
+			whichEnum = ResultEnvelope.Which.valueOf(which);
+		} catch (Exception e) {
+			// no need to pollute the console with a stack trace
+			return Promise.promise(new Function0<Result> () {
+				@Override
+				public Result apply() throws Throwable {
+				    return badRequest("Invalid value for which parameter");
+				}
+			});
+		}
 
-		AnalystTileRequest tileRequest = new QueryTile(queryId, x, y, z, timeLimit, normalizeBy, groupBy);
+		AnalystTileRequest tileRequest = new QueryTile(queryId, x, y, z, timeLimit, normalizeBy, groupBy, whichEnum);
 		return tileBuilder(tileRequest);
     }
 

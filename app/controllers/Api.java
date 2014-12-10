@@ -82,6 +82,7 @@ import scala.concurrent.ExecutionContext;
 import tiles.Tile;
 import utils.HaltonPoints;
 import utils.QueryResults;
+import utils.ResultEnvelope;
 import utils.QueryResults.QueryResultItem;
 
 @Security.Authenticated(Secured.class)
@@ -236,11 +237,20 @@ public class Api extends Controller {
         return isochrones;
     }
     
-    public static Result queryBins(String queryId, Integer timeLimit, String normalizeBy, String groupBy) {
+    public static Result queryBins(String queryId, Integer timeLimit, String normalizeBy, String groupBy,
+    		String which) {
     	
 		response().setHeader(CACHE_CONTROL, "no-cache, no-store, must-revalidate");
 		response().setHeader(PRAGMA, "no-cache");
 		response().setHeader(EXPIRES, "0");
+		
+		ResultEnvelope.Which whichEnum;
+		try {
+			whichEnum = ResultEnvelope.Which.valueOf(which);
+		} catch (Exception e) {
+			// no need to pollute the console with a stack trace
+			return badRequest("Invalid value for which parameter");
+		}
 		
 		Query query = Query.getQuery(queryId);
 		
@@ -249,13 +259,13 @@ public class Api extends Controller {
 	   	
     	try {
 	
-    		String queryKey = queryId + "_" + timeLimit;
+    		String queryKey = queryId + "_" + timeLimit + "_" + which;
     		
     		QueryResults qr = null;
     		
     		synchronized(QueryResults.queryResultsCache) {
     			if(!QueryResults.queryResultsCache.containsKey(queryKey)) {
-	    			qr = new QueryResults(query, timeLimit);
+	    			qr = new QueryResults(query, timeLimit, whichEnum);
 	    			QueryResults.queryResultsCache.put(queryKey, qr);
 	    		}
 	    		else

@@ -24,6 +24,7 @@ import otp.ProfileResult;
 import utils.HaltonPoints;
 import utils.QueryResults;
 import utils.QueryResults.QueryResultItem;
+import utils.ResultEnvelope;
 import utils.TransportIndex;
 import utils.TransportIndex.TransitSegment;
 
@@ -558,14 +559,17 @@ public static class QueryTile extends AnalystTileRequest {
 		final Integer timeLimit;
 		final String normalizeBy;
 		final String groupBy;
+		final ResultEnvelope.Which which;
 		
-		public QueryTile(String queryId, Integer x, Integer y, Integer z, Integer timeLimit, String normalizeBy, String groupBy) {
+		public QueryTile(String queryId, Integer x, Integer y, Integer z, Integer timeLimit,
+				String normalizeBy, String groupBy, ResultEnvelope.Which which) {
 			super(x, y, z, "transit");
 			
 			this.queryId = queryId;
 			this.timeLimit = timeLimit;
 			this.normalizeBy = normalizeBy;
 			this.groupBy = groupBy;
+			this.which = which;
 		}
 		
 		public String getId() {
@@ -582,13 +586,13 @@ public static class QueryTile extends AnalystTileRequest {
 				return null;
 
 
-    		String queryKey = queryId + "_" + timeLimit;
+    		String queryKey = queryId + "_" + timeLimit + "_" + which;
 			
 			QueryResults qr = null;
 
 			synchronized(QueryResults.queryResultsCache) {
 				if(!QueryResults.queryResultsCache.containsKey(queryKey)) {
-					qr = new QueryResults(query, timeLimit);
+					qr = new QueryResults(query, timeLimit, which);
 					QueryResults.queryResultsCache.put(queryKey, qr);
 				}
 				else

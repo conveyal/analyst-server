@@ -20,6 +20,7 @@ import play.Logger;
 import play.libs.Akka;
 import utils.DataStore;
 import utils.HashUtils;
+import utils.ResultEnvelope;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
@@ -42,7 +43,7 @@ import controllers.Tiles;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Query implements Serializable {
 
-	private static HashMap<String, List<ResultSet>> resultsQueue = new HashMap<String, List<ResultSet>>();
+	private static HashMap<String, List<ResultEnvelope>> resultsQueue = new HashMap<String, List<ResultEnvelope>>();
 	
 	private static final long serialVersionUID = 1L;
 
@@ -65,7 +66,7 @@ public class Query implements Serializable {
 	public Integer completePoints;
 	
 	@JsonIgnore 
-	transient private DataStore<ResultSet> results; 
+	transient private DataStore<ResultEnvelope> results; 
 	
 	public Query() {
 		
@@ -89,6 +90,16 @@ public class Query implements Serializable {
 			return null;
 		
 		return l.name;
+	}
+	
+	/**
+	 * Does this query use transit?
+	 */
+	public Boolean isTransit () {
+		if (this.mode == null)
+			return null;
+		
+		return new TraverseModeSet(this.mode).isTransit();
 	}
 	
 	public void save() {
@@ -127,10 +138,10 @@ public class Query implements Serializable {
 	}
 
 	@JsonIgnore
-	public synchronized DataStore<ResultSet> getResults() {
+	public synchronized DataStore<ResultEnvelope> getResults() {
 		
 		if(results == null) {
-			results = new DataStore<ResultSet>(new File(Application.dataPath, "results"), "r_" + id);
+			results = new DataStore<ResultEnvelope>(new File(Application.dataPath, "results"), "r_" + id);
 		}
 		
 		return results;
@@ -167,22 +178,22 @@ public class Query implements Serializable {
 		}	
 	}
 	
-	static void saveQueryResult(String id, ResultSet rf) {
+	static void saveQueryResult(String id, ResultEnvelope resultEnvelope) {
 		
 		Query q = getQuery(id);
 
 		if(q == null)
 			return;
 
-		ArrayList<ResultSet> writeList = null;
+		ArrayList<ResultEnvelope> writeList = null;
 		
 		synchronized(resultsQueue) {
 			if(!resultsQueue.containsKey(id))
-				resultsQueue.put(id, new ArrayList<ResultSet>());
-			resultsQueue.get(id).add(rf);
+				resultsQueue.put(id, new ArrayList<ResultEnvelope>());
+			resultsQueue.get(id).add(resultEnvelope);
 			
 			if(resultsQueue.get(id).size() > 10) {
-				writeList = new ArrayList<ResultSet>(resultsQueue.get(id));
+				writeList = new ArrayList<ResultEnvelope>(resultsQueue.get(id));
 				resultsQueue.get(id).clear();
 				Logger.info("flushing queue...");
 			}
@@ -190,7 +201,7 @@ public class Query implements Serializable {
 		}
 		
 		if(writeList != null){
-				for(ResultSet rf1 : writeList)
+				for(ResultEnvelope rf1 : writeList)
 					q.getResults().saveWithoutCommit(rf1.id, rf1);
 			
 				q.getResults().commit();
@@ -235,18 +246,17 @@ public class Query implements Serializable {
 				
 				cluster.registerWorker(exec, worker);
 				
-				// create a profile request
-				ProfileRequest pr = Api.analyst.buildProfileRequest(q.scenarioId, q.mode, null);
-				
 				JobSpec js;
 				
-				if (pr.transitModes.getMask() == 0) {
+				if (q.isTransit()) {
+					// create a profile request
+					ProfileRequest pr = Api.analyst.buildProfileRequest(q.scenarioId, q.mode, null);
+					js = new JobSpec(q.scenarioId, q.pointSetId + ".json",  q.pointSetId + ".json", pr);
+				}
+				else {
 					// this is not a transit request, no need for computationally-expensive profile routing 
 					RoutingRequest rr = Api.analyst.buildRequest(q.scenarioId, null, q.mode, 120);
 					js = new JobSpec(q.scenarioId, q.pointSetId + ".json",  q.pointSetId + ".json", rr);
-				}
-				else {
-					js = new JobSpec(q.scenarioId, q.pointSetId + ".json",  q.pointSetId + ".json", pr);
 				}
 
 				// plus a callback that registers how many work items have returned
@@ -254,8 +264,7 @@ public class Query implements Serializable {
 					
 					@Override
 					public synchronized void onWorkResult(WorkResult res) {
-						// TODO: profile needs to save not only the best case but all cases
-						Query.saveQueryResult(q.id, res.profile ? res.getBestCase() : res.getResult());
+						Query.saveQueryResult(q.id, new ResultEnvelope(res));
 					}
 				}
 				
