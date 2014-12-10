@@ -1,96 +1,95 @@
-	<input id="queryCheckbox" type="checkbox" data-id="{{id}}"/> <strong>{{name}}</strong> <i style="margin-left: 5px;" id="deleteItem" class="pull-right glyphicon glyphicon-trash"></i>
+<input id="queryCheckbox" type="checkbox" data-id="{{id}}" /> <strong>{{name}}</strong> <i style="margin-left: 5px;" id="deleteItem" class="pull-right glyphicon glyphicon-trash"></i>
 
-	<p>
-		{{#unless complete}}
-			<div class="progress" style="margin-bottom: 0px;">
-			  <div class="progress-bar" role="progressbar" aria-valuenow="{{percent}}" aria-valuemin="0" aria-valuemax="100" style="width: {{percent}}%;">
-			    <strong>{{percent}}%</strong>
-			  </div>
+<p>
+	{{#unless complete}}
+		<div class="progress" style="margin-bottom: 0px;">
+			<div class="progress-bar" role="progressbar" aria-valuenow="{{percent}}" aria-valuemin="0" aria-valuemax="100" style="width: {{percent}}%;">
+				<strong>{{percent}}%</strong>
 			</div>
+		</div>
+	{{/unless}}
+
+	{{#if starting}}
+		<small>starting up...</smal>
+	{{else}}
+		{{#unless complete}}
+			<small>({{completePoints}} of {{totalPoints}} complete)<small>
 		{{/unless}}
+	{{/if}}
 
-		{{#if starting}}
-			<small>starting up...</smal>
-		{{else}}
-			{{#unless complete}}
-				<small>({{completePoints}} of {{totalPoints}} complete)<small>
-			{{/unless}}
-		{{/if}}
-
+	{{#if complete}}
 		<div id="settings">
 			<form>
-			<!-- preinitialize to no aggregation -->
-			<div class="legendTitle">{{ I18n "analysis.accessibility-to" pointSetName }}</div>
+				<!-- preinitialize to no aggregation -->
+				<div class="legendTitle">{{ I18n "analysis.accessibility-to" pointSetName }}</div>
 
-			<div class="form-group">
-		        <label>Travel Time Range: <span class="notes" id="timeLimitValue"></span></label>
+				<div class="form-group">
+					<label>Travel Time Range: <span class="notes" id="timeLimitValue"></span></label>
 
-		      	<input id="timeSlider" data-slider-id="timeSlider" style="width: 380px;" type="text" data-slider-min="0" data-slider-max="120" data-slider-step="5" data-slider-value="60"/>
+					<input id="timeSlider" data-slider-id="timeSlider" style="width: 380px;" type="text" data-slider-min="0" data-slider-max="120" data-slider-step="5" data-slider-value="60"/>
 
-				<div class="timeScale"></div>
+					<div class="timeScale"></div>
 
-				<div class="timeScaleLabels">
-					<span class="note pull-right">120 mins</span>
-					<span class="note">0 mins</span>
+					<div class="timeScaleLabels">
+						<span class="note pull-right">120 mins</span>
+						<span class="note">0 mins</span>
+					</div>
 				</div>
-			</div>
 
-			<div class="form-group">
-				<div class="btn-group mode-selector whichMulti" data-toggle="buttons">
-					<label class="btn btn-default">
-						<input type="radio" name="which" value="LOWER_BOUND" />
-						{{ I18n "analysis.lower-bound-option" }}
-					</label>
+				<div class="form-group">
+					<div class="btn-group mode-selector whichMulti" data-toggle="buttons">
+						<label class="btn btn-default">
+							<input type="radio" name="which" value="LOWER_BOUND" />
+							{{ I18n "analysis.lower-bound-option" }}
+						</label>
 
-					<label class="btn btn-default">
-						<input type="radio" name="which" value="POINT_ESTIMATE" />
-						{{ I18n "analysis.point-estimate-option" }}
-					</label>
+						<label class="btn btn-default">
+							<input type="radio" name="which" value="POINT_ESTIMATE" />
+							{{ I18n "analysis.point-estimate-option" }}
+						</label>
 
-					<label class="btn btn-default">
-						<input type="radio" name="which" value="UPPER_BOUND" />
-						{{ I18n "analysis.upper-bound-option" }}
-					</label>
+						<label class="btn btn-default">
+							<input type="radio" name="which" value="UPPER_BOUND" />
+							{{ I18n "analysis.upper-bound-option" }}
+						</label>
 
-					<label class="btn btn-default">
-						<input type="radio" name="which" value="SPREAD" />
-						{{ I18n "analysis.spread-option" }}
-					</label>
+						<label class="btn btn-default">
+							<input type="radio" name="which" value="SPREAD" />
+							{{ I18n "analysis.spread-option" }}
+						</label>
+					</div>
 				</div>
-			</div>
 
-			<div class="form-group">
+				<div class="form-group">
 					<input id="normalizeCheckbox" type="checkbox" data-id="{{id}}"/>
 					<label for="normalizeCheckbox">{{ I18n "analysis.aggregate" }}</label>
-			</div>
+				</div>
 
-			<div class="form-group" id="aggregation-controls" style="display: none">
-				<p class="bg-info" style="padding: 3px">{{ I18n "analysis.aggregate-summary" }}</p>
+				<div class="form-group" id="aggregation-controls" style="display: none">
+					<p class="bg-info" style="padding: 3px">{{ I18n "analysis.aggregate-summary" }}</p>
 
-				<label for="groupBy">{{ I18n "analysis.aggregate-to" }}</label>
+					<label for="groupBy">{{ I18n "analysis.aggregate-to" }}</label>
 					<select id="groupBy" class="primary-indicator form-control">
-				</select>
+					</select>
 
-						<label for="weightBy">{{ I18n "analysis.weight-by" }}</label>
-	          <select id="weightBy" class="primary-indicator form-control">
-						</select>
-	        </div>
-
-	        <div id="legend" style="margin-top: 20px; margin-bottom: 20px;">
-	        	<h5 class="legendTitle"></h5>
-		        <div id="legendData" class="indicator_box">
-
-
+					<label for="weightBy">{{ I18n "analysis.weight-by" }}</label>
+					<select id="weightBy" class="primary-indicator form-control">
+					</select>
 				</div>
 
-				<div id="updatingMap" style="margin-left: 15px; display: none;">
+				<div id="legend" style="margin-top: 20px; margin-bottom: 20px;">
+					<h5 class="legendTitle"></h5>
+					<div id="legendData" class="indicator_box">
+
+
+					</div>
+
+					<div id="updatingMap" style="margin-left: 15px; display: none;">
 						<img src="/assets/images/ajax-loader.gif"/> Calculating...
+					</div>
 				</div>
-			</div>
-			 <button id="updateMap" type="button" class="btn btn-primary">Update Map</button> <button id="exportShape" type="button" class="btn btn-default">Export Shapefile</button>
-		</form>
+				<button id="updateMap" type="button" class="btn btn-primary">Update Map</button> <button id="exportShape" type="button" class="btn btn-default">Export Shapefile</button>
+			</form>
 		</div>
-
-
-
-	</p>
+	{{/if}}
+</p>
