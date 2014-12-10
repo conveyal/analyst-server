@@ -12,8 +12,8 @@ import models.Shapefile.ShapeFeature;
 import models.SpatialLayer;
 import models.Attribute;
 
-import org.opentripplanner.analyst.ResultFeatureDelta;
-import org.opentripplanner.analyst.ResultFeatureWithTimes;
+import org.opentripplanner.analyst.ResultSetDelta;
+import org.opentripplanner.analyst.ResultSetWithTimes;
 import org.opentripplanner.analyst.TimeSurface;
 import org.opentripplanner.api.model.TimeSurfaceShort;
 import org.opentripplanner.common.model.GenericLocation;

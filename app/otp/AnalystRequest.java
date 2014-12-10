@@ -15,8 +15,8 @@ import javax.ws.rs.core.Response;
 
 import models.SpatialLayer;
 
-import org.opentripplanner.analyst.ResultFeature;
-import org.opentripplanner.analyst.ResultFeatureWithTimes;
+import org.opentripplanner.analyst.ResultSet;
+import org.opentripplanner.analyst.ResultSetWithTimes;
 import org.opentripplanner.analyst.SurfaceCache;
 import org.opentripplanner.analyst.TimeSurface;
 import org.opentripplanner.api.model.TimeSurfaceShort;
@@ -34,7 +34,7 @@ public class AnalystRequest extends RoutingRequest{
 	private static final long serialVersionUID = 1L;
 
 	private static SurfaceCache surfaceCache = new SurfaceCache(100);
-	private static  Map<String, ResultFeature> resultCache = new ConcurrentHashMap<String, ResultFeature>();
+	private static  Map<String, ResultSet> resultCache = new ConcurrentHashMap<String, ResultSet>();
 	
 	private static PrototypeAnalystRequest prototypeRequest = new PrototypeAnalystRequest();
 
@@ -77,18 +77,18 @@ public class AnalystRequest extends RoutingRequest{
 		
 	}
 	
-	public static ResultFeature getResult(Integer surfaceId, String pointSetId) {
+	public static ResultSet getResult(Integer surfaceId, String pointSetId) {
 		
 		String resultId = "resultId_" + surfaceId + "_" + pointSetId;
     	
-		ResultFeature result;
+		ResultSet result;
     	
     	synchronized(resultCache) {
     		if(resultCache.containsKey(resultId))
     			result = resultCache.get(resultId);
         	else {
         		TimeSurface surf =getSurface(surfaceId);
-        		result = new ResultFeature(SpatialLayer.getPointSetCategory(pointSetId).getPointSet().getSampleSet(surf.routerId), surf);;
+        		result = new ResultSet(SpatialLayer.getPointSetCategory(pointSetId).getPointSet().getSampleSet(surf.routerId), surf);;
         		resultCache.put(resultId, result);
         	}
     	}
@@ -96,18 +96,18 @@ public class AnalystRequest extends RoutingRequest{
     	return result;
 	}
 	
-	public static ResultFeatureWithTimes getResultWithTimes(Integer surfaceId, String pointSetId) {
+	public static ResultSetWithTimes getResultWithTimes(Integer surfaceId, String pointSetId) {
 		
 		String resultId = "resultWIthTimesId_" + surfaceId + "_" + pointSetId;
     	
-		ResultFeatureWithTimes resultWithTimes;
+		ResultSetWithTimes resultWithTimes;
     	
     	synchronized(resultCache) {
     		if(resultCache.containsKey(resultId))
-    			resultWithTimes = (ResultFeatureWithTimes)resultCache.get(resultId);
+    			resultWithTimes = (ResultSetWithTimes)resultCache.get(resultId);
         	else {
         		TimeSurface surf =getSurface(surfaceId);
-        		resultWithTimes = new ResultFeatureWithTimes(SpatialLayer.getPointSetCategory(pointSetId).getPointSet().getSampleSet(surf.routerId), surf);
+        		resultWithTimes = new ResultSetWithTimes(SpatialLayer.getPointSetCategory(pointSetId).getPointSet().getSampleSet(surf.routerId), surf);
         		resultCache.put(resultId, resultWithTimes);
         	}
     	}

@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.mapdb.Fun.Tuple2;
-import org.opentripplanner.analyst.ResultFeature;
+import org.opentripplanner.analyst.ResultSet;
 
 import utils.NaturalBreaksClassifier.Bin;
 
@@ -66,9 +66,11 @@ public class QueryResults {
 	public QueryResults(Query q, Integer timeLimit) {
 	   SpatialLayer sd = SpatialLayer.getPointSetCategory(q.pointSetId);
 
-       for(ResultFeature feature : q.getResults().getAll()) {
+       double value;
+
+       for(ResultSet feature : q.getResults().getAll()) {
         	
-        	Double value = feature.sum(timeLimit).doubleValue();
+           value = (double) feature.sum(timeLimit);
         	
         	if(maxValue == null || value > maxValue)
         		maxValue = value;

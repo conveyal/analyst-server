@@ -36,7 +36,7 @@ import org.geotools.geometry.jts.JTS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.operation.MathTransform;
 import org.opentripplanner.analyst.PointSet;
-import org.opentripplanner.analyst.ResultFeature;
+import org.opentripplanner.analyst.ResultSet;
 import org.opentripplanner.analyst.TimeSurface;
 import org.opentripplanner.analyst.core.IsochroneData;
 import org.opentripplanner.analyst.core.SlippyTile;
@@ -178,7 +178,7 @@ public class Api extends Controller {
     		show = "min";
     	
     	final SpatialLayer ps = SpatialLayer.getPointSetCategory(pointSetId);
-    	final ResultFeature result = AnalystProfileRequest.getResult(surfaceId, pointSetId, show);
+    	final ResultSet result = AnalystProfileRequest.getResult(surfaceId, pointSetId, show);
     	
     	ByteArrayOutputStream baos = new ByteArrayOutputStream();
     	result.writeJson(baos, ps.getPointSet());    

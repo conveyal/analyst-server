@@ -20,8 +20,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.geotools.geometry.Envelope2D;
-import org.opentripplanner.gtfs.model.GTFSFeed;
-import org.opentripplanner.gtfs.model.Stop;
+import com.conveyal.gtfs.GTFSFeed;
+import com.conveyal.gtfs.model.Stop;
 
 import play.Play;
 import utils.Bounds;
@@ -116,10 +116,7 @@ public class ProcessTransitScenarioJob implements Runnable {
 					GTFSFeed feed = GTFSFeed.fromFile(f.getAbsolutePath());
 
 					for(Stop s : feed.stops.values()) {
-						Double lat = Double.parseDouble(s.stop_lat);
-						Double lon = Double.parseDouble(s.stop_lon);
-
-						envelope.include(lon, lat);
+						envelope.include(s.stop_lon, s.stop_lat);
 					}
 				}
 			}

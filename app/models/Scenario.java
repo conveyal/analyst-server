@@ -31,8 +31,8 @@ import org.apache.commons.io.IOUtils;
 import org.geotools.geometry.Envelope2D;
 import org.mapdb.Bind;
 import org.mapdb.Fun;
-import org.opentripplanner.gtfs.model.GTFSFeed;
-import org.opentripplanner.gtfs.model.Stop;
+import com.conveyal.gtfs.GTFSFeed;
+import com.conveyal.gtfs.model.Stop;
 import org.opentripplanner.routing.graph.Graph;
 
 import play.Logger;

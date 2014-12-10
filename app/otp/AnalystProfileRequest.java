@@ -8,8 +8,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import models.SpatialLayer;
 
-import org.opentripplanner.analyst.ResultFeature;
-import org.opentripplanner.analyst.ResultFeatureWithTimes;
+import org.opentripplanner.analyst.ResultSet;
+import org.opentripplanner.analyst.ResultSetWithTimes;
 import org.opentripplanner.analyst.SurfaceCache;
 import org.opentripplanner.analyst.TimeSurface;
 import org.opentripplanner.api.model.TimeSurfaceShort;
@@ -28,7 +28,7 @@ public class AnalystProfileRequest extends ProfileRequest{
 
 	private static ProfileResultCache profileResultCache = new ProfileResultCache(100);
 
-	private static  Map<String, ResultFeature> resultCache = new ConcurrentHashMap<String, ResultFeature>();
+	private static  Map<String, ResultSet> resultCache = new ConcurrentHashMap<String, ResultSet>();
 
 	public int cutoffMinutes;
 	public String graphId;
@@ -58,11 +58,11 @@ public class AnalystProfileRequest extends ProfileRequest{
         return new TimeSurfaceShort(router.minSurface);
   	}
 	
-	public static ResultFeature getResult(Integer surfaceId, String pointSetId, String show) {
+	public static ResultSet getResult(Integer surfaceId, String pointSetId, String show) {
 		
 		String resultId = "resultId_" + surfaceId + "_" + pointSetId + "_" + show;
     	
-		ResultFeature result;
+		ResultSet result;
     	
     	synchronized(resultCache) {
     		if(resultCache.containsKey(resultId))
@@ -76,7 +76,7 @@ public class AnalystProfileRequest extends ProfileRequest{
         		if(show.equals("max"))
         			surf = profileResult.max;
         		
-        		result = new ResultFeature(SpatialLayer.getPointSetCategory(pointSetId).getPointSet().getSampleSet(surf.routerId), surf);;
+        		result = new ResultSet(SpatialLayer.getPointSetCategory(pointSetId).getPointSet().getSampleSet(surf.routerId), surf);;
         		resultCache.put(resultId, result);
         	}
     	}
@@ -84,15 +84,15 @@ public class AnalystProfileRequest extends ProfileRequest{
     	return result;
 	}
 	
-	public static ResultFeatureWithTimes getResultWithTimes(Integer surfaceId, String pointSetId, String show) {
+	public static ResultSetWithTimes getResultWithTimes(Integer surfaceId, String pointSetId, String show) {
 		
 		String resultId = "resultWithTimesId_" + surfaceId + "_" + pointSetId + "_" + show;
     	
-		ResultFeatureWithTimes resultWithTimes;
+		ResultSetWithTimes resultWithTimes;
     	
     	synchronized(resultCache) {
     		if(resultCache.containsKey(resultId))
-    			resultWithTimes = (ResultFeatureWithTimes)resultCache.get(resultId);
+    			resultWithTimes = (ResultSetWithTimes)resultCache.get(resultId);
         	else {
         		ProfileResult profileResult =getSurface(surfaceId);
         		
@@ -102,7 +102,7 @@ public class AnalystProfileRequest extends ProfileRequest{
         		if(show.equals("max"))
         			surf = profileResult.max;
         			
-        		resultWithTimes = new ResultFeatureWithTimes(SpatialLayer.getPointSetCategory(pointSetId).getPointSet().getSampleSet(surf.routerId), surf);
+        		resultWithTimes = new ResultSetWithTimes(SpatialLayer.getPointSetCategory(pointSetId).getPointSet().getSampleSet(surf.routerId), surf);
         		resultCache.put(resultId, resultWithTimes);
         	}
     	}

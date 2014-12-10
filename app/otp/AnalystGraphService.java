@@ -12,12 +12,13 @@ import java.util.zip.ZipOutputStream;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graph.Graph.LoadLevel;
 import org.opentripplanner.routing.services.GraphService;
+import org.opentripplanner.routing.services.GraphSource;
+import org.opentripplanner.routing.services.GraphSource.Factory;
 
 import controllers.Application;
 
 
 public class AnalystGraphService implements GraphService { 
-	
 	AnaylstGraphCache graphCache = new AnaylstGraphCache();
 	
 	public Graph getGraph(String graphId) {
@@ -85,30 +86,29 @@ public class AnalystGraphService implements GraphService {
 		return graphCache.keySet();
 	}
 
-	@Override
-	public boolean registerGraph(String graphId, boolean arg1) {
-		return graphCache.get(graphId) != null;
+
+	public boolean registerGraph(String graphId, GraphSource gs) {
+		graphCache.put(graphId, gs.getGraph());
+		return true;
 	}
 
-	@Override
+
 	public boolean registerGraph(String arg0, Graph arg1) {
 		graphCache.put(arg0, arg1);
 		return  true;
+	}
+	
+    public void setDefaultRouterId (String routerId) {
+    	// do nothing
+    }
+
+	@Override
+	public Factory getGraphSourceFactory() {
+		return null;
 	}
 
 	@Override
 	public boolean reloadGraphs(boolean arg0) {
 		return false;
 	}
-
-	@Override
-	public boolean save(String arg0, InputStream arg1) {
-		return false;
-	}
-
-	@Override
-	public void setLoadLevel(LoadLevel arg0) {
-	}
-	
-	
 }

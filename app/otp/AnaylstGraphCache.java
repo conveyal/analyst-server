@@ -11,6 +11,7 @@ import org.opentripplanner.api.model.TimeSurfaceShort;
 import org.opentripplanner.common.model.GenericLocation;
 import org.opentripplanner.graph_builder.GraphBuilderTask;
 import org.opentripplanner.routing.graph.Graph;
+import org.opentripplanner.routing.impl.DefaultStreetVertexIndexFactory;
 
 import play.libs.Akka;
 import play.libs.Json;
@@ -118,6 +119,8 @@ public class AnaylstGraphCache extends CacheLoader<String, Graph> {
  		 
  		 Graph g = gbt.getGraph();
  		 g.routerId = graphId;
+ 		 
+ 		 g.index(new DefaultStreetVertexIndexFactory());
  		 
  		 graphsBuilding.remove(graphId);
  	

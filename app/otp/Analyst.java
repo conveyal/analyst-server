@@ -37,6 +37,7 @@ import com.conveyal.otpac.standalone.StandaloneCluster;
 import com.conveyal.otpac.standalone.StandaloneExecutive;
 import com.conveyal.otpac.standalone.StandaloneWorker;
 import com.google.common.collect.Lists;
+import com.vividsolutions.jts.geom.Coordinate;
 
 import play.Logger;
 
@@ -105,51 +106,33 @@ public class Analyst {
 		
 		// use center of graph extent if no location is specified
 		if(latLon == null) {
-			latLon = new LatLon(null);
-			latLon.lat = this.graphService.getGraph(graphId).getExtent().centre().y;
-			latLon.lon = this.graphService.getGraph(graphId).getExtent().centre().x;
+			Coordinate center = this.graphService.getGraph(graphId).getExtent().centre();
+			latLon = new LatLon(String.format("%f,%f", center.y, center.x));
 		}
 		
 		AnalystProfileRequest req = new AnalystProfileRequest();
 		
-		TraverseModeSet modes = new TraverseModeSet();
-		
-		switch(mode) {
-			case "TRANSIT":
-				modes.setWalk(true);
-				modes.setTransit(true);
-				break;
-			case "CAR,TRANSIT,WALK":
-				modes.setCar(true);
-				modes.setTransit(true);
-				modes.setWalk(true);
-				break;	
-			case "BIKE,TRANSIT":
-				modes.setBicycle(true);
-				modes.setTransit(true);
-				break;
-			case "CAR":
-				modes.setCar(true);
-				break;
-			case "BIKE":
-				modes.setBicycle(true);
-				break;
-			case "WALK":
-				modes.setWalk(true);
-				break;
-		}
-	
-		req.modes = modes;
+		// split the modeset into two modes
+		TraverseModeSet modes = new TraverseModeSet(mode);
+		modes.setTransit(false);
+
+		TraverseModeSet transitModes = new TraverseModeSet(mode);
+		transitModes.setBicycle(false);
+		transitModes.setDriving(false);
+		transitModes.setWalk(false);
+
+		req.accessModes = req.egressModes = req.directModes = modes;
+		req.transitModes = transitModes;
+
 		req.graphId = graphId;
         req.from       = latLon;
-        req.to		   = latLon; // not used but required?
+        req.to		   = latLon; // not used but required
         req.analyst	   = true;
         req.fromTime   = 7 * 60 * 60;
         req.toTime     = 9 * 60 * 60;
         req.walkSpeed  = 1.4f;
         req.bikeSpeed  = 4.1f;
-        req.streetTime = 15;
-        req.accessTime = 15;
+        req.streetTime = 90;
         req.date       = new YearMonthDay("2014-12-04").toJoda();
 		
         return req;

@@ -9,8 +9,11 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
-import org.opentripplanner.analyst.ResultFeature;
+import org.opentripplanner.analyst.ResultSet;
+import org.opentripplanner.profile.ProfileRequest;
 
+import otp.Analyst;
+import otp.AnalystProfileRequest;
 import play.Logger;
 import play.libs.Akka;
 import utils.DataStore;
@@ -37,7 +40,7 @@ import controllers.Tiles;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Query implements Serializable {
 
-	private static HashMap<String, List<ResultFeature>> resultsQueue = new HashMap<String, List<ResultFeature>>();
+	private static HashMap<String, List<ResultSet>> resultsQueue = new HashMap<String, List<ResultSet>>();
 	
 	private static final long serialVersionUID = 1L;
 
@@ -60,7 +63,7 @@ public class Query implements Serializable {
 	public Integer completePoints;
 	
 	@JsonIgnore 
-	transient private DataStore<ResultFeature> results; 
+	transient private DataStore<ResultSet> results; 
 	
 	public Query() {
 		
@@ -122,10 +125,10 @@ public class Query implements Serializable {
 	}
 
 	@JsonIgnore
-	public synchronized DataStore<ResultFeature> getResults() {
+	public synchronized DataStore<ResultSet> getResults() {
 		
 		if(results == null) {
-			results = new DataStore<ResultFeature>(new File(Application.dataPath, "results"), "r_" + id);
+			results = new DataStore<ResultSet>(new File(Application.dataPath, "results"), "r_" + id);
 		}
 		
 		return results;
@@ -162,22 +165,22 @@ public class Query implements Serializable {
 		}	
 	}
 	
-	static void saveQueryResult(String id, ResultFeature rf) {
+	static void saveQueryResult(String id, ResultSet rf) {
 		
 		Query q = getQuery(id);
 
 		if(q == null)
 			return;
 
-		ArrayList<ResultFeature> writeList = null;
+		ArrayList<ResultSet> writeList = null;
 		
 		synchronized(resultsQueue) {
 			if(!resultsQueue.containsKey(id))
-				resultsQueue.put(id, new ArrayList<ResultFeature>());
+				resultsQueue.put(id, new ArrayList<ResultSet>());
 			resultsQueue.get(id).add(rf);
 			
 			if(resultsQueue.get(id).size() > 10) {
-				writeList = new ArrayList<ResultFeature>(resultsQueue.get(id));
+				writeList = new ArrayList<ResultSet>(resultsQueue.get(id));
 				resultsQueue.get(id).clear();
 				Logger.info("flushing queue...");
 			}
@@ -185,7 +188,7 @@ public class Query implements Serializable {
 		}
 		
 		if(writeList != null){
-				for(ResultFeature rf1 : writeList)
+				for(ResultSet rf1 : writeList)
 					q.getResults().saveWithoutCommit(rf1.id, rf1);
 			
 				q.getResults().commit();
@@ -229,16 +232,20 @@ public class Query implements Serializable {
 				StandaloneWorker worker = cluster.createWorker();
 				
 				cluster.registerWorker(exec, worker);
-				String graphTimeZone = Api.analyst.getGraphService().getGraph(q.scenarioId).getTimeZone().getID();
 				
-				JobSpec js = new JobSpec(q.scenarioId, q.pointSetId + ".json",  q.pointSetId + ".json", "2014-12-04", "8:05 AM", graphTimeZone, q.mode, null);
+				// create a profile request
+				ProfileRequest pr = Api.analyst.buildProfileRequest(q.scenarioId, q.mode, null);
 				
+				JobSpec js = new JobSpec(q.scenarioId, q.pointSetId + ".json",  q.pointSetId + ".json", pr);
+
 				// plus a callback that registers how many work items have returned
 				class CounterCallback implements JobItemCallback {
 					
 					@Override
 					public synchronized void onWorkResult(WorkResult res) {
-						Query.saveQueryResult(q.id, res.getResult());
+						// TODO: profile needs to save not only the maximum
+						// this is the maximum *time* to each point in the graph, so worst-case
+						Query.saveQueryResult(q.id, res.profile ? res.getMinimum() : res.getResult());
 					}
 				}
 				

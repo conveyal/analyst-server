@@ -14,8 +14,8 @@ import models.SpatialLayer;
 
 import org.opengis.geometry.MismatchedDimensionException;
 import org.opengis.referencing.operation.TransformException;
-import org.opentripplanner.analyst.ResultFeatureDelta;
-import org.opentripplanner.analyst.ResultFeatureWithTimes;
+import org.opentripplanner.analyst.ResultSetDelta;
+import org.opentripplanner.analyst.ResultSetWithTimes;
 import org.opentripplanner.analyst.TimeSurface;
 
 import otp.AnalystProfileRequest;
@@ -364,7 +364,7 @@ public abstract class AnalystTileRequest {
 			
 			
 			
-			ResultFeatureDelta resultDelta = new ResultFeatureDelta(sd.getPointSet().getSampleSet(surf1.routerId), sd.getPointSet().getSampleSet(surf2.routerId),  surf1, surf2);
+			ResultSetDelta resultDelta = new ResultSetDelta(sd.getPointSet().getSampleSet(surf1.routerId), sd.getPointSet().getSampleSet(surf2.routerId),  surf1, surf2);
 
 			List<ShapeFeature> features = sd.getShapefile().query(tile.envelope);
 
@@ -476,7 +476,7 @@ public abstract class AnalystTileRequest {
     				return null;
 
 
-	    		ResultFeatureWithTimes result = AnalystProfileRequest.getResultWithTimes(surfaceId, pointSetId, show);
+	    		ResultSetWithTimes result = AnalystProfileRequest.getResultWithTimes(surfaceId, pointSetId, show);
 
 	            List<ShapeFeature> features = sd.getShapefile().query(tile.envelope);
 
