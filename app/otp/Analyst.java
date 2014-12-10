@@ -65,37 +65,13 @@ public class Analyst {
 			Logger.error("unable to create request id");
 			return null;
 		}
-		req.modes.clear();
-		switch(mode) {
-			case "WALK,TRANSIT":
-				req.modes.setWalk(true);
-				req.modes.setTransit(true);
-				Logger.warn("Building a non-profile transit routing request, this probably shouldn't be happening.");
-				break;
-			case "CAR,TRANSIT,WALK":
-				req.modes.setCar(true);
-				req.modes.setTransit(true);
-				req.modes.setWalk(true);
-				req.kissAndRide = true;
-				Logger.warn("Building a non-profile transit routing request, this probably shouldn't be happening.");
-				req.walkReluctance = 1.0;
-				break;	
-			case "BIKE,TRANSIT":
-				req.modes.setBicycle(true);
-				req.modes.setTransit(true);
-				Logger.warn("Building a non-profile transit routing request, this probably shouldn't be happening.");
-				break;
-			case "CAR":
-				req.modes.setCar(true);
-				break;
-			case "BIKE":
-				req.modes.setBicycle(true);
-				break;
-			case "WALK":
-				req.modes.setWalk(true);
-				break;
+		
+		req.modes = new TraverseModeSet(mode);
+		
+		if (req.modes.isTransit()) {
+			Logger.warn("Building a non-profile transit routing request, this probably shouldn't be happening.");
+			req.walkReluctance = 1.0;
 		}
-
 
 		return req;
     }
