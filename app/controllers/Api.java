@@ -47,6 +47,7 @@ import org.opentripplanner.api.param.LatLon;
 import org.opentripplanner.api.resource.LIsochrone;
 import org.opentripplanner.common.geometry.DelaunayIsolineBuilder;
 import org.opentripplanner.common.model.GenericLocation;
+import org.opentripplanner.routing.core.TraverseModeSet;
 
 import otp.Analyst;
 import otp.AnalystProfileRequest;
@@ -113,41 +114,55 @@ public class Api extends Controller {
     }
     
     public static Promise<Result> surface(final String graphId, final Double lat, final Double lon, final String mode, final Double bikeSpeed, final Double walkSpeed) {
+    	Promise<TimeSurfaceShort> promise;
     	
-		
-    	Promise<TimeSurfaceShort> promise = Promise.promise(
-		    new Function0<TimeSurfaceShort>() {
-		      public TimeSurfaceShort apply() {
-		    	  	LatLon latLon = new LatLon(null);
-		  	  		latLon.lat = lat;
-		  	  		latLon.lon = lon;
-		  	    	
-		  	  		AnalystProfileRequest request = analyst.buildProfileRequest(graphId, mode, latLon);
-		  	        	
-		  	  		if(request == null)
-		  	  			return null;
-		  	  		
-		  	  	return request.createSurfaces();
-	        	
-		    	
-		        
-		      }
-		    }
-		  );
-    	return promise.map(
-		    new Function<TimeSurfaceShort, Result>() {
-		      public Result apply(TimeSurfaceShort response) {
-		    	
-		    	  if(response == null)
-			    	  return notFound();
-			    	
-		 
-			      return ok(Json.toJson(response));
-		    	
-		      }
-		    }
-		  ); 
-    	
+     	if (new TraverseModeSet(mode).isTransit()) {
+    		// transit search: use profile routing
+    		promise = Promise.promise(
+    				new Function0<TimeSurfaceShort>() {
+    					public TimeSurfaceShort apply() {
+    						LatLon latLon = new LatLon(String.format("%s,%s", lat, lon));
+    						
+    						AnalystProfileRequest request = analyst.buildProfileRequest(graphId, mode, latLon);
+
+    						if(request == null)
+    							return null;
+
+    						return request.createSurfaces();
+    					}
+    				}
+    				);
+    	}
+    	else {
+    		promise = Promise.promise(    				
+    				new Function0<TimeSurfaceShort>() {
+						public TimeSurfaceShort apply() throws Throwable {
+							GenericLocation latLon = new GenericLocation(lat, lon);
+							AnalystRequest req = analyst.buildRequest(graphId, latLon, mode, 120);
+							
+							if (req == null)
+								return null;
+							
+							req.setRoutingContext(analyst.getGraph(graphId));
+							
+							return req.createSurface();
+						}
+    				});
+    	}
+     	
+		return promise.map(
+				new Function<TimeSurfaceShort, Result>() {
+					public Result apply(TimeSurfaceShort response) {
+
+						if(response == null)
+							return notFound();
+
+
+						return ok(Json.toJson(response));
+
+					}
+				}
+		);    	
     }
         
     public static Result isochrone(Integer surfaceId, List<Integer> cutoffs) throws IOException {
@@ -178,7 +193,15 @@ public class Api extends Controller {
     		show = "min";
     	
     	final SpatialLayer ps = SpatialLayer.getPointSetCategory(pointSetId);
-    	final ResultSet result = AnalystProfileRequest.getResult(surfaceId, pointSetId, show);
+    	ResultSet result;
+    	
+    	// it could be a profile request, or not
+    	// The IDs are unique; they come from inside OTP. 
+    	try {
+    		result = AnalystProfileRequest.getResult(surfaceId, pointSetId, show);
+    	} catch (NullPointerException e) {
+    		result = AnalystRequest.getResult(surfaceId, pointSetId);
+    	}
     	
     	ByteArrayOutputStream baos = new ByteArrayOutputStream();
     	result.writeJson(baos, ps.getPointSet());    

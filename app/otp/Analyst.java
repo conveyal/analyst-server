@@ -51,6 +51,11 @@ public class Analyst {
 		
 	}
 	 
+	/**
+	 * Build a routing request. Note that this does not set the routing context, you'll have to do that
+	 * manually; this is because, in cluster mode, we don't want to serialize the routing context and send
+	 * it over the wire.
+	 */
 	public AnalystRequest buildRequest(String graphId, GenericLocation latLon, String mode, int cutoffMinutes) {
 		
 		// use center of graph extent if no location is specified
@@ -121,6 +126,8 @@ public class Analyst {
 		
 		// doesn't matter for analyst requests
 		req.orderBy = Option.SortOrder.AVG;
+		
+		req.cutoffMinutes = 120;
 		
         return req;
         

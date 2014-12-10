@@ -19,6 +19,7 @@ import org.opentripplanner.analyst.ResultSetWithTimes;
 import org.opentripplanner.analyst.TimeSurface;
 
 import otp.AnalystProfileRequest;
+import otp.AnalystRequest;
 import otp.ProfileResult;
 import utils.HaltonPoints;
 import utils.QueryResults;
@@ -476,7 +477,15 @@ public abstract class AnalystTileRequest {
     				return null;
 
 
-	    		ResultSetWithTimes result = AnalystProfileRequest.getResultWithTimes(surfaceId, pointSetId, show);
+	    		ResultSetWithTimes result;
+	    		
+	    		try {
+	    			result = AnalystProfileRequest.getResultWithTimes(surfaceId, pointSetId, show);
+	    		}
+	    		catch (NullPointerException e) {
+	    			// not a profile request
+	    			result = AnalystRequest.getResultWithTimes(surfaceId, pointSetId);
+	    		}
 
 	            List<ShapeFeature> features = sd.getShapefile().query(tile.envelope);
 
