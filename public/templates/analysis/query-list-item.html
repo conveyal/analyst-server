@@ -1,5 +1,3 @@
-<li class="list-group-item" data-id="{{id}}">
-
 	<input id="queryCheckbox" type="checkbox" data-id="{{id}}"/> <strong>{{name}}</strong> <i style="margin-left: 5px;" id="deleteItem" class="pull-right glyphicon glyphicon-trash"></i>
 
 	<p>
@@ -20,6 +18,7 @@
 		{{/if}}
 
 		<div id="settings">
+			<form>
 			<!-- preinitialize to no aggregation -->
 			<div class="legendTitle">{{ I18n "analysis.accessibility-to" pointSetName }}</div>
 
@@ -36,14 +35,28 @@
 				</div>
 			</div>
 
-			<div clas="form-group">
-				<label for="whichMulti">{{ I18n "analysis.statistic" }}</label>
-				<select id="whichMulti" name="which" class="form-control">
-					<option value="POINT_ESTIMATE">{{ I18n "analysis.point-estimate-option" }}</option>
-					<option value="LOWER_BOUND">{{ I18n "analysis.lower-bound-option" }}</option>
-					<option value="UPPER_BOUND">{{ I18n "analysis.upper-bound-option" }}</option>
-					<option value="SPREAD">{{ I18n "analysis.spread-option" }}</option>
-				</select>
+			<div class="form-group">
+				<div class="btn-group mode-selector whichMulti" data-toggle="buttons">
+					<label class="btn btn-default">
+						<input type="radio" name="which" value="LOWER_BOUND" />
+						{{ I18n "analysis.lower-bound-option" }}
+					</label>
+
+					<label class="btn btn-default">
+						<input type="radio" name="which" value="POINT_ESTIMATE" />
+						{{ I18n "analysis.point-estimate-option" }}
+					</label>
+
+					<label class="btn btn-default">
+						<input type="radio" name="which" value="UPPER_BOUND" />
+						{{ I18n "analysis.upper-bound-option" }}
+					</label>
+
+					<label class="btn btn-default">
+						<input type="radio" name="which" value="SPREAD" />
+						{{ I18n "analysis.spread-option" }}
+					</label>
+				</div>
 			</div>
 
 			<div class="form-group">
@@ -75,9 +88,9 @@
 				</div>
 			</div>
 			 <button id="updateMap" type="button" class="btn btn-primary">Update Map</button> <button id="exportShape" type="button" class="btn btn-default">Export Shapefile</button>
+		</form>
 		</div>
 
 
 
 	</p>
-</li>

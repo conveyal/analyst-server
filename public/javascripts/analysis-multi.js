@@ -150,6 +150,8 @@ var Analyst = Analyst || {};
   });
 
   A.analysis.QueryListItem = Backbone.Marionette.ItemView.extend({
+    tagName: 'li',
+    className: 'list-group-item',
 
     template: Handlebars.getTemplate('analysis', 'query-list-item'),
 
@@ -226,7 +228,7 @@ var Analyst = Analyst || {};
       if (this.weightById)
         url = url + "&weightBy=" + this.weightById;
 
-      url += '&which=' + this.$('#whichMulti').val();
+      url += '&which=' + this.which;
 
       window.open(url);
 
@@ -271,7 +273,7 @@ var Analyst = Analyst || {};
 
       this.normalizeBy();
 
-      this.which = this.$('#whichMulti').val();
+      this.which = this.$('.whichMulti input:checked').val();
 
       var legendTitle;
       if (this.groupById) {
@@ -360,14 +362,6 @@ var Analyst = Analyst || {};
 
       var _this = this;
 
-      // Get rid of that pesky wrapping-div.
-      // Assumes 1 child element present in template.
-      this.$el = this.$el.children();
-      // Unwrap the element to prevent infinitely
-      // nesting elements during re-render.
-      this.$el.unwrap();
-      this.setElement(this.$el);
-
       if (this.isComplete()) {
 
         this.pointsets = new A.models.PointSets();
@@ -396,13 +390,15 @@ var Analyst = Analyst || {};
 
         if (this.model.get('transit')) {
           // we have transit modes, so it's a profile request
-          this.$('#whichMulti option[value="POINT_ESTIMATE"]').remove();
-          this.$('#whichMulti option[value="SPREAD"]').remove();
+          this.$('.whichMulti input[value="POINT_ESTIMATE"]').parent().remove();
+          this.$('.whichMulti input[value="SPREAD"]').parent().remove();
+          this.$('.whichMulti input[value="LOWER_BOUND"]').prop('checked', true).parent().addClass('active');
         } else {
           // it's a stock/vanilla request
-          this.$('#whichMulti option[value="LOWER_BOUND"]').remove();
-          this.$('#whichMulti option[value="UPPER_BOUND"]').remove();
-          this.$('#whichMulti option[value="SPREAD"]').remove();
+          this.$('.whichMulti input[value="LOWER_BOUND"]').parent().remove();
+          this.$('.whichMulti input[value="UPPER_BOUND"]').parent().remove();
+          this.$('.whichMulti input[value="SPREAD"]').parent().remove();
+          this.$('.whichMulti input[value="POINT_ESTIMATE"]').prop('checked', true).parent().addClass('active');
         }
 
         this.shapefiles = new A.models.Shapefiles();
