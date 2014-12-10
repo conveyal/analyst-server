@@ -122,7 +122,7 @@ public class Api extends Controller {
 		  	  		latLon.lat = lat;
 		  	  		latLon.lon = lon;
 		  	    	
-		  	  		AnalystProfileRequest request = analyst.buildProfileRequest(graphId, "TRANSIT", latLon);
+		  	  		AnalystProfileRequest request = analyst.buildProfileRequest(graphId, mode, latLon);
 		  	        	
 		  	  		if(request == null)
 		  	  			return null;
