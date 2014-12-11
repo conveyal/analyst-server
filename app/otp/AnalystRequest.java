@@ -13,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.ws.rs.core.Response;
 
+import models.Shapefile;
 import models.SpatialLayer;
 
 import org.opentripplanner.analyst.ResultSet;
@@ -77,9 +78,9 @@ public class AnalystRequest extends RoutingRequest{
 		
 	}
 	
-	public static ResultSet getResult(Integer surfaceId, String pointSetId) {
+	public static ResultSet getResult(Integer surfaceId, String shapefilId) {
 		
-		String resultId = "resultId_" + surfaceId + "_" + pointSetId;
+		String resultId = "resultId_" + surfaceId + "_" + shapefilId;
     	
 		ResultSet result;
     	
@@ -88,7 +89,7 @@ public class AnalystRequest extends RoutingRequest{
     			result = resultCache.get(resultId);
         	else {
         		TimeSurface surf =getSurface(surfaceId);
-        		result = new ResultSet(SpatialLayer.getPointSetCategory(pointSetId).getPointSet().getSampleSet(surf.routerId), surf);
+        		result = new ResultSet(Shapefile.getShapefile(shapefilId).getPointSet().getSampleSet(surf.routerId), surf);
         		resultCache.put(resultId, result);
         	}
     	}
@@ -96,9 +97,9 @@ public class AnalystRequest extends RoutingRequest{
     	return result;
 	}
 	
-	public static ResultSetWithTimes getResultWithTimes(Integer surfaceId, String pointSetId) {
+	public static ResultSetWithTimes getResultWithTimes(Integer surfaceId, String shapefilId) {
 		
-		String resultId = "resultWIthTimesId_" + surfaceId + "_" + pointSetId;
+		String resultId = "resultWIthTimesId_" + surfaceId + "_" + shapefilId;
     	
 		ResultSetWithTimes resultWithTimes;
     	
@@ -107,7 +108,7 @@ public class AnalystRequest extends RoutingRequest{
     			resultWithTimes = (ResultSetWithTimes)resultCache.get(resultId);
         	else {
         		TimeSurface surf =getSurface(surfaceId);
-        		resultWithTimes = new ResultSetWithTimes(SpatialLayer.getPointSetCategory(pointSetId).getPointSet().getSampleSet(surf.routerId), surf);
+        		resultWithTimes = new ResultSetWithTimes(Shapefile.getShapefile(shapefilId).getPointSet().getSampleSet(surf.routerId), surf);
         		resultCache.put(resultId, resultWithTimes);
         	}
     	}

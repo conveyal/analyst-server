@@ -68,8 +68,8 @@ public class QueryResults {
 	}
 	
 	public QueryResults(Query q, Integer timeLimit, ResultEnvelope.Which which) {
-	   SpatialLayer sd = SpatialLayer.getPointSetCategory(q.pointSetId);
-	   this.which = which;
+		Shapefile sd = Shapefile.getShapefile(q.shapefileId);
+		this.which = which;
 
        double value;
 
@@ -105,12 +105,12 @@ public class QueryResults {
         	
         	item.value = value;
         	        	
-        	item.feature = sd.getShapefile().getShapeFeatureStore().getById(feature.id);
+        	item.feature = sd.getShapeFeatureStore().getById(feature.id);
         	
         	items.put(feature.id, item);
        }
        
-       shapeFileId = sd.shapeFileId;
+       shapeFileId = sd.id;
        
        //linearClassifier = new LinearClassifier(values, new Color(0.5f, 0.5f, 1.0f, 0.5f), new Color(0.0f, 0.0f, 1.0f, 0.5f));
        jenksClassifier = new NaturalBreaksClassifier(this, nClasses, new Color(1.0f, 1.0f, 1.0f, 0.25f), new Color(0.0f, 0.0f, 1.0f, 0.5f));
@@ -143,7 +143,7 @@ public class QueryResults {
 	 * to themselves. In this implementation, if the two come from the same shapefile, the matching for
 	 * the weighting is done by feature ID.
 	 */
-	public QueryResults aggregate (Shapefile aggregateTo, SpatialLayer weightBy) {
+	public QueryResults aggregate (Shapefile aggregateTo, Shapefile weightBy) {
 		// see if we've already performed this aggregation; if so, return it from the cache
 		synchronized (aggregated) {
 			Tuple2<String, String> key = new Tuple2<String, String> (aggregateTo.id, weightBy.id);
@@ -151,7 +151,7 @@ public class QueryResults {
 				return aggregated.get(key);
 						
 			// Do the features come from the same shapefile?
-			boolean sameShapefile = shapeFileId.equals(weightBy.shapeFileId);
+			boolean sameShapefile = shapeFileId.equals(weightBy.id);
 			
 			// if they don't come from the same shapefile, create the weights pycnoplactically
 			// we'll need a spatial index for that
@@ -160,11 +160,11 @@ public class QueryResults {
 			
 			if (!sameShapefile) {
 				// get the spatial index
-				weightIdx = weightBy.getShapefile().getSpatialIndex();
+				weightIdx = weightBy.getSpatialIndex();
 			}
 			else {
 				// just use the id -> feature mapping directly
-				weightStore = weightBy.getShapefile().getShapeFeatureStore();
+				weightStore = weightBy.getShapeFeatureStore();
 			}
 			
 			// build a spatial index for the features of this queryresult
@@ -183,8 +183,6 @@ public class QueryResults {
 				// find all of the items that could overlap this geometry
 				List<QueryResultItem> potentialMatches = spIdx.query(env);
 				
-				
-				
 				// this is the weighted value of all of the original geographies within this
 				// aggregate geography
 				double weightedVal = 0.0;
@@ -198,7 +196,8 @@ public class QueryResults {
 					double weight;
 					
 					if (sameShapefile) {
-						weight = weightStore.getById(match.feature.id).getAttributeSum(weightBy.getAttributeIds());
+						// FIXME hard-wiring first attribute sum while rebuilding UI -- this won't work 
+						weight = weightStore.getById(match.feature.id).getAttribute(weightBy.attributes.get(0).fieldName);
 					}
 					else {
 						weight = 0;
@@ -209,7 +208,9 @@ public class QueryResults {
 						
 						for (ShapeFeature weightFeature : potentialWeights) {
 							// calculate the weight of the entire item geometry that we are weighting by
-							double totalWeight = weightFeature.getAttributeSum(weightBy.getAttributeIds()); 
+							
+							// FIXME hard-wiring first attribute sum while rebuilding UI -- this won't work 
+							double totalWeight = weightFeature.getAttribute(weightBy.attributes.get(0).fieldName); 
 						
 							// figure out how much of this weight should be assigned to the original geometry
 							double weightArea = GeoUtils.getArea(weightFeature.geom);

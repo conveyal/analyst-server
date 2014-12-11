@@ -30,16 +30,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import controllers.Api;
 
-/**
- * A SpatialLayer corresponds to an OTP PointSet. It can have multiple attributes which are summed.
- * So a SpatialLayer Jobs might have components retail jobs, professional jobs, service jobs, other jobs,
- * which summed represent all jobs.
- *  
- * @author mattwigway
- */
+
 public class SpatialLayer implements Serializable {
 	
-	private static final long serialVersionUID = 1L;
+/*	private static final long serialVersionUID = 1L;
 
 	static DataStore<SpatialLayer> spatialDataSets = new DataStore<SpatialLayer>("layer");
 
@@ -50,11 +44,6 @@ public class SpatialLayer implements Serializable {
 	
 	public String shapeFileId;
 	
-	public List<Attribute> attributes = new ArrayList<Attribute>();
-	
-	public Integer featureCount;
-	
-	public static Map<String,PointSet> pointSetCache = new ConcurrentHashMap<String,PointSet>(); 
 	
 	
 	@JsonIgnore
@@ -62,13 +51,6 @@ public class SpatialLayer implements Serializable {
 		return Shapefile.getShapefile(shapeFileId);
 	}
 
-	public Integer getFeatureCount() {
-		if(featureCount == null)
-			featureCount = getShapefile().getShapeFeatureStore().size();
-		
-		return featureCount;
-	}
-	
 	public SpatialLayer() {
 	
 	}
@@ -110,81 +92,7 @@ public class SpatialLayer implements Serializable {
 		Logger.info("delete spatial data set sd" +id);
 	}
 	
-	@JsonIgnore
-	public PointSet getPointSet() {
-		
-		synchronized (pointSetCache) {
-			if(pointSetCache.containsKey(this.id))
-				return pointSetCache.get(this.id);
-				
-			PointSet ps = new PointSet(featureCount);
-			ps.setGraphService(Api.analyst.getGraphService());
-			
-			String categoryId = Attribute.convertNameToId(this.name);
-			
-			ps.id = categoryId;
-			ps.label = this.name;
-			ps.description = this.description;
-			
-			int index = 0;
-			for(ShapeFeature sf :  this.getShapefile().getShapeFeatureStore().getAll()) {
-				
-				HashMap<String,Integer> propertyData = new HashMap<String,Integer>();
-				
-				for(Attribute a : this.attributes) {
-					String propertyId = categoryId + "." + Attribute.convertNameToId(a.name);	
-					propertyData.put(propertyId, sf.getAttribute(a.fieldName));
-				}
-				
-				PointFeature pf;
-				try {
-					pf = new PointFeature(sf.id.toString(), sf.geom, propertyData);
-					ps.addFeature(pf, index);
-				} catch (EmptyPolygonException | UnsupportedGeometryException e) {
-					e.printStackTrace();
-				}
-				
-				
-				index++;
-			}
-			
-			ps.setLabel(categoryId, this.name);
-			
-			for(Attribute attr : this.attributes) {
-				String propertyId = categoryId + "." + Attribute.convertNameToId(attr.name);
-				ps.setLabel(propertyId, attr.name);
-				ps.setStyle(propertyId, "color", attr.color);
-			}
-			
-			pointSetCache.put(this.id, ps);
-			
-			return ps;
-		}
-	}
 	
-	public String writeToClusterCache(Boolean workOffline) throws IOException {
-		
-		
-		
-		PointSet ps = this.getPointSet();	
-		String cachePointSetId = id + ".json";
-		
-		File f = new File(cachePointSetId);
-		
-		FileOutputStream fos = new FileOutputStream(f);
-		ps.writeJson(fos, true);
-		fos.close();
-		
-		PointSetDatastore datastore = new PointSetDatastore(10, "s3Credentials", workOffline);
-	
-		datastore.addPointSet(f, cachePointSetId);
-		
-		f.delete();
-		
-		return cachePointSetId;
-			
-	}
-
 	static public SpatialLayer getPointSetCategory(String id) {
 		
 		return spatialDataSets.getById(id);	
@@ -205,7 +113,7 @@ public class SpatialLayer implements Serializable {
 			
 			return data;
 		}
-	}
+	} */
 	
 	
 }

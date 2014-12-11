@@ -174,25 +174,25 @@ public abstract class AnalystTileRequest {
 	
 	public static class SpatialTile extends AnalystTileRequest {
 		
-		final String pointSetId;
+		final String shapefileId;
 		final String selectedAttributes;
 		
-		public SpatialTile(String pointSetId, Integer x, Integer y, Integer z, String selectedAttributes) {
+		public SpatialTile(String shapefileId, Integer x, Integer y, Integer z, String selectedAttributes) {
 			super(x, y, z, "spatial");
 			
-			this.pointSetId = pointSetId;
+			this.shapefileId = shapefileId;
 			this.selectedAttributes = selectedAttributes;
 		}
 		
 		public String getId() {
-			return super.getId() + "_" + pointSetId + "_" + selectedAttributes;
+			return super.getId() + "_" + shapefileId + "_" + selectedAttributes;
 		}
 		
 		public byte[] render(){
 			
 			Tile tile = new Tile(this);
 
-			SpatialLayer sd = SpatialLayer.getPointSetCategory(pointSetId);
+			Shapefile shp = Shapefile.getShapefile(shapefileId);
 
 			HashSet<String> attributes = new HashSet<String>();
 
@@ -202,15 +202,15 @@ public abstract class AnalystTileRequest {
 				}
 			}
 
-			if(sd == null)
+			if(shp == null)
 				return null;
 
-    	    List<ShapeFeature> features = sd.getShapefile().query(tile.envelope);
+    	    List<ShapeFeature> features = shp.query(tile.envelope);
 
             for(ShapeFeature feature : features) {
 
-            	if(sd.attributes.size() > 0 || attributes.isEmpty()) {
-            		for(Attribute a : sd.attributes) {
+            	if(shp.attributes.size() > 0 || attributes.isEmpty()) {
+            		for(Attribute a : shp.attributes) {
 
             			if(!attributes.contains(a.fieldName))
             				continue;
@@ -273,12 +273,12 @@ public abstract class AnalystTileRequest {
 			
 			Tile tile = new Tile(this);
 
-			SpatialLayer sd = SpatialLayer.getPointSetCategory(shapefileId);
+			Shapefile shp = Shapefile.getShapefile(shapefileId);
 
-			if(sd == null)
+			if(shp == null)
 				return null;
 
-    	    List<ShapeFeature> features = sd.getShapefile().query(tile.envelope);
+    	    List<ShapeFeature> features = shp.getShapefile(shapefileId).query(tile.envelope);
 
             for(ShapeFeature feature : features) {
 
@@ -310,7 +310,7 @@ public abstract class AnalystTileRequest {
 	
 	public static class SurfaceComparisonTile extends AnalystTileRequest {
 		
-		final String spatialId;
+		final String shapefileId;
 		final Integer surfaceId1;
 		final Integer surfaceId2;
 		final Boolean showIso;
@@ -319,10 +319,10 @@ public abstract class AnalystTileRequest {
 		final Integer minTime;
 		final String show;
 		
-		public SurfaceComparisonTile(Integer surfaceId1, Integer surfaceId2, String spatialId, Integer x, Integer y, Integer z, Boolean showIso, Boolean showPoints, Integer timeLimit, Integer minTime, String show) {
+		public SurfaceComparisonTile(Integer surfaceId1, Integer surfaceId2, String shapefileId, Integer x, Integer y, Integer z, Boolean showIso, Boolean showPoints, Integer timeLimit, Integer minTime, String show) {
 			super(x, y, z, "surface");
 			
-			this.spatialId = spatialId;
+			this.shapefileId = shapefileId;
 			this.surfaceId1 = surfaceId1;
 			this.surfaceId2 = surfaceId2;
 			this.showIso = showIso;
@@ -333,24 +333,24 @@ public abstract class AnalystTileRequest {
 		}
 		
 		public String getId() {
-			return super.getId() + "_" + spatialId + "_" + surfaceId1 + "_" + surfaceId2 + "_" + showIso + "_" + showPoints + "_" + timeLimit + "_" + minTime + "_" + show;
+			return super.getId() + "_" + shapefileId + "_" + surfaceId1 + "_" + surfaceId2 + "_" + showIso + "_" + showPoints + "_" + timeLimit + "_" + minTime + "_" + show;
 		}
 		
 		public byte[] render(){
 			
 			Tile tile = new Tile(this);
 
-			SpatialLayer sd = SpatialLayer.getPointSetCategory(spatialId);
+			Shapefile shp = Shapefile.getShapefile(shapefileId);
 
-			if(sd == null)
+			if(shp == null)
 				return null;
 			
 			TimeSurface surf1 = AnalystProfileRequest.getSurface(surfaceId1);
 			TimeSurface surf2 = AnalystProfileRequest.getSurface(surfaceId2);
 			
-			ResultSetDelta resultDelta = new ResultSetDelta(sd.getPointSet().getSampleSet(surf1.routerId), sd.getPointSet().getSampleSet(surf2.routerId),  surf1, surf2);
+			ResultSetDelta resultDelta = new ResultSetDelta(shp.getPointSet().getSampleSet(surf1.routerId), shp.getPointSet().getSampleSet(surf2.routerId),  surf1, surf2);
 
-			List<ShapeFeature> features = sd.getShapefile().query(tile.envelope);
+			List<ShapeFeature> features = shp.query(tile.envelope);
 
             for(ShapeFeature feature : features) {
 
@@ -398,7 +398,7 @@ public abstract class AnalystTileRequest {
 
              	if(showPoints && (time1 < timeLimit || time2 < timeLimit)) {
 
-            		for(Attribute a : sd.attributes) {
+            		for(Attribute a : shp.attributes) {
 
 		    			HaltonPoints hp = feature.getHaltonPoints(a.fieldName);
 
@@ -426,7 +426,7 @@ public abstract class AnalystTileRequest {
 	
     public static class SurfaceTile extends AnalystTileRequest {
     		
-    		final String pointSetId;
+    		final String shapefileId;
     		final Integer surfaceId;
     		final Boolean showIso;
     		final Boolean showPoints;
@@ -434,10 +434,10 @@ public abstract class AnalystTileRequest {
     		final Integer minTime;
     		final String show;
     		
-    		public SurfaceTile(Integer surfaceId, String pointSetId, Integer x, Integer y, Integer z, Boolean showIso, Boolean showPoints, Integer timeLimit, Integer minTime, String show) {
+    		public SurfaceTile(Integer surfaceId, String shapefileId, Integer x, Integer y, Integer z, Boolean showIso, Boolean showPoints, Integer timeLimit, Integer minTime, String show) {
     			super(x, y, z, "surface");
     			
-    			this.pointSetId = pointSetId;
+    			this.shapefileId = shapefileId;
     			this.surfaceId = surfaceId;
     			this.showIso = showIso;
     			this.showPoints = showPoints;
@@ -447,30 +447,30 @@ public abstract class AnalystTileRequest {
     		}
     		
     		public String getId() {
-    			return super.getId() + "_" + pointSetId + "_" + surfaceId + "_" + showIso + "_" + showPoints + "_" + timeLimit + "_" + minTime;
+    			return super.getId() + "_" + shapefileId + "_" + surfaceId + "_" + showIso + "_" + showPoints + "_" + timeLimit + "_" + minTime;
     		}
     		
     		public byte[] render(){
     			
     			Tile tile = new Tile(this);
 
-    			SpatialLayer sd = SpatialLayer.getPointSetCategory(pointSetId);
+    			Shapefile shp = Shapefile.getShapefile(shapefileId);
 
-    			if(sd == null)
+    			if(shp == null)
     				return null;
 
 
 	    		ResultSetWithTimes result;
 	    		
 	    		try {
-	    			result = AnalystProfileRequest.getResultWithTimes(surfaceId, pointSetId);
+	    			result = AnalystProfileRequest.getResultWithTimes(surfaceId, shapefileId);
 	    		}
 	    		catch (NullPointerException e) {
 	    			// not a profile request
-	    			result = AnalystRequest.getResultWithTimes(surfaceId, pointSetId);
+	    			result = AnalystRequest.getResultWithTimes(surfaceId, shapefileId);
 	    		}
 
-	            List<ShapeFeature> features = sd.getShapefile().query(tile.envelope);
+	            List<ShapeFeature> features = shp.query(tile.envelope);
 
 	            for(ShapeFeature feature : features) {
 
@@ -509,7 +509,7 @@ public abstract class AnalystTileRequest {
 
 	        		if(showPoints && sampleTime < timeLimit && (minTime != null && sampleTime > minTime)) {
 
-	            		for(Attribute a : sd.attributes) {
+	            		for(Attribute a : shp.attributes) {
 
 			    			HaltonPoints hp = feature.getHaltonPoints(a.fieldName);
 
@@ -581,9 +581,9 @@ public static class QueryTile extends AnalystTileRequest {
 					qr = QueryResults.queryResultsCache.get(queryKey);
 			}
 
-			SpatialLayer sd = SpatialLayer.getPointSetCategory(query.pointSetId);
+			Shapefile shp = Shapefile.getShapefile(query.shapefileId);
 
-		    List<ShapeFeature> features = sd.getShapefile().query(tile.envelope);
+		    List<ShapeFeature> features = shp.query(tile.envelope);
 
 		    if(normalizeBy == null) {
 		        for(ShapeFeature feature : features) {
@@ -620,7 +620,7 @@ public static class QueryTile extends AnalystTileRequest {
 		    	}
 		    	else {
 		    		Shapefile aggregateTo = Shapefile.getShapefile(groupBy);
-		    		SpatialLayer weightBy = SpatialLayer.getPointSetCategory(normalizeBy); 
+		    		Shapefile weightBy = Shapefile.getShapefile(normalizeBy); 
 		    		QueryResults groupedQr = qr.aggregate(aggregateTo, weightBy);
 
 		    		// TODO: don't loop over everything here, only the items in this tile

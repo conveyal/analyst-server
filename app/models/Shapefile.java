@@ -31,10 +31,7 @@ import org.geotools.data.simple.SimpleFeatureSource;
 import org.geotools.geometry.jts.JTS;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
-import org.mapdb.DB;
-import org.mapdb.DBMaker;
 import org.mapdb.Fun;
-import org.mapdb.Fun.Tuple2;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.Property;
 import org.opengis.feature.simple.SimpleFeatureType;
@@ -42,10 +39,15 @@ import org.opengis.feature.type.PropertyType;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.MathTransform;
+import org.opentripplanner.analyst.EmptyPolygonException;
+import org.opentripplanner.analyst.PointFeature;
+import org.opentripplanner.analyst.PointSet;
+import org.opentripplanner.analyst.UnsupportedGeometryException;
 import org.opentripplanner.analyst.core.Sample;
 
 import play.Logger;
 
+import com.conveyal.otpac.PointSetDatastore;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
@@ -61,6 +63,12 @@ import utils.DataStore;
 import utils.HaltonPoints;
 import utils.HashUtils;
 
+/**
+ * A Shapefile corresponds to an OTP PointSet. All numeric Shapefile columns are coveretd to poitnset columns and accessibility value are calculated for each.
+ *  
+ * @author mattwigway
+ */
+
 public class Shapefile implements Serializable {
 	
 	private static final long serialVersionUID = 1L;
@@ -74,6 +82,12 @@ public class Shapefile implements Serializable {
 	
 	public String projectId;
 	
+	public List<Attribute> attributes = new ArrayList<Attribute>();
+	
+	public Integer featureCount;
+	
+	public static Map<String,PointSet> pointSetCache = new ConcurrentHashMap<String,PointSet>(); 
+
 	public ArrayList<String> fieldnames = new ArrayList<String>();
 	
 	
@@ -225,6 +239,81 @@ public class Shapefile implements Serializable {
 		
 		return spatialIndex;
 	}
+		
+	@JsonIgnore
+	public PointSet getPointSet() {
+		
+		synchronized (pointSetCache) {
+			if(pointSetCache.containsKey(this.id))
+				return pointSetCache.get(this.id);
+				
+			PointSet ps = new PointSet(featureCount);
+			ps.setGraphService(Api.analyst.getGraphService());
+			
+			String categoryId = Attribute.convertNameToId(this.name);
+			
+			ps.id = categoryId;
+			ps.label = this.name;
+			ps.description = this.description;
+			
+			int index = 0;
+			for(ShapeFeature sf :  this.getShapeFeatureStore().getAll()) {
+				
+				HashMap<String,Integer> propertyData = new HashMap<String,Integer>();
+				
+				for(Attribute a : this.attributes) {
+					String propertyId = categoryId + "." + Attribute.convertNameToId(a.name);	
+					propertyData.put(propertyId, sf.getAttribute(a.fieldName));
+				}
+				
+				PointFeature pf;
+				try {
+					pf = new PointFeature(sf.id.toString(), sf.geom, propertyData);
+					ps.addFeature(pf, index);
+				} catch (EmptyPolygonException | UnsupportedGeometryException e) {
+					e.printStackTrace();
+				}
+				
+				
+				index++;
+			}
+			
+			ps.setLabel(categoryId, this.name);
+			
+			for(Attribute attr : this.attributes) {
+				String propertyId = categoryId + "." + Attribute.convertNameToId(attr.name);
+				ps.setLabel(propertyId, attr.name);
+				ps.setStyle(propertyId, "color", attr.color);
+			}
+			
+			pointSetCache.put(this.id, ps);
+			
+			return ps;
+		}
+	}
+	
+	public String writeToClusterCache(Boolean workOffline) throws IOException {
+		
+		PointSet ps = this.getPointSet();	
+		String cachePointSetId = id + ".json";
+		
+		File f = new File(cachePointSetId);
+		
+		FileOutputStream fos = new FileOutputStream(f);
+		ps.writeJson(fos, true);
+		fos.close();
+		
+		PointSetDatastore datastore = new PointSetDatastore(10, "s3Credentials", workOffline);
+	
+		datastore.addPointSet(f, cachePointSetId);
+		
+		f.delete();
+		
+		return cachePointSetId;
+			
+	}
+
+	
 	
 	@JsonIgnore
 	public void setShapeFeatureStore(List<Fun.Tuple2<String,ShapeFeature>> features) {
@@ -541,6 +630,5 @@ public class Shapefile implements Serializable {
 		}
 
 	}
-
 }
 

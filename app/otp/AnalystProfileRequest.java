@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import models.Shapefile;
 import models.SpatialLayer;
 
 import org.opentripplanner.analyst.ResultSet;
@@ -70,9 +71,9 @@ public class AnalystProfileRequest extends ProfileRequest{
 	 * Get the ResultSet for the given ID. Note that no ResultEnvelope.Which need be specified as each surface ID is unique to a particular
 	 * statistic.
 	 */
-	public static ResultSet getResult(Integer surfaceId, String pointSetId) {
+	public static ResultSet getResult(Integer surfaceId, String shapefilId) {
 		
-		String resultId = "resultId_" + surfaceId + "_" + pointSetId;
+		String resultId = "resultId_" + surfaceId + "_" + shapefilId;
     	
 		ResultSet result;
     	
@@ -82,7 +83,7 @@ public class AnalystProfileRequest extends ProfileRequest{
         	else {
         		TimeSurface surf =getSurface(surfaceId);
         		
-        		result = new ResultSet(SpatialLayer.getPointSetCategory(pointSetId).getPointSet().getSampleSet(surf.routerId), surf);
+        		result = new ResultSet(Shapefile.getShapefile(shapefilId).getPointSet().getSampleSet(surf.routerId), surf);
         		resultCache.put(resultId, result);
         	}
     	}
@@ -94,9 +95,9 @@ public class AnalystProfileRequest extends ProfileRequest{
 	 * Get the ResultSet for the given ID. Note that no min/max need be specified as each surface ID is unique to a particular
 	 * statistic.
 	 */
-	public static ResultSetWithTimes getResultWithTimes(Integer surfaceId, String pointSetId) {
+	public static ResultSetWithTimes getResultWithTimes(Integer surfaceId, String shapefilId) {
 		
-		String resultId = "resultWithTimesId_" + surfaceId + "_" + pointSetId;;
+		String resultId = "resultWithTimesId_" + surfaceId + "_" + shapefilId;;
     	
 		ResultSetWithTimes resultWithTimes;
     	
@@ -106,7 +107,7 @@ public class AnalystProfileRequest extends ProfileRequest{
         	else {
         		TimeSurface surf = getSurface(surfaceId);
         			
-        		resultWithTimes = new ResultSetWithTimes(SpatialLayer.getPointSetCategory(pointSetId).getPointSet().getSampleSet(surf.routerId), surf);
+        		resultWithTimes = new ResultSetWithTimes(Shapefile.getShapefile(shapefilId).getPointSet().getSampleSet(surf.routerId), surf);
         		resultCache.put(resultId, resultWithTimes);
         	}
     	}

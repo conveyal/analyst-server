@@ -207,24 +207,24 @@ public class Api extends Controller {
     /**
      * Get a ResultSet. ResultEnvelope.Which is embedded in the 
      * @param surfaceId
-     * @param pointSetId
+     * @param shapefileId
      * @return
      */
-    public static Result result(Integer surfaceId, String pointSetId) {
+    public static Result result(Integer surfaceId, String shapefileId) {
     	
-    	final SpatialLayer ps = SpatialLayer.getPointSetCategory(pointSetId);
+    	final Shapefile shp = Shapefile.getShapefile(shapefileId);
     	ResultSet result;
     	
     	// it could be a profile request, or not
     	// The IDs are unique; they come from inside OTP. 
     	try {
-    		result = AnalystProfileRequest.getResult(surfaceId, pointSetId);
+    		result = AnalystProfileRequest.getResult(surfaceId, shapefileId);
     	} catch (NullPointerException e) {
-    		result = AnalystRequest.getResult(surfaceId, pointSetId);
+    		result = AnalystRequest.getResult(surfaceId, shapefileId);
     	}
     	
     	ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    	result.writeJson(baos, ps.getPointSet());    
+    	result.writeJson(baos, shp.getPointSet());    
         ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
         response().setContentType("application/json");
     	return ok(bais);
@@ -296,7 +296,7 @@ public class Api extends Controller {
             }
             else {
             	Shapefile aggregateTo = Shapefile.getShapefile(groupBy);
-            	SpatialLayer weightBy = SpatialLayer.getPointSetCategory(normalizeBy);
+            	Shapefile weightBy = Shapefile.getShapefile(normalizeBy);
             	return ok(Json.toJson(qr.aggregate(aggregateTo, weightBy).jenksClassifier.bins));
 	            
             }
@@ -571,14 +571,14 @@ public class Api extends Controller {
     	try {
     		
             if(id != null) {
-            	SpatialLayer s = SpatialLayer.getPointSetCategory(id);
-                if(s != null)
-                    return ok(Api.toJson(s, false));
+            	Shapefile shp = Shapefile.getShapefile(id);
+                if(shp != null)
+                    return ok(Api.toJson(shp, false));
                 else
                     return notFound();
             }
             else {
-                return ok(Api.toJson(SpatialLayer.getPointSetCategories(projectId), false));
+                return ok(Api.toJson(Shapefile.getShapfiles(projectId), false));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -591,7 +591,7 @@ public class Api extends Controller {
         
     	try {
     		
-    		return ok(Api.toJson(SpatialLayer.getPointSetCategories(projectId), false));
+    		return ok(Api.toJson(Shapefile.getShapfiles(projectId), false));
     		
         } catch (Exception e) {
             e.printStackTrace();
@@ -602,16 +602,16 @@ public class Api extends Controller {
     
     
     public static Result createPointset() {
-    	SpatialLayer sd;
+    	Shapefile shp;
         try {
         
-        	sd = mapper.readValue(request().body().asJson().traverse(), SpatialLayer.class);
-        	sd.save();
+        	shp = mapper.readValue(request().body().asJson().traverse(), Shapefile.class);
+        	shp.save();
         	
         	Tiles.resetTileCache();
-        	SpatialLayer.pointSetCache.clear();
+        	Shapefile.pointSetCache.clear();
 
-            return ok(Api.toJson(sd, false));
+            return ok(Api.toJson(shp, false));
         } catch (Exception e) {
             e.printStackTrace();
             return badRequest();
@@ -621,21 +621,21 @@ public class Api extends Controller {
     
     public static Result updatePointset(String id) {
         
-    	SpatialLayer sd;
+    	Shapefile shp;
 
         try {
         	
-        	sd = mapper.readValue(request().body().asJson().traverse(), SpatialLayer.class);
+        	shp = mapper.readValue(request().body().asJson().traverse(), Shapefile.class);
         	
-        	if(sd.id == null || SpatialLayer.getPointSetCategory(sd.id) == null)
+        	if(shp.id == null || Shapefile.getShapefile(shp.id) == null)
                 return badRequest();
         	
-        	sd.save();
+        	shp.save();
 
         	Tiles.resetTileCache();
-        	SpatialLayer.pointSetCache.clear();
+        	Shapefile.pointSetCache.clear();
         	
-            return ok(Api.toJson(sd, false));
+            return ok(Api.toJson(shp, false));
         } catch (Exception e) {
             e.printStackTrace();
             return badRequest();
@@ -646,15 +646,15 @@ public class Api extends Controller {
         if(id == null)
             return badRequest();
 
-        SpatialLayer sd = SpatialLayer.getPointSetCategory(id);
+        Shapefile shp = Shapefile.getShapefile(id);
 
-        if(sd == null)
+        if(shp == null)
         	return badRequest();
 
-        sd.delete();
+        shp.delete();
         
         Tiles.resetTileCache();
-        SpatialLayer.pointSetCache.clear();
+        Shapefile.pointSetCache.clear();
 
         return ok();
     }

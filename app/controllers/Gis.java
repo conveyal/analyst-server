@@ -117,15 +117,15 @@ public class Gis extends Controller {
 			}
     		
     		
-    		SpatialLayer sd = SpatialLayer.getPointSetCategory(query.pointSetId);
+			Shapefile shp = Shapefile.getShapefile(query.shapefileId);
     		       
-            Collection<ShapeFeature> features = sd.getShapefile().getShapeFeatureStore().getAll();
+            Collection<ShapeFeature> features = shp.getShapeFeatureStore().getAll();
          
             if(weightBy == null) {
 	            
             	ArrayList<String> fields = new ArrayList<String>();
             	
-            	fields.add(sd.name.replaceAll("\\W+", ""));
+            	fields.add(shp.name.replaceAll("\\W+", ""));
             	
             	ArrayList<GisShapeFeature> gisFeatures = new ArrayList<GisShapeFeature>();
             	
@@ -142,7 +142,7 @@ public class Gis extends Controller {
             		}
 	            }
             	
-            	shapeName += "access_" + sd.name.replaceAll("\\W+", "").toLowerCase();
+            	shapeName += "access_" + shp.name.replaceAll("\\W+", "").toLowerCase();
             	
             	return ok(generateZippedShapefile(shapeName, fields, gisFeatures));
             	
@@ -159,10 +159,10 @@ public class Gis extends Controller {
             	else {
             		
                 	
-                	SpatialLayer sdNorm = SpatialLayer.getPointSetCategory(weightBy);
+            		Shapefile shpNorm = Shapefile.getShapefile(weightBy);
                 	Shapefile aggregateToSf = Shapefile.getShapefile(groupBy);
                 	
-            		QueryResults groupedQr = qr.aggregate(aggregateToSf, sdNorm);
+            		QueryResults groupedQr = qr.aggregate(aggregateToSf, shpNorm);
             		            		
             		ArrayList<String> fields = new ArrayList<String>();
 
@@ -184,7 +184,7 @@ public class Gis extends Controller {
     	            	}
                 	}
                 	
-                	shapeName += "_" + sd.name.replaceAll("\\W+", "") + "_norm_" + sdNorm.name.replaceAll("\\W+", "") + "_group_" + aggregateToSf.name.replaceAll("\\W+", "").toLowerCase();
+                	shapeName += "_" + shp.name.replaceAll("\\W+", "") + "_norm_" + shpNorm.name.replaceAll("\\W+", "") + "_group_" + aggregateToSf.name.replaceAll("\\W+", "").toLowerCase();
                 	
                 	return ok(generateZippedShapefile(shapeName, fields, gisFeatures));
             	}

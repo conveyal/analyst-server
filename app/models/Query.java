@@ -58,7 +58,7 @@ public class Query implements Serializable {
 
 	public String mode;
 	
-	public String pointSetId;
+	public String shapefileId;
 	public String scenarioId;
 	public String status;
 	
@@ -83,8 +83,8 @@ public class Query implements Serializable {
 	/**
 	 * Get the pointset name. This is used in the UI so that we can display the name of the pointset.
 	 */
-	public String getPointSetName () {
-		SpatialLayer l = SpatialLayer.getPointSetCategory(pointSetId);
+	public String getShapefileName () {
+		Shapefile l = Shapefile.getShapefile(shapefileId);
 		
 		if (l == null)
 			return null;
@@ -236,7 +236,7 @@ public class Query implements Serializable {
 				
 				final Query q = (Query)message;
 	
-				SpatialLayer sl = SpatialLayer.getPointSetCategory(q.pointSetId);
+				Shapefile sl = Shapefile.getShapefile(q.shapefileId);
 				sl.writeToClusterCache(true);
 				
 				StandaloneCluster cluster = new StandaloneCluster("s3credentials", true, Api.analyst.getGraphService());
@@ -251,12 +251,12 @@ public class Query implements Serializable {
 				if (q.isTransit()) {
 					// create a profile request
 					ProfileRequest pr = Api.analyst.buildProfileRequest(q.scenarioId, q.mode, null);
-					js = new JobSpec(q.scenarioId, q.pointSetId + ".json",  q.pointSetId + ".json", pr);
+					js = new JobSpec(q.scenarioId, q.shapefileId + ".json",  q.shapefileId + ".json", pr);
 				}
 				else {
 					// this is not a transit request, no need for computationally-expensive profile routing 
 					RoutingRequest rr = Api.analyst.buildRequest(q.scenarioId, null, q.mode, 120);
-					js = new JobSpec(q.scenarioId, q.pointSetId + ".json",  q.pointSetId + ".json", rr);
+					js = new JobSpec(q.scenarioId, q.shapefileId + ".json",  q.shapefileId + ".json", rr);
 				}
 
 				// plus a callback that registers how many work items have returned
