@@ -560,8 +560,6 @@ public static class QueryTile extends AnalystTileRequest {
 		
 		public byte[] render(){
 			
-			Tile tile = new Tile(this);
-			
 			Query query = Query.getQuery(queryId);
 			
 			if(query == null)
@@ -580,8 +578,18 @@ public static class QueryTile extends AnalystTileRequest {
 				else
 					qr = QueryResults.queryResultsCache.get(queryKey);
 			}
-
-			SpatialLayer sd = SpatialLayer.getPointSetCategory(query.pointSetId);
+			
+			return doRender(qr, query.pointSetId);
+		}
+		
+		/**
+		 * Actually perform the rendering. This is abstracted into a separate function so it can also be used in
+		 * QueryComparisonTile.
+		 */
+		protected byte[] doRender(QueryResults qr, String pointSetId) {
+			Tile tile = new Tile(this);
+			
+			SpatialLayer sd = SpatialLayer.getPointSetCategory(pointSetId);
 
 		    List<ShapeFeature> features = sd.getShapefile().query(tile.envelope);
 
@@ -656,6 +664,58 @@ public static class QueryTile extends AnalystTileRequest {
 				return null;
 			}
 			
+		}
+	}
+
+	/**
+	 * A tile comparing two queries
+	 */
+	public static class QueryComparisonTile extends QueryTile {
+		public final String compareTo;
+		
+		public QueryComparisonTile(String queryId, String compareTo, Integer x, Integer y, Integer z, Integer timeLimit,
+				String normalizeBy, String groupBy, ResultEnvelope.Which which) {
+			super(queryId, x, y, z, timeLimit, normalizeBy, groupBy, which);
+
+			this.compareTo = compareTo;
+		}
+		
+		@Override
+		public String getId () {
+			return super.getId() + "_" + compareTo;
+		}
+		
+		@Override
+		public byte[] render () {
+			Query q1 = Query.getQuery(queryId);
+			Query q2 = Query.getQuery(compareTo);
+			
+			if (q1 == null || q2 == null || !q1.pointSetId.equals(q2.pointSetId))
+				return null;
+			
+			String q1key = queryId + "_" + timeLimit + "_" + which;
+			String q2key = compareTo + "_" + timeLimit + "_" + which;
+			
+			QueryResults qr1, qr2;
+			
+			if (!QueryResults.queryResultsCache.containsKey(q1key)) {
+				qr1 = new QueryResults(q1, timeLimit, which);
+				QueryResults.queryResultsCache.put(q1key, qr1);
+			}
+			else {
+				qr1 = QueryResults.queryResultsCache.get(q1key);
+			}
+			
+			if (!QueryResults.queryResultsCache.containsKey(q2key)) {
+				qr2 = new QueryResults(q2, timeLimit, which);
+				QueryResults.queryResultsCache.put(q2key, qr2);
+			}
+			else {
+				qr2 = QueryResults.queryResultsCache.get(q2key);
+			}
+			
+			
+			return doRender(qr1.subtract(qr2), q1.pointSetId);
 		}
 	}
  

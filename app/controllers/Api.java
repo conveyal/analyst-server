@@ -257,7 +257,7 @@ public class Api extends Controller {
     }
     
     public static Result queryBins(String queryId, Integer timeLimit, String normalizeBy, String groupBy,
-    		String which) {
+    		String which, String compareTo) {
     	
 		response().setHeader(CACHE_CONTROL, "no-cache, no-store, must-revalidate");
 		response().setHeader(PRAGMA, "no-cache");
@@ -275,6 +275,16 @@ public class Api extends Controller {
 		
 		if(query == null)
 			return badRequest();
+		
+		Query otherQuery = null;
+		
+		if (compareTo != null) {
+			otherQuery = Query.getQuery(compareTo);
+			
+			if (otherQuery == null) {
+				return badRequest("Non-existent comparison query.");
+			}
+		}
 	   	
     	try {
 	
@@ -289,6 +299,21 @@ public class Api extends Controller {
 	    		}
 	    		else
 	    			qr = QueryResults.queryResultsCache.get(queryKey);
+    		}
+    		
+    		if (otherQuery != null) {
+        		QueryResults otherQr = null;
+        		
+    			queryKey = compareTo + "_" + timeLimit + "_" + which;
+    			if (!QueryResults.queryResultsCache.containsKey(queryKey)) {
+    				otherQr = new QueryResults(otherQuery, timeLimit, whichEnum);
+    				QueryResults.queryResultsCache.put(queryKey, otherQr);
+    			}
+    			else {
+    				otherQr = QueryResults.queryResultsCache.get(queryKey);
+    			}
+    			
+    			qr = qr.subtract(otherQr);
     		}
     		
             if(normalizeBy == null) {

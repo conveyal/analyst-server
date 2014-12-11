@@ -33,6 +33,13 @@ public class QueryResults {
 
 	public static  Map<String, QueryResults> queryResultsCache = new ConcurrentHashMap<String, QueryResults>();
 	
+	/**
+	 * Keep track of IDs
+	 * This is an Integer not an int so we can synchronize on it.
+	 */
+	
+	private static Integer nextId = 0;
+	
 	/*
 	 * Min and max values for this result. Set to null initially so that there is no confusion
 	 * as to whether they've been set.
@@ -49,8 +56,16 @@ public class QueryResults {
 	 * From whence do the geometries of this QueryResults come?
 	 */
 	public String shapeFileId;
+	
+	/**
+	 * What is the attribute of that shapefile that we are using? For now this is the pointset ID.
+	 */
+	public String attributeId;
 
 	public ConcurrentHashMap<String, QueryResultItem> items = new ConcurrentHashMap<String, QueryResultItem>();
+	
+	public ConcurrentHashMap<Integer, QueryResults> subtracted = new ConcurrentHashMap<Integer, QueryResults>();
+	
 	public ConcurrentHashMap<Tuple2<String, String>, QueryResults> aggregated =
 			new ConcurrentHashMap<Tuple2<String, String>, QueryResults>();
 	
@@ -59,6 +74,9 @@ public class QueryResults {
 	
 	/** Cache the spatial index */
 	private transient SpatialIndex spIdx = null;
+	
+	/** We want the IDs to be weak so that they never get serialized, as they are reset every time the server is restarted */
+	private transient int id;
 
 	/** Is this the point estimate, lower bound, etc.? */
 	private ResultEnvelope.Which which;
@@ -111,6 +129,13 @@ public class QueryResults {
        }
        
        shapeFileId = sd.shapeFileId;
+       
+       attributeId = q.pointSetId;
+       
+       // assign a unique ID
+       synchronized (nextId) {
+    	   id = nextId++;
+       }
        
        //linearClassifier = new LinearClassifier(values, new Color(0.5f, 0.5f, 1.0f, 0.5f), new Color(0.0f, 0.0f, 1.0f, 0.5f));
        jenksClassifier = new NaturalBreaksClassifier(this, nClasses, new Color(1.0f, 1.0f, 1.0f, 0.25f), new Color(0.0f, 0.0f, 1.0f, 0.5f));
@@ -259,9 +284,58 @@ public class QueryResults {
 			
 			aggregated.put(key, out);
 			
+			// TODO: set attribute ID.
+			
 			return out;
 		}
-	}	
+	}
+	
+	/**
+	 * Subtract the other queryresults from this one, and return the query results.
+	 * The other queryresults must have come from or been aggregated to the same shapefile.
+	 */
+	public QueryResults subtract(QueryResults otherQr) {
+		synchronized (subtracted) {
+			if (subtracted.containsKey(otherQr.id))
+				return subtracted.get(otherQr.id);
+			
+			// TODO: check that indicator is same also
+			if (!shapeFileId.equals(otherQr.shapeFileId) || !attributeId.equals(otherQr.attributeId)) {
+				throw new IllegalArgumentException("Query results in difference operation do not come from same attribute of same shapefile!");
+			}
+			
+			QueryResults ret = new QueryResults();
+			
+			ret.shapeFileId = this.shapeFileId;
+			
+			for (String id : items.keySet()) {
+				QueryResultItem item1 = this.items.get(id);
+				QueryResultItem item2 = otherQr.items.get(id);
+				
+				if (item2 == null)
+					// if it's unreachable in either leave it out of the difference
+					continue;
+				
+				QueryResultItem newItem = new QueryResultItem();
+				newItem.feature = item1.feature;
+				newItem.value = item1.value - item2.value;
+				
+				if (ret.maxValue == null || newItem.value > ret.maxValue)
+					ret.maxValue = newItem.value;
+	        	
+				if (ret.minValue == null || ret.minValue > newItem.value)
+	        		ret.minValue = newItem.value;
+				
+				ret.items.put(id, newItem);
+			}
+			
+			ret.jenksClassifier = new NaturalBreaksClassifier(ret, nClasses, new Color(.9f, .9f, .1f, .5f), new Color(0f, 0f, 1f, .5f));
+			
+			subtracted.put(otherQr.id, ret);
+			
+			return ret;
+		}
+	}
     
 	/** Get a spatial index for the items of this queryresults */
 	public SpatialIndex getSpatialIndex () {
