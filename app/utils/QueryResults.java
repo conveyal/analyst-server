@@ -78,11 +78,11 @@ public class QueryResults {
     	   ResultSet feature;
     	   
     	   switch(which) {
-    	   case LOWER_BOUND:
-    		   feature = env.lowerBound;
+    	   case WORST_CASE:
+    		   feature = env.worstCase;
     		   break;
-    	   case UPPER_BOUND:
-    		   feature = env.upperBound;
+    	   case BEST_CASE:
+    		   feature = env.bestCase;
     		   break;
     	   case POINT_ESTIMATE:
     		   feature = env.pointEstimate;

@@ -118,15 +118,15 @@ analysis.statistic=Statistic
 
 # the -option versions are displayed in the dropsown
 # the -suffix versions are displayed in the legend title
-analysis.lower-bound-option=Worst case
-analysis.upper-bound-option=Best case
+analysis.worst-case-option=Worst case
+analysis.best-case-option=Best case
 analysis.point-estimate-option=Estimated accessibility
 
 # spread is some measure of dispersion, e.g. standard deviation or interquartile range
 analysis.spread-option=spread
 
-analysis.lower-bound-suffix=(worst case)
-analysis.upper-bound-suffix=(best case)
+analysis.worst-case-suffix=(worst case)
+analysis.best-case-suffix=(best case)
 analysis.point-estimate-suffix=
 analysis.spread-suffix=(spread)
 

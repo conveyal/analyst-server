@@ -13,14 +13,14 @@ import com.conveyal.otpac.message.WorkResult;
  */
 public class ResultEnvelope implements Serializable {
 	/**
-	 * The upper bound (e.g. number of jobs reachable under best-case travel time) 
+	 * The best case/upper bound (e.g. number of jobs reachable under best-case travel time) 
 	 */
-	public ResultSet upperBound;
+	public ResultSet bestCase;
 	
 	/**
 	 * The lower bound (e.g. number of jobs reachable under worst-case travel time)
 	 */
-	public ResultSet lowerBound;
+	public ResultSet worstCase;
 	
 	/**
 	 * The point estimate of the accessibility. If profile = false, this is the journey
@@ -51,17 +51,17 @@ public class ResultEnvelope implements Serializable {
 	public ResultEnvelope (WorkResult res) {
 		if (res.profile) {
 			this.profile = true;
-			this.upperBound = res.getBestCase();
-			this.lowerBound = res.getWorstCase();
+			this.bestCase = res.getBestCase();
+			this.worstCase = res.getWorstCase();
 			this.pointEstimate = null;
 			this.spread = null;
-			this.id = this.upperBound.id;
+			this.id = this.bestCase.id;
 		}
 		else {
 			this.profile = false;
 			this.pointEstimate = res.getResult();
-			this.upperBound = null;
-			this.lowerBound = null;
+			this.bestCase = null;
+			this.worstCase = null;
 			this.spread = null;
 			this.id = this.pointEstimate.id;
 		}
@@ -75,6 +75,6 @@ public class ResultEnvelope implements Serializable {
 	}
 	
 	public static enum Which {
-		UPPER_BOUND, LOWER_BOUND, POINT_ESTIMATE, SPREAD;
+		BEST_CASE, WORST_CASE, POINT_ESTIMATE, SPREAD;
 	}
 }

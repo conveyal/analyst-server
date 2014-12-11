@@ -18,6 +18,8 @@ import org.opentripplanner.profile.ProfileRequest;
 import org.opentripplanner.profile.ProfileResponse;
 import org.opentripplanner.profile.ProfileRouter;
 
+import utils.ResultEnvelope;
+
 import com.google.common.collect.Lists;
 
 import controllers.Api;
@@ -26,14 +28,14 @@ public class AnalystProfileRequest extends ProfileRequest{
 	
 	private static final long serialVersionUID = 1L;
 
-	private static ProfileResultCache profileResultCache = new ProfileResultCache(100);
+	private static SurfaceCache profileResultCache = new SurfaceCache(100);
 
 	private static  Map<String, ResultSet> resultCache = new ConcurrentHashMap<String, ResultSet>();
 
 	public int cutoffMinutes;
 	public String graphId;
 	
-	public TimeSurfaceShort createSurfaces() {
+	public TimeSurfaceShort createSurfaces(ResultEnvelope.Which which) {
 		
 		ProfileRouter router = new ProfileRouter(Api.analyst.getGraph(graphId), this);
 		
@@ -43,10 +45,9 @@ public class AnalystProfileRequest extends ProfileRequest{
             router.minSurface.cutoffMinutes = cutoffMinutes;
             router.maxSurface.cutoffMinutes = cutoffMinutes;
             
-            ProfileResult result = new ProfileResult(router.minSurface.id, router.minSurface, router.maxSurface);
-            
-            profileResultCache.add(result);
-
+            // add both the min surface and the max surface to the cache; they will be retrieved later on by ID
+            profileResultCache.add(router.minSurface);
+            profileResultCache.add(router.maxSurface);
         }
         catch (Exception e) {
         	e.printStackTrace();
@@ -55,12 +56,23 @@ public class AnalystProfileRequest extends ProfileRequest{
             router.cleanup(); // destroy routing contexts even when an exception happens
         }
         
-        return new TimeSurfaceShort(router.minSurface);
+        switch(which) {
+        case BEST_CASE:
+        	return new TimeSurfaceShort(router.minSurface);
+        case WORST_CASE:
+        	return new TimeSurfaceShort(router.maxSurface);
+        default:
+        	return null;
+        }
   	}
 	
-	public static ResultSet getResult(Integer surfaceId, String pointSetId, String show) {
+	/**
+	 * Get the ResultSet for the given ID. Note that no ResultEnvelope.Which need be specified as each surface ID is unique to a particular
+	 * statistic.
+	 */
+	public static ResultSet getResult(Integer surfaceId, String pointSetId) {
 		
-		String resultId = "resultId_" + surfaceId + "_" + pointSetId + "_" + show;
+		String resultId = "resultId_" + surfaceId + "_" + pointSetId;
     	
 		ResultSet result;
     	
@@ -68,15 +80,9 @@ public class AnalystProfileRequest extends ProfileRequest{
     		if(resultCache.containsKey(resultId))
     			result = resultCache.get(resultId);
         	else {
-        		ProfileResult profileResult =getSurface(surfaceId);
+        		TimeSurface surf =getSurface(surfaceId);
         		
-        		TimeSurface surf = null;
-        		if(show.equals("min"))
-        			surf = profileResult.min;
-        		if(show.equals("max"))
-        			surf = profileResult.max;
-        		
-        		result = new ResultSet(SpatialLayer.getPointSetCategory(pointSetId).getPointSet().getSampleSet(surf.routerId), surf);;
+        		result = new ResultSet(SpatialLayer.getPointSetCategory(pointSetId).getPointSet().getSampleSet(surf.routerId), surf);
         		resultCache.put(resultId, result);
         	}
     	}
@@ -84,9 +90,13 @@ public class AnalystProfileRequest extends ProfileRequest{
     	return result;
 	}
 	
-	public static ResultSetWithTimes getResultWithTimes(Integer surfaceId, String pointSetId, String show) {
+	/**
+	 * Get the ResultSet for the given ID. Note that no min/max need be specified as each surface ID is unique to a particular
+	 * statistic.
+	 */
+	public static ResultSetWithTimes getResultWithTimes(Integer surfaceId, String pointSetId) {
 		
-		String resultId = "resultWithTimesId_" + surfaceId + "_" + pointSetId + "_" + show;
+		String resultId = "resultWithTimesId_" + surfaceId + "_" + pointSetId;;
     	
 		ResultSetWithTimes resultWithTimes;
     	
@@ -94,13 +104,7 @@ public class AnalystProfileRequest extends ProfileRequest{
     		if(resultCache.containsKey(resultId))
     			resultWithTimes = (ResultSetWithTimes)resultCache.get(resultId);
         	else {
-        		ProfileResult profileResult =getSurface(surfaceId);
-        		
-        		TimeSurface surf = null;
-        		if(show.equals("min"))
-        			surf = profileResult.min;
-        		if(show.equals("max"))
-        			surf = profileResult.max;
+        		TimeSurface surf = getSurface(surfaceId);
         			
         		resultWithTimes = new ResultSetWithTimes(SpatialLayer.getPointSetCategory(pointSetId).getPointSet().getSampleSet(surf.routerId), surf);
         		resultCache.put(resultId, resultWithTimes);
@@ -110,7 +114,7 @@ public class AnalystProfileRequest extends ProfileRequest{
     	return resultWithTimes;
 	}
 	
-	public static ProfileResult getSurface(Integer surfaceId) {
+	public static TimeSurface getSurface(Integer surfaceId) {
 		return profileResultCache.get(surfaceId);
 	}
 

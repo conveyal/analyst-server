@@ -114,8 +114,24 @@ public class Api extends Controller {
     	public Long accessible = 0l;
     }
     
-    public static Promise<Result> surface(final String graphId, final Double lat, final Double lon, final String mode, final Double bikeSpeed, final Double walkSpeed) {
+    public static Promise<Result> surface(final String graphId, final Double lat, final Double lon, final String mode,
+    		final Double bikeSpeed, final Double walkSpeed, String which) {
     	Promise<TimeSurfaceShort> promise;
+    	
+		ResultEnvelope.Which whichEnum_tmp;
+		try {
+			whichEnum_tmp = ResultEnvelope.Which.valueOf(which);
+		} catch (Exception e) {
+			// no need to pollute the console with a stack trace
+			return Promise.promise(new Function0<Result> () {
+				@Override
+				public Result apply() throws Throwable {
+				    return badRequest("Invalid value for which parameter");
+				}
+			});
+		}
+		
+		final ResultEnvelope.Which whichEnum = whichEnum_tmp;
     	
      	if (new TraverseModeSet(mode).isTransit()) {
     		// transit search: use profile routing
@@ -129,7 +145,7 @@ public class Api extends Controller {
     						if(request == null)
     							return null;
 
-    						return request.createSurfaces();
+    						return request.createSurfaces(whichEnum);
     					}
     				}
     				);
@@ -188,10 +204,13 @@ public class Api extends Controller {
          return ok(fcString);
     }
     
-    public static Result result(Integer surfaceId, String pointSetId, String show) {
-    	
-    	if(show == null)
-    		show = "min";
+    /**
+     * Get a ResultSet. ResultEnvelope.Which is embedded in the 
+     * @param surfaceId
+     * @param pointSetId
+     * @return
+     */
+    public static Result result(Integer surfaceId, String pointSetId) {
     	
     	final SpatialLayer ps = SpatialLayer.getPointSetCategory(pointSetId);
     	ResultSet result;
@@ -199,7 +218,7 @@ public class Api extends Controller {
     	// it could be a profile request, or not
     	// The IDs are unique; they come from inside OTP. 
     	try {
-    		result = AnalystProfileRequest.getResult(surfaceId, pointSetId, show);
+    		result = AnalystProfileRequest.getResult(surfaceId, pointSetId);
     	} catch (NullPointerException e) {
     		result = AnalystRequest.getResult(surfaceId, pointSetId);
     	}

@@ -292,11 +292,11 @@ var Analyst = Analyst || {};
       if (this.which == 'POINT_ESTIMATE')
         legendTitle += window.Messages('analysis.point-estimate-suffix');
 
-      else if (this.which == 'LOWER_BOUND')
-        legendTitle += window.Messages('analysis.lower-bound-suffix');
+      else if (this.which == 'WORST_CASE')
+        legendTitle += window.Messages('analysis.worst-case-suffix');
 
-      else if (this.which == 'UPPER_BOUND')
-        legendTitle += window.Messages('analysis.upper-bound-suffix');
+      else if (this.which == 'BEST_CASE')
+        legendTitle += window.Messages('analysis.best-case-suffix');
 
       else if (this.which == 'SPREAD')
         legendTitle += window.Messages('analysis.spread-suffix');
@@ -392,11 +392,11 @@ var Analyst = Analyst || {};
           // we have transit modes, so it's a profile request
           this.$('.whichMulti input[value="POINT_ESTIMATE"]').parent().remove();
           this.$('.whichMulti input[value="SPREAD"]').parent().remove();
-          this.$('.whichMulti input[value="LOWER_BOUND"]').prop('checked', true).parent().addClass('active');
+          this.$('.whichMulti input[value="WORST_CASE"]').prop('checked', true).parent().addClass('active');
         } else {
           // it's a stock/vanilla request
-          this.$('.whichMulti input[value="LOWER_BOUND"]').parent().remove();
-          this.$('.whichMulti input[value="UPPER_BOUND"]').parent().remove();
+          this.$('.whichMulti input[value="WORST_CASE"]').parent().remove();
+          this.$('.whichMulti input[value="BEST_CASE"]').parent().remove();
           this.$('.whichMulti input[value="SPREAD"]').parent().remove();
           this.$('.whichMulti input[value="POINT_ESTIMATE"]').prop('checked', true).parent().addClass('active');
         }

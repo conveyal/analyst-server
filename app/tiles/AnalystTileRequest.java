@@ -345,26 +345,8 @@ public abstract class AnalystTileRequest {
 			if(sd == null)
 				return null;
 			
-			final ProfileResult res1 = AnalystProfileRequest.getSurface(surfaceId1);
-			final ProfileResult res2 = AnalystProfileRequest.getSurface(surfaceId2);
-
-			if(res1 == null || res2 == null)
-				return null;
-			
-			TimeSurface surf1 = null;
-			TimeSurface surf2 = null;
-			
-			if(show.equals("min")) {
-				surf1 = res1.min;
-				surf2 = res2.min;
-			}
-			else {
-				surf1 = res1.max;
-				surf2 = res2.max;
-			}
-	
-			
-			
+			TimeSurface surf1 = AnalystProfileRequest.getSurface(surfaceId1);
+			TimeSurface surf2 = AnalystProfileRequest.getSurface(surfaceId2);
 			
 			ResultSetDelta resultDelta = new ResultSetDelta(sd.getPointSet().getSampleSet(surf1.routerId), sd.getPointSet().getSampleSet(surf2.routerId),  surf1, surf2);
 
@@ -465,7 +447,7 @@ public abstract class AnalystTileRequest {
     		}
     		
     		public String getId() {
-    			return super.getId() + "_" + pointSetId + "_" + surfaceId + "_" + showIso + "_" + showPoints + "_" + timeLimit + "_" + minTime + "_" + show;
+    			return super.getId() + "_" + pointSetId + "_" + surfaceId + "_" + showIso + "_" + showPoints + "_" + timeLimit + "_" + minTime;
     		}
     		
     		public byte[] render(){
@@ -481,7 +463,7 @@ public abstract class AnalystTileRequest {
 	    		ResultSetWithTimes result;
 	    		
 	    		try {
-	    			result = AnalystProfileRequest.getResultWithTimes(surfaceId, pointSetId, show);
+	    			result = AnalystProfileRequest.getResultWithTimes(surfaceId, pointSetId);
 	    		}
 	    		catch (NullPointerException e) {
 	    			// not a profile request

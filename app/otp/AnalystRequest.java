@@ -88,7 +88,7 @@ public class AnalystRequest extends RoutingRequest{
     			result = resultCache.get(resultId);
         	else {
         		TimeSurface surf =getSurface(surfaceId);
-        		result = new ResultSet(SpatialLayer.getPointSetCategory(pointSetId).getPointSet().getSampleSet(surf.routerId), surf);;
+        		result = new ResultSet(SpatialLayer.getPointSetCategory(pointSetId).getPointSet().getSampleSet(surf.routerId), surf);
         		resultCache.put(resultId, result);
         	}
     	}

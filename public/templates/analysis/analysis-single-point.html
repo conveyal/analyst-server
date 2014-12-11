@@ -3,7 +3,6 @@
 </div>
 
 <div id="detail" style="padding: 10px;">
-
      <div class="form-group">
      <label>{{I18n "analysis.primary-indicator"}}</label>
      <select id="primaryIndicator" class="primary-indicator form-control"></select>
@@ -40,6 +39,30 @@
 		    <input type="radio" name="mode1" id="modePed" value="WALK"><span class="icon icon-pedestrian"></span>
 		  </label>
 		</div>
+
+    <div style="margin-top: 10px" class="form-group">
+      <div class="btn-group mode-selector which1" data-toggle="buttons">
+        <label class="btn btn-default">
+          <input type="radio" name="which1" value="WORST_CASE" />
+          {{ I18n "analysis.worst-case-option" }}
+        </label>
+
+        <label class="btn btn-default">
+          <input type="radio" name="which1" value="POINT_ESTIMATE" />
+          {{ I18n "analysis.point-estimate-option" }}
+        </label>
+
+        <label class="btn btn-default">
+          <input type="radio" name="which1" value="BEST_CASE" />
+          {{ I18n "analysis.best-case-option" }}
+        </label>
+
+        <label class="btn btn-default">
+          <input type="radio" name="which1" value="SPREAD" />
+          {{ I18n "analysis.spread-option" }}
+        </label>
+      </div>
+    </div>
 	</div>
 
 	<div id="scenario2-controls">
@@ -66,6 +89,30 @@
 			  </label>
 			</div>
 		</div>
+
+    <div class="form-group">
+      <div class="btn-group mode-selector which2" data-toggle="buttons">
+        <label class="btn btn-default">
+          <input type="radio" name="which2" value="WORST_CASE" />
+          {{ I18n "analysis.worst-case-option" }}
+        </label>
+
+        <label class="btn btn-default">
+          <input type="radio" name="which2" value="POINT_ESTIMATE" />
+          {{ I18n "analysis.point-estimate-option" }}
+        </label>
+
+        <label class="btn btn-default">
+          <input type="radio" name="which2" value="BEST_CASE" />
+          {{ I18n "analysis.best-case-option" }}
+        </label>
+
+        <label class="btn btn-default">
+          <input type="radio" name="which2" value="SPREAD" />
+          {{ I18n "analysis.spread-option" }}
+        </label>
+      </div>
+    </div>
 
 	</div>
 

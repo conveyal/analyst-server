@@ -12,6 +12,8 @@ var Analyst = Analyst || {};
 		  'change #scenario2': 'createSurface',
 		  'change .primary-indicator': 'createSurface',
 		  'change #chartType' : 'updateResults',
+			'change .which1 input' : 'updateEnvelope',
+			'change .which2 input' : 'updateEnvelope',
 		  'click #showIso': 'updateMap',
 		  'click #showPoints': 'updateMap',
 		  'click #showTransit': 'updateMap',
@@ -23,7 +25,7 @@ var Analyst = Analyst || {};
 		},
 
 		initialize: function(options){
-			_.bindAll(this, 'createSurface', 'updateMap', 'onMapClick');
+			_.bindAll(this, 'createSurface', 'updateMap', 'onMapClick', 'updateEnvelope');
 
 			this.transitOverlays = {};
 		},
@@ -44,6 +46,65 @@ var Analyst = Analyst || {};
 		      style.weight = 1.5;
 		    }
 		    return style;
+		},
+
+		/**
+		 * Update the best case, worst case, etc. that the user can choose
+		 * based on the modes. For example, for on-street modes, there is no
+		 * best case; for transit modes, there is currently no point estimate.
+		 */
+		updateAvailableEnvelopeParameters: function () {
+			// we use this variable so that the map is not automatically redrawn when
+			// we check checkboxes programatically
+			this.envelopeParametersChangingProgramatically = true;
+
+			// do it for the modes for both the baseline and the comparison
+			for (var i = 1; i <= 2; i++) {
+				var mode =  this['mode' + i];
+				var inps = this.$('.which' + i);
+
+				if (mode.includes('TRANSIT') || mode.includes('TRAINISH') || mode.includes('BUSISH') ||
+							mode.includes('FERRY') || mode.includes('FUNICULAR') || mode.includes('GONDOLA') ||
+							mode.includes('CABLE_CAR') || mode.includes('RAIL') || mode.includes('SUBWAY') ||
+							mode.includes('TRAM') || mode.includes('BUS')) {
+					// transit request, we're doing profile routing
+					inps.find('[value="WORST_CASE"]').prop('disabled', false).parent().removeClass('hidden');
+					inps.find('[value="BEST_CASE"]').prop('disabled', false).parent().removeClass('hidden');
+					inps.find('[value="SPREAD"]').prop('disabled', true).parent().addClass('hidden');
+					inps.find('[value="POINT_ESTIMATE"]').prop('disabled', true).parent().addClass('hidden');
+
+					if (inps.find(':checked:disabled').length > 0 || inps.find(':checked').length == 0) {
+						// we have disabled the currently selected envelope parameter, choose a reasonable default
+						inps.find('input').prop('checked', false).parent().removeClass('active');
+						inps.find('[value="WORST_CASE"]').prop('checked', true).parent().addClass('active');
+					}
+				} else {
+					// non-transit request, we're doing vanilla routing with point estimates only
+					inps.find('[value="WORST_CASE"]').prop('disabled', true).parent().addClass('hidden');
+					inps.find('[value="BEST_CASE"]').prop('disabled', true).parent().addClass('hidden');
+					inps.find('[value="SPREAD"]').prop('disabled', true).parent().addClass('hidden');
+
+					// since there is only one option, we may as well go ahead and check it
+					inps.find('[value="POINT_ESTIMATE"]')
+						.prop('disabled', false)
+						.prop('checked', true)
+						.parent()
+						.removeClass('hidden')
+						.addClass('active');
+					}
+			 }
+
+			this.envelopeParametersChangingProgramatically = false;
+		},
+
+		/**
+		 * Event handler to update the envelope parameters
+		 */
+		updateEnvelope : function (e) {
+			// prevent it from being run twice: once for uncheck and once for check
+			if (e.target.checked && this.envelopeParametersChangingProgramatically !== true) {
+				this.createSurface();
+			}
 		},
 
 		onShow : function() {
@@ -100,17 +161,20 @@ var Analyst = Analyst || {};
 				_this.createSurface();
 			}).data('slider');
 
-			this.mode1 = 'TRANSIT';
-			this.mode2 = 'TRANSIT';
+			this.mode1 = 'TRANSIT,WALK';
+			this.mode2 = 'TRANSIT,WALK';
 
+			this.updateAvailableEnvelopeParameters();
 
 			this.$('input[name=mode1]:radio').on('change', function(event) {
 				_this.mode1 = _this.$('input:radio[name=mode1]:checked').val();
+				_this.updateAvailableEnvelopeParameters();
 				_this.createSurface();
 		    });
 
 		    this.$('input[name=mode2]:radio').on('change', function(event) {
 				_this.mode2 = _this.$('input:radio[name=mode2]:checked').val();
+				_this.updateAvailableEnvelopeParameters();
 				_this.createSurface();
 		    });
 
@@ -201,10 +265,14 @@ var Analyst = Analyst || {};
 		  	var walkSpeed = (this.walkSpeedSlider.getValue() * 1000 / 60 / 60 );
 
  			var graphId1 = this.$('#scenario1').val();
+			var which1 = this.$('input[name="which1"]:checked').val();
 
 			var _this = this;
 
-			var surfaceUrl1 = '/api/surface?graphId=' + graphId1 + '&lat=' + A.map.marker.getLatLng().lat + '&lon=' + A.map.marker.getLatLng().lng + '&mode=' + this.mode1 + '&bikeSpeed=' + bikeSpeed + '&walkSpeed=' + walkSpeed;
+			var surfaceUrl1 = '/api/surface?graphId=' + graphId1 + '&lat=' + A.map.marker.getLatLng().lat + '&lon=' +
+				A.map.marker.getLatLng().lng + '&mode=' + this.mode1 + '&bikeSpeed=' + bikeSpeed + '&walkSpeed=' + walkSpeed +
+				'&which=' + which1;
+
 		    $.getJSON(surfaceUrl1, function(data) {
 
 		  	  _this.surfaceId1 = data.id;
@@ -219,8 +287,11 @@ var Analyst = Analyst || {};
 		    if(this.comparisonType == 'compare') {
 
 		    	var graphId2 = this.$('#scenario2').val();
+					var which2 = this.$('input[name="which2"]:checked').val();
 
-		    	var surfaceUrl2 = '/api/surface?graphId=' + graphId2 + '&lat=' + A.map.marker.getLatLng().lat + '&lon=' + A.map.marker.getLatLng().lng + '&mode=' + this.mode2 + '&bikeSpeed=' + bikeSpeed + '&walkSpeed=' + walkSpeed;
+		    	var surfaceUrl2 = '/api/surface?graphId=' + graphId2 + '&lat=' + A.map.marker.getLatLng().lat + '&lon=' +
+						A.map.marker.getLatLng().lng + '&mode=' + this.mode2 + '&bikeSpeed=' + bikeSpeed +
+						'&walkSpeed=' + walkSpeed + '&which=' + which2;
 		    	$.getJSON(surfaceUrl2, function(data) {
 
 			  	  _this.surfaceId2 = data.id;
@@ -244,7 +315,9 @@ var Analyst = Analyst || {};
 			if(this.comparisonType == 'compare') {
 
 				if(this.surfaceId1) {
-					$.getJSON('/api/result?&pointSetId=' + this.$("#primaryIndicator").val() + '&surfaceId=' + this.surfaceId1, function(res) {
+					var resUrl = '/api/result?pointSetId=' + this.$("#primaryIndicator").val() + '&surfaceId=' + this.surfaceId1 +
+					'&which=' + this.$('input[name="which1"]:checked').val();
+					$.getJSON(resUrl, function(res) {
 
 						_this.scenario1Data = res;
 						_this.drawChart(res, 1, "#barChart1", 175);
@@ -253,7 +326,9 @@ var Analyst = Analyst || {};
 				}
 
 				if(this.surfaceId2) {
-					$.getJSON('/api/result?&pointSetId=' + this.$("#primaryIndicator").val() + '&surfaceId=' + this.surfaceId2, function(res) {
+					var resUrl = '/api/result?pointSetId=' + this.$("#primaryIndicator").val() + '&surfaceId=' + this.surfaceId2 +
+						'&which=' + this.$('input[name="which2"]:checked').val();
+					$.getJSON(resUrl, function(res) {
 
 						_this.scenario2Data = res;
 						_this.drawChart(res, 2, "#barChart2", 175);
@@ -262,7 +337,9 @@ var Analyst = Analyst || {};
 				}
 			}
 			else {
-				$.getJSON('/api/result?&pointSetId=' + this.$("#primaryIndicator").val() + '&surfaceId=' + this.surfaceId1, function(res) {
+				var resUrl = '/api/result?pointSetId=' + this.$("#primaryIndicator").val() + '&surfaceId=' + this.surfaceId1 +
+				'&which=' + this.$('input[name="which1"]:checked').val();
+				$.getJSON(resUrl, function(res) {
 
 					_this.drawChart(res, 1, "#barChart1", 175);
 
