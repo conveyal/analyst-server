@@ -129,6 +129,8 @@ analysis.worst-case-suffix=(worst case)
 analysis.best-case-suffix=(best case)
 analysis.point-estimate-suffix=
 analysis.spread-suffix=(spread)
+analysis.compare=Compare
+analysis.compare-to=Compare to
 
 analysis.group=Group
 analysis.dont-group=Don't Group

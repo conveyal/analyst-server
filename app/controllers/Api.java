@@ -756,10 +756,10 @@ public class Api extends Controller {
     // **** query controllers ****
     
     public static Result getQueryById(String id) {
-    	return getQuery(id, null);
+    	return getQuery(id, null, null);
     }
     
-    public static Result getQuery(String id, String projectId) {
+    public static Result getQuery(String id, String projectId, String pointSetId) {
         
     	try {
     		
@@ -770,8 +770,11 @@ public class Api extends Controller {
                 else
                     return notFound();
             }
-            else {
+            else if (projectId != null){
                 return ok(Api.toJson(Query.getQueries(projectId), false));
+            }
+            else {
+            	return ok(Api.toJson(Query.getQueriesByPointSet(pointSetId), false));
             }
         } catch (Exception e) {
             e.printStackTrace();

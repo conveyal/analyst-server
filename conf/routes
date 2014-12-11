@@ -45,7 +45,7 @@ POST    /api/scenario/					controllers.Api.createScenario()
 PUT     /api/scenario/:id				controllers.Api.updateScenario(id:String)
 DELETE  /api/scenario/:id				controllers.Api.deleteScenario(id:String)
 
-GET     /api/query						controllers.Api.getQuery(id:String ?= null, projectId:String ?= null)
+GET     /api/query						controllers.Api.getQuery(id:String ?= null, projectId:String ?= null, pointSetId: String ?= null)
 GET     /api/query/:id					controllers.Api.getQueryById(id:String)
 POST    /api/query/						controllers.Api.createQuery()
 PUT     /api/query/:id					controllers.Api.updateQuery(id:String)
