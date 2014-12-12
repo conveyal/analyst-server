@@ -82,6 +82,7 @@ public class Shapefile implements Serializable {
 
 	public String projectId;
 
+	@JsonIgnore
 	public HashMap<String,Attribute> attributes = new HashMap<String,Attribute>();
 
 	public Integer featureCount;
@@ -361,6 +362,10 @@ public class Shapefile implements Serializable {
 
 		return getSpatialIndex().query(env);
 
+	}
+	
+	public List<Attribute> getShapeAttributes() {
+		return new ArrayList(attributes.values());
 	}
 
 	public Collection<ShapeFeature> queryAll() {
