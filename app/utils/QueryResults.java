@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.mapdb.Fun.Tuple2;
 import org.opentripplanner.analyst.ResultSet;
 
-import utils.NaturalBreaksClassifier.Bin;
+import utils.Bin;
 import utils.ResultEnvelope.Which;
 
 import com.google.common.base.Predicate;
@@ -69,8 +69,7 @@ public class QueryResults {
 	public ConcurrentHashMap<Tuple2<String, String>, QueryResults> aggregated =
 			new ConcurrentHashMap<Tuple2<String, String>, QueryResults>();
 	
-	public LinearClassifier linearClassifier;
-	public NaturalBreaksClassifier jenksClassifier;
+	public Classifier classifier;
 	
 	/** Cache the spatial index */
 	private transient SpatialIndex spIdx = null;
@@ -138,7 +137,7 @@ public class QueryResults {
        }
        
        //linearClassifier = new LinearClassifier(values, new Color(0.5f, 0.5f, 1.0f, 0.5f), new Color(0.0f, 0.0f, 1.0f, 0.5f));
-       jenksClassifier = new NaturalBreaksClassifier(this, nClasses, new Color(1.0f, 1.0f, 1.0f, 0.25f), new Color(0.0f, 0.0f, 1.0f, 0.5f));
+       classifier = new NaturalBreaksClassifier(this, nClasses, new Color(1.0f, 1.0f, 1.0f, 0.25f), new Color(0.0f, 0.0f, 1.0f, 0.5f));
 		
 	}
 	
@@ -279,7 +278,7 @@ public class QueryResults {
 	        		out.minValue = item.value;
         	}
 			
-			out.jenksClassifier = new NaturalBreaksClassifier(out, nClasses, new Color(1.0f, 1.0f, 1.0f, 0.5f), new Color(0.0f, 0.0f, 1.0f, 0.5f));
+			out.classifier = new NaturalBreaksClassifier(out, nClasses, new Color(1.0f, 1.0f, 1.0f, 0.5f), new Color(0.0f, 0.0f, 1.0f, 0.5f));
 			out.shapeFileId = aggregateTo.id;
 			
 			aggregated.put(key, out);
@@ -329,7 +328,8 @@ public class QueryResults {
 				ret.items.put(id, newItem);
 			}
 			
-			ret.jenksClassifier = new NaturalBreaksClassifier(ret, nClasses, new Color(.9f, .9f, .1f, .5f), new Color(0f, 0f, 1f, .5f));
+			ret.classifier = new BimodalNaturalBreaksClassifier(ret, nClasses, 0d,
+					new Color(.9f, .9f, .1f, .5f), new Color(.5f, .5f, .5f, .5f), new Color(0f, 0f, 1f, .5f));
 			
 			subtracted.put(otherQr.id, ret);
 			

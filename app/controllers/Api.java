@@ -317,12 +317,12 @@ public class Api extends Controller {
     		}
     		
             if(normalizeBy == null) {
-            	return ok(Json.toJson(qr.jenksClassifier.bins));
+            	return ok(Json.toJson(qr.classifier.getBins()));
             }
             else {
             	Shapefile aggregateTo = Shapefile.getShapefile(groupBy);
             	SpatialLayer weightBy = SpatialLayer.getPointSetCategory(normalizeBy);
-            	return ok(Json.toJson(qr.aggregate(aggregateTo, weightBy).jenksClassifier.bins));
+            	return ok(Json.toJson(qr.aggregate(aggregateTo, weightBy).classifier.getBins()));
 	            
             }
 

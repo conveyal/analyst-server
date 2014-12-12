@@ -599,7 +599,7 @@ public static class QueryTile extends AnalystTileRequest {
 		        	Color color = null;
 
 		        	if(qr.items.containsKey(feature.id)) {
-		         		color = qr.jenksClassifier.getColorValue(qr.items.get(feature.id).value);
+		         		color = qr.classifier.getColorValue(qr.items.get(feature.id).value);
 		         	}
 
 					if(color == null) {
@@ -636,7 +636,7 @@ public static class QueryTile extends AnalystTileRequest {
 
 		            	Color color = null;
 
-		            	color = groupedQr.jenksClassifier.getColorValue(item.value);
+		            	color = groupedQr.classifier.getColorValue(item.value);
 
 		            	if(color == null){
 							color = new Color(0.0f,0.0f,0.0f,0.1f);
