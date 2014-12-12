@@ -248,10 +248,10 @@ public class Shapefile implements Serializable {
 
 				HashMap<String,Integer> propertyData = new HashMap<String,Integer>();
 
-				for(Attribute a : this.attributes.values()) {
-					String propertyId = categoryId + "." + Attribute.convertNameToId(a.name);
-					propertyData.put(propertyId, sf.getAttribute(a.fieldName));
-				}
+				Attribute a = this.attributes.get(attrName);
+				String propertyId = categoryId + "." + Attribute.convertNameToId(a.name);
+				propertyData.put(propertyId, sf.getAttribute(a.fieldName));
+
 
 				PointFeature pf;
 				try {
