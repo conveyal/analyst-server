@@ -48,7 +48,7 @@ import utils.TransportIndex.TransitSegment;
 
 @Security.Authenticated(Secured.class)
 public class Tiles extends Controller {
-	
+
 	private static TileCache tileCache = new TileCache();
 
 	public static void resetTileCache() {
@@ -61,17 +61,17 @@ public class Tiles extends Controller {
 	}
 
 	public static Promise<Result> tileBuilder(final AnalystTileRequest tileRequest) {
-		
+
 		response().setHeader(CACHE_CONTROL, "no-cache, no-store, must-revalidate");
 		response().setHeader(PRAGMA, "no-cache");
 		response().setHeader(EXPIRES, "0");
 		response().setContentType("image/png");
 
 		ExecutionContext tileContext = Akka.system().dispatchers().lookup("contexts.tile-analyst-context");
-		
+
 		Promise<byte[]> promise = Promise.promise(
 		    new Function0<byte[]>() {
-		      public byte[] apply() {	
+		      public byte[] apply() {
 		    	  return tileCache.get(tileRequest);
 		      }
 		    }, tileContext
@@ -79,56 +79,56 @@ public class Tiles extends Controller {
 		Promise<Result> promiseOfResult = promise.map(
 		    new Function<byte[], Result>() {
 		      public Result apply(byte[] response) {
-		    	
+
 		    	if(response == null)
 		    	  return notFound();
-		    	
+
 		    	ByteArrayInputStream bais = new ByteArrayInputStream(response);
-			    
+
 				return ok(bais);
 		      }
 		    }, tileContext
 		  );
-		
+
 		return promiseOfResult;
 	}
-	
-	
-	public static Promise<Result> spatial(String pointSetId, Integer x, Integer y, Integer z, String selectedAttributes) {
 
 
-		AnalystTileRequest tileRequest = new SpatialTile(pointSetId, x, y, z, selectedAttributes);
+	public static Promise<Result> spatial(String shapefileId, Integer x, Integer y, Integer z, String selectedAttributes) {
+
+
+		AnalystTileRequest tileRequest = new SpatialTile(shapefileId, x, y, z, selectedAttributes);
 		return tileBuilder(tileRequest);
     }
-	
+
 	public static Promise<Result> shape(String shapefileId, Integer x, Integer y, Integer z) {
-		
+
 		AnalystTileRequest tileRequest = new ShapefileTile(shapefileId, x, y, z);
 		return tileBuilder(tileRequest);
     }
-	
-	public static Promise<Result> surface(Integer surfaceId, String pointSetId, Integer x, Integer y, Integer z, Boolean showIso, Boolean showPoints, Integer timeLimit, Integer minTime, String show) {
+
+	public static Promise<Result> surface(Integer surfaceId, String shapefileId, Integer x, Integer y, Integer z, Boolean showIso, Boolean showPoints, Integer timeLimit, Integer minTime, String show) {
 
 		if(show == null)
     		show = "min";
-		
-		AnalystTileRequest tileRequest = new SurfaceTile( surfaceId, pointSetId, x, y, z, showIso, showPoints, timeLimit, minTime, show);
+
+		AnalystTileRequest tileRequest = new SurfaceTile( surfaceId, shapefileId, x, y, z, showIso, showPoints, timeLimit, minTime, show);
 		return tileBuilder(tileRequest);
-		
+
     }
-	
+
 	public static Promise<Result> surfaceComparison(Integer surfaceId1, Integer surfaceId2, String spatialId, Integer x, Integer y, Integer z, Boolean showIso, Boolean showPoints, Integer timeLimit, Integer minTime, String show) {
 
 		if(show == null)
     		show = "min";
-		
+
 		AnalystTileRequest tileRequest = new SurfaceComparisonTile(surfaceId1, surfaceId2, spatialId, x, y, z, showIso, showPoints, timeLimit, minTime, show);
 		return tileBuilder(tileRequest);
     }
 
 	public static Promise<Result> query(String queryId, Integer x, Integer y, Integer z,
 			Integer timeLimit, String normalizeBy, String groupBy, String which) {
-		
+
 		ResultEnvelope.Which whichEnum;
 		try {
 			whichEnum = ResultEnvelope.Which.valueOf(which);
@@ -148,17 +148,17 @@ public class Tiles extends Controller {
 
 
 	public static Promise<Result> transit(final String scenarioId, final Integer x, final Integer y, final Integer z) {
-	
+
 		AnalystTileRequest tileRequest = new TransitTile(scenarioId, x, y, z);
 		return tileBuilder(tileRequest);
-		
+
 	}
-	
+
 	public static Promise<Result> transitComparison(String scenarioId1, String scenarioId2, Integer x, Integer y, Integer z) {
-		
+
 		AnalystTileRequest tileRequest = new TransitComparisonTile(scenarioId1, scenarioId2, x, y, z);
 		return tileBuilder(tileRequest);
-		
+
 	}
 
 	public static Result traffic(String scenarioId, Integer x, Integer y, Integer z) {
@@ -189,13 +189,13 @@ public class Tiles extends Controller {
 
 		    response().setContentType("image/png");
 			return ok(bais);
-		
+
 
 		} catch (Exception e) {
 	    	e.printStackTrace();
 	    	return badRequest();
 	    } */
-		
+
 		return ok();
 
 	}

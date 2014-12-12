@@ -33,12 +33,6 @@ POST    /api/shapefile/					controllers.Api.createShapefile()
 PUT     /api/shapefile/:id				controllers.Api.updateShapefile(id:String)
 DELETE  /api/shapfile/:id				controllers.Api.deleteShapefile(id:String)
 
-GET     /api/pointset					controllers.Api.getPointset(id:String ?= null, projectId:String ?= null)
-GET     /api/pointset/:id				controllers.Api.getPointsetById(id:String)
-POST    /api/pointset/					controllers.Api.createPointset()
-PUT     /api/pointset/:id				controllers.Api.updatePointset(id:String)
-DELETE  /api/pointset/:id				controllers.Api.deletePointset(id:String)
-
 GET     /api/scenario					controllers.Api.getScenario(id:String ?= null, projectId:String ?= null)
 GET     /api/scenario/:id				controllers.Api.getScenarioById(id:String)
 POST    /api/scenario/					controllers.Api.createScenario()
@@ -52,8 +46,8 @@ PUT     /api/query/:id					controllers.Api.updateQuery(id:String)
 DELETE  /api/query/:id					controllers.Api.deleteQuery(id:String)
 
 GET     /tile/shapefile                 controllers.Tiles.shape(shapefileId:String, x:Integer, y:Integer, z:Integer)
-GET     /tile/spatial                  	controllers.Tiles.spatial(pointSetId:String, x:Integer, y:Integer, z:Integer, selectedAttributes:String	)
-GET     /tile/surface                  	controllers.Tiles.surface(surfaceId:Integer, pointSetId:String, x:Integer, y:Integer, z:Integer, showIso:Boolean ?= false, showPoints:Boolean ?= true, timeLimit:Integer ?= 3600, minTime:Integer ?= null, show:String ?= null)
+GET     /tile/spatial                  	controllers.Tiles.spatial(shapefileId:String, x:Integer, y:Integer, z:Integer, selectedAttributes:String	)
+GET     /tile/surface                  	controllers.Tiles.surface(surfaceId:Integer, shapefileId:String, x:Integer, y:Integer, z:Integer, showIso:Boolean ?= false, showPoints:Boolean ?= true, timeLimit:Integer ?= 3600, minTime:Integer ?= null, show:String ?= null)
 GET     /tile/query	                    controllers.Tiles.query(queryId:String, x:Integer, y:Integer, z:Integer, timeLimit:Integer ?= 3600, normalizeBy:String ?= null, groupBy:String ?= null, which: String)
 GET     /tile/transit                	controllers.Tiles.transit(scenarioId:String, x:Integer, y:Integer, z:Integer)
 GET     /tile/transitComparison         controllers.Tiles.transitComparison(scenarioId1:String, scenarioId2:String, x:Integer, y:Integer, z:Integer)
@@ -64,8 +58,8 @@ GET     /gis/query	                    controllers.Gis.query(queryId:String, tim
 GET     /api/queryBins	                controllers.Api.queryBins(queryId:String, timeLimit:Integer ?= 3600, normalizeBy:String ?= null, groupBy:String ?= null, which: String)
 
 GET     /api/surface                    controllers.Api.surface(graphId:String, lat:Double, lon:Double, mode:String, bikeSpeed:Double, walkSpeed:Double, which:String)
-GET	   /api/isochrone					controllers.Api.isochrone(surfaceId:Integer, cutoffs:java.util.List[Integer])
-GET     /api/result						controllers.Api.result(surfaceId:Integer, pointSetId:String)
+GET	    /api/isochrone					controllers.Api.isochrone(surfaceId:Integer, cutoffs:java.util.List[Integer])
+GET     /api/result						controllers.Api.result(surfaceId:Integer, shapefileId:String)
 
 
 # Map static resources from the /public folder to the /assets URL path
