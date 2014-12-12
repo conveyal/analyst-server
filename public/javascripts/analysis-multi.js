@@ -220,6 +220,9 @@ var Analyst = Analyst || {};
 
       url += '&which=' + this.which;
 
+      if (this.compareToId)
+        url += '&compareTo=' + this.compareToId;
+
       window.open(url);
 
     },
