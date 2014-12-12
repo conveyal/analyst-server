@@ -159,8 +159,12 @@ var Analyst = Analyst || {};
     initialize: function() {
       var _this = this;
       this.updateInterval = setInterval(function() {
-        if (_this.model.get("completePoints") < _this.model.get("totalPoints"))
+        if (!_this.isComplete()) {
           _this.model.fetch();
+        } else {
+          // don't keep polling
+          clearInterval(_this.updateInterval);
+        }
       }, 1000);
     },
 
@@ -190,7 +194,7 @@ var Analyst = Analyst || {};
     },
 
     isStarting: function() {
-      return this.model.get("totalPoints") === null;
+      return this.model.get("totalPoints") === null || this.model.get('totalPoints') == -1;
     },
 
     isComplete: function() {
