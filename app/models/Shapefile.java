@@ -64,7 +64,7 @@ import utils.HaltonPoints;
 import utils.HashUtils;
 
 /**
- * A Shapefile corresponds to an OTP PointSet. All numeric Shapefile columns are coveretd to poitnset columns and accessibility value are calculated for each.
+ * A Shapefile corresponds to an OTP PointSet. All numeric Shapefile columns are converted to pointset columns and accessibility value are calculated for each.
  *
  * @author mattwigway
  */
@@ -82,7 +82,7 @@ public class Shapefile implements Serializable {
 
 	public String projectId;
 
-	public List<Attribute> attributes = new ArrayList<Attribute>();
+	public HashMap<String,Attribute> attributes = new HashMap<String,Attribute>();
 
 	public Integer featureCount;
 
@@ -100,6 +100,9 @@ public class Shapefile implements Serializable {
 	@JsonIgnore
 	transient private STRtree spatialIndex;
 
+	public Shapefile() {
+		
+	}
 	static public class ShapeFeature  implements Serializable, Comparable<ShapeFeature> {
 
 		private static final long serialVersionUID = 1L;
@@ -207,18 +210,6 @@ public class Shapefile implements Serializable {
 		public int compareTo(ShapeFeature o) {
 			return this.id.compareTo(o.id);
 		}
-
-		public Long sum() {
-			Long value = 0l;
-
-			for(Object o : this.attributes.values()) {
-				if(o != null && o instanceof Integer){
-					value += (Integer)o;
-				}
-			}
-
-			return value;
-		}
 	}
 
 	public static class FeatureTime {
@@ -261,7 +252,7 @@ public class Shapefile implements Serializable {
 
 				HashMap<String,Integer> propertyData = new HashMap<String,Integer>();
 
-				for(Attribute a : this.attributes) {
+				for(Attribute a : this.attributes.values()) {
 					String propertyId = categoryId + "." + Attribute.convertNameToId(a.name);
 					propertyData.put(propertyId, sf.getAttribute(a.fieldName));
 				}
@@ -280,7 +271,7 @@ public class Shapefile implements Serializable {
 
 			ps.setLabel(categoryId, this.name);
 
-			for(Attribute attr : this.attributes) {
+			for(Attribute attr : this.attributes.values()) {
 				String propertyId = categoryId + "." + Attribute.convertNameToId(attr.name);
 				ps.setLabel(propertyId, attr.name);
 				ps.setStyle(propertyId, "color", attr.color);
@@ -441,6 +432,26 @@ public class Shapefile implements Serializable {
 
 		return shapefile;
 	}
+	
+	
+	public void updateAttributeStats(String name, String type, Object value) {
+		
+		Attribute attribute; 
+		
+		if(!attributes.containsKey(name)){
+			attribute = new Attribute();
+			attribute.name = name;
+			attribute.fieldName = name;
+			attribute.type = type;
+			
+			attributes.put(name, attribute);
+		}
+		else
+			attribute = attributes.get(name);
+		
+		attribute.updateStats(value);
+		 
+	}
 
 	private List<Fun.Tuple2<String,ShapeFeature>> getShapeFeatures() throws ZipException, IOException {
 
@@ -494,6 +505,9 @@ public class Shapefile implements Serializable {
 			        		String name = p.getName().toString();
 			        		PropertyType pt = p.getType();
 			        		Object value = p.getValue();
+			        		
+			        		updateAttributeStats(name, pt.getName().toString(), value);
+			        		
 			        		if(value != null && (value instanceof Long)) {
 			        			feature.attributes.put(p.getName().toString(), (int)(long)p.getValue());
 
@@ -516,7 +530,7 @@ public class Shapefile implements Serializable {
 				}
 				catch(Exception e) {
 					skippedFeatures++;
-					System.out.println(e.toString());
+					e.printStackTrace();
 					continue;
 				}
 		     }
