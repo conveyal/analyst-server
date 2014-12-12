@@ -128,13 +128,9 @@ public class Tiles extends Controller {
     }
 
 	public static Promise<Result> query(String queryId, Integer x, Integer y, Integer z,
-<<<<<<< HEAD
-			Integer timeLimit, String normalizeBy, String groupBy, String which) {
 
-=======
 			Integer timeLimit, String normalizeBy, String groupBy, String which, String compareTo) {
-		
->>>>>>> origin/profile-routing
+
 		ResultEnvelope.Which whichEnum;
 		try {
 			whichEnum = ResultEnvelope.Which.valueOf(which);
