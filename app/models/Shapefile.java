@@ -77,6 +77,10 @@ public class Shapefile implements Serializable {
 	public String id;
 	public String name;
 	public String description;
+	
+	public String filename;
+	
+	public String type;
 
 	public String projectId;
 
@@ -363,6 +367,12 @@ public class Shapefile implements Serializable {
 		return new ArrayList(attributes.values());
 	}
 
+	public void setShapeAttributes(List<Attribute> shapeAttributes) {
+		for(Attribute a : shapeAttributes) {
+			this.attributes.put(a.fieldName, a);
+		}
+	}
+	
 	public Collection<ShapeFeature> queryAll() {
 
 		return shapeFeatures.getAll();
@@ -396,14 +406,16 @@ public class Shapefile implements Serializable {
 
 	    Boolean hasShp = false;
 	    Boolean hasDbf = false;
-
+	    
 	    while(entries.hasMoreElements()) {
 
 	        ZipEntry entry = entries.nextElement();
 
-	        if(entry.getName().toLowerCase().endsWith("shp"))
-	        	hasShp = true;
-	        if(entry.getName().toLowerCase().endsWith("dbf"))
+	        if(entry.getName().toLowerCase().endsWith("shp")){
+	   	        hasShp = true;
+	   	        shapefile.filename = entry.getName();
+	        }
+	   	    if(entry.getName().toLowerCase().endsWith("dbf"))
 	        	hasDbf = true;
 	    }
 
@@ -502,6 +514,8 @@ public class Shapefile implements Serializable {
 					feature.id = (String)sFeature.getID();
 			    	feature.geom = JTS.transform((Geometry)sFeature.getDefaultGeometry(),  transform);
 
+			    	this.type = feature.geom.getGeometryType().toLowerCase();
+			    	
 			        for(Object attr : sFeature.getProperties()) {
 			        	if(attr instanceof Property) {
 			        		Property p = ((Property)attr);

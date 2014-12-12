@@ -540,6 +540,43 @@ A.spatialData = {};
 			// nesting elements during re-render.
 			this.$el.unwrap();
 			this.setElement(this.$el);
+
+			var _this = this;
+
+			var nameField = "name";
+
+			this.$el.find("#shapefileName").editable({
+				type        : 'text',
+				name        : nameField,
+				mode				: "inline",
+				value       : this.model.get(nameField),
+				pk          : this.model.get('id'),
+				url         : '',
+				success     : function(response, newValue) {
+					_this.model.set(nameField, newValue);
+					_this.model.save(nameField, newValue);
+				}
+			}).on("hidden", function(e, reason) {
+				_this.render();
+			});
+
+			var descriptionField = "description";
+
+			this.$el.find("#shapefileDescription").editable({
+				type        : 'textarea',
+				name        : descriptionField,
+				mode				: "inline",
+				value       : this.model.get(descriptionField),
+				pk          : this.model.get('id'),
+				url         : '',
+				success     : function(response, newValue) {
+					_this.model.set(descriptionField, newValue);
+					_this.model.save(descriptionField, newValue);
+				}
+			}).on("hidden", function(e, reason) {
+				_this.render();
+			});
+
 		}
 
 	});

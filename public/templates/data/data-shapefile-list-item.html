@@ -1,4 +1,6 @@
-<li data-id="{{id}}" class="list-group-item"><strong> {{#if name}}{{name}}{{else}}<em>[no title]</em>{{/if}}</strong>
+<li data-id="{{id}}" class="list-group-item">
+  <span class="pull-right glyphicon glyphicon-eye-close" style="color: #ccc;"></span> <span id="shapefileName"><strong>{{#if name}}{{name}}{{else}}<em>[no name]</em>{{/if}}</strong></span>
+  <br/><small><span>{{filename}}, {{featureCount}} {{type}} features</small></span>
 
-{{#if description}}<p><small>{{description}}</small></p>{{/if}}
+  <p><small><span id="shapefileDescription">{{#if description}}{{description}}{{else}}<em>[no description]</em>{{/if}}</span></small></p>
 </li>
