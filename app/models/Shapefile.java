@@ -89,9 +89,6 @@ public class Shapefile implements Serializable {
 
 	public static Map<String,PointSet> pointSetCache = new ConcurrentHashMap<String,PointSet>();
 
-	public ArrayList<String> fieldnames = new ArrayList<String>();
-
-
 	@JsonIgnore
 	public File file;
 
@@ -548,9 +545,6 @@ public class Shapefile implements Serializable {
 		}
 
 		dataStore.dispose();
-
-		fieldnames = new ArrayList<String>(fieldnamesFound);
-		Collections.sort(fieldnames);
 
 		cleanupUnzippedShapefile();
 
