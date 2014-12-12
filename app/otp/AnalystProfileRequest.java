@@ -73,7 +73,7 @@ public class AnalystProfileRequest extends ProfileRequest{
 	 */
 	public static ResultSet getResult(Integer surfaceId, String shapefileId, String attributeName) {
 		
-		String resultId = "resultId_" + surfaceId + "_" + shapefileId;
+		String resultId = "resultId_" + surfaceId + "_" + shapefileId + "_" + attributeName;
     	
 		ResultSet result;
     	
@@ -97,7 +97,7 @@ public class AnalystProfileRequest extends ProfileRequest{
 	 */
 	public static ResultSetWithTimes getResultWithTimes(Integer surfaceId, String shapefileId, String attributeName) {
 		
-		String resultId = "resultWithTimesId_" + surfaceId + "_" + shapefileId;;
+		String resultId = "resultWithTimesId_" + surfaceId + "_" + shapefileId + "_" + attributeName;
     	
 		ResultSetWithTimes resultWithTimes;
     	

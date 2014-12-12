@@ -14,6 +14,7 @@ import models.SpatialLayer;
 
 import org.opengis.geometry.MismatchedDimensionException;
 import org.opengis.referencing.operation.TransformException;
+import org.opentripplanner.analyst.PointSet;
 import org.opentripplanner.analyst.ResultSetDelta;
 import org.opentripplanner.analyst.ResultSetWithTimes;
 import org.opentripplanner.analyst.TimeSurface;
@@ -25,6 +26,7 @@ import utils.HaltonPoints;
 import utils.QueryResults;
 import utils.QueryResults.QueryResultItem;
 import utils.ResultEnvelope;
+import utils.ResultEnvelope.Which;
 import utils.TransportIndex;
 import utils.TransportIndex.TransitSegment;
 
@@ -311,29 +313,30 @@ public abstract class AnalystTileRequest {
 	public static class SurfaceComparisonTile extends AnalystTileRequest {
 		
 		final String shapefileId;
+		final String attributeName;
 		final Integer surfaceId1;
 		final Integer surfaceId2;
 		final Boolean showIso;
 		final Boolean showPoints;
 		final Integer timeLimit;
 		final Integer minTime;
-		final String show;
 		
-		public SurfaceComparisonTile(Integer surfaceId1, Integer surfaceId2, String shapefileId, Integer x, Integer y, Integer z, Boolean showIso, Boolean showPoints, Integer timeLimit, Integer minTime, String show) {
+		public SurfaceComparisonTile(Integer surfaceId1, Integer surfaceId2, String shapefileId,  String attributeName,
+				Integer x, Integer y, Integer z, Boolean showIso, Boolean showPoints, Integer timeLimit, Integer minTime) {
 			super(x, y, z, "surface");
 			
 			this.shapefileId = shapefileId;
+			this.attributeName = attributeName;
 			this.surfaceId1 = surfaceId1;
 			this.surfaceId2 = surfaceId2;
 			this.showIso = showIso;
 			this.showPoints = showPoints;
 			this.timeLimit = timeLimit;
 			this.minTime = minTime;
-			this.show = show;
 		}
 		
 		public String getId() {
-			return super.getId() + "_" + shapefileId + "_" + surfaceId1 + "_" + surfaceId2 + "_" + showIso + "_" + showPoints + "_" + timeLimit + "_" + minTime + "_" + show;
+			return super.getId() + "_" + shapefileId + "_" + attributeName + "_" + surfaceId1 + "_" + surfaceId2 + "_" + showIso + "_" + showPoints + "_" + timeLimit + "_" + minTime;
 		}
 		
 		public byte[] render(){
@@ -346,10 +349,15 @@ public abstract class AnalystTileRequest {
 				return null;
 			
 			TimeSurface surf1 = AnalystProfileRequest.getSurface(surfaceId1);
-			TimeSurface surf2 = AnalystProfileRequest.getSurface(surfaceId2);
+			if (surf1 == null)
+				surf1 = AnalystRequest.getSurface(surfaceId1);
 			
-			// FIXME: Attribute ID.
-			ResultSetDelta resultDelta = new ResultSetDelta(shp.getPointSet("").getSampleSet(surf1.routerId), shp.getPointSet("").getSampleSet(surf2.routerId),  surf1, surf2);
+			TimeSurface surf2 = AnalystProfileRequest.getSurface(surfaceId2);
+			if (surf2 == null)
+				surf2 = AnalystRequest.getSurface(surfaceId2);
+			
+			PointSet ps = shp.getPointSet(attributeName);
+			ResultSetDelta resultDelta = new ResultSetDelta(ps.getSampleSet(surf1.routerId), ps.getSampleSet(surf2.routerId),  surf1, surf2);
 
 			List<ShapeFeature> features = shp.query(tile.envelope);
 
@@ -433,22 +441,23 @@ public abstract class AnalystTileRequest {
     		final Boolean showPoints;
     		final Integer timeLimit;
     		final Integer minTime;
-    		final String show;
+			final String attributeName;
     		
-    		public SurfaceTile(Integer surfaceId, String shapefileId, Integer x, Integer y, Integer z, Boolean showIso, Boolean showPoints, Integer timeLimit, Integer minTime, String show) {
+    		public SurfaceTile(Integer surfaceId, String shapefileId, String attributeName, Integer x, Integer y, Integer z,
+    				Boolean showIso, Boolean showPoints, Integer timeLimit, Integer minTime) {
     			super(x, y, z, "surface");
     			
     			this.shapefileId = shapefileId;
+    			this.attributeName = attributeName;
     			this.surfaceId = surfaceId;
     			this.showIso = showIso;
     			this.showPoints = showPoints;
     			this.timeLimit = timeLimit;
     			this.minTime = minTime;
-    			this.show = show;
     		}
     		
     		public String getId() {
-    			return super.getId() + "_" + shapefileId + "_" + surfaceId + "_" + showIso + "_" + showPoints + "_" + timeLimit + "_" + minTime;
+    			return super.getId() + "_" + shapefileId + "_" + attributeName + "_" + surfaceId + "_" + showIso + "_" + showPoints + "_" + timeLimit + "_" + minTime;
     		}
     		
     		public byte[] render(){
@@ -462,15 +471,13 @@ public abstract class AnalystTileRequest {
 
 
 	    		ResultSetWithTimes result;
-	    		
-	    		// FIXME: Attribute ID.
-	    		
+	    			    		
 	    		try {
-	    			result = AnalystProfileRequest.getResultWithTimes(surfaceId, shapefileId, "");
+	    			result = AnalystProfileRequest.getResultWithTimes(surfaceId, shapefileId, attributeName);
 	    		}
 	    		catch (NullPointerException e) {
 	    			// not a profile request
-	    			result = AnalystRequest.getResultWithTimes(surfaceId, shapefileId, "");
+	    			result = AnalystRequest.getResultWithTimes(surfaceId, shapefileId, attributeName);
 	    		}
 
 	            List<ShapeFeature> features = shp.query(tile.envelope);

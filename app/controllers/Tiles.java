@@ -108,22 +108,18 @@ public class Tiles extends Controller {
 		return tileBuilder(tileRequest);
     }
 
-	public static Promise<Result> surface(Integer surfaceId, String shapefileId, Integer x, Integer y, Integer z, Boolean showIso, Boolean showPoints, Integer timeLimit, Integer minTime, String show) {
+	public static Promise<Result> surface(Integer surfaceId, String shapefileId, String attributeName, Integer x, Integer y, Integer z,
+			Boolean showIso, Boolean showPoints, Integer timeLimit, Integer minTime) {
 
-		if(show == null)
-    		show = "min";
-
-		AnalystTileRequest tileRequest = new SurfaceTile( surfaceId, shapefileId, x, y, z, showIso, showPoints, timeLimit, minTime, show);
+		AnalystTileRequest tileRequest = new SurfaceTile( surfaceId, shapefileId, attributeName, x, y, z, showIso, showPoints, timeLimit, minTime);
 		return tileBuilder(tileRequest);
 
     }
 
-	public static Promise<Result> surfaceComparison(Integer surfaceId1, Integer surfaceId2, String spatialId, Integer x, Integer y, Integer z, Boolean showIso, Boolean showPoints, Integer timeLimit, Integer minTime, String show) {
+	public static Promise<Result> surfaceComparison(Integer surfaceId1, Integer surfaceId2, String shapefileId, String attributeName,
+			Integer x, Integer y, Integer z, Boolean showIso, Boolean showPoints, Integer timeLimit, Integer minTime) {
 
-		if(show == null)
-    		show = "min";
-
-		AnalystTileRequest tileRequest = new SurfaceComparisonTile(surfaceId1, surfaceId2, spatialId, x, y, z, showIso, showPoints, timeLimit, minTime, show);
+		AnalystTileRequest tileRequest = new SurfaceComparisonTile(surfaceId1, surfaceId2, shapefileId, attributeName, x, y, z, showIso, showPoints, timeLimit, minTime);
 		return tileBuilder(tileRequest);
     }
 

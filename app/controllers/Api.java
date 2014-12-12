@@ -210,10 +210,7 @@ public class Api extends Controller {
      * @param shapefileId
      * @return
      */
-    public static Result result(Integer surfaceId, String shapefileId) {
-    	// FIXME: pass in attribute ID. completely broken now -MWC
-    	String attributeName = "";
-    	
+    public static Result result(Integer surfaceId, String shapefileId, String attributeName) {
     	final Shapefile shp = Shapefile.getShapefile(shapefileId);
     	ResultSet result;
 

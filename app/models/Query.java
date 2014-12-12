@@ -59,8 +59,9 @@ public class Query implements Serializable {
 	public String mode;
 	
 	public String shapefileId;
+
+	public String attributeName;
 	
-	public String attributeName;	
 	public String scenarioId;
 	public String status;
 	

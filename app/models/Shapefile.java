@@ -230,9 +230,11 @@ public class Shapefile implements Serializable {
 	@JsonIgnore
 	public PointSet getPointSet(String attrName) {
 
+		String psId = this.id + "_" + attrName;
+		
 		synchronized (pointSetCache) {
-			if(pointSetCache.containsKey(this.id))
-				return pointSetCache.get(this.id);
+			if(pointSetCache.containsKey(psId))
+				return pointSetCache.get(psId);
 
 			PointSet ps = new PointSet(getFeatureCount());
 			ps.setGraphService(Api.analyst.getGraphService());
@@ -274,7 +276,7 @@ public class Shapefile implements Serializable {
 			if (attr.color != null)
 				ps.setStyle(propertyId, "color", attr.color);
 
-			pointSetCache.put(this.id, ps);
+			pointSetCache.put(psId, ps);
 
 			return ps;
 		}

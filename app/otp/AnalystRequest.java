@@ -80,7 +80,7 @@ public class AnalystRequest extends RoutingRequest{
 	
 	public static ResultSet getResult(Integer surfaceId, String shapefileId, String attributeName) {
 		
-		String resultId = "resultId_" + surfaceId + "_" + shapefileId;
+		String resultId = "resultId_" + surfaceId + "_" + shapefileId + "_" + attributeName;
     	
 		ResultSet result;
     	
@@ -99,7 +99,7 @@ public class AnalystRequest extends RoutingRequest{
 	
 	public static ResultSetWithTimes getResultWithTimes(Integer surfaceId, String shapefileId, String attributeName) {
 		
-		String resultId = "resultWIthTimesId_" + surfaceId + "_" + shapefileId;
+		String resultId = "resultWIthTimesId_" + surfaceId + "_" + shapefileId + "_" + attributeName;
     	
 		ResultSetWithTimes resultWithTimes;
     	
