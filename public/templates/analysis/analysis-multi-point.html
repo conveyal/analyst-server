@@ -20,8 +20,13 @@
              </div>
 
              <div class="form-group">
-               <label>{{I18n "analysis.primary-indicator"}}</label>
-               <select id="primaryIndicator" class="primary-indicator form-control">
+               <label for="shapefile">{{ I18n "analysis.shapefile" }}</label>
+               <select id="shapefile" class="shapefile form-control">
+               </select>
+
+               <!-- TODO: column selection should be done in the queryresults, not the query (i.e. create resultsets for all possible columns) -->
+               <label for="shapefileColumn">{{ I18n "analysis.primary-indicator" }}</label>
+               <select id="shapefileColumn" class="shapefile-column form-control">
                </select>
              </div>
 

@@ -39,9 +39,18 @@ var Analyst = Analyst || {};
 			id: null,
 			name: null,
 			description: null,
-			fieldnames: [],
 			projectId: null,
-			attributes: []
+			shapeAttributes: [],
+			featureCount: null
+		},
+
+		/**
+		 * Get the columns that are numeric and thus can be used for analysis.
+		 */
+		getNumericAttributes: function () {
+			return _.filter(this.get('shapeAttributes'), function (a) {
+				return a.numeric;
+			})
 		}
 
 	});
@@ -79,7 +88,8 @@ var Analyst = Analyst || {};
 			id: null,
 			name: null,
 			mode: null,
-			pointSetId: null,
+			shapefileId: null,
+			attributeId: null,
 			scenarioId: null,
 			status: null,
 			totalPoints: null,

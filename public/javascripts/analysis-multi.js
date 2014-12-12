@@ -28,25 +28,9 @@ var Analyst = Analyst || {};
 
       var _this = this;
 
-      this.pointsets = new A.models.PointSets();
       this.scenarios = new A.models.Scenarios();
       this.queries = new A.models.Queries();
-
-      this.pointsets.fetch({
-        reset: true,
-        data: {
-          projectId: A.app.selectedProject
-        },
-        success: function(collection, response, options) {
-
-          _this.$("#primaryIndicator").empty();
-
-          for (var i in _this.pointsets.models)
-            _this.$("#primaryIndicator").append('<option value="' + _this.pointsets.models[i].get("id") +
-              '">' + _this.pointsets.models[i].get("name") + '</option>');
-
-        }
-      });
+      this.shapefiles = new A.models.Shapefiles();
 
       this.scenarios.fetch({
         reset: true,
@@ -80,6 +64,18 @@ var Analyst = Analyst || {};
         }
       });
 
+      this.shapefiles.fetch({projectId: A.app.selectedProject})
+        .done(function () {
+          _this.shapefiles.each(function (shp) {
+            $('<option>')
+              .attr('value', shp.id)
+              .text(shp.get('name'))
+              .appendTo(this.$('#shapefile'));
+          });
+
+          _this.updateAttributes();
+        });
+
       this.mode = "WALK,TRANSIT";
 
       this.$('input[name=mode1]:radio').on('change', function(event) {
@@ -95,6 +91,30 @@ var Analyst = Analyst || {};
       this.main.show(queryListLayout);
     },
 
+    /**
+     * Update the attributes select to show the attributes of the current shapefile
+     */
+    updateAttributes: function () {
+      var shpId = this.$('#shapefile').val();
+      var shp = this.shapefiles.get(shpId);
+      var _this = this;
+
+      this.$('#shapefileColumn').empty();
+
+      shp.getNumericAttributes().forEach(function (attr) {
+        var atName;
+        if (attr.description !== null && attr.description !== '')
+          atName = window.Messages('analysis.attribute-alias', attr.description, attr.name);
+        else
+          atName = attr.name;
+
+        $('<option>')
+          .attr('value', attr.name)
+          .text(atName)
+          .appendTo(_this.$('#shapefileColumn'));
+      });
+    },
+
     createQuery: function(evt) {
 
       var _this = this;
@@ -102,7 +122,8 @@ var Analyst = Analyst || {};
       var data = {
         name: this.$("#name").val(),
         mode: this.mode,
-        pointSetId: this.$("#primaryIndicator").val(),
+        shapefileId: this.$('#shapefile').val(),
+        attributeId: this.$('#shapefileAttribute').val(),
         scenarioId: this.$('#scenario1').val(),
         projectId: A.app.selectedProject
       };
@@ -376,31 +397,6 @@ var Analyst = Analyst || {};
       var _this = this;
 
       if (this.isComplete()) {
-
-        this.pointsets = new A.models.PointSets();
-
-        // Set up weight and group by select boxes
-        // we weight by PointSets (which have values attached to them), and we group by shapefiles,
-        // which do not and need not.
-        this.pointsets.fetch({
-            reset: true,
-            data: {
-              projectId: this.model.get("projectId")
-            }
-          })
-          .done(function() {
-
-            _this.$("#weightBy").empty();
-
-            _this.pointsets.each(function(pointset) {
-              $('<option>')
-                .attr('value', pointset.id)
-                .text(pointset.get('name'))
-                .appendTo(_this.$('#weightBy'));
-            });
-
-          });
-
         if (this.model.get('transit')) {
           // we have transit modes, so it's a profile request
           this.$('.whichMulti input[value="POINT_ESTIMATE"]').parent().remove();
@@ -414,6 +410,10 @@ var Analyst = Analyst || {};
           this.$('.whichMulti input[value="POINT_ESTIMATE"]').prop('checked', true).parent().addClass('active');
         }
 
+
+        // Set up weight and group by select boxes
+        // we weight by PointSets (which have values attached to them), and we group by shapefiles,
+        // which do not and need not.
         this.shapefiles = new A.models.Shapefiles();
         this.shapefiles.fetch({
             data: {

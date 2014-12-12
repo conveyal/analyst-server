@@ -103,6 +103,11 @@ analysis.percent-accessible=Percent Accessible
 analysis.create-new-query-name=Query Name
 analysis.run-query=Run Query
 
+analysis.shapefile=Shapefile
+
+# {0} is the description and {1} is the column name from the shapefile
+analysis.attribute-name={0} ({1})
+
 analysis.aggregate=Aggregate
 analysis.aggregate-summary=Summarize results to a larger unit of analysis, weighting by another indicator. For example, you might summarize job access to municipalities and weight by population, to generate an estimate of job access for the average person in each municipality.
 analysis.aggregate-to=Aggregate to

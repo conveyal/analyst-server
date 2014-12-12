@@ -64,9 +64,7 @@ import utils.HaltonPoints;
 import utils.HashUtils;
 
 /**
- * A Shapefile corresponds to an OTP PointSet. All numeric Shapefile columns are converted to pointset columns and accessibility value are calculated for each.
- *
- * @author mattwigway
+ * A Shapefile corresponds to an OTP PointSet. All numeric Shapefile columns are converted to pointset columns and accessibility values are calculated for each.
  */
 
 public class Shapefile implements Serializable {
