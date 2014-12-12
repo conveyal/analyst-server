@@ -78,9 +78,9 @@ public class AnalystRequest extends RoutingRequest{
 		
 	}
 	
-	public static ResultSet getResult(Integer surfaceId, String shapefilId) {
+	public static ResultSet getResult(Integer surfaceId, String shapefileId, String attributeName) {
 		
-		String resultId = "resultId_" + surfaceId + "_" + shapefilId;
+		String resultId = "resultId_" + surfaceId + "_" + shapefileId;
     	
 		ResultSet result;
     	
@@ -89,7 +89,7 @@ public class AnalystRequest extends RoutingRequest{
     			result = resultCache.get(resultId);
         	else {
         		TimeSurface surf =getSurface(surfaceId);
-        		result = new ResultSet(Shapefile.getShapefile(shapefilId).getPointSet().getSampleSet(surf.routerId), surf);
+        		result = new ResultSet(Shapefile.getShapefile(shapefileId).getPointSet(attributeName).getSampleSet(surf.routerId), surf);
         		resultCache.put(resultId, result);
         	}
     	}
@@ -97,9 +97,9 @@ public class AnalystRequest extends RoutingRequest{
     	return result;
 	}
 	
-	public static ResultSetWithTimes getResultWithTimes(Integer surfaceId, String shapefilId) {
+	public static ResultSetWithTimes getResultWithTimes(Integer surfaceId, String shapefileId, String attributeName) {
 		
-		String resultId = "resultWIthTimesId_" + surfaceId + "_" + shapefilId;
+		String resultId = "resultWIthTimesId_" + surfaceId + "_" + shapefileId;
     	
 		ResultSetWithTimes resultWithTimes;
     	
@@ -108,7 +108,7 @@ public class AnalystRequest extends RoutingRequest{
     			resultWithTimes = (ResultSetWithTimes)resultCache.get(resultId);
         	else {
         		TimeSurface surf =getSurface(surfaceId);
-        		resultWithTimes = new ResultSetWithTimes(Shapefile.getShapefile(shapefilId).getPointSet().getSampleSet(surf.routerId), surf);
+        		resultWithTimes = new ResultSetWithTimes(Shapefile.getShapefile(shapefileId).getPointSet(attributeName).getSampleSet(surf.routerId), surf);
         		resultCache.put(resultId, resultWithTimes);
         	}
     	}

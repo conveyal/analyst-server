@@ -348,7 +348,8 @@ public abstract class AnalystTileRequest {
 			TimeSurface surf1 = AnalystProfileRequest.getSurface(surfaceId1);
 			TimeSurface surf2 = AnalystProfileRequest.getSurface(surfaceId2);
 			
-			ResultSetDelta resultDelta = new ResultSetDelta(shp.getPointSet().getSampleSet(surf1.routerId), shp.getPointSet().getSampleSet(surf2.routerId),  surf1, surf2);
+			// FIXME: Attribute ID.
+			ResultSetDelta resultDelta = new ResultSetDelta(shp.getPointSet("").getSampleSet(surf1.routerId), shp.getPointSet("").getSampleSet(surf2.routerId),  surf1, surf2);
 
 			List<ShapeFeature> features = shp.query(tile.envelope);
 
@@ -462,12 +463,14 @@ public abstract class AnalystTileRequest {
 
 	    		ResultSetWithTimes result;
 	    		
+	    		// FIXME: Attribute ID.
+	    		
 	    		try {
-	    			result = AnalystProfileRequest.getResultWithTimes(surfaceId, shapefileId);
+	    			result = AnalystProfileRequest.getResultWithTimes(surfaceId, shapefileId, "");
 	    		}
 	    		catch (NullPointerException e) {
 	    			// not a profile request
-	    			result = AnalystRequest.getResultWithTimes(surfaceId, shapefileId);
+	    			result = AnalystRequest.getResultWithTimes(surfaceId, shapefileId, "");
 	    		}
 
 	            List<ShapeFeature> features = shp.query(tile.envelope);
