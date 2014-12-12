@@ -80,7 +80,7 @@ public class Gis extends Controller {
 	static File TMP_PATH = new File("tmp/");
 	
 	public static Result query(String queryId, Integer timeLimit, String weightBy, String groupBy,
-			String which) {
+			String which, String compareTo) {
     	
 		response().setHeader(CACHE_CONTROL, "no-cache, no-store, must-revalidate");
 		response().setHeader(PRAGMA, "no-cache");
@@ -96,6 +96,8 @@ public class Gis extends Controller {
 		
 		Query query = Query.getQuery(queryId);
 		
+		Query query2 = compareTo != null ? Query.getQuery(compareTo) : null;
+		
 		if(query == null)
 			return badRequest();
 		
@@ -105,7 +107,7 @@ public class Gis extends Controller {
 	    
     		String queryKey = queryId + "_" + timeLimit + "_" + which;
     		
-			QueryResults qr = null;
+			QueryResults qr, qr2;
 
 			synchronized(QueryResults.queryResultsCache) {
 				if(!QueryResults.queryResultsCache.containsKey(queryKey)) {
@@ -114,10 +116,24 @@ public class Gis extends Controller {
 				}
 				else
 					qr = QueryResults.queryResultsCache.get(queryKey);
+				
+	    		if (compareTo != null) {
+	    			String q2key = compareTo + "_" + timeLimit + "_" + which;
+	    			
+					if(!QueryResults.queryResultsCache.containsKey(q2key)) {
+						qr2 = new QueryResults(query2, timeLimit, whichEnum);
+						QueryResults.queryResultsCache.put(q2key, qr2);
+					}
+					else {
+						qr2 = QueryResults.queryResultsCache.get(q2key);
+					}
+					
+		    		qr = qr.subtract(qr2);
+	    		}
 			}
-    		
-    		
+
 			Shapefile shp = Shapefile.getShapefile(query.shapefileId);
+
     		       
             Collection<ShapeFeature> features = shp.getShapeFeatureStore().getAll();
          
@@ -141,8 +157,9 @@ public class Gis extends Controller {
 	            		gisFeatures.add(gf);
             		}
 	            }
-            	
-            	shapeName += "access_" + shp.name.replaceAll("\\W+", "").toLowerCase();
+       
+            	shapeName += "access_" + shp.name.replaceAll("\\W+", "").toLowerCase() +
+            			(query2 != null ? "_compare_" + query2.name : "");
             	
             	return ok(generateZippedShapefile(shapeName, fields, gisFeatures));
             	
@@ -184,7 +201,9 @@ public class Gis extends Controller {
     	            	}
                 	}
                 	
-                	shapeName += "_" + shp.name.replaceAll("\\W+", "") + "_norm_" + shpNorm.name.replaceAll("\\W+", "") + "_group_" + aggregateToSf.name.replaceAll("\\W+", "").toLowerCase();
+
+                	shapeName += "_" + shp.name.replaceAll("\\W+", "") + "_norm_" + shpNorm.name.replaceAll("\\W+", "") + "_group_" +
+                			aggregateToSf.name.replaceAll("\\W+", "").toLowerCase() + (query2 != null ? "_compare_" + query2.name : "");
                 	
                 	return ok(generateZippedShapefile(shapeName, fields, gisFeatures));
             	}

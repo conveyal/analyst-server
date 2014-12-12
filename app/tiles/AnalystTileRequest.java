@@ -210,7 +210,7 @@ public abstract class AnalystTileRequest {
             for(ShapeFeature feature : features) {
 
             	if(shp.attributes.size() > 0 || attributes.isEmpty()) {
-            		for(Attribute a : shp.attributes) {
+            		for(Attribute a : shp.attributes.values()) {
 
             			if(!attributes.contains(a.fieldName))
             				continue;
@@ -398,7 +398,7 @@ public abstract class AnalystTileRequest {
 
              	if(showPoints && (time1 < timeLimit || time2 < timeLimit)) {
 
-            		for(Attribute a : shp.attributes) {
+            		for(Attribute a : shp.attributes.values()) {
 
 		    			HaltonPoints hp = feature.getHaltonPoints(a.fieldName);
 
@@ -509,7 +509,7 @@ public abstract class AnalystTileRequest {
 
 	        		if(showPoints && sampleTime < timeLimit && (minTime != null && sampleTime > minTime)) {
 
-	            		for(Attribute a : shp.attributes) {
+	            		for(Attribute a : shp.attributes.values()) {
 
 			    			HaltonPoints hp = feature.getHaltonPoints(a.fieldName);
 

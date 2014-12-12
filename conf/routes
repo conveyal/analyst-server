@@ -55,7 +55,7 @@ GET     /tile/transit                	controllers.Tiles.transit(scenarioId:Strin
 GET     /tile/transitComparison         controllers.Tiles.transitComparison(scenarioId1:String, scenarioId2:String, x:Integer, y:Integer, z:Integer)
 GET     /tile/surfaceComparison         controllers.Tiles.surfaceComparison(surfaceId1:Integer, surfaceId2:Integer, spatialId:String, x:Integer, y:Integer, z:Integer, showIso:Boolean ?= false, showPoints:Boolean ?= false, timeLimit:Integer ?= 3600, minTime:Integer ?= null, show:String ?= null)
 
-GET     /gis/query	                    controllers.Gis.query(queryId:String, timeLimit:Integer ?= 3600, weightBy:String ?= null, groupBy:String ?= null, which: String)
+GET     /gis/query	                    controllers.Gis.query(queryId:String, timeLimit:Integer ?= 3600, weightBy:String ?= null, groupBy:String ?= null, which: String, compareTo:String ?= null)
 
 GET     /api/queryBins	                controllers.Api.queryBins(queryId:String, timeLimit:Integer ?= 3600, normalizeBy:String ?= null, groupBy:String ?= null, which: String, compareTo: String ?= null)
 

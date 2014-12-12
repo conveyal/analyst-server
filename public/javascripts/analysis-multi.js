@@ -159,8 +159,12 @@ var Analyst = Analyst || {};
     initialize: function() {
       var _this = this;
       this.updateInterval = setInterval(function() {
-        if (_this.model.get("completePoints") < _this.model.get("totalPoints"))
+        if (!_this.isComplete()) {
           _this.model.fetch();
+        } else {
+          // don't keep polling
+          clearInterval(_this.updateInterval);
+        }
       }, 1000);
     },
 
@@ -190,11 +194,13 @@ var Analyst = Analyst || {};
     },
 
     isStarting: function() {
-      return this.model.get("totalPoints") == -1;
+      return this.model.get("totalPoints") === null || this.model.get('totalPoints') == -1;
     },
 
     isComplete: function() {
-      return this.model.get("totalPoints") == this.model.get("completePoints");
+      var tp = this.model.get("totalPoints");
+      var cp = this.model.get("completePoints");
+      return tp !== null && cp !== null && tp == cp;
     },
 
     clickItem: function(evt) {
@@ -219,6 +225,9 @@ var Analyst = Analyst || {};
         url = url + "&weightBy=" + this.weightById;
 
       url += '&which=' + this.which;
+
+      if (this.compareToId)
+        url += '&compareTo=' + this.compareToId;
 
       window.open(url);
 
