@@ -439,7 +439,7 @@ public class Shapefile implements Serializable {
 	}
 	
 	
-	public void updateAttributeStats(String name, String type, Object value) {
+	public void updateAttributeStats(String name, Object value) {
 		
 		Attribute attribute; 
 		
@@ -447,12 +447,15 @@ public class Shapefile implements Serializable {
 			attribute = new Attribute();
 			attribute.name = name;
 			attribute.fieldName = name;
-			attribute.type = type;
+			
 			
 			attributes.put(name, attribute);
 		}
 		else
 			attribute = attributes.get(name);
+		
+		if(value != null && value instanceof Number )
+			attribute.numeric = true;
 		
 		attribute.updateStats(value);
 		 
@@ -511,7 +514,7 @@ public class Shapefile implements Serializable {
 			        		PropertyType pt = p.getType();
 			        		Object value = p.getValue();
 			        		
-			        		updateAttributeStats(name, pt.getName().toString(), value);
+			        		updateAttributeStats(name, value);
 			        		
 			        		if(value != null && (value instanceof Long)) {
 			        			feature.attributes.put(p.getName().toString(), (int)(long)p.getValue());

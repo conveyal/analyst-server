@@ -10,7 +10,7 @@ public class Attribute implements Serializable {
 	public String description;
 	public String color;
 	
-	public String type;
+	public Boolean numeric = false;
 	
 	public Double min = 0.0;
 	public Double max = 0.0;
