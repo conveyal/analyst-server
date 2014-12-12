@@ -278,7 +278,11 @@ public class QueryResults {
 	        		out.minValue = item.value;
         	}
 			
-			out.classifier = new NaturalBreaksClassifier(out, nClasses, new Color(1.0f, 1.0f, 1.0f, 0.5f), new Color(0.0f, 0.0f, 1.0f, 0.5f));
+			if (this.classifier instanceof BimodalNaturalBreaksClassifier)
+				out.classifier = new BimodalNaturalBreaksClassifier(out, nClasses, 0d,
+						new Color(.9f, .9f, .1f, .5f), new Color(.5f, .5f, .5f, .5f), new Color(0f, 0f, 1f, .5f));
+			else
+				out.classifier = new NaturalBreaksClassifier(out, nClasses, new Color(1.0f, 1.0f, 1.0f, 0.5f), new Color(0.0f, 0.0f, 1.0f, 0.5f));
 			out.shapeFileId = aggregateTo.id;
 			
 			aggregated.put(key, out);
