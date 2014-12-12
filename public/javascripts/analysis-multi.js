@@ -190,11 +190,13 @@ var Analyst = Analyst || {};
     },
 
     isStarting: function() {
-      return this.model.get("totalPoints") == -1;
+      return this.model.get("totalPoints") === null;
     },
 
     isComplete: function() {
-      return this.model.get("totalPoints") == this.model.get("completePoints");
+      var tp = this.model.get("totalPoints");
+      var cp = this.model.get("completePoints");
+      return tp !== null && cp !== null && tp == cp;
     },
 
     clickItem: function(evt) {
