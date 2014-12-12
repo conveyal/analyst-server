@@ -39,23 +39,29 @@ POST    /api/scenario/					controllers.Api.createScenario()
 PUT     /api/scenario/:id				controllers.Api.updateScenario(id:String)
 DELETE  /api/scenario/:id				controllers.Api.deleteScenario(id:String)
 
-GET     /api/query						controllers.Api.getQuery(id:String ?= null, projectId:String ?= null)
+GET     /api/query						controllers.Api.getQuery(id:String ?= null, projectId:String ?= null, pointSetId: String ?= null)
 GET     /api/query/:id					controllers.Api.getQueryById(id:String)
 POST    /api/query/						controllers.Api.createQuery()
 PUT     /api/query/:id					controllers.Api.updateQuery(id:String)
 DELETE  /api/query/:id					controllers.Api.deleteQuery(id:String)
 
 GET     /tile/shapefile                 controllers.Tiles.shape(shapefileId:String, x:Integer, y:Integer, z:Integer)
+<<<<<<< HEAD
 GET     /tile/spatial                  	controllers.Tiles.spatial(shapefileId:String, x:Integer, y:Integer, z:Integer, selectedAttributes:String	)
 GET     /tile/surface                  	controllers.Tiles.surface(surfaceId:Integer, shapefileId:String, x:Integer, y:Integer, z:Integer, showIso:Boolean ?= false, showPoints:Boolean ?= true, timeLimit:Integer ?= 3600, minTime:Integer ?= null, show:String ?= null)
 GET     /tile/query	                    controllers.Tiles.query(queryId:String, x:Integer, y:Integer, z:Integer, timeLimit:Integer ?= 3600, normalizeBy:String ?= null, groupBy:String ?= null, which: String)
+=======
+GET     /tile/spatial                  	controllers.Tiles.spatial(pointSetId:String, x:Integer, y:Integer, z:Integer, selectedAttributes:String	)
+GET     /tile/surface                  	controllers.Tiles.surface(surfaceId:Integer, pointSetId:String, x:Integer, y:Integer, z:Integer, showIso:Boolean ?= false, showPoints:Boolean ?= true, timeLimit:Integer ?= 3600, minTime:Integer ?= null, show:String ?= null)
+GET     /tile/query	                    controllers.Tiles.query(queryId:String, x:Integer, y:Integer, z:Integer, timeLimit:Integer ?= 3600, normalizeBy:String ?= null, groupBy:String ?= null, which: String, compareTo:String ?= null)
+>>>>>>> origin/profile-routing
 GET     /tile/transit                	controllers.Tiles.transit(scenarioId:String, x:Integer, y:Integer, z:Integer)
 GET     /tile/transitComparison         controllers.Tiles.transitComparison(scenarioId1:String, scenarioId2:String, x:Integer, y:Integer, z:Integer)
 GET     /tile/surfaceComparison         controllers.Tiles.surfaceComparison(surfaceId1:Integer, surfaceId2:Integer, spatialId:String, x:Integer, y:Integer, z:Integer, showIso:Boolean ?= false, showPoints:Boolean ?= false, timeLimit:Integer ?= 3600, minTime:Integer ?= null, show:String ?= null)
 
 GET     /gis/query	                    controllers.Gis.query(queryId:String, timeLimit:Integer ?= 3600, weightBy:String ?= null, groupBy:String ?= null, which: String)
 
-GET     /api/queryBins	                controllers.Api.queryBins(queryId:String, timeLimit:Integer ?= 3600, normalizeBy:String ?= null, groupBy:String ?= null, which: String)
+GET     /api/queryBins	                controllers.Api.queryBins(queryId:String, timeLimit:Integer ?= 3600, normalizeBy:String ?= null, groupBy:String ?= null, which: String, compareTo: String ?= null)
 
 GET     /api/surface                    controllers.Api.surface(graphId:String, lat:Double, lon:Double, mode:String, bikeSpeed:Double, walkSpeed:Double, which:String)
 GET	    /api/isochrone					controllers.Api.isochrone(surfaceId:Integer, cutoffs:java.util.List[Integer])

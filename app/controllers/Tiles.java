@@ -37,6 +37,7 @@ import tiles.AnalystTileRequest.SpatialTile;
 import tiles.AnalystTileRequest.SurfaceTile;
 import tiles.AnalystTileRequest.SurfaceComparisonTile;
 import tiles.AnalystTileRequest.QueryTile;
+import tiles.AnalystTileRequest.QueryComparisonTile;
 import tiles.AnalystTileRequest.ShapefileTile;
 import tiles.TileCache;
 import utils.HaltonPoints;
@@ -127,8 +128,13 @@ public class Tiles extends Controller {
     }
 
 	public static Promise<Result> query(String queryId, Integer x, Integer y, Integer z,
+<<<<<<< HEAD
 			Integer timeLimit, String normalizeBy, String groupBy, String which) {
 
+=======
+			Integer timeLimit, String normalizeBy, String groupBy, String which, String compareTo) {
+		
+>>>>>>> origin/profile-routing
 		ResultEnvelope.Which whichEnum;
 		try {
 			whichEnum = ResultEnvelope.Which.valueOf(which);
@@ -142,10 +148,15 @@ public class Tiles extends Controller {
 			});
 		}
 
-		AnalystTileRequest tileRequest = new QueryTile(queryId, x, y, z, timeLimit, normalizeBy, groupBy, whichEnum);
+		AnalystTileRequest tileRequest;
+		
+		if (compareTo == null)
+			tileRequest = new QueryTile(queryId, x, y, z, timeLimit, normalizeBy, groupBy, whichEnum);
+		else
+			tileRequest = new QueryComparisonTile(queryId, compareTo, x, y, z, timeLimit, normalizeBy, groupBy, whichEnum);
+		
 		return tileBuilder(tileRequest);
     }
-
 
 	public static Promise<Result> transit(final String scenarioId, final Integer x, final Integer y, final Integer z) {
 

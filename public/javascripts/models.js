@@ -32,51 +32,6 @@ var Analyst = Analyst || {};
 
 	});
 
-	A.models.PointSet = Backbone.Model.extend({
-		urlRoot: '/api/pointset/',
-
-		defaults: {
-			id: null,
-			name: null,
-			description: null,
-			shapeFileId: null,
-			projectId: null,
-			attributes: []
-		},
-
-		addAttribute : function (name, description, color, fieldName) {
-
-			this.deleteAttribute(fieldName);
-
-			var item = {
-				name: name,
-				description: description,
-				color: color,
-				fieldName: fieldName
-			};
-
-			this.set(this.get("attributes").push(item));
-		},
-
-		deleteAttribute : function (fieldName) {
-			this.set("attributes", _.filter(this.get("attributes"), function(item) {
-				if(item.fieldName == fieldName)
-					return false;
-				else
-					return true;
-			}));
-		}
-
-	});
-
-	A.models.PointSets = Backbone.Collection.extend({
-	  type: 'PointSets',
-	  model: A.models.PointSet,
-	  url: '/api/pointset',
-	  comparator: 'name'
-
-	});
-
 	A.models.Shapefile = Backbone.Model.extend({
 		urlRoot: '/api/shapefile/',
 
@@ -84,7 +39,9 @@ var Analyst = Analyst || {};
 			id: null,
 			name: null,
 			description: null,
-			fieldnames: []
+			fieldnames: [],
+			projectId: null,
+			attributes: []
 		}
 
 	});

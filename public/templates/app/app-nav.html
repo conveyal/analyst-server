@@ -16,12 +16,11 @@
       {{#if selectedProject}}
 
           <ul class="nav navbar-nav">
-             <li id="transportDataTab" class="{{#if transportDataActive}}active{{/if}}"><a  href="#"><span class="glyphicon glyphicon-road"></span> Transport Data</a></li>
              <li id="spatialDataTab" class="dropdown {{#if spatialDataActive}}active{{/if}}">
-               <a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-globe"></span> Spatial Data <span class="caret"></span></a>
+               <a href="#" class="dropdown-toggle" data-toggle="dropdown">Data <span class="caret"></span></a>
                <ul class="dropdown-menu" role="menu">
-                 <li id="spatialDataTabShapefilesListItem"><a href="#">Shapefiles</a></li>
-                 <li id="spatialDataTabPointSetsListItem"></span><a href="#">Point Sets</a></li>
+                 <li id="transportDataTab" class="{{#if transportDataActive}}active{{/if}}"><a  href="#"><span class="glyphicon glyphicon-road"></span> Transport Data</a></li>
+                 <li id="spatialDataTabShapefilesListItem"><a href="#"><span class="glyphicon glyphicon-globe"></span> Shapefiles</a></li>
                </ul>
              </li>
              <li id="analysisTab" class="dropdown {{#if analysisActive}}active{{/if}}">

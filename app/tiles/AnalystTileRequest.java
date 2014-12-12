@@ -560,8 +560,6 @@ public static class QueryTile extends AnalystTileRequest {
 		
 		public byte[] render(){
 			
-			Tile tile = new Tile(this);
-			
 			Query query = Query.getQuery(queryId);
 			
 			if(query == null)
@@ -580,8 +578,19 @@ public static class QueryTile extends AnalystTileRequest {
 				else
 					qr = QueryResults.queryResultsCache.get(queryKey);
 			}
+			
+			return doRender(qr, query.shapefileId);
+		}
+		
+		/**
+		 * Actually perform the rendering. This is abstracted into a separate function so it can also be used in
+		 * QueryComparisonTile.
+		 */
+		protected byte[] doRender(QueryResults qr, String shapefileId) {
+			Tile tile = new Tile(this);
+			
+			Shapefile shp = Shapefile.getShapefile(shapefileId);
 
-			Shapefile shp = Shapefile.getShapefile(query.shapefileId);
 
 		    List<ShapeFeature> features = shp.query(tile.envelope);
 
@@ -591,7 +600,7 @@ public static class QueryTile extends AnalystTileRequest {
 		        	Color color = null;
 
 		        	if(qr.items.containsKey(feature.id)) {
-		         		color = qr.jenksClassifier.getColorValue(qr.items.get(feature.id).value);
+		         		color = qr.classifier.getColorValue(qr.items.get(feature.id).value);
 		         	}
 
 					if(color == null) {
@@ -628,7 +637,7 @@ public static class QueryTile extends AnalystTileRequest {
 
 		            	Color color = null;
 
-		            	color = groupedQr.jenksClassifier.getColorValue(item.value);
+		            	color = groupedQr.classifier.getColorValue(item.value);
 
 		            	if(color == null){
 							color = new Color(0.0f,0.0f,0.0f,0.1f);
@@ -656,6 +665,58 @@ public static class QueryTile extends AnalystTileRequest {
 				return null;
 			}
 			
+		}
+	}
+
+	/**
+	 * A tile comparing two queries
+	 */
+	public static class QueryComparisonTile extends QueryTile {
+		public final String compareTo;
+		
+		public QueryComparisonTile(String queryId, String compareTo, Integer x, Integer y, Integer z, Integer timeLimit,
+				String normalizeBy, String groupBy, ResultEnvelope.Which which) {
+			super(queryId, x, y, z, timeLimit, normalizeBy, groupBy, which);
+
+			this.compareTo = compareTo;
+		}
+		
+		@Override
+		public String getId () {
+			return super.getId() + "_" + compareTo;
+		}
+		
+		@Override
+		public byte[] render () {
+			Query q1 = Query.getQuery(queryId);
+			Query q2 = Query.getQuery(compareTo);
+			
+			if (q1 == null || q2 == null || !q1.shapefileId.equals(q2.shapefileId))
+				return null;
+			
+			String q1key = queryId + "_" + timeLimit + "_" + which;
+			String q2key = compareTo + "_" + timeLimit + "_" + which;
+			
+			QueryResults qr1, qr2;
+			
+			if (!QueryResults.queryResultsCache.containsKey(q1key)) {
+				qr1 = new QueryResults(q1, timeLimit, which);
+				QueryResults.queryResultsCache.put(q1key, qr1);
+			}
+			else {
+				qr1 = QueryResults.queryResultsCache.get(q1key);
+			}
+			
+			if (!QueryResults.queryResultsCache.containsKey(q2key)) {
+				qr2 = new QueryResults(q2, timeLimit, which);
+				QueryResults.queryResultsCache.put(q2key, qr2);
+			}
+			else {
+				qr2 = QueryResults.queryResultsCache.get(q2key);
+			}
+			
+			
+			return doRender(qr1.subtract(qr2), q1.shapefileId);
 		}
 	}
  

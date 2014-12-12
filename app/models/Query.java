@@ -299,4 +299,19 @@ public class Query implements Serializable {
 			}
 		} 
 	}
+
+	/**
+	 * Get all the queries for a point set.
+	 */
+	public static Collection<Query> getQueriesByPointSet(String pointSetId) {
+		Collection<Query> ret = new ArrayList<Query>();
+		
+		for (Query q : queryData.getAll()) {
+			if (q.pointSetId != null && q.pointSetId.equals(pointSetId)) {
+				ret.add(q);
+			}
+		}
+		
+		return ret;
+	}
 }

@@ -7,7 +7,6 @@ var Analyst = Analyst || {};
     template: Handlebars.getTemplate('analysis', 'analysis-multi-point'),
 
     events: {
-      'change .scenario-comparison': 'selectComparisonType',
       'click #createQuery': 'createQuery',
       'click #cancelQuery': 'cancelQuery',
       'click #newQuery': 'newQuery'
@@ -18,24 +17,11 @@ var Analyst = Analyst || {};
     },
 
     initialize: function(options) {
-      _.bindAll(this, 'selectComparisonType', 'createQuery', 'cancelQuery');
-
+      _.bindAll(this, 'createQuery', 'cancelQuery');
     },
 
     onRender: function() {
       $('#scenario2-controls').hide();
-    },
-
-    selectComparisonType: function(evt) {
-
-      this.comparisonType = $('.scenario-comparison').val();
-
-      if (this.comparisonType == 'compare') {
-        $('#scenario2-controls').show();
-      } else {
-        $('#scenario2-controls').hide();
-      }
-
     },
 
     onShow: function() {
@@ -160,6 +146,7 @@ var Analyst = Analyst || {};
       'click #deleteItem': 'deleteItem',
       'click #queryCheckbox': 'clickItem',
       'click #normalizeCheckbox': 'normalizeBy',
+      'click #compareCheckbox': 'compareTo',
       'click #exportShape': 'exportShape',
       'click #updateMap': 'updateMap'
 
@@ -218,6 +205,9 @@ var Analyst = Analyst || {};
 
     exportShape: function(evt) {
 
+      this.normalizeBy();
+      this.compareTo();
+
       var timeLimit = this.timeSlider.getValue() * 60;
 
       var url = '/gis/query?queryId=' + this.model.id + '&timeLimit=' + timeLimit;
@@ -263,6 +253,16 @@ var Analyst = Analyst || {};
       }
     },
 
+    compareTo: function () {
+      if (this.$('#compareCheckbox').is(':checked')) {
+        this.compareToId = this.$('#compareTo').val();
+        this.$('#compareControls').removeClass('hidden');
+      } else {
+        this.compareToId = false;
+        this.$('#compareControls').addClass('hidden');
+      }
+    },
+
     deleteItem: function(evt) {
       this.model.destroy();
     },
@@ -272,6 +272,7 @@ var Analyst = Analyst || {};
       var _this = this;
 
       this.normalizeBy();
+      this.compareTo();
 
       this.which = this.$('.whichMulti input:checked').val();
 
@@ -318,6 +319,9 @@ var Analyst = Analyst || {};
           url = url + "&normalizeBy=" + this.weightById;
 
         url += '&which=' + this.which;
+
+        if (this.compareToId)
+          url = url + '&compareTo=' + this.compareToId;
 
         this.$(".legendTitle").text(legendTitle);
 
@@ -417,6 +421,21 @@ var Analyst = Analyst || {};
                 .appendTo(_this.$('#groupBy'));
             });
           });
+
+        // set up the comparison select boxes
+        this.comparisonQueries = new A.models.Queries();
+        this.comparisonQueries.fetch({
+          data: {
+            pointSetId: this.model.get('pointSetId')
+          }
+        }).done(function () {
+          _this.comparisonQueries.each(function (query) {
+            $('<option>')
+            .attr('value', query.id)
+            .text(query.get('name'))
+            .appendTo(_this.$('#compareTo'));
+          });
+        });
 
         this.$("#weightBy").prop("disabled", true);
         this.$("#groupBy").prop("disabled", true);

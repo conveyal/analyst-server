@@ -257,8 +257,8 @@ public class Api extends Controller {
     }
 
     public static Result queryBins(String queryId, Integer timeLimit, String normalizeBy, String groupBy,
-    		String which) {
-
+    		String which, String compareTo) {
+    	
 		response().setHeader(CACHE_CONTROL, "no-cache, no-store, must-revalidate");
 		response().setHeader(PRAGMA, "no-cache");
 		response().setHeader(EXPIRES, "0");
@@ -275,7 +275,16 @@ public class Api extends Controller {
 
 		if(query == null)
 			return badRequest();
-
+		Query otherQuery = null;
+		
+		if (compareTo != null) {
+			otherQuery = Query.getQuery(compareTo);
+			
+			if (otherQuery == null) {
+				return badRequest("Non-existent comparison query.");
+			}
+		}
+	   	
     	try {
 
     		String queryKey = queryId + "_" + timeLimit + "_" + which;
@@ -290,15 +299,31 @@ public class Api extends Controller {
 	    		else
 	    			qr = QueryResults.queryResultsCache.get(queryKey);
     		}
+    		
+    		if (otherQuery != null) {
+        		QueryResults otherQr = null;
+        		
+    			queryKey = compareTo + "_" + timeLimit + "_" + which;
+    			if (!QueryResults.queryResultsCache.containsKey(queryKey)) {
+    				otherQr = new QueryResults(otherQuery, timeLimit, whichEnum);
+    				QueryResults.queryResultsCache.put(queryKey, otherQr);
+    			}
+    			else {
+    				otherQr = QueryResults.queryResultsCache.get(queryKey);
+    			}
+    			
+    			qr = qr.subtract(otherQr);
+    		}
 
             if(normalizeBy == null) {
-            	return ok(Json.toJson(qr.jenksClassifier.bins));
+            	return ok(Json.toJson(qr.classifier.getBins()));
             }
             else {
             	Shapefile aggregateTo = Shapefile.getShapefile(groupBy);
-            	Shapefile weightBy = Shapefile.getShapefile(normalizeBy);
-            	return ok(Json.toJson(qr.aggregate(aggregateTo, weightBy).jenksClassifier.bins));
 
+				Shapefile weightBy = Shapefile.getShapefile(normalizeBy);
+				return ok(Json.toJson(qr.aggregate(aggregateTo, weightBy).classifier.getBins()));
+	        
             }
 
 
@@ -756,11 +781,11 @@ public class Api extends Controller {
     // **** query controllers ****
 
     public static Result getQueryById(String id) {
-    	return getQuery(id, null);
+    	return getQuery(id, null, null);
     }
-
-    public static Result getQuery(String id, String projectId) {
-
+    
+    public static Result getQuery(String id, String projectId, String pointSetId) {
+        
     	try {
 
             if(id != null) {
@@ -770,8 +795,11 @@ public class Api extends Controller {
                 else
                     return notFound();
             }
-            else {
+            else if (projectId != null){
                 return ok(Api.toJson(Query.getQueries(projectId), false));
+            }
+            else {
+            	return ok(Api.toJson(Query.getQueriesByPointSet(pointSetId), false));
             }
         } catch (Exception e) {
             e.printStackTrace();
