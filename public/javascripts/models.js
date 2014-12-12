@@ -55,6 +55,14 @@ var Analyst = Analyst || {};
 
 	});
 
+	/** static function to get the human-readable, localized name of an attribute */
+	A.models.Shapefile.attributeName = function (attr) {
+		if (attr.name == attr.fieldName)
+			return attr.name;
+		else
+			return window.Messages('analysis.attribute-name', attr.name, attr.fieldName);
+	}
+
 	A.models.Shapefiles = Backbone.Collection.extend({
 	  type: 'Shapefiles',
 	  model: A.models.Shapefile,
@@ -89,7 +97,7 @@ var Analyst = Analyst || {};
 			name: null,
 			mode: null,
 			shapefileId: null,
-			attributeId: null,
+			attributeName: null,
 			scenarioId: null,
 			status: null,
 			totalPoints: null,
@@ -102,6 +110,11 @@ var Analyst = Analyst || {};
 
 		getPoints : function() {
 
+		},
+
+		pointSetName : function () {
+			var attrName = A.models.Shapefile.attributeName(this.get('attribute'));
+			return window.Messages('analysis.point-set-name', this.get('shapefileName'), attrName);
 		}
 
 	});

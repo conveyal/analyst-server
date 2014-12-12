@@ -22,6 +22,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
+import javax.smartcardio.ATR;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.geotools.data.DataStoreFinder;
@@ -86,8 +88,6 @@ public class Shapefile implements Serializable {
 
 	@JsonIgnore
 	public HashMap<String,Attribute> attributes = new HashMap<String,Attribute>();
-
-	public Integer featureCount;
 
 	public static Map<String,PointSet> pointSetCache = new ConcurrentHashMap<String,PointSet>();
 
@@ -232,13 +232,15 @@ public class Shapefile implements Serializable {
 	}
 
 	@JsonIgnore
-	public PointSet getPointSet() {
+	public PointSet getPointSet(String attrName) {
 
+		String psId = this.id + "_" + attrName;
+		
 		synchronized (pointSetCache) {
-			if(pointSetCache.containsKey(this.id))
-				return pointSetCache.get(this.id);
+			if(pointSetCache.containsKey(psId))
+				return pointSetCache.get(psId);
 
-			PointSet ps = new PointSet(featureCount);
+			PointSet ps = new PointSet(getFeatureCount());
 			ps.setGraphService(Api.analyst.getGraphService());
 
 			String categoryId = Attribute.convertNameToId(this.name);
@@ -252,10 +254,10 @@ public class Shapefile implements Serializable {
 
 				HashMap<String,Integer> propertyData = new HashMap<String,Integer>();
 
-				for(Attribute a : this.attributes.values()) {
-					String propertyId = categoryId + "." + Attribute.convertNameToId(a.name);
-					propertyData.put(propertyId, sf.getAttribute(a.fieldName));
-				}
+				Attribute a = this.attributes.get(attrName);
+				String propertyId = categoryId + "." + Attribute.convertNameToId(a.name);
+				propertyData.put(propertyId, sf.getAttribute(a.fieldName));
+
 
 				PointFeature pf;
 				try {
@@ -271,22 +273,23 @@ public class Shapefile implements Serializable {
 
 			ps.setLabel(categoryId, this.name);
 
-			for(Attribute attr : this.attributes.values()) {
-				String propertyId = categoryId + "." + Attribute.convertNameToId(attr.name);
-				ps.setLabel(propertyId, attr.name);
+			Attribute attr = this.attributes.get(attrName);
+			String propertyId = categoryId + "." + Attribute.convertNameToId(attr.name);
+			ps.setLabel(propertyId, attr.name);
+			
+			if (attr.color != null)
 				ps.setStyle(propertyId, "color", attr.color);
-			}
 
-			pointSetCache.put(this.id, ps);
+			pointSetCache.put(psId, ps);
 
 			return ps;
 		}
 	}
 
-	public String writeToClusterCache(Boolean workOffline) throws IOException {
+	public String writeToClusterCache(Boolean workOffline, String attrName) throws IOException {
 
-		PointSet ps = this.getPointSet();
-		String cachePointSetId = id + ".json";
+		PointSet ps = this.getPointSet(attrName);
+		String cachePointSetId = id + "_" + Attribute.convertNameToId(attrName) + ".json";
 
 		File f = new File(cachePointSetId);
 

@@ -10,14 +10,16 @@ var Analyst = Analyst || {};
 		  'change #scenarioComparison': 'selectComparisonType',
 		  'change #scenario1': 'createSurface',
 		  'change #scenario2': 'createSurface',
-		  'change .primary-indicator': 'createSurface',
+		  'change #shapefile': 'createSurface',
+			'change #shapefileColumn': 'createSurface',
 		  'change #chartType' : 'updateResults',
 			'change .which1 input' : 'updateEnvelope',
 			'change .which2 input' : 'updateEnvelope',
+			'change #shapefile' : 'updateAttributes',
 		  'click #showIso': 'updateMap',
 		  'click #showPoints': 'updateMap',
 		  'click #showTransit': 'updateMap',
-		  'click .mode-selector' : 'updateMap'
+		  'click .mode-selector' : 'updateMap',
 		},
 
 		regions: {
@@ -25,7 +27,7 @@ var Analyst = Analyst || {};
 		},
 
 		initialize: function(options){
-			_.bindAll(this, 'createSurface', 'updateMap', 'onMapClick', 'updateEnvelope');
+			_.bindAll(this, 'createSurface', 'updateMap', 'onMapClick', 'updateEnvelope', 'updateAttributes');
 
 			this.transitOverlays = {};
 		},
@@ -51,7 +53,7 @@ var Analyst = Analyst || {};
 		/**
 		 * Update the best case, worst case, etc. that the user can choose
 		 * based on the modes. For example, for on-street modes, there is no
-		 * best case; for transit modes, there is currently no point estimate.
+		 * best or worst case; for transit modes, there is currently no point estimate.
 		 */
 		updateAvailableEnvelopeParameters: function () {
 			// we use this variable so that the map is not automatically redrawn when
@@ -122,7 +124,7 @@ var Analyst = Analyst || {};
 
 	  		A.map.on('click', this.onMapClick);
 
-			this.pointsets = new A.models.PointSets();
+			this.shapefiles = new A.models.Shapefiles();
 			this.scenarios = new A.models.Scenarios();
 
 			this.timeSlider = this.$('#timeSlider1').slider({
@@ -178,14 +180,19 @@ var Analyst = Analyst || {};
 				_this.createSurface();
 		    });
 
-			this.pointsets.fetch({reset: true, data : {projectId: A.app.selectedProject}, success: function(collection, response, options){
-
+			this.shapefiles.fetch({reset: true, data : {projectId: A.app.selectedProject}})
+				.done(function () {
 				_this.$("#primaryIndicator").empty();
 
-				for(var i in _this.pointsets.models)
-	    			_this.$("#primaryIndicator").append('<option value="' + _this.pointsets.models[i].get("id") + '">' + _this.pointsets.models[i].get("name") + '</option>');
+				_this.shapefiles.each(function (shp) {
+					$('<option>')
+						.attr('value', shp.id)
+						.text(shp.get('name'))
+						.appendTo(this.$('#shapefile'));
+				});
 
-			}});
+				_this.updateAttributes();
+			});
 
 			this.scenarios.fetch({reset: true, data : {projectId: A.app.selectedProject}, success: function(collection, response, options){
 
@@ -204,6 +211,26 @@ var Analyst = Analyst || {};
 			this.$('#comparisonChart').hide();
 			this.$('#compareLegend').hide();
 
+		},
+
+		/**
+		* Update the attributes select to show the attributes of the current shapefile
+		*/
+		updateAttributes: function () {
+			var shpId = this.$('#shapefile').val();
+			var shp = this.shapefiles.get(shpId);
+			var _this = this;
+
+			this.$('#shapefileColumn').empty();
+
+			shp.getNumericAttributes().forEach(function (attr) {
+				var atName = A.models.Shapefile.attributeName(attr);
+
+				$('<option>')
+				.attr('value', attr.fieldName)
+				.text(atName)
+				.appendTo(_this.$('#shapefileColumn'));
+			});
 		},
 
 		onClose : function() {
@@ -315,8 +342,8 @@ var Analyst = Analyst || {};
 			if(this.comparisonType == 'compare') {
 
 				if(this.surfaceId1) {
-					var resUrl = '/api/result?pointSetId=' + this.$("#primaryIndicator").val() + '&surfaceId=' + this.surfaceId1 +
-					'&which=' + this.$('input[name="which1"]:checked').val();
+					var resUrl = '/api/result?shapefileId=' + this.$("#shapefile").val() + '&attributeName=' + this.$('#shapefileColumn').val() +
+						'&surfaceId=' + this.surfaceId1 +	'&which=' + this.$('input[name="which1"]:checked').val();
 					$.getJSON(resUrl, function(res) {
 
 						_this.scenario1Data = res;
@@ -326,8 +353,8 @@ var Analyst = Analyst || {};
 				}
 
 				if(this.surfaceId2) {
-					var resUrl = '/api/result?pointSetId=' + this.$("#primaryIndicator").val() + '&surfaceId=' + this.surfaceId2 +
-						'&which=' + this.$('input[name="which2"]:checked').val();
+					var resUrl = '/api/result?shapefileId=' + this.$("#shapefile").val() + '&attributeName=' + this.$('#shapefileColumn').val() +
+					  '&surfaceId=' + this.surfaceId2 + '&which=' + this.$('input[name="which2"]:checked').val();
 					$.getJSON(resUrl, function(res) {
 
 						_this.scenario2Data = res;
@@ -337,8 +364,8 @@ var Analyst = Analyst || {};
 				}
 			}
 			else {
-				var resUrl = '/api/result?pointSetId=' + this.$("#primaryIndicator").val() + '&surfaceId=' + this.surfaceId1 +
-				'&which=' + this.$('input[name="which1"]:checked').val();
+				var resUrl = '/api/result?shapefileId=' + this.$("#shapefile").val() + '&attributeName=' + this.$('#shapefileColumn').val() +
+					'&surfaceId=' + this.surfaceId1 +	'&which=' + this.$('input[name="which1"]:checked').val();
 				$.getJSON(resUrl, function(res) {
 
 					_this.drawChart(res, 1, "#barChart1", 175);
@@ -394,7 +421,7 @@ var Analyst = Analyst || {};
 
 			}
 
-			if(!this.$("#primaryIndicator").val() ||  !this.surfaceId1)
+			if(!this.surfaceId1 && (this.surfaceId2 || this.comparisonType != 'compare'))
 				return;
 
 			$('#results1').hide();
@@ -414,7 +441,8 @@ var Analyst = Analyst || {};
 				if(A.map.tileOverlay && A.map.hasLayer(A.map.tileOverlay))
 		  			A.map.removeLayer(A.map.tileOverlay);
 
-				A.map.tileOverlay = L.tileLayer('/tile/surfaceComparison?z={z}&x={x}&y={y}&spatialId=' +  this.$("#primaryIndicator").val() + '&minTime=' + minTime + '&timeLimit=' + timeLimit + '&surfaceId1=' + this.surfaceId1  + '&surfaceId2=' + this.surfaceId2 + '&showIso=' + showIso + '&showPoints=' +  showPoints + '&show=max', {}
+				A.map.tileOverlay = L.tileLayer('/tile/surfaceComparison?z={z}&x={x}&y={y}&shapefileId=' + this.$('#shapefile').val() + '&attributeName=' + this.$('#shapefileColumn').val() +
+					'&minTime=' + minTime + '&timeLimit=' + timeLimit + '&surfaceId1=' + this.surfaceId1  + '&surfaceId2=' + this.surfaceId2 + '&showIso=' + showIso + '&showPoints=' +  showPoints, {}
 					).addTo(A.map);
 
 			}
@@ -423,7 +451,8 @@ var Analyst = Analyst || {};
 				if(A.map.tileOverlay && A.map.hasLayer(A.map.tileOverlay))
 		  			A.map.removeLayer(A.map.tileOverlay);
 
-				A.map.tileOverlay = L.tileLayer('/tile/surface?z={z}&x={x}&y={y}&pointSetId=' +  this.$("#primaryIndicator").val() + '&minTime=' + minTime + '&timeLimit=' + timeLimit + '&showPoints=' + showPoints + '&showIso=' + showIso + '&surfaceId=' + this.surfaceId1, {
+				A.map.tileOverlay = L.tileLayer('/tile/surface?z={z}&x={x}&y={y}&shapefileId=' + this.$('#shapefile').val() + '&attributeName=' + this.$('#shapefileColumn').val() +
+					'&minTime=' + minTime + '&timeLimit=' + timeLimit + '&showPoints=' + showPoints + '&showIso=' + showIso + '&surfaceId=' + this.surfaceId1, {
 
 					}).addTo(A.map);
 

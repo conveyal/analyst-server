@@ -9,7 +9,8 @@ var Analyst = Analyst || {};
     events: {
       'click #createQuery': 'createQuery',
       'click #cancelQuery': 'cancelQuery',
-      'click #newQuery': 'newQuery'
+      'click #newQuery': 'newQuery',
+      'change #shapefile': 'updateAttributes'
     },
 
     regions: {
@@ -17,7 +18,7 @@ var Analyst = Analyst || {};
     },
 
     initialize: function(options) {
-      _.bindAll(this, 'createQuery', 'cancelQuery');
+      _.bindAll(this, 'createQuery', 'cancelQuery', 'updateAttributes');
     },
 
     onRender: function() {
@@ -102,14 +103,10 @@ var Analyst = Analyst || {};
       this.$('#shapefileColumn').empty();
 
       shp.getNumericAttributes().forEach(function (attr) {
-        var atName;
-        if (attr.description !== null && attr.description !== '')
-          atName = window.Messages('analysis.attribute-alias', attr.description, attr.name);
-        else
-          atName = attr.name;
+        var atName = A.models.Shapefile.attributeName(attr);
 
         $('<option>')
-          .attr('value', attr.name)
+          .attr('value', attr.fieldName)
           .text(atName)
           .appendTo(_this.$('#shapefileColumn'));
       });
@@ -123,7 +120,7 @@ var Analyst = Analyst || {};
         name: this.$("#name").val(),
         mode: this.mode,
         shapefileId: this.$('#shapefile').val(),
-        attributeId: this.$('#shapefileAttribute').val(),
+        attributeName: this.$('#shapefileColumn').val(),
         scenarioId: this.$('#scenario1').val(),
         projectId: A.app.selectedProject
       };
@@ -209,6 +206,8 @@ var Analyst = Analyst || {};
         data['starting'] = true;
       else if (this.isComplete())
         data['complete'] = true;
+
+      data['pointSetName'] = this.model.pointSetName();
 
       return data;
 
@@ -309,12 +308,12 @@ var Analyst = Analyst || {};
       var legendTitle;
       if (this.groupById) {
         legendTitle = Messages('analysis.aggregated-title',
-          this.model.get("pointSetName"),
+          this.model.pointSetName(),
           this.groupByName,
           this.weightByName
         );
       } else {
-        legendTitle = Messages('analysis.accessibility-to', this.model.get("pointSetName"));
+        legendTitle = Messages('analysis.accessibility-to', this.model.pointSetName());
       }
 
       // add the suffix, e.g. (best case)
