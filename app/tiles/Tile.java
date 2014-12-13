@@ -73,7 +73,7 @@ public class Tile {
          
     	Envelope2D env = JTS.getEnvelope2D(envelope, DefaultGeographicCRS.WGS84);
     	
-    	TileRequest tileRequest = new TileRequest("", env, 256 * this.scaleFactor, 256 * this.scaleFactor);
+    	TileRequest tileRequest = new TileRequest(env, 256 * this.scaleFactor, 256 * this.scaleFactor);
     	GridEnvelope2D gridEnv = new GridEnvelope2D(0, 0, tileRequest.width, tileRequest.height);
     	GridGeometry2D gg = new GridGeometry2D(gridEnv, (org.opengis.geometry.Envelope)(tileRequest.bbox));
     	
