@@ -211,6 +211,9 @@ var Analyst = Analyst || {};
 			this.$('#comparisonChart').hide();
 			this.$('#compareLegend').hide();
 
+			this.$('#processing-query').hide();
+			this.$('#results-area').hide();
+
 		},
 
 		/**
@@ -296,6 +299,9 @@ var Analyst = Analyst || {};
 
 			var _this = this;
 
+			this.$('#results-area').hide();
+			this.$('#processing-query').show();
+
 			var surfaceUrl1 = '/api/surface?graphId=' + graphId1 + '&lat=' + A.map.marker.getLatLng().lat + '&lon=' +
 				A.map.marker.getLatLng().lng + '&mode=' + this.mode1 + '&bikeSpeed=' + bikeSpeed + '&walkSpeed=' + walkSpeed +
 				'&which=' + which1;
@@ -338,6 +344,9 @@ var Analyst = Analyst || {};
 			var _this = this;
 
 			this.comparisonType = this.$('.scenario-comparison').val();
+
+			this.$('#processing-query').hide();
+			this.$('#results-area').show();
 
 			if(this.comparisonType == 'compare') {
 
