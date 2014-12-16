@@ -1,8 +1,10 @@
 <li data-id="{{id}}" class="list-group-item">
-  <span class="pull-right">
-    <span id="zoomToExtent" class="glyphicon glyphicon-fullscreen"></span>
-    <span id="toggleLayer" class="glyphicon glyphicon-eye-close gray-icon"></span>
-  </span>
+
+    <div class="btn-group btn-group-sm pull-right" aria-label="">
+      <button type="button" class="btn btn-default"  id="zoomToExtent"><span class="glyphicon glyphicon-fullscreen"></span></button>
+      <button type="button" class="btn btn-default" id="toggleLayer" ><span id="toggleLayerIcon" class="glyphicon glyphicon-eye-close"></span></button>
+    </div>
+
   <span id="shapefileName"><strong>{{#if name}}{{name}}{{else}}<em>[no name]</em>{{/if}}</strong></span>
   <br/><span><small>{{filename}}, {{featureCount}} {{type}} features</small></span>
 

@@ -188,43 +188,75 @@ A.transportData = {};
 
 	  events: {
 
-	  	'click #deleteItem' : 'deleteItem',
-	  	'click #scenarioCheckbox' : 'clickItem'
+	  	'click #deleteScenario' : 'deleteScenario',
+	  	'click #toggleLayer' : 'toggleLayer',
+			'click #zoomToExtent' : 'zoomToExtent'
 
 	  },
 
 	  initialize : function() {
 
-		_.bindAll(this, 'refreshModel');
+			_.bindAll(this, 'refreshModel');
 
-		this.refreshModel();
-	  },
+			this.refreshModel();
+
+			this.transitOverlay = false;
+		},
 
 	  refreshModel : function() {
-		if(this.model.get('status') != "BUILT") {
-			this.model.fetch();
-			this.render();
-			setTimeout(this.refreshModel, 5000);
-		}
-		else
-			this.render();
+			if(this.model.get('status') != "BUILT") {
+				this.model.fetch();
+				this.render();
+				setTimeout(this.refreshModel, 5000);
+			}
+			else
+				this.render();
 	  },
 
+		toggleLayer : function(evt) {
 
-	  clickItem : function(evt) {
+	 	  var target = $(evt.target);
 
-	 	var target = $(evt.target);
+	  	var scenarioId = this.model.id;
 
-	  	var scenarioId = target.data("id")
+			if(this.transitOverlay) {
+				if(A.map.hasLayer(this.transitOverlay))
+					A.map.removeLayer(this.transitOverlay);
 
-	  	if(target.prop("checked"))
-	  		this.trigger("transitShow", {scenarioId : scenarioId});
-	  	else
-	  		this.trigger("transitHide", {scenarioId : scenarioId});
+					this.transitOverlay = false;
 
-	  },
+					this.$("#zoomToExtent").addClass("disabled");
 
-	  deleteItem: function(evt) {
+					this.$("#toggleLayerIcon").removeClass("glyphicon-eye-open");
+					this.$("#toggleLayerIcon").addClass("glyphicon-eye-close");
+			}
+			else {
+				this.transitOverlay = L.tileLayer('/tile/transit?z={z}&x={x}&y={y}&scenarioId=' + scenarioId	).addTo(A.map);
+
+				this.$("#zoomToExtent").removeClass("disabled");
+
+				this.$("#toggleLayerIcon").addClass("glyphicon-eye-open");
+				this.$("#toggleLayerIcon").removeClass("glyphicon-eye-close");
+
+			}
+
+		},
+
+		onClose : function(evt) {
+			if(this.transitOverlay && A.map.hasLayer(this.transitOverlay))
+				A.map.removeLayer(this.transitOverlay);
+		},
+
+		zoomToExtent : function(evt) {
+
+			// prevent bootstrap toggle state
+			evt.stopImmediatePropagation();
+
+			var bounds = L.latLngBounds([L.latLng(this.model.get("bounds").north, this.model.get("bounds").east), L.latLng(this.model.get("bounds").south, this.model.get("bounds").west)])
+			A.map.fitBounds(bounds);
+		},
+
+	  deleteScenario: function(evt) {
 	  	this.model.destroy();
 	  },
 
@@ -238,16 +270,9 @@ A.transportData = {};
 		},
 
 	  onRender: function () {
-        // Get rid of that pesky wrapping-div.
-        // Assumes 1 child element present in template.
-        this.$el = this.$el.children();
-        // Unwrap the element to prevent infinitely
-        // nesting elements during re-render.
-        this.$el.unwrap();
-        this.setElement(this.$el);
 
 				var _this = this;
-				
+
 				this.$el.find("#scenarioName").editable({
 					type        : 'text',
 					name        : "name",
@@ -262,6 +287,23 @@ A.transportData = {};
 				}).on("hidden", function(e, reason) {
 					_this.render();
 				});
+
+				this.$el.find("#scenarioDescription").editable({
+					type        : 'textarea',
+					name        : "description",
+					mode				: "inline",
+					value       : this.model.get("description"),
+					pk          : this.model.get('id'),
+					url         : '',
+					success     : function(response, newValue) {
+						_this.model.set("description", newValue);
+						_this.model.save("description", newValue);
+					}
+				}).on("hidden", function(e, reason) {
+					_this.render();
+				});
+
+
       }
 
 	});
@@ -277,40 +319,10 @@ A.transportData = {};
 		itemView: A.transportData.ScenarioListItem,
 		emptyView: A.transportData.ScenarioEmptyList,
 
-		initialize : function() {
-			this.transitOverlays = {};
-
-		},
-
-		onClose : function() {
-
-			for(var id in this.transitOverlays){
-				if(this.transitOverlays[id] && A.map.hasLayer(this.transitOverlays[id]))
-					A.map.removeLayer(this.transitOverlays[id]);
-			}
-
-		},
-
 		appendHtml: function(collectionView, itemView){
 	    	collectionView.$("#scenarioList").append(itemView.el);
-	    	this.listenTo(itemView, "transitShow", this.transitShow);
-	    	this.listenTo(itemView, "transitHide", this.transitHide);
-	 	},
 
-	 	transitShow : function(data) {
-
-	 		if(A.map.hasLayer(this.transitOverlays[data.scenarioId]))
-	 			A.map.removeLayer(this.transitOverlays[data.scenarioId ]);
-
-			this.transitOverlays[data.scenarioId] = L.tileLayer('/tile/transit?z={z}&x={x}&y={y}&scenarioId=' + data.scenarioId).addTo(A.map);
-		},
-
-		transitHide : function(data) {
-
-			if(A.map.hasLayer(this.transitOverlays[data.scenarioId]))
-				A.map.removeLayer(this.transitOverlays[data.scenarioId ]);
-
-		}
+	 	}
 
 	});
 

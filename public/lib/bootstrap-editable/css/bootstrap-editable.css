@@ -17,7 +17,7 @@
   See: https://github.com/vitalets/x-editable/issues/393
 */
 .editableform .form-control {
-    width: 275px;
+    width: 200px;
 }
 
 .editable-buttons {
@@ -67,7 +67,7 @@
 }
 
  .editable-error-block {
-    max-width: 300px;
+    max-width: 200px;
     margin: 5px 0 0 0;
     width: auto;
     white-space: normal;

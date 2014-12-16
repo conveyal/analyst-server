@@ -41,7 +41,8 @@ data-manager.pointset-description=Spatial data sets allow measurement of access 
 data-manager.shapefile-description=Shapefile data sets are used to measure accessibility to spatially distributed characteristics like population or jobs.
 
 data-manager.no-scenarios=No transit scenarios for this project.
-data-manager.scenarios-description=Create a transport scenario by clicking "Add" above and uploading a GTFS feed, or create a GTFS feed using TransitMix or TransitWand.
+data-manager.scenarios-description-a=Create a transport scenario by clicking "Add" above and uploading a GTFS feed, or create a GTFS feed using TransitMix or TransitWand.
+data-manager.scenarios-description=Transport scenarios are an essential requirement to performing accessibility analysis.  Adding more than one allows comparisons to be made.
 
 data-manager.no-shapefiles=No Shapefiles
 data-manager.shapefiles-upload-description=To create a spatial data set first upload a Shapefile containing the geometries and attributes you wish to measure.
@@ -74,6 +75,9 @@ data-manager.upload-shapefile-description=Shapefile Description
 data-manager.upload-shapefile=Upload Shapefile
 
 data-manager.upload-shapefile-uploading=Uploading & Processing Shapefile
+
+
+analysis.single-point-description=Click anywhere on the map to perform a calculation and use the options below to change the parameters.  Drag the pin point marker to change the origin point of the analysis.
 
 analysis.analysis-type=Analysis Type
 

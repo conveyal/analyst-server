@@ -53,6 +53,7 @@ import com.vividsolutions.jts.geom.Geometry;
 import controllers.Api;
 import controllers.Application;
 
+
 public class Scenario implements Serializable {
 
 	private static final long serialVersionUID = 1L;

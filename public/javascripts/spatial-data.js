@@ -130,6 +130,8 @@ A.spatialData = {};
 
 		template: Handlebars.getTemplate('data', 'data-shapefile-list-item'),
 
+		tagName : "li",
+
 		events: {
 			'click #toggleLayer': 'toggleLayer',
 			'click #zoomToExtent': 'zoomToExtent'
@@ -137,13 +139,6 @@ A.spatialData = {};
 
 
 		onRender: function () {
-			// Get rid of that pesky wrapping-div
-			// Assumes 1 child element present in template.
-			this.$el = this.$el.children();
-			// Unwrap the element to prevent infinitely
-			// nesting elements during re-render.
-			this.$el.unwrap();
-			this.setElement(this.$el);
 
 			var _this = this;
 
@@ -200,7 +195,7 @@ A.spatialData = {};
 					});
 			});
 
-			this.$el.find("#zoomToExtent").hide();
+			this.$("#zoomToExtent").addClass("disabled");
 			this.$("#shapefileAttributes").hide();
 
 			this.$el.find("#shapefileDescription").editable({
@@ -220,12 +215,11 @@ A.spatialData = {};
 
 			if(this.shapefileOverlay) {
 
-				this.$("#zoomToExtent").show();
+				this.$("#zoomToExtent").removeClass("disabled");
 				this.$("#shapefileAttributes").show();
 
-				this.$("#toggleLayer").addClass("glyphicon-eye-open");
-				this.$("#toggleLayer").removeClass("glyphicon-eye-close");
-				this.$("#toggleLayer").removeClass("gray-icon");
+				this.$("#toggleLayerIcon").addClass("glyphicon-eye-open");
+				this.$("#toggleLayerIcon").removeClass("glyphicon-eye-close");
 			}
 
 		},
@@ -236,11 +230,19 @@ A.spatialData = {};
 		},
 
 		zoomToExtent : function(evt) {
+
+			// prevent bootstrap toggle state
+			evt.stopImmediatePropagation();
+
 			var bounds = L.latLngBounds([L.latLng(this.model.get("bounds").north, this.model.get("bounds").east), L.latLng(this.model.get("bounds").south, this.model.get("bounds").west)])
 			A.map.fitBounds(bounds);
 		},
 
-		toggleLayer : function(data) {
+		toggleLayer : function(evt) {
+
+			// prevent bootstrap toggle state
+			evt.stopImmediatePropagation();
+
 			if(this.shapefileOverlay) {
 
 				if(A.map.hasLayer(this.shapefileOverlay))
@@ -248,23 +250,21 @@ A.spatialData = {};
 
 				this.shapefileOverlay = false;
 
-				this.$("#zoomToExtent").hide();
+				this.$("#zoomToExtent").addClass("disabled");
 				this.$("#shapefileAttributes").hide();
 
-				this.$("#toggleLayer").removeClass("glyphicon-eye-open");
-				this.$("#toggleLayer").addClass("glyphicon-eye-close");
-				this.$("#toggleLayer").addClass("gray-icon");
+				this.$("#toggleLayerIcon").removeClass("glyphicon-eye-open");
+				this.$("#toggleLayerIcon").addClass("glyphicon-eye-close");
 
 			}
 			else {
 				this.shapefileOverlay = L.tileLayer('/tile/shapefile?z={z}&x={x}&y={y}&shapefileId=' + this.model.id).addTo(A.map);
 
-				this.$("#zoomToExtent").show();
+				this.$("#zoomToExtent").removeClass("disabled");
 				this.$("#shapefileAttributes").show();
 
-				this.$("#toggleLayer").addClass("glyphicon-eye-open");
-				this.$("#toggleLayer").removeClass("glyphicon-eye-close");
-				this.$("#toggleLayer").removeClass("gray-icon");
+				this.$("#toggleLayerIcon").addClass("glyphicon-eye-open");
+				this.$("#toggleLayerIcon").removeClass("glyphicon-eye-close");
 
 		 }
 		}
