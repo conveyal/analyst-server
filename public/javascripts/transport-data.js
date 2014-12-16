@@ -245,6 +245,23 @@ A.transportData = {};
         // nesting elements during re-render.
         this.$el.unwrap();
         this.setElement(this.$el);
+
+				var _this = this;
+				
+				this.$el.find("#scenarioName").editable({
+					type        : 'text',
+					name        : "name",
+					mode				: "inline",
+					value       : this.model.get("name"),
+					pk          : this.model.get('id'),
+					url         : '',
+					success     : function(response, newValue) {
+						_this.model.set("name", newValue);
+						_this.model.save("name", newValue);
+					}
+				}).on("hidden", function(e, reason) {
+					_this.render();
+				});
       }
 
 	});

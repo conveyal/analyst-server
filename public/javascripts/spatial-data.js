@@ -166,21 +166,42 @@ A.spatialData = {};
 
 			var descriptionField = "description";
 
-			_.each(this.model.get("shapeAttributes"), function(shapeAttribute) {
-				if(shapeAttribute.numeric) {
+			_.each(this.model.getNumericAttributes(), function(shapeAttribute) {
+						_this.$el.find('#attributeName[data-id='+ shapeAttribute.fieldName +']').editable({
+							type        : 'text',
+							name        : descriptionField,
+							mode				: "inline",
+							value       : shapeAttribute.name,
+							url         : '',
+							success     : function(response, newValue) {
+								var match = _.find(_this.model.get("shapeAttributes"), function(val){return val.fieldName === shapeAttribute.fieldName});
+								match.name = newValue;
+								_this.model.save();
+							}
+						}).on("hidden", function(e, reason) {
+							_this.render();
+						});
+			});
 
-					var attributeName;
-					if(shapeAttribute.name === shapeAttribute.fieldName)
-						attributeName = shapeAttribute.name;
-					else
-						attributeName  = shapeAttribute.name + " (" + shapeAttribute.fieldName + ")";
-
-					_this.$el.find("#shapefileAttribute").append('<option value="' + shapeAttribute.id + '">' + attributeName + '</option>');
-
-				}
+			_.each(this.model.getNumericAttributes(), function(shapeAttribute) {
+					_this.$el.find('#attributeDescription[data-id='+ shapeAttribute.fieldName +']').editable({
+						type        : 'text',
+						name        : descriptionField,
+						mode				: "inline",
+						value       : shapeAttribute.description,
+						url         : '',
+						success     : function(response, newValue) {
+							var match = _.find(_this.model.get("shapeAttributes"), function(val){return val.fieldName === shapeAttribute.fieldName});
+							match.description = newValue;
+							_this.model.save();
+						}
+					}).on("hidden", function(e, reason) {
+						_this.render();
+					});
 			});
 
 			this.$el.find("#zoomToExtent").hide();
+			this.$("#shapefileAttributes").hide();
 
 			this.$el.find("#shapefileDescription").editable({
 				type        : 'textarea',
@@ -200,11 +221,13 @@ A.spatialData = {};
 			if(this.shapefileOverlay) {
 
 				this.$("#zoomToExtent").show();
+				this.$("#shapefileAttributes").show();
 
 				this.$("#toggleLayer").addClass("glyphicon-eye-open");
 				this.$("#toggleLayer").removeClass("glyphicon-eye-close");
 				this.$("#toggleLayer").removeClass("gray-icon");
 			}
+
 		},
 
 		onClose : function() {
@@ -213,7 +236,7 @@ A.spatialData = {};
 		},
 
 		zoomToExtent : function(evt) {
-			var bounds = L.latLngBounds([L.latLng(this.model.get("envelope").maxY, this.model.get("envelope").minX), L.latLng(this.model.get("envelope").minY, this.model.get("envelope").maxX)])
+			var bounds = L.latLngBounds([L.latLng(this.model.get("bounds").north, this.model.get("bounds").east), L.latLng(this.model.get("bounds").south, this.model.get("bounds").west)])
 			A.map.fitBounds(bounds);
 		},
 
@@ -226,6 +249,7 @@ A.spatialData = {};
 				this.shapefileOverlay = false;
 
 				this.$("#zoomToExtent").hide();
+				this.$("#shapefileAttributes").hide();
 
 				this.$("#toggleLayer").removeClass("glyphicon-eye-open");
 				this.$("#toggleLayer").addClass("glyphicon-eye-close");
@@ -236,6 +260,7 @@ A.spatialData = {};
 				this.shapefileOverlay = L.tileLayer('/tile/shapefile?z={z}&x={x}&y={y}&shapefileId=' + this.model.id).addTo(A.map);
 
 				this.$("#zoomToExtent").show();
+				this.$("#shapefileAttributes").show();
 
 				this.$("#toggleLayer").addClass("glyphicon-eye-open");
 				this.$("#toggleLayer").removeClass("glyphicon-eye-close");
