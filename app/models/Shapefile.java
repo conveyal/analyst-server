@@ -51,6 +51,7 @@ import play.Logger;
 
 import com.conveyal.otpac.PointSetDatastore;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.MultiPolygon;
@@ -61,6 +62,7 @@ import com.vividsolutions.jts.index.strtree.STRtree;
 
 import controllers.Api;
 import controllers.Application;
+import utils.Bounds;
 import utils.DataStore;
 import utils.HaltonPoints;
 import utils.HashUtils;
@@ -69,6 +71,7 @@ import utils.HashUtils;
  * A Shapefile corresponds to an OTP PointSet. All numeric Shapefile columns are converted to pointset columns and accessibility values are calculated for each.
  */
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Shapefile implements Serializable {
 
 	private static final long serialVersionUID = 1L;
@@ -79,8 +82,14 @@ public class Shapefile implements Serializable {
 	public String id;
 	public String name;
 	public String description;
+	
+	public String filename;
+	
+	public String type;
 
 	public String projectId;
+	
+	public Bounds bounds;
 
 	@JsonIgnore
 	public HashMap<String,Attribute> attributes = new HashMap<String,Attribute>();
@@ -218,7 +227,7 @@ public class Shapefile implements Serializable {
 			time = t;
 		}
 	}
-
+	
 	@JsonIgnore
 	public synchronized STRtree getSpatialIndex() {
 		if(spatialIndex == null)
@@ -366,6 +375,12 @@ public class Shapefile implements Serializable {
 		return new ArrayList(attributes.values());
 	}
 
+	public void setShapeAttributes(List<Attribute> shapeAttributes) {
+		for(Attribute a : shapeAttributes) {
+			this.attributes.put(a.fieldName, a);
+		}
+	}
+	
 	public Collection<ShapeFeature> queryAll() {
 
 		return shapeFeatures.getAll();
@@ -399,14 +414,16 @@ public class Shapefile implements Serializable {
 
 	    Boolean hasShp = false;
 	    Boolean hasDbf = false;
-
+	    
 	    while(entries.hasMoreElements()) {
 
 	        ZipEntry entry = entries.nextElement();
 
-	        if(entry.getName().toLowerCase().endsWith("shp"))
-	        	hasShp = true;
-	        if(entry.getName().toLowerCase().endsWith("dbf"))
+	        if(entry.getName().toLowerCase().endsWith("shp")){
+	   	        hasShp = true;
+	   	        shapefile.filename = entry.getName();
+	        }
+	   	    if(entry.getName().toLowerCase().endsWith("dbf"))
 	        	hasDbf = true;
 	    }
 
@@ -494,6 +511,7 @@ public class Shapefile implements Serializable {
 
 
 		try {
+			Envelope envelope = new Envelope();
 			while( iterator.hasNext() ) {
 
 				try {
@@ -505,6 +523,10 @@ public class Shapefile implements Serializable {
 					feature.id = (String)sFeature.getID();
 			    	feature.geom = JTS.transform((Geometry)sFeature.getDefaultGeometry(),  transform);
 
+			    	envelope.expandToInclude(feature.geom.getEnvelopeInternal());
+			    	
+			    	this.type = feature.geom.getGeometryType().toLowerCase();
+			    	
 			        for(Object attr : sFeature.getProperties()) {
 			        	if(attr instanceof Property) {
 			        		Property p = ((Property)attr);
@@ -540,6 +562,8 @@ public class Shapefile implements Serializable {
 					continue;
 				}
 		     }
+			
+			this.bounds = new Bounds(envelope);
 		}
 		finally {
 		     iterator.close();

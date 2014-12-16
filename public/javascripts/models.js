@@ -101,7 +101,8 @@ var Analyst = Analyst || {};
 			scenarioId: null,
 			status: null,
 			totalPoints: null,
-			completePoints: null
+			completePoints: null,
+			envelope: null
 		},
 
 		updateStatus : function() {
