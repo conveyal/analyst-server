@@ -217,6 +217,8 @@ var Analyst = Analyst || {};
 					maxZoom: 18
 				}).addTo(A.map);
 
+			new L.control.scale({position: 'bottomleft', metric: true, imperial: true}).addTo(A.map);
+
 			new L.control.zoom({position: 'bottomleft'}).addTo(A.map);
 
 			A.map.on("moveend", function(evt) {
