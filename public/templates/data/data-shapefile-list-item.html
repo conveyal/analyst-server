@@ -1,6 +1,13 @@
 <li data-id="{{id}}" class="list-group-item">
-  <span class="pull-right glyphicon glyphicon-eye-close" style="color: #ccc;"></span> <span id="shapefileName"><strong>{{#if name}}{{name}}{{else}}<em>[no name]</em>{{/if}}</strong></span>
+  <span class="pull-right">
+    <span id="zoomToExtent" class="glyphicon glyphicon-fullscreen"></span>
+    <span id="toggleLayer" class="glyphicon glyphicon-eye-close gray-icon"></span>
+  </span>
+  <span id="shapefileName"><strong>{{#if name}}{{name}}{{else}}<em>[no name]</em>{{/if}}</strong></span>
   <br/><small><span>{{filename}}, {{featureCount}} {{type}} features</small></span>
 
   <p><small><span id="shapefileDescription">{{#if description}}{{description}}{{else}}<em>[no description]</em>{{/if}}</span></small></p>
+
+  <input type="checkbox"/> <strong>Attribute:</strong>
+  <select id="shapefileAttribute" class="form-control"></select>
 </li>

@@ -85,6 +85,8 @@ public class Shapefile implements Serializable {
 	public String type;
 
 	public String projectId;
+	
+	public Envelope envelope = new Envelope();
 
 	@JsonIgnore
 	public HashMap<String,Attribute> attributes = new HashMap<String,Attribute>();
@@ -222,7 +224,7 @@ public class Shapefile implements Serializable {
 			time = t;
 		}
 	}
-
+	
 	@JsonIgnore
 	public synchronized STRtree getSpatialIndex() {
 		if(spatialIndex == null)
@@ -517,6 +519,8 @@ public class Shapefile implements Serializable {
 					feature.id = (String)sFeature.getID();
 			    	feature.geom = JTS.transform((Geometry)sFeature.getDefaultGeometry(),  transform);
 
+			    	this.envelope.expandToInclude(feature.geom.getEnvelopeInternal());
+			    	
 			    	this.type = feature.geom.getGeometryType().toLowerCase();
 			    	
 			        for(Object attr : sFeature.getProperties()) {

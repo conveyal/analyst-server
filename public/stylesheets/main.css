@@ -149,3 +149,8 @@ div.legend-item {
     border-style: solid;
     border-color: #b3b3b3;
 }
+
+
+.gray-icon {
+  color: #ccc;
+}
