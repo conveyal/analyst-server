@@ -2,6 +2,7 @@ package jobs;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -9,10 +10,13 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import models.Scenario;
 
@@ -20,8 +24,10 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.geotools.geometry.Envelope2D;
+
 import com.conveyal.gtfs.GTFSFeed;
 import com.conveyal.gtfs.model.Stop;
+import com.conveyal.otpac.ClusterGraphService;
 
 import play.Play;
 import utils.Bounds;
@@ -79,8 +85,9 @@ public class ProcessTransitScenarioJob implements Runnable {
 
 			File outputDirectory = scenario.getTempShapeDirPath();
 			
-			// TODO: abstract this code; it needs to be re-run each time the frequency is changed
-			// and cannot be run until a frequency is set.
+			// the files that are needed for this graph build
+			List<File> graphFiles = new ArrayList<File>(2);
+			
 			if (confFile != null && shpFile != null) {				
 				zipFile = new ZipFile(uploadFile);
 
@@ -97,15 +104,18 @@ public class ProcessTransitScenarioJob implements Runnable {
 				uploadFile.delete();
 			}
 			else  {
-				newFile = new File(scenario.getScenarioDataPath(), scenario.id + ".zip");
+				newFile = new File(scenario.getScenarioDataPath(), scenario.id + "_gtfs.zip");
 				FileUtils.copyFile(uploadFile, newFile);
 			}
 
+			graphFiles.add(newFile);
+			
 			if((scenarioType != null && augmentScenarioId != null && scenarioType.equals("augment"))) 
 			{	
 				for(File f : Scenario.getScenario(augmentScenarioId).getScenarioDataPath().listFiles()) {
 					if(f.getName().toLowerCase().endsWith(".zip")) {
 						FileUtils.copyFileToDirectory(f, scenario.getScenarioDataPath());
+						graphFiles.add(new File(scenario.getScenarioDataPath(), f.getName()));
 					}
 				}
 			}
@@ -127,8 +137,6 @@ public class ProcessTransitScenarioJob implements Runnable {
 			scenario.save();
 
 			File osmPbfFile = new File(scenario.getScenarioDataPath(), scenario.id + ".osm.pbf");
-
-			// hard-coding vex osm integration (for now)
 
 			Double south = scenario.bounds.north < scenario.bounds.south ? scenario.bounds.north : scenario.bounds.south;
 			Double west = scenario.bounds.east < scenario.bounds.west ? scenario.bounds.east : scenario.bounds.west;
@@ -155,11 +163,41 @@ public class ProcessTransitScenarioJob implements Runnable {
 			}
 
 			// download the file
-			ByteStreams.copy(conn.getInputStream(), new FileOutputStream(osmPbfFile));
+			InputStream is = conn.getInputStream();
+			OutputStream os = new FileOutputStream(osmPbfFile);
+			ByteStreams.copy(is, os);
+			is.close();
+			os.close();
+			
+			graphFiles.add(osmPbfFile);
 
 			System.out.println("osm pbf retrieved");
-
-
+			
+			String s3cred = Play.application().configuration().getString("cluster.s3credentials");
+			Boolean workOffline = Play.application().configuration().getBoolean("cluster.work-offline");
+			String bucket = Play.application().configuration().getString("cluster.graphs-bucket");
+			
+			// copy everything to the cluster cache and S3
+			// build a zip file
+			File graphFile = new File(scenario.getScenarioDataPath(), scenario.id + ".zip");
+			
+			ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(graphFile));
+			// GTFS is already zipped, and PBF is gzipped, so no need to attempt to compress further
+			//zos.setMethod(ZipOutputStream.STORED);
+			
+			for (File file : graphFiles) {
+				zos.putNextEntry(new ZipEntry(file.getName()));
+				is = new FileInputStream(file);
+				ByteStreams.copy(is, zos);
+				is.close();
+				zos.closeEntry();
+			}
+			
+			zos.close();
+			
+			ClusterGraphService cgs = new ClusterGraphService(s3cred, workOffline, bucket);
+			 
+			cgs.addGraphFile(graphFile);
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.out.println("Failed to process gtfs");

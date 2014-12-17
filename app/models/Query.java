@@ -17,15 +17,24 @@ import org.opentripplanner.routing.core.TraverseModeSet;
 import otp.Analyst;
 import otp.AnalystProfileRequest;
 import play.Logger;
+import play.Play;
 import play.libs.Akka;
+import scala.concurrent.Await;
+import scala.concurrent.Future;
+import scala.concurrent.duration.Duration;
+import utils.Cluster;
 import utils.DataStore;
 import utils.HashUtils;
 import utils.ResultEnvelope;
 import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
+import akka.pattern.Patterns;
+import akka.util.Timeout;
 
-import com.conveyal.otpac.JobItemCallback;
+import com.conveyal.otpac.actors.JobItemActor;
+import com.conveyal.otpac.message.JobId;
 import com.conveyal.otpac.message.JobSpec;
 import com.conveyal.otpac.message.JobStatus;
 import com.conveyal.otpac.message.WorkResult;
@@ -252,14 +261,16 @@ public class Query implements Serializable {
 				final Query q = (Query)message;
 	
 				Shapefile sl = Shapefile.getShapefile(q.shapefileId);
-				String pointSetCachedName = sl.writeToClusterCache(true, q.attributeName);
 				
-				StandaloneCluster cluster = new StandaloneCluster("s3credentials", true, Api.analyst.getGraphService());
+				Boolean workOffline = Play.application().configuration().getBoolean("cluster.work-offline");
 				
-				StandaloneExecutive exec = cluster.createExecutive();
-				StandaloneWorker worker = cluster.createWorker();
+				if (workOffline == null)
+					workOffline = true;
 				
-				cluster.registerWorker(exec, worker);
+				String pointSetCachedName = sl.writeToClusterCache(workOffline, q.attributeName);
+				
+				ActorSystem system = Cluster.getActorSystem();
+				ActorRef executive = Cluster.getExecutive();
 				
 				JobSpec js;
 				
@@ -276,19 +287,14 @@ public class Query implements Serializable {
 				}
 
 				// plus a callback that registers how many work items have returned
-				class CounterCallback implements JobItemCallback {
-					
-					@Override
-					public synchronized void onWorkResult(WorkResult res) {
-						Query.saveQueryResult(q.id, new ResultEnvelope(res));
-					}
-				}
-				
-				CounterCallback callback = new CounterCallback();
+				ActorRef callback = system.actorOf(Props.create(SaveQueryCallback.class, q.id));
 				js.setCallback(callback);
 
 				// start the job
-				exec.find(js);
+				Timeout timeout = new Timeout(Duration.create(60, "seconds"));
+				Future<Object> future = Patterns.ask(executive, js, timeout);
+				
+				int jobId = ((JobId) Await.result(future, timeout.duration())).jobId;
 				
 				JobStatus status = null;
 				
@@ -296,7 +302,7 @@ public class Query implements Serializable {
 				do {
 					Thread.sleep(500);
 					try {
-						status = exec.getJobStatus().get(0);
+						status = Cluster.getStatus(jobId);
 						
 						if(status != null)
 							Query.updateStatus(q.id, status);
@@ -308,14 +314,12 @@ public class Query implements Serializable {
 					}
 					
 					
-				} while(status == null || !status.isComplete());
-					
-				cluster.stop(worker);
-				
+				} while(status == null || !status.isComplete());				
 			}
 		} 
 	}
 
+	
 	/**
 	 * Get all the queries for a point set.
 	 */
@@ -329,5 +333,27 @@ public class Query implements Serializable {
 		}
 		
 		return ret;
+	}
+	
+	/**
+	 * Save the queries as they come back.
+	 */
+	public static class SaveQueryCallback extends JobItemActor {
+		
+		/** the query ID */
+		public final String id;
+		
+		/**
+		 * Create a new save query callback.
+		 * @param id the query ID.
+		 */
+		public SaveQueryCallback(String id) {
+			this.id = id;
+		}
+		
+		@Override
+		public synchronized void onWorkResult(WorkResult res) {
+			Query.saveQueryResult(id, new ResultEnvelope(res));
+		}
 	}
 }

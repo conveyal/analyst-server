@@ -48,6 +48,7 @@ import org.opentripplanner.analyst.UnsupportedGeometryException;
 import org.opentripplanner.analyst.core.Sample;
 
 import play.Logger;
+import play.Play;
 
 import com.conveyal.otpac.PointSetDatastore;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -302,7 +303,10 @@ public class Shapefile implements Serializable {
 		ps.writeJson(fos, true);
 		fos.close();
 
-		PointSetDatastore datastore = new PointSetDatastore(10, "s3Credentials", workOffline);
+		String s3credentials = Play.application().configuration().getString("cluster.s3credentials");
+		String bucket = Play.application().configuration().getString("cluster.pointset-bucket");
+		
+		PointSetDatastore datastore = new PointSetDatastore(10, s3credentials, workOffline, bucket);
 
 		datastore.addPointSet(f, cachePointSetId);
 

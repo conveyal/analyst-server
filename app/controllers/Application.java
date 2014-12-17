@@ -31,14 +31,18 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.MathTransform;
 import org.opentripplanner.routing.graph.Graph;
 
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+
 import com.conveyal.otpac.ClusterGraphService;
-import com.conveyal.otpac.JobItemCallback;
 import com.conveyal.otpac.message.JobSpec;
 import com.conveyal.otpac.message.WorkResult;
 import com.conveyal.otpac.standalone.StandaloneCluster;
 import com.conveyal.otpac.standalone.StandaloneExecutive;
 import com.conveyal.otpac.standalone.StandaloneWorker;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 import com.vividsolutions.jts.geom.Geometry;
 
 import play.*;
