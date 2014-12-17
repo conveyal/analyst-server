@@ -12,10 +12,15 @@ libraryDependencies ++= Seq(
   "org.julienrf" %% "play-jsmessages" % "1.6.2",
   "commons-io" % "commons-io" % "2.4",
   "com.amazonaws" % "aws-java-sdk" % "1.7.13",
-  "com.typesafe.akka" % "akka-remote_2.10" % "2.3.5"
+  "com.typesafe.akka" % "akka-remote_2.10" % "2.3.5",
+  "org.opentripplanner" % "otp" % "1.0.0-SNAPSHOT"
 )
 
 watchSources := (watchSources.value
   --- baseDirectory.value / "app/assets" ** "*"
   --- baseDirectory.value / "conf" ** "*"
   --- baseDirectory.value / "public" ** "*").get
+  
+resolvers += "Local Maven Repository" at "file://"+Path.userHome.absolutePath+"/.m2/repository"
+
+resolvers += "Conveyal Maven Repository" at "http://maven.conveyal.com"
