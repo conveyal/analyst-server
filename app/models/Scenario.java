@@ -31,8 +31,10 @@ import org.apache.commons.io.IOUtils;
 import org.geotools.geometry.Envelope2D;
 import org.mapdb.Bind;
 import org.mapdb.Fun;
+
 import com.conveyal.gtfs.GTFSFeed;
 import com.conveyal.gtfs.model.Stop;
+
 import org.opentripplanner.routing.graph.Graph;
 
 import play.Logger;
@@ -47,6 +49,7 @@ import utils.DataStore;
 import utils.HashUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.io.ByteStreams;
 import com.vividsolutions.jts.geom.Geometry;
 
@@ -54,6 +57,7 @@ import controllers.Api;
 import controllers.Application;
 
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Scenario implements Serializable {
 
 	private static final long serialVersionUID = 1L;
