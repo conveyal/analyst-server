@@ -274,8 +274,7 @@ public class Query implements Serializable {
 				
 				JobSpec js;
 				
-				// temporarily disabling profile routing
-				if (false) {
+				if (q.isTransit()) {
 					// create a profile request
 					ProfileRequest pr = Api.analyst.buildProfileRequest(q.scenarioId, q.mode, null);
 					js = new JobSpec(q.scenarioId, pointSetCachedName, pointSetCachedName, pr);
