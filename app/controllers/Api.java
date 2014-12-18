@@ -133,7 +133,8 @@ public class Api extends Controller {
 
 		final ResultEnvelope.Which whichEnum = whichEnum_tmp;
 
-     	if (new TraverseModeSet(mode).isTransit()) {
+		// temporarily disabling profile routing due to problems with large/dense graphs
+     	if (false) { // (new TraverseModeSet(mode).isTransit()) {
     		// transit search: use profile routing
     		promise = Promise.promise(
     				new Function0<TimeSurfaceShort>() {
