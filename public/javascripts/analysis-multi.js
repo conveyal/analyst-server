@@ -466,7 +466,7 @@ var Analyst = Analyst || {};
         this.comparisonQueries = new A.models.Queries();
         this.comparisonQueries.fetch({
           data: {
-            pointSetId: this.model.get('pointSetId')
+            projectId: A.app.selectedProject
           }
         }).done(function () {
           _this.comparisonQueries.each(function (query) {
