@@ -65,7 +65,7 @@ var Analyst = Analyst || {};
         }
       });
 
-      this.shapefiles.fetch({projectId: A.app.selectedProject})
+      this.shapefiles.fetch({data: {projectId: A.app.selectedProject}})
         .done(function () {
           _this.shapefiles.each(function (shp) {
             $('<option>')
