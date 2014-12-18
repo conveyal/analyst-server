@@ -17,6 +17,18 @@ public abstract class Classifier {
 	
 	public abstract List<Bin> getBins();
 	
+	/**
+	 * Add percentage values to the bins, as percentages of the total possible.
+	 * Note that this does not calculate percent change in a subtraction!
+	 */
+	protected void addPercentagesToBins(double totalPossible) {
+		List<Bin> bins = getBins();
+		
+		for (Bin bin : bins) {
+			bin.upperPercent = 100 * bin.upper / totalPossible;
+			bin.lowerPercent = 100 * bin.lower / totalPossible;
+		}
+	}
 	
 	// from http://harmoniccode.blogspot.com.au/2011/04/bilinear-color-interpolation.html
 	public static java.awt.Color interpolateColor(final Color color1, final Color color2, float fraction) {            

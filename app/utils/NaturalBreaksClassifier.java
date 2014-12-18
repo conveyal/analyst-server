@@ -27,37 +27,9 @@ public class NaturalBreaksClassifier extends Classifier {
 		
 		Arrays.sort(list);
 		
-		// If there are more than 2000 values, take a systematic sample
-		// This is what is done by QGIS:
-		// https://github.com/qgis/QGIS/blob/d4f64d9bde43c05458e867d04e73bc804435e7b6/src/core/symbology-ng/qgsgraduatedsymbolrendererv2.cpp#L832
-		// QGIS also takes a 10% sample if that is larger, but that's not really necessary because
-		// the central limit theorem states that confidence intervals around statistics are based
-		// on the sample size, not the population size.
-		
-		// We use a systematic sample so that the renderer is deterministic. We take it after sorting
-		// so that it is not influenced by the order of the input. The systematic sample should
-		// approximate a random sample because it is taken over the entire range of input data
-		if (list.length > 2000) {
-			// figure out the increment to get ~2000 values
-			int increment = (int) Math.floor(list.length / 2000D);
-			
-			// and how many values will that generate?
-			// we add two because we also use the minimum and the maximum
-			int sampleSize = (int) Math.floor(list.length / (double) increment) + 2;
-			
-			double[] sample = new double[sampleSize];
-			
-			// Make sure the min and the max values get in there.
-			// maintain the array in sorted order though.
-			sample[0] = qr.minValue;
-			sample[sampleSize - 1] = qr.maxValue;
-			
-			for (int i = 0; i < sampleSize - 2; i++) {
-				sample[i + 1] = list[i * increment];
-			}
-			
-			list = sample;
-		}
+		// we can't classify into more bins than we have values
+		if (numCategories > list.length)
+			numCategories = list.length;
 		
 		double[] breaks = buildJenksBreaks(list, numCategories);
 		
@@ -66,9 +38,19 @@ public class NaturalBreaksClassifier extends Classifier {
 		
 		for (int i = 0; i < numCategories; i++) {
 			// numcategories - 1: fencepost problem. The highest value should get color2
-			Color c = interpolateColor(color1, color2, (float)((float)i / (float) (numCategories - 1)));
+			Color c;
+			if (numCategories > 1)
+				c = interpolateColor(color1, color2, (float)((float)i / (float) (numCategories - 1)));
+			else
+				c = interpolateColor(color1, color2, 0.5f);
+			
 			bins.add(new Bin(breaks[i], breaks[i + 1], c));
 		}
+		
+		addPercentagesToBins(qr.maxPossible);
+		
+		bins.get(0).lower -= 0.00000001;
+		bins.get(bins.size() - 1).upper += 0.00000001;
 	}
 	
 	@Override
@@ -76,9 +58,42 @@ public class NaturalBreaksClassifier extends Classifier {
 		return bins;
 	}
 
+	/**
+	 * Build Jenks breaks for the given list, which is assumed to be already sorted.
+	 */
 	public static double[] buildJenksBreaks(double[] list, int numclass) {
 		try {
+			// If there are more than 2000 values, take a systematic sample
+			// This is what is done by QGIS:
+			// https://github.com/qgis/QGIS/blob/d4f64d9bde43c05458e867d04e73bc804435e7b6/src/core/symbology-ng/qgsgraduatedsymbolrendererv2.cpp#L832
+			// QGIS also takes a 10% sample if that is larger, but that's not really necessary because
+			// the central limit theorem states that confidence intervals around statistics are based
+			// on the sample size, not the population size.
 			
+			// We use a systematic sample so that the renderer is deterministic. We take it after sorting
+			// so that it is not influenced by the order of the input. The systematic sample should
+			// approximate a random sample because it is taken over the entire range of input data
+			if (list.length > 2000) {
+				// figure out the increment to get ~2000 values
+				int increment = (int) Math.floor(list.length / 2000D);
+				
+				// and how many values will that generate?
+				// we add two because we also use the minimum and the maximum
+				int sampleSize = (int) Math.floor(list.length / (double) increment) + 2;
+				
+				double[] sample = new double[sampleSize];
+				
+				// Make sure the min and the max values get in there.
+				// maintain the array in sorted order though.
+				sample[0] = list[0];
+				sample[sampleSize - 1] = list[list.length - 1];
+				
+				for (int i = 0; i < sampleSize - 2; i++) {
+					sample[i + 1] = list[i * increment];
+				}
+				
+				list = sample;
+			}
 			//int numclass;
 			int numdata = list.length;
 				        

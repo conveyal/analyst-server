@@ -48,6 +48,9 @@ public class QueryResults {
 	public Double minValue = null;
 	public Double maxValue = null;
 	
+	/** The maximum possible accessibility value an item could take, if everything was accessible. */
+	public double maxPossible;
+	
 	/**
 	 * Number of classes to display on the map. 
 	 */
@@ -59,7 +62,7 @@ public class QueryResults {
 	public String shapeFileId;
 	
 	/**
-	 * What is the attribute of that shapefile that we are using? For now this is the pointset ID.
+	 * What attribute of that shapefile are we using?
 	 */
 	public String attributeId;
 
@@ -87,6 +90,7 @@ public class QueryResults {
 	
 	public QueryResults(Query q, Integer timeLimit, ResultEnvelope.Which which) {
 		Shapefile sd = Shapefile.getShapefile(q.shapefileId);
+		
 		this.which = which;
 
        double value;
@@ -130,7 +134,9 @@ public class QueryResults {
        
        shapeFileId = sd.id;
        
-       attributeId = q.shapefileId;
+       attributeId = q.attributeName;
+       
+       this.maxPossible = sd.attributes.get(attributeId).sum;
        
        // assign a unique ID
        synchronized (nextId) {
@@ -240,6 +246,10 @@ public class QueryResults {
 							// figure out how much of this weight should be assigned to the original geometry
 							double weightArea = GeoUtils.getArea(weightFeature.geom);
 							
+							// don't divide by zeroish
+							if (weightArea < 0.0000000001)
+								continue;
+							
 							Geometry overlap = weightFeature.geom.intersection(match.feature.geom);
 							if (overlap.isEmpty())
 								continue;
@@ -254,12 +264,17 @@ public class QueryResults {
 					// this aggregate geography may not completely contain the original geography.
 					// discount weight to account for that.
 					
+					double matchArea = GeoUtils.getArea(match.feature.geom);
+					
+					if (matchArea < 0.0000000001)
+						continue;
+					
 					Geometry overlap = match.feature.geom.intersection(aggregateFeature.geom);
 					
 					if (overlap.isEmpty())
 						continue;
 					
-					weight *= GeoUtils.getArea(overlap) / GeoUtils.getArea(match.feature.geom);
+					weight *= GeoUtils.getArea(overlap) / matchArea;
 					
 					weightedVal += match.value * weight;
 					sumOfWeights += weight;
@@ -280,13 +295,17 @@ public class QueryResults {
 	        		out.minValue = item.value;
         	}
 			
+			// we preserve the maxPossible from the original. It does not change under aggregation.
+			out.maxPossible = this.maxPossible;
+			
 			if (this.classifier instanceof BimodalNaturalBreaksClassifier)
 				out.classifier = new BimodalNaturalBreaksClassifier(out, nClasses, 0d,
 						new Color(.9f, .9f, .1f, .5f), new Color(.5f, .5f, .5f, .5f), new Color(0f, 0f, 1f, .5f));
 			else
 				out.classifier = new NaturalBreaksClassifier(out, nClasses, new Color(1.0f, 1.0f, 1.0f, 0.5f), new Color(0.0f, 0.0f, 1.0f, 0.5f));
-			out.shapeFileId = aggregateTo.id;
 			
+			out.shapeFileId = aggregateTo.id;
+						
 			aggregated.put(key, out);
 			
 			// TODO: set attribute ID.
@@ -333,6 +352,10 @@ public class QueryResults {
 				
 				ret.items.put(id, newItem);
 			}
+			
+			// we preserve the maxPossible from the original. This is because we want to represent percentages as
+			// a percentage of total possible still, not a percent change.
+			ret.maxPossible = this.maxPossible;
 			
 			ret.classifier = new BimodalNaturalBreaksClassifier(ret, nClasses, 0d,
 					new Color(.9f, .9f, .1f, .5f), new Color(.5f, .5f, .5f, .5f), new Color(0f, 0f, 1f, .5f));

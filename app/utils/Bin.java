@@ -12,6 +12,15 @@ public class Bin {
 	public Double lower;
 	public Double upper;
 	
+	/**
+	 * The percentage of the total for this bin's lower bound.
+	 * This is not a percent change, but is relative to the total.
+	 */
+	public Double lowerPercent;
+	
+	/** The percentage of the total for this bin's upper bound. Above comment applies. */
+	public Double upperPercent;
+	
 	@JsonIgnore
 	public Color color;
 	

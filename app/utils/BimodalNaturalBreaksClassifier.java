@@ -54,9 +54,29 @@ public class BimodalNaturalBreaksClassifier extends Classifier {
 			}
 		}
 		
-		// we should have filled the entire list, so the pointers should be just passed each other
+		// we should have filled the entire list, so the pointers should be just past each other
 		if (lower != upper + 1)
 			throw new IllegalStateException("Array filled incorrectly (internal error).");
+		
+		if (values.length <= numCategories) {
+			// just create a bin for each value
+			Arrays.sort(values);
+			
+			for (double v : values) {
+				// linear interpolation
+				Color c;
+				if (v > center)
+					c = interpolateColor(centerColor, color2, (float) (v - center) / (float) (values[values.length - 1] - center));
+				else
+					c = interpolateColor(color1, centerColor, (float) (v - center) / (float) (values[0] - center));
+
+				bins.add(new Bin(v - 0.00000001, v + 0.00000001, c));
+			}
+			
+			addPercentagesToBins(qr.maxPossible);
+			
+			return;
+		}
 		
 		// this is the first index of the values above the center 
 		int centralIndex = lower;  
@@ -115,6 +135,8 @@ public class BimodalNaturalBreaksClassifier extends Classifier {
 			Bin b2 = new Bin(upperBreaks[i], upperBreaks[i + 1], c);
 			bins.add(b2);
 		}
+		
+		addPercentagesToBins(qr.maxPossible);
 	}
 
 	@Override
