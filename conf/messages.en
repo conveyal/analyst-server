@@ -119,7 +119,8 @@ analysis.point-set-name={1} ({0})
 analysis.aggregate=Aggregate
 analysis.aggregate-summary=Summarize results to a larger unit of analysis, weighting by another indicator. For example, you might summarize job access to municipalities and weight by population, to generate an estimate of job access for the average person in each municipality.
 analysis.aggregate-to=Aggregate to
-analysis.weight-by=Weighted by
+analysis.weight-by-shapefile=Weighted by shapefile
+analysis.weight-by-attribute=Weighted by attribute
 # {0} is replaced with the name of an indicator
 analysis.accessibility-to=Accessibility to {0}
 analysis.aggregated-title=Accessibility to {0} aggregated to {1} weighted by {2}
