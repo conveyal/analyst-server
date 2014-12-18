@@ -166,8 +166,8 @@ var Analyst = Analyst || {};
       'click #normalizeCheckbox': 'normalizeBy',
       'click #compareCheckbox': 'compareTo',
       'click #exportShape': 'exportShape',
-      'click #updateMap': 'updateMap'
-
+      'click #updateMap': 'updateMap',
+      'change #weightByShapefile': 'updateAttributes'
     },
 
     modelEvents: {
@@ -241,8 +241,8 @@ var Analyst = Analyst || {};
       if (this.groupById)
         url = url + "&groupBy=" + this.groupById;
 
-      if (this.weightById)
-        url = url + "&weightBy=" + this.weightById;
+      if (this.weightByShapefile)
+        url = url + "&weightByShapefile=" + this.weightByShapefile + '&weightByAttribute=' + this.weightByAttribute;
 
       url += '&which=' + this.which;
 
@@ -260,19 +260,26 @@ var Analyst = Analyst || {};
     normalizeBy: function(evt) {
 
       if (this.$("#normalizeCheckbox").prop('checked')) {
-        this.$("#weightBy").prop("disabled", false);
+        this.$("#weightByShapefile").prop("disabled", false);
+        this.$("#weightByAttribute").prop("disabled", false);
         this.$("#groupBy").prop("disabled", false);
         this.$('#aggregation-controls').slideDown();
 
-        this.weightById = this.$("#weightBy").val();
-        this.weightByName = this.$('#weightBy :selected').text();
+        this.weightByShapefile = this.$("#weightByShapefile").val();
+        this.weightByName = this.$('#weightByShapefile :selected').text() + ' ' +
+          this.$('#weightByAttribute :selected').text();
+
+        this.weightByAttribute = this.$("#weightByAttribute").val();
 
         this.groupById = this.$('#groupBy').val();
         this.groupByName = this.$('#groupBy :selected').text();
       } else {
-        this.$("#weightBy").prop("disabled", true);
-        this.weightById = false;
+        this.$("#weightByShapefile").prop("disabled", true);
+        this.$("#weightByAttribute").prop("disabled", true);
+
+        this.weightByShapefile = false;
         this.weightByName = '';
+        this.weightByAttribute = false;
 
         this.groupById = false;
         this.groupByName = '';
@@ -344,8 +351,8 @@ var Analyst = Analyst || {};
         if (this.groupById)
           url = url + "&groupBy=" + this.groupById;
 
-        if (this.weightById)
-          url = url + "&normalizeBy=" + this.weightById;
+        if (this.weightByShapefile)
+          url = url + "&weightByShapefile=" + this.weightByShapefile + '&weightByAttribute=' + this.weightByAttribute;
 
         url += '&which=' + this.which;
 
@@ -391,6 +398,25 @@ var Analyst = Analyst || {};
       }
     },
 
+    /** Update available shapefile attributes for weighting */
+    updateAttributes: function () {
+      this.$('#weightByAttribute').empty();
+
+      var _this = this;
+
+      var shp = this.shapefiles.get(this.$('#weightByShapefile').val());
+
+      shp.getNumericAttributes().forEach(function (attr) {
+        var atName = A.models.Shapefile.attributeName(attr);
+
+        $('<option>')
+          .attr('value', attr.fieldName)
+          .text(atName)
+          .appendTo(_this.$('#weightByAttribute'));
+      });
+
+    },
+
     onRender: function() {
 
       var _this = this;
@@ -411,8 +437,7 @@ var Analyst = Analyst || {};
 
 
         // Set up weight and group by select boxes
-        // we weight by PointSets (which have values attached to them), and we group by shapefiles,
-        // which do not and need not.
+        // we weight and group by shapefiles. for weighting we also specify an attribute.
         this.shapefiles = new A.models.Shapefiles();
         this.shapefiles.fetch({
             data: {
@@ -426,8 +451,15 @@ var Analyst = Analyst || {};
               $('<option>')
                 .attr('value', shapefile.id)
                 .text(shapefile.get('name'))
+                .appendTo(_this.$('#weightByShapefile'));
+
+                $('<option>')
+                .attr('value', shapefile.id)
+                .text(shapefile.get('name'))
                 .appendTo(_this.$('#groupBy'));
             });
+
+            _this.updateAttributes();
           });
 
         // set up the comparison select boxes

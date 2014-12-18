@@ -256,7 +256,7 @@ public class Api extends Controller {
         return isochrones;
     }
 
-    public static Result queryBins(String queryId, Integer timeLimit, String normalizeBy, String groupBy,
+    public static Result queryBins(String queryId, Integer timeLimit, String weightByShapefile, String weightByAttribute, String groupBy,
     		String which, String compareTo) {
     	
 		response().setHeader(CACHE_CONTROL, "no-cache, no-store, must-revalidate");
@@ -315,14 +315,14 @@ public class Api extends Controller {
     			qr = qr.subtract(otherQr);
     		}
 
-            if(normalizeBy == null) {
+            if(weightByShapefile == null) {
             	return ok(Json.toJson(qr.classifier.getBins()));
             }
             else {
             	Shapefile aggregateTo = Shapefile.getShapefile(groupBy);
 
-				Shapefile weightBy = Shapefile.getShapefile(normalizeBy);
-				return ok(Json.toJson(qr.aggregate(aggregateTo, weightBy).classifier.getBins()));
+				Shapefile weightBy = Shapefile.getShapefile(weightByShapefile);
+				return ok(Json.toJson(qr.aggregate(aggregateTo, weightBy, weightByAttribute).classifier.getBins()));
 	        
             }
 

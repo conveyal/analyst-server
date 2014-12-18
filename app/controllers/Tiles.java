@@ -124,8 +124,7 @@ public class Tiles extends Controller {
     }
 
 	public static Promise<Result> query(String queryId, Integer x, Integer y, Integer z,
-
-			Integer timeLimit, String normalizeBy, String groupBy, String which, String compareTo) {
+			Integer timeLimit, String weightByShapefile, String weightByAttribute, String groupBy, String which, String compareTo) {
 
 		ResultEnvelope.Which whichEnum;
 		try {
@@ -143,9 +142,9 @@ public class Tiles extends Controller {
 		AnalystTileRequest tileRequest;
 		
 		if (compareTo == null)
-			tileRequest = new QueryTile(queryId, x, y, z, timeLimit, normalizeBy, groupBy, whichEnum);
+			tileRequest = new QueryTile(queryId, x, y, z, timeLimit, weightByShapefile, weightByAttribute, groupBy, whichEnum);
 		else
-			tileRequest = new QueryComparisonTile(queryId, compareTo, x, y, z, timeLimit, normalizeBy, groupBy, whichEnum);
+			tileRequest = new QueryComparisonTile(queryId, compareTo, x, y, z, timeLimit, weightByShapefile, weightByAttribute, groupBy, whichEnum);
 		
 		return tileBuilder(tileRequest);
     }

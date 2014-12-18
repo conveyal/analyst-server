@@ -2,6 +2,7 @@ package tiles;
 
 import java.awt.Color;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -549,23 +550,25 @@ public static class QueryTile extends AnalystTileRequest {
 		
 		final String queryId;
 		final Integer timeLimit;
-		final String normalizeBy;
+		final String weightByShapefile;
+		final String weightByAttribute;
 		final String groupBy;
 		final ResultEnvelope.Which which;
 		
 		public QueryTile(String queryId, Integer x, Integer y, Integer z, Integer timeLimit,
-				String normalizeBy, String groupBy, ResultEnvelope.Which which) {
+				String weightByShapefile, String weightByAttribute, String groupBy, ResultEnvelope.Which which) {
 			super(x, y, z, "transit");
 			
 			this.queryId = queryId;
 			this.timeLimit = timeLimit;
-			this.normalizeBy = normalizeBy;
+			this.weightByShapefile = weightByShapefile;
+			this.weightByAttribute = weightByAttribute;
 			this.groupBy = groupBy;
 			this.which = which;
 		}
 		
 		public String getId() {
-			return super.getId() + "_" + queryId;
+			return super.getId() + "_" + queryId + "_" + timeLimit +  "_" +  which + "_" + weightByShapefile + "_" + groupBy + "_" + weightByAttribute;
 		}
 		
 		public byte[] render(){
@@ -604,7 +607,7 @@ public static class QueryTile extends AnalystTileRequest {
 
 		    List<ShapeFeature> features = shp.query(tile.envelope);
 
-		    if(normalizeBy == null) {
+		    if(weightByShapefile == null) {
 		        for(ShapeFeature feature : features) {
 
 		        	Color color = null;
@@ -639,8 +642,8 @@ public static class QueryTile extends AnalystTileRequest {
 		    	}
 		    	else {
 		    		Shapefile aggregateTo = Shapefile.getShapefile(groupBy);
-		    		Shapefile weightBy = Shapefile.getShapefile(normalizeBy); 
-		    		QueryResults groupedQr = qr.aggregate(aggregateTo, weightBy);
+		    		Shapefile weightBy = Shapefile.getShapefile(weightByShapefile); 
+		    		QueryResults groupedQr = qr.aggregate(aggregateTo, weightBy, weightByAttribute);
 
 		    		// TODO: don't loop over everything here, only the items in this tile
 		    		for(QueryResultItem item : groupedQr.items.values()) {
@@ -685,8 +688,8 @@ public static class QueryTile extends AnalystTileRequest {
 		public final String compareTo;
 		
 		public QueryComparisonTile(String queryId, String compareTo, Integer x, Integer y, Integer z, Integer timeLimit,
-				String normalizeBy, String groupBy, ResultEnvelope.Which which) {
-			super(queryId, x, y, z, timeLimit, normalizeBy, groupBy, which);
+				String weightByShapefile, String weightByAttribute, String groupBy, ResultEnvelope.Which which) {
+			super(queryId, x, y, z, timeLimit, weightByShapefile, weightByAttribute, groupBy, which);
 
 			this.compareTo = compareTo;
 		}

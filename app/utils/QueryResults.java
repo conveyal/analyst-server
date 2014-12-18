@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.mapdb.Fun.Tuple2;
+import org.mapdb.Fun.Tuple3;
 import org.opentripplanner.analyst.ResultSet;
 
 import utils.Bin;
@@ -66,8 +67,8 @@ public class QueryResults {
 	
 	public ConcurrentHashMap<Integer, QueryResults> subtracted = new ConcurrentHashMap<Integer, QueryResults>();
 	
-	public ConcurrentHashMap<Tuple2<String, String>, QueryResults> aggregated =
-			new ConcurrentHashMap<Tuple2<String, String>, QueryResults>();
+	public ConcurrentHashMap<Tuple3<String, String, String>, QueryResults> aggregated =
+			new ConcurrentHashMap<Tuple3<String, String, String>, QueryResults>();
 	
 	public Classifier classifier;
 	
@@ -167,10 +168,10 @@ public class QueryResults {
 	 * to themselves. In this implementation, if the two come from the same shapefile, the matching for
 	 * the weighting is done by feature ID.
 	 */
-	public QueryResults aggregate (Shapefile aggregateTo, Shapefile weightBy) {
+	public QueryResults aggregate (Shapefile aggregateTo, Shapefile weightBy, String weightByAttribute) {
 		// see if we've already performed this aggregation; if so, return it from the cache
 		synchronized (aggregated) {
-			Tuple2<String, String> key = new Tuple2<String, String> (aggregateTo.id, weightBy.id);
+			Tuple3<String, String, String> key = new Tuple3<String, String, String> (aggregateTo.id, weightBy.id, weightByAttribute);
 			if (aggregated.containsKey(key))
 				return aggregated.get(key);
 						
@@ -221,7 +222,7 @@ public class QueryResults {
 					
 					if (sameShapefile) {
 						// FIXME hard-wiring first attribute sum while rebuilding UI -- this won't work 
-						weight = weightStore.getById(match.feature.id).getAttribute(weightBy.attributes.get(0).fieldName);
+						weight = weightStore.getById(match.feature.id).getAttribute(weightByAttribute);
 					}
 					else {
 						weight = 0;
@@ -234,7 +235,7 @@ public class QueryResults {
 							// calculate the weight of the entire item geometry that we are weighting by
 							
 							// FIXME hard-wiring first attribute sum while rebuilding UI -- this won't work 
-							double totalWeight = weightFeature.getAttribute(weightBy.attributes.get(0).fieldName); 
+							double totalWeight = weightFeature.getAttribute(weightByAttribute); 
 						
 							// figure out how much of this weight should be assigned to the original geometry
 							double weightArea = GeoUtils.getArea(weightFeature.geom);

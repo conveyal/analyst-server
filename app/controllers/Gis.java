@@ -79,8 +79,8 @@ public class Gis extends Controller {
 	
 	static File TMP_PATH = new File("tmp/");
 	
-	public static Result query(String queryId, Integer timeLimit, String weightBy, String groupBy,
-			String which, String compareTo) {
+	public static Result query(String queryId, Integer timeLimit, String weightByShapefile, String weightByAttribute,
+			String groupBy, String which, String compareTo) {
     	
 		response().setHeader(CACHE_CONTROL, "no-cache, no-store, must-revalidate");
 		response().setHeader(PRAGMA, "no-cache");
@@ -137,7 +137,7 @@ public class Gis extends Controller {
     		       
             Collection<ShapeFeature> features = shp.getShapeFeatureStore().getAll();
          
-            if(weightBy == null) {
+            if(weightByShapefile == null) {
 	            
             	ArrayList<String> fields = new ArrayList<String>();
             	
@@ -176,10 +176,10 @@ public class Gis extends Controller {
             	else {
             		
                 	
-            		Shapefile shpNorm = Shapefile.getShapefile(weightBy);
+            		Shapefile shpNorm = Shapefile.getShapefile(weightByShapefile);
                 	Shapefile aggregateToSf = Shapefile.getShapefile(groupBy);
                 	
-            		QueryResults groupedQr = qr.aggregate(aggregateToSf, shpNorm);
+            		QueryResults groupedQr = qr.aggregate(aggregateToSf, shpNorm, weightByAttribute);
             		            		
             		ArrayList<String> fields = new ArrayList<String>();
 
