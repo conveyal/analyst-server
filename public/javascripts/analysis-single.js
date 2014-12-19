@@ -65,7 +65,7 @@ var Analyst = Analyst || {};
 				var mode =  this['mode' + i];
 				var inps = this.$('.which' + i);
 
-				if (mode.includes('TRANSIT') || mode.includes('TRAINISH') || mode.includes('BUSISH') ||
+				if (false && mode.includes('TRANSIT') || mode.includes('TRAINISH') || mode.includes('BUSISH') ||
 							mode.includes('FERRY') || mode.includes('FUNICULAR') || mode.includes('GONDOLA') ||
 							mode.includes('CABLE_CAR') || mode.includes('RAIL') || mode.includes('SUBWAY') ||
 							mode.includes('TRAM') || mode.includes('BUS')) {
@@ -440,7 +440,7 @@ var Analyst = Analyst || {};
 			var timeLimit = this.timeSlider.getValue()[1] * 60;
 
 			var showIso =  this.$('#showIso').prop('checked');
-			var showPoints = this.$('#showPoints').prop('checked');
+			var showPoints = false;//this.$('#showPoints').prop('checked');
 
 			if(this.comparisonType == 'compare') {
 
