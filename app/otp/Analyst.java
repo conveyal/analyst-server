@@ -11,10 +11,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 
 import models.SpatialLayer;
 
+import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDateTime;
 import org.opentripplanner.analyst.core.Sample;	
 import org.opentripplanner.api.model.TimeSurfaceShort;
 import org.opentripplanner.api.param.LatLon;
@@ -25,12 +28,15 @@ import org.opentripplanner.profile.ProfileRequest;
 import org.opentripplanner.profile.ProfileResponse;
 import org.opentripplanner.profile.ProfileRouter;
 import org.opentripplanner.routing.algorithm.EarliestArrivalSPTService;
+import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.TraverseModeSet;
 import org.opentripplanner.routing.error.VertexNotFoundException;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.services.GraphService;
 import org.opentripplanner.routing.spt.ShortestPathTree;
 
+import com.conveyal.otpac.PrototypeAnalystProfileRequest;
+import com.conveyal.otpac.PrototypeAnalystRequest;
 import com.conveyal.otpac.message.JobSpec;
 import com.conveyal.otpac.message.WorkResult;
 import com.conveyal.otpac.standalone.StandaloneCluster;
@@ -79,6 +85,69 @@ public class Analyst {
 
 		return req;
     }
+	
+	public RoutingRequest buildClusterRequest (String graphId, GenericLocation latLon, String mode, int cutoffMinutes) {
+		// use center of graph extent if no location is specified
+		if(latLon == null)
+			latLon = new GenericLocation(this.graphService.getGraph(graphId).getExtent().centre().y, this.graphService.getGraph(graphId).getExtent().centre().x);
+		 
+		PrototypeAnalystRequest req = new PrototypeAnalystRequest();
+		
+		// TODO hardwired time zone
+		req.dateTime = new LocalDateTime(2014, 12, 11, 8, 0, 0).toDate(TimeZone.getTimeZone("America/Argentina/Buenos_Aires")).getTime();
+		req.modes = new TraverseModeSet(mode);
+		req.routerId = graphId;
+		req.from = latLon;
+		req.worstTime = req.dateTime + cutoffMinutes * 60 * 1000;
+		
+		if (req.modes.isTransit()) {
+			Logger.warn("Building a non-profile transit routing request, this probably shouldn't be happening.");
+			req.walkReluctance = 1.0;
+		}
+
+		return req;
+	}
+	
+	public ProfileRequest buildClusterProfileRequest(String graphId, String mode, LatLon latLon) {
+		PrototypeAnalystProfileRequest req = new PrototypeAnalystProfileRequest();
+		
+		// split the modeset into two modes
+		TraverseModeSet modes = new TraverseModeSet(mode);
+		modes.setTransit(false);
+
+		TraverseModeSet transitModes = new TraverseModeSet(mode);
+		transitModes.setBicycle(false);
+		transitModes.setDriving(false);
+		transitModes.setWalk(false);
+
+		req.accessModes = req.egressModes = req.directModes = modes;
+		req.transitModes = transitModes;
+
+        req.from       = latLon;
+        req.to		   = latLon; // not used but required
+        req.analyst	   = true;
+        req.fromTime   = 7 * 60 * 60;
+        req.toTime     = 9 * 60 * 60;
+        req.walkSpeed  = 1.4f;
+        req.bikeSpeed  = 4.1f;
+        req.carSpeed   = 20f;
+        req.streetTime = 10;
+        req.date       = new YearMonthDay("2014-12-04").toJoda();
+		
+        req.maxWalkTime = 20;
+		req.maxBikeTime = 20;
+		req.maxCarTime  = 20;
+		req.minBikeTime = 5;
+		req.minCarTime  = 5;
+		
+		req.limit       = 10;
+		req.suboptimalMinutes = 5;
+		
+		// doesn't matter for analyst requests
+		req.orderBy = Option.SortOrder.AVG;
+		
+		return req;
+	}
 	
 	public AnalystProfileRequest buildProfileRequest(String graphId, String mode, LatLon latLon) {
 		

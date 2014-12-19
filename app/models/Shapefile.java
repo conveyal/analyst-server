@@ -304,7 +304,7 @@ public class Shapefile implements Serializable {
 		fos.close();
 
 		String s3credentials = Play.application().configuration().getString("cluster.s3credentials");
-		String bucket = Play.application().configuration().getString("cluster.pointset-bucket");
+		String bucket = Play.application().configuration().getString("cluster.pointsets-bucket");
 		
 		PointSetDatastore datastore = new PointSetDatastore(10, s3credentials, workOffline, bucket);
 
