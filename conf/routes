@@ -8,6 +8,7 @@ GET     /logout		            controllers.Application.logout()
 
 GET     /createUser		        controllers.Application.createUser(username:String, password:String, email:String)
 GET     /linkUser		        controllers.Application.linkUserProject(username:String, projectId:String)
+POST    /setPassword		        controllers.Application.setPassword()
 
 POST    /doLogin		        controllers.Application.doLogin()
 
@@ -20,6 +21,8 @@ GET     /api/user/:id				controllers.Api.getUser(id:String)
 POST    /api/user/					controllers.Api.createUser()
 PUT     /api/user/:id				controllers.Api.updateUser(id:String)
 DELETE  /api/user/:id				controllers.Api.deleteUser(id:String)
+
+GET     /api/allProjects			controllers.Api.getAllProject()
 
 GET     /api/project					controllers.Api.getProject(id:String = null)
 GET     /api/project/:id				controllers.Api.getProject(id:String)

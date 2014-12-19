@@ -95,6 +95,23 @@ public class Application extends Controller {
 		return ok();
 	}
 	
+	public static Result setPassword() {
+		
+		String userId = request().body().asFormUrlEncoded().get("userId")[0];
+		String password = request().body().asFormUrlEncoded().get("password")[0];
+		
+		User u = User.getUser(userId);
+		try {
+			u.passwordHash = User.getPasswordHash(password);
+			u.save();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return ok();
+	}
+	
 	public static Result linkUserProject(String username, String projectId) {
 				
 		User u = User.getUserByUsername(username);
