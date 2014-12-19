@@ -77,6 +77,18 @@ var Analyst = Analyst || {};
           _this.updateAttributes();
         });
 
+      // pick a reasonable default date
+      $.get('api/project/' + A.app.selectedProject + '/exemplarDay')
+        .done(function (data) {
+          var $d = _this.$('#date');
+
+          // if the user has edited the date already don't overwrite
+          if ($d.val() === '') {
+            // data is the plain-text date
+            $d.val(data);
+          }
+        });
+
       this.mode = "WALK,TRANSIT";
 
       this.$('input[name=mode1]:radio').on('change', function(event) {

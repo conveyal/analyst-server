@@ -34,6 +34,7 @@ import org.geotools.geojson.feature.FeatureJSON;
 import org.geotools.geometry.Envelope2D;
 import org.geotools.geometry.jts.JTS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.opengis.referencing.operation.MathTransform;
 import org.opentripplanner.analyst.PointSet;
@@ -51,6 +52,7 @@ import org.opentripplanner.common.model.GenericLocation;
 import org.opentripplanner.profile.ProfileRequest;
 import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.TraverseModeSet;
+import org.opentripplanner.routing.graph.Graph;
 
 import otp.Analyst;
 import otp.AnalystProfileRequest;
@@ -195,6 +197,63 @@ public class Api extends Controller {
 					}
 				}
 		);
+    }
+    
+    /**
+     * Get a day that has ostensibly normal service, one would guess. Uses the next Tuesday that
+     * is covered by all transit feeds in the project.
+     */
+    public static Result getExemplarDay(String projectId) throws Exception {
+    	Collection<Scenario> scenarios = Scenario.getScenarios(projectId);
+    	
+    	LocalDate originalDate = new LocalDate().dayOfWeek().setCopy("Tuesday");
+    	LocalDate date = originalDate;
+    	
+    	// date is now a nearby Tuesday
+    	
+    	// don't loop an excessive amount 
+    	LocalDate dateBound = date.plusYears(2);
+    	
+    	// search forward first
+    	DATES: while (date.isBefore(dateBound)) {
+    		for (Scenario s : scenarios) {
+    			Graph graph = analyst.getGraph(s.id);
+    			
+    			long dateInLocalTime = date.toDateTimeAtStartOfDay(DateTimeZone.forTimeZone(graph.getTimeZone()))
+    					.toDate().getTime();
+    			if (!graph.transitFeedCovers(dateInLocalTime)) {
+    				date = date.plusWeeks(1);
+    				continue DATES;
+    			}
+    		}
+    		
+    		// if we got here, this date is within the transit service range for all graphs in the project
+    		return ok(date.toString());
+    	}
+    	
+    	// if we got here, there is no future date where all the graphs have service
+    	date = originalDate;
+    	dateBound = date.minusYears(2);
+    	
+    	// search forward first
+    	BDATES: while (date.isAfter(dateBound)) {
+    		for (Scenario s : scenarios) {
+    			Graph graph = analyst.getGraph(s.id);
+    			
+    			long dateInLocalTime = date.toDateTimeAtStartOfDay(DateTimeZone.forTimeZone(graph.getTimeZone()))
+    					.toDate().getTime();
+    			if (!graph.transitFeedCovers(dateInLocalTime)) {
+    				date = date.minusWeeks(1);
+    				continue BDATES;
+    			}
+    		}
+    		
+    		// if we got here, this date is within the transit service range for all graphs in the project
+    		return ok(date.toString());
+    	}
+    	
+    	// we don't have a date to return that is valid in all feeds
+    	return ok(originalDate.toString());
     }
 
     public static Result isochrone(Integer surfaceId, List<Integer> cutoffs) throws IOException {

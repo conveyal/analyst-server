@@ -114,6 +114,18 @@ var Analyst = Analyst || {};
 
 			var _this = this;
 
+			// pick a reasonable default date
+			$.get('api/project/' + A.app.selectedProject + '/exemplarDay')
+			.done(function (data) {
+				var $d = _this.$('#date');
+
+				// if the user has edited the date already don't overwrite
+				if ($d.val() === '') {
+					// data is the plain-text date
+					$d.val(data);
+				}
+			});
+
 			this.$('#scenario2-controls').hide();
 
 			if(A.map.tileOverlay && A.map.hasLayer(A.map.tileOverlay))

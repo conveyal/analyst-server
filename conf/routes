@@ -25,6 +25,7 @@ DELETE  /api/user/:id				controllers.Api.deleteUser(id:String)
 GET     /api/allProjects			controllers.Api.getAllProject()
 
 GET     /api/project					controllers.Api.getProject(id:String = null)
+GET     /api/project/:id/exemplarDay controllers.Api.getExemplarDay(id:String)
 GET     /api/project/:id				controllers.Api.getProject(id:String)
 POST    /api/project/					controllers.Api.createProject()
 PUT     /api/project/:id				controllers.Api.updateProject(id:String)
