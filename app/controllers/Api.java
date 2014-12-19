@@ -69,6 +69,7 @@ import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
@@ -95,6 +96,11 @@ public class Api extends Controller {
 	public static Analyst analyst = new Analyst();
 
 	private static ObjectMapper mapper = new ObjectMapper();
+	
+	static {
+		mapper.registerModule(new JodaModule());
+	}
+	
     private static JsonFactory jf = new JsonFactory();
 
 
@@ -208,7 +214,7 @@ public class Api extends Controller {
     }
 
     /**
-     * Get a ResultSet. ResultEnvelope.Which is embedded in the
+     * Get a ResultSet. ResultEnvelope.Which is embedded in the surface ID.
      * @param surfaceId
      * @param shapefileId
      * @return

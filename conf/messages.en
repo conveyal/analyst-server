@@ -91,6 +91,10 @@ analysis.scenario-comparison=Scenario Comparison
 analysis.scenario.no-comparison=No comparison
 analysis.scenario.compare=Compare
 
+analysis.date=Date
+analysis.earliest-departure-time=Earliest departure time
+analysis.latest-departure-time=Latest departure time
+
 analysis.scenario=Scenario
 analysis.scenario-1=Scenario 1
 analysis.scenario-2=Scenario 2

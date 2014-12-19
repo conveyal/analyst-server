@@ -7,10 +7,10 @@
   <p>{{I18n "analysis.single-point-description"}}</p>
 
      <div class="form-group">
-     <label>{{I18n "analysis.shapefile"}}</label>
+     <label for="shapefile">{{I18n "analysis.shapefile"}}</label>
      <select id="shapefile" class="primary-indicator form-control"></select>
 
-     <label>{{I18n "analysis.shapefile-field"}}</label>
+     <label for="shapefileColumn">{{I18n "analysis.shapefile-field"}}</label>
      <select id="shapefileColumn" class="primary-indicator form-control"></select>
    </div>
 
@@ -45,6 +45,21 @@
 		    <input type="radio" name="mode1" id="modePed" value="WALK"><span class="icon icon-pedestrian"></span>
 		  </label>
 		</div>
+
+    <div class="form-group">
+      <label for="date1">{{I18n "analysis.date"}}</label>
+      <input id="date1" class="form-control timesel" type="date" value="2014-12-04" />
+    </div>
+
+    <div class="form-group">
+      <label for="fromTime1">{{I18n "analysis.earliest-departure-time"}}</label>
+      <input id="fromTime1" class="form-control timesel" type="time" value="07:00:00" />
+    </div>
+
+    <div class="form-group" id="toTime1_controls">
+      <label for="toTime1">{{I18n "analysis.latest-departure-time"}}</label>
+      <input id="toTime1" class="form-control timesel" type="time" value="09:00:00" />
+    </div>
 
     <div style="margin-top: 10px" class="form-group">
       <div class="btn-group mode-selector which1" data-toggle="buttons">
@@ -119,6 +134,22 @@
         </label>
       </div>
     </div>
+
+    <div class="form-group">
+      <label for="date2">{{I18n "analysis.date"}}</label>
+      <input id="date2" class="form-control timesel" type="date" value="2014-12-04" />
+    </div>
+
+    <div class="form-group">
+      <label for="fromTime2">{{I18n "analysis.earliest-departure-time"}}</label>
+      <input id="fromTime2" class="form-control timesel" type="time" value="07:00:00" />
+    </div>
+
+    <div class="form-group" id="toTime1_controls">
+      <label for="toTime2">{{I18n "analysis.latest-departure-time"}}</label>
+      <input id="toTime2" class="form-control timesel " type="time" value="09:00:00" />
+    </div>
+
 
 	</div>
 

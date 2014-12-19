@@ -81,6 +81,11 @@ var Analyst = Analyst || {};
 
       this.$('input[name=mode1]:radio').on('change', function(event) {
         _this.mode = _this.$('input:radio[name=mode1]:checked').val();
+        // profile routing needs a toTime
+        if (A.util.isTransit(_this.mode))
+          _this.$('#toTimeControls').removeClass('hidden');
+        else
+          _this.$('#toTimeControls').addClass('hidden');
       });
 
       this.$("#createQueryForm").hide();
@@ -122,8 +127,16 @@ var Analyst = Analyst || {};
         shapefileId: this.$('#shapefile').val(),
         attributeName: this.$('#shapefileColumn').val(),
         scenarioId: this.$('#scenario1').val(),
-        projectId: A.app.selectedProject
+        projectId: A.app.selectedProject,
+        fromTime: this.makeTime(this.$('#fromTime').val()),
+        date: this.$('#date').val()
       };
+
+      // profile routing uses a to time as well
+      if (A.util.isTransit(this.mode))
+        data.toTime = this.makeTime(this.$('#toTime').val());
+      else
+        data.toTime = -1;
 
       var query = new A.models.Query();
       query.save(data, {
@@ -141,6 +154,18 @@ var Analyst = Analyst || {};
       });
 
       this.$("#createQueryForm").hide();
+    },
+
+    /** Turn a time like 14:00:00 into seconds since midnight */
+    makeTime: function (t) {
+      var ts = t.split(':');
+
+      var time = ts[0] * 3600 + ts[1] * 60;
+
+      if (ts.length == 3)
+        time += ts[2];
+
+      return time;
     },
 
     cancelQuery: function(evt) {

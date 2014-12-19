@@ -17,6 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import models.SpatialLayer;
 
 import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
 import org.joda.time.LocalDateTime;
 import org.opentripplanner.analyst.core.Sample;	
 import org.opentripplanner.api.model.TimeSurfaceShort;
@@ -63,6 +64,10 @@ public class Analyst {
 	 */
 
 	public RoutingRequest buildRequest (String graphId, GenericLocation latLon, String mode, int cutoffMinutes) {
+		return buildRequest(graphId, new LocalDate(2014, 12, 4), 7*3600, latLon, mode, cutoffMinutes);
+	}
+	
+	public RoutingRequest buildRequest(String graphId, LocalDate date, int time, GenericLocation latLon, String mode, int cutoffMinutes) {
 		Graph graph = getGraph(graphId);
 		
 		// use center of graph extent if no location is specified
@@ -74,7 +79,8 @@ public class Analyst {
 		
 		PrototypeAnalystRequest req = new PrototypeAnalystRequest();
 		
-		req.dateTime = new LocalDateTime(2014, 12, 11, 8, 0, 0).toDate(tz).getTime() / 1000;
+		req.dateTime = date.toDateTimeAtStartOfDay(DateTimeZone.forTimeZone(tz)).toDate().getTime() / 1000;
+		req.dateTime += time;
 		req.modes = new TraverseModeSet(mode);
 		req.routerId = graphId;
 		req.from = latLon;
@@ -89,6 +95,10 @@ public class Analyst {
 	}
 	
 	public ProfileRequest buildProfileRequest(String mode, LatLon latLon) {
+		return buildProfileRequest(mode, new LocalDate(2014, 12, 4), 7 * 60 * 60, 9 * 60 * 60, latLon);
+	}
+	
+	public ProfileRequest buildProfileRequest(String mode, LocalDate date, int fromTime, int toTime, LatLon latLon) {
 		PrototypeAnalystProfileRequest req = new PrototypeAnalystProfileRequest();
 		
 		// split the modeset into two modes
@@ -106,13 +116,13 @@ public class Analyst {
         req.from       = latLon;
         req.to		   = latLon; // not used but required
         req.analyst	   = true;
-        req.fromTime   = 7 * 60 * 60;
-        req.toTime     = 9 * 60 * 60;
+        req.fromTime   = fromTime;
+        req.toTime     = toTime;
         req.walkSpeed  = 1.4f;
         req.bikeSpeed  = 4.1f;
         req.carSpeed   = 20f;
         req.streetTime = 10;
-        req.date       = new YearMonthDay("2014-12-04").toJoda();
+        req.date       = date;
 		
         req.maxWalkTime = 20;
 		req.maxBikeTime = 20;

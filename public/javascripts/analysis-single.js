@@ -11,6 +11,7 @@ var Analyst = Analyst || {};
 		  'change #scenario1': 'createSurface',
 		  'change #scenario2': 'createSurface',
 		  'change #shapefile': 'createSurface',
+			'cahnge .timesel': 'createSurface',
 			'change #shapefileColumn': 'createSurface',
 		  'change #chartType' : 'updateResults',
 			'change .which1 input' : 'updateEnvelope',
@@ -54,6 +55,8 @@ var Analyst = Analyst || {};
 		 * Update the best case, worst case, etc. that the user can choose
 		 * based on the modes. For example, for on-street modes, there is no
 		 * best or worst case; for transit modes, there is currently no point estimate.
+		 *
+		 * This function also turns on or off the latest departure time option.
 		 */
 		updateAvailableEnvelopeParameters: function () {
 			// we use this variable so that the map is not automatically redrawn when
@@ -65,10 +68,7 @@ var Analyst = Analyst || {};
 				var mode =  this['mode' + i];
 				var inps = this.$('.which' + i);
 
-				if (false && mode.includes('TRANSIT') || mode.includes('TRAINISH') || mode.includes('BUSISH') ||
-							mode.includes('FERRY') || mode.includes('FUNICULAR') || mode.includes('GONDOLA') ||
-							mode.includes('CABLE_CAR') || mode.includes('RAIL') || mode.includes('SUBWAY') ||
-							mode.includes('TRAM') || mode.includes('BUS')) {
+				if (false && A.util.isTransit(mode)) {
 					// transit request, we're doing profile routing
 					inps.find('[value="WORST_CASE"]').prop('disabled', false).parent().removeClass('hidden');
 					inps.find('[value="BEST_CASE"]').prop('disabled', false).parent().removeClass('hidden');
