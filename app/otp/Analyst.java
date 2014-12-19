@@ -61,44 +61,24 @@ public class Analyst {
 	 * manually; this is because, in cluster mode, we don't want to serialize the routing context and send
 	 * it over the wire.
 	 */
-	public AnalystRequest buildRequest(String graphId, GenericLocation latLon, String mode, int cutoffMinutes) {
-		
-		// use center of graph extent if no location is specified
-		if(latLon == null)
-			latLon = new GenericLocation(this.graphService.getGraph(graphId).getExtent().centre().y, this.graphService.getGraph(graphId).getExtent().centre().x);
-		 
-		AnalystRequest req;
-		
-		try {
-			req = AnalystRequest.create(graphId, latLon, cutoffMinutes);
-		} catch (NoSuchAlgorithmException | IOException e) {
-			Logger.error("unable to create request id");
-			return null;
-		}
-		
-		req.modes = new TraverseModeSet(mode);
-		
-		if (req.modes.isTransit()) {
-			Logger.warn("Building a non-profile transit routing request, this probably shouldn't be happening.");
-			req.walkReluctance = 1.0;
-		}
 
-		return req;
-    }
-	
-	public RoutingRequest buildClusterRequest (String graphId, GenericLocation latLon, String mode, int cutoffMinutes) {
+	public RoutingRequest buildRequest (String graphId, GenericLocation latLon, String mode, int cutoffMinutes) {
+		Graph graph = getGraph(graphId);
+		
 		// use center of graph extent if no location is specified
 		if(latLon == null)
-			latLon = new GenericLocation(this.graphService.getGraph(graphId).getExtent().centre().y, this.graphService.getGraph(graphId).getExtent().centre().x);
-		 
+			latLon = new GenericLocation(graph.getExtent().centre().y, graph.getExtent().centre().x);
+		
+		// use graph time zone to build request
+		TimeZone tz = graph.getTimeZone();
+		
 		PrototypeAnalystRequest req = new PrototypeAnalystRequest();
 		
-		// TODO hardwired time zone
-		req.dateTime = new LocalDateTime(2014, 12, 11, 8, 0, 0).toDate(TimeZone.getTimeZone("America/Argentina/Buenos_Aires")).getTime();
+		req.dateTime = new LocalDateTime(2014, 12, 11, 8, 0, 0).toDate(tz).getTime() / 1000;
 		req.modes = new TraverseModeSet(mode);
 		req.routerId = graphId;
 		req.from = latLon;
-		req.worstTime = req.dateTime + cutoffMinutes * 60 * 1000;
+		req.worstTime = req.dateTime + cutoffMinutes * 60;
 		
 		if (req.modes.isTransit()) {
 			Logger.warn("Building a non-profile transit routing request, this probably shouldn't be happening.");
@@ -108,7 +88,7 @@ public class Analyst {
 		return req;
 	}
 	
-	public ProfileRequest buildClusterProfileRequest(String graphId, String mode, LatLon latLon) {
+	public ProfileRequest buildProfileRequest(String mode, LatLon latLon) {
 		PrototypeAnalystProfileRequest req = new PrototypeAnalystProfileRequest();
 		
 		// split the modeset into two modes
@@ -147,58 +127,6 @@ public class Analyst {
 		req.orderBy = Option.SortOrder.AVG;
 		
 		return req;
-	}
-	
-	public AnalystProfileRequest buildProfileRequest(String graphId, String mode, LatLon latLon) {
-		
-		// use center of graph extent if no location is specified
-		if(latLon == null) {
-			Coordinate center = this.graphService.getGraph(graphId).getExtent().centre();
-			latLon = new LatLon(String.format("%f,%f", center.y, center.x));
-		}
-		
-		AnalystProfileRequest req = new AnalystProfileRequest();
-		
-		// split the modeset into two modes
-		TraverseModeSet modes = new TraverseModeSet(mode);
-		modes.setTransit(false);
-
-		TraverseModeSet transitModes = new TraverseModeSet(mode);
-		transitModes.setBicycle(false);
-		transitModes.setDriving(false);
-		transitModes.setWalk(false);
-
-		req.accessModes = req.egressModes = req.directModes = modes;
-		req.transitModes = transitModes;
-
-		req.graphId = graphId;
-        req.from       = latLon;
-        req.to		   = latLon; // not used but required
-        req.analyst	   = true;
-        req.fromTime   = 7 * 60 * 60;
-        req.toTime     = 9 * 60 * 60;
-        req.walkSpeed  = 1.4f;
-        req.bikeSpeed  = 4.1f;
-        req.carSpeed   = 20f;
-        req.streetTime = 10;
-        req.date       = new YearMonthDay("2014-12-04").toJoda();
-		
-        req.maxWalkTime = 20;
-		req.maxBikeTime = 20;
-		req.maxCarTime  = 20;
-		req.minBikeTime = 5;
-		req.minCarTime  = 5;
-		
-		req.limit       = 10;
-		req.suboptimalMinutes = 5;
-		
-		// doesn't matter for analyst requests
-		req.orderBy = Option.SortOrder.AVG;
-		
-		req.cutoffMinutes = 120;
-		
-        return req;
-        
 	}
 		
 	public Graph getGraph (String graphId) {

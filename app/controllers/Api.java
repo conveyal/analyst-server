@@ -47,6 +47,8 @@ import org.opentripplanner.api.param.LatLon;
 import org.opentripplanner.api.resource.LIsochrone;
 import org.opentripplanner.common.geometry.DelaunayIsolineBuilder;
 import org.opentripplanner.common.model.GenericLocation;
+import org.opentripplanner.profile.ProfileRequest;
+import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.TraverseModeSet;
 
 import otp.Analyst;
@@ -134,19 +136,19 @@ public class Api extends Controller {
 		final ResultEnvelope.Which whichEnum = whichEnum_tmp;
 
 		// temporarily disabling profile routing due to problems with large/dense graphs
-     	if (false) { // (new TraverseModeSet(mode).isTransit()) {
+     	if (false && new TraverseModeSet(mode).isTransit()) {
     		// transit search: use profile routing
     		promise = Promise.promise(
     				new Function0<TimeSurfaceShort>() {
     					public TimeSurfaceShort apply() {
     						LatLon latLon = new LatLon(String.format("%s,%s", lat, lon));
 
-    						AnalystProfileRequest request = analyst.buildProfileRequest(graphId, mode, latLon);
+    						ProfileRequest request = analyst.buildProfileRequest(mode, latLon);
 
     						if(request == null)
     							return null;
 
-    						return request.createSurfaces(whichEnum);
+    						return AnalystProfileRequest.createSurfaces(request, graphId, 120, whichEnum);
     					}
     				}
     				);
@@ -156,14 +158,14 @@ public class Api extends Controller {
     				new Function0<TimeSurfaceShort>() {
 						public TimeSurfaceShort apply() throws Throwable {
 							GenericLocation latLon = new GenericLocation(lat, lon);
-							AnalystRequest req = analyst.buildRequest(graphId, latLon, mode, 120);
+							RoutingRequest req = analyst.buildRequest(graphId, latLon, mode, 120);
 
 							if (req == null)
 								return null;
 
 							req.setRoutingContext(analyst.getGraph(graphId));
 
-							return req.createSurface();
+							return AnalystRequest.createSurface(req, 120);
 						}
     				});
     	}
