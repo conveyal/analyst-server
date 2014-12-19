@@ -380,11 +380,22 @@ var Analyst = Analyst || {};
             var upper = _this.numberWithCommas(parseFloat(data[i].upper).toFixed(0));
             var lowerPct = parseFloat(data[i].lowerPercent).toFixed(0);
             var upperPct = parseFloat(data[i].upperPercent).toFixed(0);
-            var legendItem = {
-              color: data[i].hexColor,
-              label: window.Messages('analysis.bin-range', lower, upper),
-              pctLabel: window.Messages('analysis.bin-percent-range', lowerPct, upperPct, _this.model.pointSetName())
-            };
+
+            var legendItem;
+            // if it contains only a single value, don't show upper and lower
+            if (lower == upper) {
+              legendItem = {
+                color: data[i].hexColor,
+                label: window.Messages('analysis.bin-single', lower),
+                pctLabel: window.Messages('analysis.bin-percent-single', lowerPct, _this.model.pointSetName())
+              }
+            } else {
+              legendItem = {
+                color: data[i].hexColor,
+                label: window.Messages('analysis.bin-range', lower, upper),
+                pctLabel: window.Messages('analysis.bin-percent-range', lowerPct, upperPct, _this.model.pointSetName())
+              };
+            }
 
             _this.$("#legendData").append(legendItemTemplate(legendItem));
 
