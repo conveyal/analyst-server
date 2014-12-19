@@ -34,6 +34,7 @@ import org.geotools.geojson.feature.FeatureJSON;
 import org.geotools.geometry.Envelope2D;
 import org.geotools.geometry.jts.JTS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
+import org.joda.time.LocalDate;
 import org.opengis.referencing.operation.MathTransform;
 import org.opentripplanner.analyst.PointSet;
 import org.opentripplanner.analyst.ResultSet;
@@ -123,22 +124,27 @@ public class Api extends Controller {
     }
 
     public static Promise<Result> surface(final String graphId, final Double lat, final Double lon, final String mode,
-    		final Double bikeSpeed, final Double walkSpeed, String which) {
+    		final Double bikeSpeed, final Double walkSpeed, String which, String date, final int fromTime, final int toTime) {
     	Promise<TimeSurfaceShort> promise;
 
 		ResultEnvelope.Which whichEnum_tmp;
+		
+		LocalDate jodaDate_tmp;
+		
 		try {
 			whichEnum_tmp = ResultEnvelope.Which.valueOf(which);
+			jodaDate_tmp = LocalDate.parse(date);
 		} catch (Exception e) {
 			// no need to pollute the console with a stack trace
 			return Promise.promise(new Function0<Result> () {
 				@Override
 				public Result apply() throws Throwable {
-				    return badRequest("Invalid value for which parameter");
+				    return badRequest("Invalid value for which or date parameter");
 				}
 			});
 		}
 
+		final LocalDate jodaDate = jodaDate_tmp;
 		final ResultEnvelope.Which whichEnum = whichEnum_tmp;
 
 		// temporarily disabling profile routing due to problems with large/dense graphs
@@ -149,7 +155,7 @@ public class Api extends Controller {
     					public TimeSurfaceShort apply() {
     						LatLon latLon = new LatLon(String.format("%s,%s", lat, lon));
 
-    						ProfileRequest request = analyst.buildProfileRequest(mode, latLon);
+    						ProfileRequest request = analyst.buildProfileRequest(mode, jodaDate, fromTime, toTime, latLon);
 
     						if(request == null)
     							return null;
@@ -164,7 +170,7 @@ public class Api extends Controller {
     				new Function0<TimeSurfaceShort>() {
 						public TimeSurfaceShort apply() throws Throwable {
 							GenericLocation latLon = new GenericLocation(lat, lon);
-							RoutingRequest req = analyst.buildRequest(graphId, latLon, mode, 120);
+							RoutingRequest req = analyst.buildRequest(graphId, jodaDate, fromTime, latLon, mode, 120);
 
 							if (req == null)
 								return null;

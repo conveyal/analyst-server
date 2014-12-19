@@ -128,13 +128,13 @@ var Analyst = Analyst || {};
         attributeName: this.$('#shapefileColumn').val(),
         scenarioId: this.$('#scenario1').val(),
         projectId: A.app.selectedProject,
-        fromTime: this.makeTime(this.$('#fromTime').val()),
+        fromTime: A.util.makeTime(this.$('#fromTime').val()),
         date: this.$('#date').val()
       };
 
       // profile routing uses a to time as well
       if (A.util.isTransit(this.mode))
-        data.toTime = this.makeTime(this.$('#toTime').val());
+        data.toTime = A.util.makeTime(this.$('#toTime').val());
       else
         data.toTime = -1;
 
@@ -154,18 +154,6 @@ var Analyst = Analyst || {};
       });
 
       this.$("#createQueryForm").hide();
-    },
-
-    /** Turn a time like 14:00:00 into seconds since midnight */
-    makeTime: function (t) {
-      var ts = t.split(':');
-
-      var time = ts[0] * 3600 + ts[1] * 60;
-
-      if (ts.length == 3)
-        time += ts[2];
-
-      return time;
     },
 
     cancelQuery: function(evt) {

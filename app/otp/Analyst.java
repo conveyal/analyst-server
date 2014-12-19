@@ -62,10 +62,6 @@ public class Analyst {
 	 * manually; this is because, in cluster mode, we don't want to serialize the routing context and send
 	 * it over the wire.
 	 */
-
-	public RoutingRequest buildRequest (String graphId, GenericLocation latLon, String mode, int cutoffMinutes) {
-		return buildRequest(graphId, new LocalDate(2014, 12, 4), 7*3600, latLon, mode, cutoffMinutes);
-	}
 	
 	public RoutingRequest buildRequest(String graphId, LocalDate date, int time, GenericLocation latLon, String mode, int cutoffMinutes) {
 		Graph graph = getGraph(graphId);
@@ -92,10 +88,6 @@ public class Analyst {
 		}
 
 		return req;
-	}
-	
-	public ProfileRequest buildProfileRequest(String mode, LatLon latLon) {
-		return buildProfileRequest(mode, new LocalDate(2014, 12, 4), 7 * 60 * 60, 9 * 60 * 60, latLon);
 	}
 	
 	public ProfileRequest buildProfileRequest(String mode, LocalDate date, int fromTime, int toTime, LatLon latLon) {

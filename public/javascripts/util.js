@@ -3,12 +3,26 @@ var Analyst = Analyst || {};
 Analyst.util = Analyst.util || {};
 
 /** Is an OTP mode string a transit mode? */
-Analyst.util.isTransit = function (mode) {
+_.extend(Analyst.util, {
+  isTransit: function (mode) {
   return mode.includes('TRANSIT') || mode.includes('TRAINISH') || mode.includes('BUSISH') ||
   mode.includes('FERRY') || mode.includes('FUNICULAR') || mode.includes('GONDOLA') ||
   mode.includes('CABLE_CAR') || mode.includes('RAIL') || mode.includes('SUBWAY') ||
   mode.includes('TRAM') || mode.includes('BUS');
-}
+},
+
+/** Turn a time like 14:00:00 into seconds since midnight */
+makeTime: function (t) {
+  var ts = t.split(':');
+
+  var time = parseInt(ts[0]) * 3600 + parseInt(ts[1]) * 60;
+
+  if (ts.length == 3)
+    time += parseInt(ts[2]);
+
+    return time;
+  }
+});
 
 Backbone.Marionette.View.prototype.mixinTemplateHelpers = function (target) {
     var self = this;
