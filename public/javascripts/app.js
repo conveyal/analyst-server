@@ -644,7 +644,10 @@ var Analyst = Analyst || {};
 
 	Handlebars.registerHelper('projectIdToName',
 		function(id){
-			return A.app.allProjects.get(id).get("name");
+			if(A.app.allProjects.get(id))
+				return A.app.allProjects.get(id).get("name");
+			else
+				return "Delete Project"
 		}
 	);
 
