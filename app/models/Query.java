@@ -276,12 +276,12 @@ public class Query implements Serializable {
 				
 				if (q.isTransit()) {
 					// create a profile request
-					ProfileRequest pr = Api.analyst.buildProfileRequest(q.scenarioId, q.mode, null);
+					ProfileRequest pr = Api.analyst.buildClusterProfileRequest(q.scenarioId, q.mode, null);
 					js = new JobSpec(q.scenarioId, pointSetCachedName, pointSetCachedName, pr);
 				}
 				else {
 					// this is not a transit request, no need for computationally-expensive profile routing 
-					RoutingRequest rr = Api.analyst.buildRequest(q.scenarioId, null, q.mode, 120);
+					RoutingRequest rr = Api.analyst.buildClusterRequest(q.scenarioId, null, q.mode, 120);
 					js = new JobSpec(q.scenarioId, pointSetCachedName, pointSetCachedName, rr);
 				}
 
