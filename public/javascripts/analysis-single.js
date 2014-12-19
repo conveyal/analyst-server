@@ -93,7 +93,7 @@ var Analyst = Analyst || {};
 		      .removeClass('hidden')
 		      .addClass('active');
 
-				this.$('#fromTimeControls').addClass('hidden');
+				this.$('#toTimeControls').addClass('hidden');
 		  }
 
 		  this.envelopeParametersChangingProgramatically = false;
@@ -114,17 +114,28 @@ var Analyst = Analyst || {};
 
 			var _this = this;
 
+			this.$('#date').datetimepicker({pickTime: false})
+				.on('dp.hide', this.createSurface);
+			this.$('#fromTime').datetimepicker({pickDate: false})
+				.on('dp.hide', this.createSurface);
+			this.$('#toTime').datetimepicker({pickDate: false})
+				.on('dp.hide', this.createSurface);
+
 			// pick a reasonable default date
 			$.get('api/project/' + A.app.selectedProject + '/exemplarDay')
 			.done(function (data) {
 				var $d = _this.$('#date');
 
-				// if the user has edited the date already don't overwrite
-				if ($d.val() === '') {
-					// data is the plain-text date
-					$d.val(data);
-				}
+				var sp = data.split('-');
+				// months are off by one in javascript
+				var date = new Date(sp[0], sp[1] - 1, sp[2]);
+
+				_this.$('#date').data('DateTimePicker').setDate(date);
 			});
+
+			// set default times
+			this.$('#fromTime').data('DateTimePicker').setDate(new Date(2014, 11, 15, 7, 0, 0));
+			this.$('#toTime')  .data('DateTimePicker').setDate(new Date(2014, 11, 15, 9, 0, 0));
 
 			this.$('#scenario2-controls').hide();
 
@@ -308,10 +319,13 @@ var Analyst = Analyst || {};
 			this.$('#results-area').hide();
 			this.$('#processing-query').show();
 
-			var dateTime = '&date=' + this.$('#date').val() + '&fromTime=' + A.util.makeTime(this.$('#fromTime').val());
+			var date = this.$('#date').data('DateTimePicker').getDate().format('YYYY-MM-DD');
+			var fromTime = A.util.makeTime(this.$('#fromTime').data('DateTimePicker').getDate());
+
+			var dateTime = '&date=' + date + '&fromTime=' + fromTime;
 
 			if (A.util.isTransit(this.mode))
-				dateTime += '&toTime=' + A.util.makeTime(this.$('#toTime').val());
+				dateTime += '&toTime=' + A.util.makeTime(this.$('#toTime').data('DateTimePicker').getDate());
 
 			var surfaceUrl1 = '/api/surface?graphId=' + graphId1 + '&lat=' + A.map.marker.getLatLng().lat + '&lon=' +
 				A.map.marker.getLatLng().lng + '&mode=' + this.mode + '&bikeSpeed=' + bikeSpeed + '&walkSpeed=' + walkSpeed +

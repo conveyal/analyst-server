@@ -11,17 +11,10 @@ _.extend(Analyst.util, {
   mode.includes('TRAM') || mode.includes('BUS');
 },
 
-/** Turn a time like 14:00:00 into seconds since midnight */
-makeTime: function (t) {
-  var ts = t.split(':');
-
-  var time = parseInt(ts[0]) * 3600 + parseInt(ts[1]) * 60;
-
-  if (ts.length == 3)
-    time += parseInt(ts[2]);
-
-    return time;
-  }
+/** Turn a date into seconds since noon - 12h */
+makeTime: function (d) {
+  return d.hours() * 3600 + d.minutes() * 60 + d.seconds();
+}
 });
 
 Backbone.Marionette.View.prototype.mixinTemplateHelpers = function (target) {

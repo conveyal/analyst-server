@@ -60,18 +60,29 @@
 
 
              <div class="form-group">
-               <label for="date">{{I18n "analysis.date"}}</label>
-               <input id="date" class="form-control" type="date" value="" />
+               <label for="dateText">{{I18n "analysis.date"}}</label>
+               <div class="input-group date" id="date">
+                 <input id="dateText" class="form-control pickDate" type="text" value="" />
+                 <span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span>
+               </div>
              </div>
 
-             <div class="form-group">
-               <label for="fromTime">{{I18n "analysis.earliest-departure-time"}}</label>
-               <input id="fromTime" class="form-control" type="time" value="07:00:00" />
-             </div>
+             <div class="clearfix">
+               <div class="form-group pull-left" style="width: 180px">
+                 <label for="fromTimeText">{{I18n "analysis.earliest-departure-time"}}</label>
+                 <div class="input-group date" id="fromTime" style="width: auto">
+                   <input id="fromTimeText" class="form-control pickTime" type="text" />
+                   <span class="input-group-addon"><span class="glyphicon glyphicon-time"></span>
+                 </div>
+               </div>
 
-             <div class="form-group" id="toTimeControls">
-               <label for="toTime">{{I18n "analysis.latest-departure-time"}}</label>
-               <input id="toTime" class="form-control" type="time" value="09:00:00" />
+               <div class="form-group pull-left" style="width: 180px" id="toTimeControls">
+                 <label for="toTimeText">{{I18n "analysis.latest-departure-time"}}</label>
+                 <div class="input-group date" id="toTime">
+                   <input id="toTimeText" class="form-control pickTime" type="text" />
+                   <span class="input-group-addon"><span class="glyphicon glyphicon-time"></span>
+                 </div>
+               </div>
              </div>
 
              <button class="btn btn-primary" id="createQuery">{{I18n "analysis.run-query"}}</button> <button class="btn btn-default" id="cancelQuery">{{I18n "app.shared.cancel"}}</button>
