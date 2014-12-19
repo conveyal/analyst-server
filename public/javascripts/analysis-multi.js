@@ -376,11 +376,14 @@ var Analyst = Analyst || {};
 
           for (var i in data) {
 
-            var lower = _this.numberWithCommas(parseFloat(data[i].lower).toFixed(2));
-            var upper = _this.numberWithCommas(parseFloat(data[i].upper).toFixed(2));
+            var lower = _this.numberWithCommas(parseFloat(data[i].lower).toFixed(0));
+            var upper = _this.numberWithCommas(parseFloat(data[i].upper).toFixed(0));
+            var lowerPct = parseFloat(data[i].lowerPercent).toFixed(0);
+            var upperPct = parseFloat(data[i].upperPercent).toFixed(0);
             var legendItem = {
               color: data[i].hexColor,
-              label: lower + " - " + upper
+              label: window.Messages('analysis.bin-range', lower, upper),
+              pctLabel: window.Messages('analysis.bin-percent-range', lowerPct, upperPct, _this.model.pointSetName())
             };
 
             _this.$("#legendData").append(legendItemTemplate(legendItem));

@@ -110,17 +110,14 @@ label {
 	content: "\e603";
 }
 
-.legend-item-text {
-	margin-left: 15px;
-}
-
 div.legend-item {
-
 	cursor: pointer;
+  padding-bottom: 5px
 }
 
 .legend-item-text {
 	margin-left: 15px;
+  float: left;
 }
 
 .indicator_box {
@@ -141,9 +138,10 @@ div.legend-item {
 
 .colorbox {
     float: left;
+    vertical-align: middle;
     width: 17px;
     height: 18px;
-    margin: -3px 6px;
+    margin: 1.5ex 6px -3px 6px;
     padding-bottom: 5px;
     border-width: 1px;
     border-style: solid;
