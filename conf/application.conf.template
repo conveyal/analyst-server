@@ -26,6 +26,26 @@ cluster.pointsets-bucket=<BUCKET NAME>
 # written to the local cache.
 cluster.work-offline=true
 
+# Uncomment to allow remoting
+#cluster.akka = {
+#  akka {
+#    actor {
+#      provider = "akka.remote.RemoteActorRefProvider"
+#    }
+#    remote {
+#      enabled-transports = ["akka.remote.netty.tcp"]
+#      netty.tcp {
+#        hostname = "127.0.0.1"
+#        port = 2552
+#      }
+#
+#      # secure akka settings
+#      #secure-cookie = "SUPER SECURE COOKIE"
+#      #require-cookie = on
+#    }
+#  }
+#}
+
 # The URL of your vex server
 application.vex="http://osm.conveyal.com"
 
