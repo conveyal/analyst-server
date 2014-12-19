@@ -1,5 +1,14 @@
-<li  class="list-group-item" style="padding-bottom: 10px;">
+<p><span class="glyphicon glyphicon-user"></span> <span id="userName">{{ username }}</span> (<span id="password"></span>)</p>
 
-     {{ username }}
+<p></p>
 
-</li>
+<button id="addProject" type="button" class="btn btn-default btn-xs pull-right">Add Project</button>
+<p>Projects:<p>
+<ul id="projectList" class="list-group">
+  {{#each projectPermissions}}
+  <li class="list-group-item">
+    <span class="glyphicon glyphicon-remove pull-right" id="deleteProject" data-id="{{projectId}}"></span>
+    <span class="glyphicon glyphicon-folder-close"></span> {{projectIdToName projectId}}
+  </li>
+  {{/each }}
+</ul>

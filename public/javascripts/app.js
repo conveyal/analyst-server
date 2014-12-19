@@ -18,6 +18,11 @@ var Analyst = Analyst || {};
 
 		A.app.projects  = new A.models.Projects();
 
+		A.app.allProjects = new A.models.Projects();
+
+		A.app.allProjects.url = "/api/allProjects"
+		A.app.allProjects.fetch();
+
 		A.app.controller =  new A.app.AppController();
 
 		A.app.appRouter = new A.app.Router({controller: A.app.controller});
@@ -31,9 +36,9 @@ var Analyst = Analyst || {};
 	A.app.Router = Marionette.AppRouter.extend({
   		appRoutes: {
     			':project/:x/:y/:z(/:namespace/*subroute)': 'invokeSubRoute',
-			'create-project': 'invokeSubRoute',
-			'home': 'index',
-			'': 'index'
+					'create-project': 'invokeSubRoute',
+					'home': 'index',
+					'': 'index'
 		}
 	});
 
@@ -371,6 +376,13 @@ var Analyst = Analyst || {};
 
 			this.$el.unwrap();
 			this.setElement(this.$el);
+
+			if(this.model.get("username") === "conveyal" || this.model.get("username") === "wb_admin") {
+				this.$("#userDropdownManageUsers").show();
+			}
+			else
+				this.$("#userDropdownManageUsers").hide();
+
 		}
 
 	});
@@ -379,21 +391,91 @@ var Analyst = Analyst || {};
 
 		template: Handlebars.getTemplate('app', 'app-manage-users-list-item'),
 		tagName: 'li',
+		className: 'list-group-item',
+
+		events : {
+			'click #deleteProject' : 'deleteProject',
+			'click #addProject' : 'addProject'
+		},
 
 		initialize: function () {
 
 			this.model.on('change', this.render);
 		},
 
+		addProject : function(evt) {
+			var _this = this;
+
+			this.$("#projectList").prepend('<li class="list-group-item" id="pendingProject"><span id="addProjectDropdown"></span><li>');
+
+			var projectList = _.map(A.app.allProjects.models, function(project){
+				if(!_.find(A.app.projects.models, function(data) { return project.id === data.id}))
+					return {"text" : project.get("name"), "value" : project.id };
+			});
+
+			projectList = _.filter(projectList, function(val) {
+				return val;
+			});
+
+			this.$el.find("#addProjectDropdown").editable({
+				type        : 'select',
+				source			: projectList,
+				mode 			: "inline",
+				emptytext : "select project",
+				success     : function(response, newValue) {
+					var projects = _this.model.get("projectPermissions");
+					projects.push({projectId: newValue, read: true, write: true, admin:true});
+					_this.model.set("projectPermissions", projects);
+					_this.model.save();
+				}
+			}).on("hidden", function(e, reason) {
+				_this.render();
+			});
+
+		},
+
+
+		deleteProject : function(evt) {
+			var projectId = $(evt.target).data("id");
+
+			var filteredProjects = _.reject(this.model.get("projectPermissions"), function(data) { return data.projectId === projectId });
+
+			this.model.set("projectPermissions", filteredProjects);
+			this.model.save();
+
+		},
+
 		onRender: function () {
-		// Get rid of that pesky wrapping-div
-		// Assumes 1 child element present in template.
-		this.$el = this.$el.children();
-		// Unwrap the element to prevent infinitely
-		// nesting elements during re-render.
-		this.$el.unwrap();
-		this.setElement(this.$el);
-	}
+
+			var _this = this;
+
+			this.$el.find("#password").editable({
+				mode: "inline",
+				emptytext: "set password",
+				type: "password",
+				url : "",
+				success     : function(response, newValue) {
+						$.post("/setPassword", {userId: _this.model.id, password: newValue});
+				}
+			});
+
+			var userNameField = "userName";
+			var _this = this;
+			this.$el.find("#userName").editable({
+				type        : 'text',
+				name        : userNameField,
+				mode				: "inline",
+				value       : this.model.get(userNameField),
+				pk          : this.model.get('id'),
+				url         : '',
+				success     : function(response, newValue) {
+					_this.model.set(userNameField, newValue);
+					_this.model.save(userNameField, newValue);
+				}
+			}).on("hidden", function(e, reason) {
+				_this.render();
+			});
+		}
 
 	});
 
@@ -402,10 +484,46 @@ var Analyst = Analyst || {};
 		template: Handlebars.getTemplate('app', 'app-manage-users'),
 		itemView: A.app.ManageUsersListItem,
 
+
+		events : {
+			'click #showAddUserForm' : "showAddUserForm",
+			"click #addUser" : "addUser",
+			"click #cancelAddUser" : "cancelAddUser"
+		},
+
+		showAddUserForm: function() {
+			this.$("#addUserForm").show();
+			this.$("#userList").hide();
+		},
+
+		cancelAddUser: function() {
+			this.$("#addUserForm").hide();
+			this.$("#userList").show();
+		},
+
+		addUser : function() {
+			var _this = this;
+			$.get("/createUser", {username: this.$("#username").val(), password: this.$("#password").val(), email : "test@email.com"}, function() {
+				_this.$("#addUserForm").hide();
+				_this.$("#userList").show();
+				_this.collection.fetch({success: function() {
+						_this.render();
+				}});
+			});
+		},
+
 		initialize: function () {
 
 			this.collection = new A.models.Users();
 			this.collection.fetch();
+		},
+
+		onRender : function() {
+			this.$("#addUserForm").hide();
+		},
+
+		appendHtml: function(collectionView, itemView) {
+			collectionView.$("#userList").append(itemView.el);
 		}
 
 	});
@@ -523,6 +641,15 @@ var Analyst = Analyst || {};
 		}
 
 	});
+
+	Handlebars.registerHelper('projectIdToName',
+		function(id){
+			if(A.app.allProjects.get(id))
+				return A.app.allProjects.get(id).get("name");
+			else
+				return "Delete Project"
+		}
+	);
 
 })(Analyst, jQuery);
 

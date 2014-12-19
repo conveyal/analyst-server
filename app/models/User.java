@@ -15,9 +15,10 @@ import utils.DataStore;
 import utils.HashUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.vividsolutions.jts.geom.Geometry;
 
-
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class User implements Serializable {
 
 	private static final long serialVersionUID = 1L;
@@ -32,9 +33,12 @@ public class User implements Serializable {
 	public Boolean admin;
 
 	public ArrayList<ProjectPermissions> projectPermissions = new ArrayList<ProjectPermissions>();
-	
-	@JsonIgnore
+
 	public String passwordHash;
+	
+	public User(){
+		
+	}
 	
 	public User(String username, String password, String email) throws Exception {
 		
@@ -162,6 +166,10 @@ public class User implements Serializable {
 		public Boolean read;
 		public Boolean write;
 		public Boolean admin;
+	
+		public ProjectPermissions() {
+			
+		}
 		
 	}
 

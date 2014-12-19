@@ -419,6 +419,19 @@ public class Api extends Controller {
 
 	// **** project controllers ****
 
+    public static Result getAllProject() {
+
+    	try {
+
+    		return ok(Api.toJson(Project.getProjects(), false));
+
+    	} catch (Exception e) {
+            e.printStackTrace();
+            return badRequest();
+        }
+
+    }
+    
     public static Result getProject(String id) {
 
     	try {
@@ -429,6 +442,9 @@ public class Api extends Controller {
                     return ok(Api.toJson(p, false));
                 else
                     return notFound();
+            }
+            else if(id == "ALL") {
+            	 return ok(Api.toJson(Project.getProjects(), false));
             }
             else {
 

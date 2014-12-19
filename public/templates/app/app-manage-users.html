@@ -1,8 +1,26 @@
 <div class="pannel-header">
+     <button id="showAddUserForm" type="button" class="btn btn-default btn-xs pull-right">Add User</button>
      <span class="glyphicon glyphicon-user"></span> {{I18n "app.manage-users"}}
 </div>
 
 <div id="main" style="padding: 10px;">
+
+      <div id="addUserForm">
+        <div class="form-group">
+          <label>
+            Username
+          </label>
+          <input id="username" name='username' type='text' class="form-control"/>
+        </div>
+        <div class="form-group">
+          <label>
+            Password
+          </label>
+          <input id="password" name='password' type='password' class="form-control"/>
+        </div>
+        <button id="addUser" type="button" class="save btn btn-primary">Add User</button> <button type="button" id="cancelAddUser" class="cancel btn btn-default">{{I18n "app.shared.cancel"}}</button>
+      </div>
+
 
      <ul class="list-group" id="userList">
      </ul>
