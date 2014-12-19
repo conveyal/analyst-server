@@ -1,7 +1,12 @@
 package utils;
 
+import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
+import play.Configuration;
+import play.Logger;
 import play.Play;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
@@ -12,6 +17,7 @@ import com.conveyal.otpac.message.JobStatus;
 import com.conveyal.otpac.message.JobStatusQuery;
 import com.conveyal.otpac.workers.ThreadWorkerFactory;
 import com.conveyal.otpac.workers.WorkerFactory;
+import com.google.common.collect.ImmutableMap;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
@@ -28,7 +34,31 @@ public class Cluster {
 	public static ActorSystem getActorSystem () {
 		// lazy-initialize the actor system
 		if (actorSystem == null) {
-			Config cfg = ConfigFactory.load();
+			// the config isn't large, so it's fine to just copy it to a string
+			StringWriter sw = new StringWriter();
+			
+			Map<String, Object> akkaConfig;
+			
+			Configuration akkaRemote = Play.application().configuration().getConfig("cluster.akka");
+			
+			if (akkaRemote != null)
+				akkaConfig = akkaRemote.asMap();
+			else
+				akkaConfig = new HashMap<String, Object>();
+			
+			String s3cred = Play.application().configuration().getString("cluster.s3credentials");
+			
+			if (s3cred != null && !Play.application().configuration().getBoolean("cluster.work-offline")) {
+				// add the s3 credentials to the local akka system config
+				Map<String, ImmutableMap<String, String>> s3 = ImmutableMap.of(
+						"credentials", ImmutableMap.of("filename", s3cred)
+						);
+				
+				akkaConfig.put("s3", s3);
+			}
+			
+			Config cfg = ConfigFactory.parseMap(akkaConfig);
+			
 			actorSystem = ActorSystem.create("analyst-server", cfg); 
 		}
 		
@@ -53,6 +83,9 @@ public class Cluster {
 				// give it a worker
 				WorkerFactory factory = new ThreadWorkerFactory(sys, workOffline, graphsBucket, pointsetsBucket);
 				factory.createWorkerManagers(1, executive);
+			}
+			else {
+				Logger.info("Started executive, but no workers started. Start a cluster worker to see analysis results.");
 			}
 		}
 		
