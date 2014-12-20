@@ -7,11 +7,82 @@
   <p>{{I18n "analysis.single-point-description"}}</p>
 
      <div class="form-group">
-     <label>{{I18n "analysis.shapefile"}}</label>
+     <label for="shapefile">{{I18n "analysis.shapefile"}}</label>
      <select id="shapefile" class="primary-indicator form-control"></select>
 
-     <label>{{I18n "analysis.shapefile-field"}}</label>
+     <label for="shapefileColumn">{{I18n "analysis.shapefile-field"}}</label>
      <select id="shapefileColumn" class="primary-indicator form-control"></select>
+   </div>
+
+
+
+   <div style="margin-top: 10px;" class="btn-group mode-selector" data-toggle="buttons">
+     <label class="btn btn-default">
+       <input type="radio" name="mode" id="modeCar" value="CAR"><span class="icon icon-car"></span>
+     </label>
+     <label class="btn btn-default active">
+       <input type="radio" name="mode" id="modeBus" value="WALK,TRANSIT"><span class="icon icon-pedestrian"></span> + <span class="icon icon-bus"></span>
+     </label>
+     <label class="btn btn-default">
+       <input type="radio" name="mode" id="modeBus" value="BICYCLE,TRANSIT"><span class="icon icon-bike"></span> + <span class="icon icon-bus"></span>
+     </label>
+     <label class="btn btn-default">
+       <input type="radio" name="mode" id="modeBike" value="BICYCLE"><span class="icon icon-bike"></span>
+     </label>
+     <label class="btn btn-default">
+       <input type="radio" name="mode" id="modePed" value="WALK"><span class="icon icon-pedestrian"></span>
+     </label>
+   </div>
+
+ <div style="margin-top: 10px" class="form-group">
+   <div class="btn-group mode-selector which" data-toggle="buttons">
+     <label class="btn btn-default">
+       <input type="radio" name="which" value="WORST_CASE" />
+       {{ I18n "analysis.worst-case-option" }}
+     </label>
+
+     <label class="btn btn-default">
+       <input type="radio" name="which" value="POINT_ESTIMATE" />
+       {{ I18n "analysis.point-estimate-option" }}
+     </label>
+
+     <label class="btn btn-default">
+       <input type="radio" name="which" value="BEST_CASE" />
+       {{ I18n "analysis.best-case-option" }}
+     </label>
+
+     <label class="btn btn-default">
+       <input type="radio" name="which" value="SPREAD" />
+       {{ I18n "analysis.spread-option" }}
+     </label>
+   </div>
+
+   <div class="form-group">
+     <label for="dateText">{{I18n "analysis.date"}}</label>
+     <div class="input-group date" id="date">
+       <input id="dateText" class="form-control pickDate" type="text" value="" />
+       <span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span>
+     </div>
+   </div>
+
+   <div class="clearfix">
+     <div class="form-group pull-left" style="width: 180px">
+       <label for="fromTimeText">{{I18n "analysis.earliest-departure-time"}}</label>
+       <div class="input-group date" id="fromTime" style="width: auto">
+         <input id="fromTimeText" class="form-control pickTime" type="text" />
+         <span class="input-group-addon"><span class="glyphicon glyphicon-time"></span>
+       </div>
+     </div>
+
+     <div class="form-group pull-left" style="width: 180px" id="toTimeControls">
+       <label for="toTimeText">{{I18n "analysis.latest-departure-time"}}</label>
+       <div class="input-group date" id="toTime">
+         <input id="toTimeText" class="form-control pickTime" type="text" />
+         <span class="input-group-addon"><span class="glyphicon glyphicon-time"></span>
+       </div>
+     </div>
+   </div>
+
    </div>
 
 	<div class="form-group">
@@ -23,105 +94,18 @@
 	</div>
 
 	<div class="form-group">
-     <label>{{I18n "analysis.scenario-1"}}</label>
+     <label for="scenario1">{{I18n "analysis.scenario-1"}}</label>
 		<select id="scenario1" class="scenario-list form-control">
 		</select>
-
-
-		<div style="margin-top: 10px;" class="btn-group mode-selector" data-toggle="buttons">
-		  <label class="btn btn-default">
-		    <input type="radio" name="mode1" id="modeCar" value="CAR"><span class="icon icon-car"></span>
-		  </label>
-		  <label class="btn btn-default active">
-		    <input type="radio" name="mode1" id="modeBus" value="WALK,TRANSIT"><span class="icon icon-pedestrian"></span> + <span class="icon icon-bus"></span>
-		  </label>
-		  <label class="btn btn-default">
-			    <input type="radio" name="mode1" id="modeBus" value="BICYCLE,TRANSIT"><span class="icon icon-bike"></span> + <span class="icon icon-bus"></span>
-			  </label>
-		  <label class="btn btn-default">
-		    <input type="radio" name="mode1" id="modeBike" value="BICYCLE"><span class="icon icon-bike"></span>
-		  </label>
-		  <label class="btn btn-default">
-		    <input type="radio" name="mode1" id="modePed" value="WALK"><span class="icon icon-pedestrian"></span>
-		  </label>
-		</div>
-
-    <div style="margin-top: 10px" class="form-group">
-      <div class="btn-group mode-selector which1" data-toggle="buttons">
-        <label class="btn btn-default">
-          <input type="radio" name="which1" value="WORST_CASE" />
-          {{ I18n "analysis.worst-case-option" }}
-        </label>
-
-        <label class="btn btn-default">
-          <input type="radio" name="which1" value="POINT_ESTIMATE" />
-          {{ I18n "analysis.point-estimate-option" }}
-        </label>
-
-        <label class="btn btn-default">
-          <input type="radio" name="which1" value="BEST_CASE" />
-          {{ I18n "analysis.best-case-option" }}
-        </label>
-
-        <label class="btn btn-default">
-          <input type="radio" name="which1" value="SPREAD" />
-          {{ I18n "analysis.spread-option" }}
-        </label>
-      </div>
-    </div>
-	</div>
+  </div>
 
 	<div id="scenario2-controls">
 		<div class="form-group">
-     		<label>{{I18n "analysis.scenario-2"}}</label>
+     		<label for="scenario2">{{I18n "analysis.scenario-2"}}</label>
 			<select id="scenario2" class="scenario-list form-control">
 			</select>
-
-			<div style="margin-top: 10px;" class="btn-group" data-toggle="buttons">
-			  <label class="btn btn-default">
-			    <input type="radio" name="mode2" id="modeCar" value="CAR"><span class="icon icon-car"></span>
-			  </label>
-			  <label class="btn btn-default active">
-			    <input type="radio" name="mode2" id="modeBus" value="WALK,TRANSIT"><span class="icon icon-pedestrian"></span> + <span class="icon icon-bus"></span>
-			  </label>
-			  <label class="btn btn-default">
-			    <input type="radio" name="mode2" id="modeBus" value="BICYCLE,TRANSIT"><span class="icon icon-bike"></span> + <span class="icon icon-bus"></span>
-			  </label>
-			  <label class="btn btn-default">
-			    <input type="radio" name="mode2" id="modeBike" value="BICYCLE"><span class="icon icon-bike"></span>
-			  </label>
-			  <label class="btn btn-default">
-			    <input type="radio" name="mode2" id="modePed" value="WALK"><span class="icon icon-pedestrian"></span>
-			  </label>
-			</div>
-		</div>
-
-    <div class="form-group">
-      <div class="btn-group mode-selector which2" data-toggle="buttons">
-        <label class="btn btn-default">
-          <input type="radio" name="which2" value="WORST_CASE" />
-          {{ I18n "analysis.worst-case-option" }}
-        </label>
-
-        <label class="btn btn-default">
-          <input type="radio" name="which2" value="POINT_ESTIMATE" />
-          {{ I18n "analysis.point-estimate-option" }}
-        </label>
-
-        <label class="btn btn-default">
-          <input type="radio" name="which2" value="BEST_CASE" />
-          {{ I18n "analysis.best-case-option" }}
-        </label>
-
-        <label class="btn btn-default">
-          <input type="radio" name="which2" value="SPREAD" />
-          {{ I18n "analysis.spread-option" }}
-        </label>
-      </div>
     </div>
-
 	</div>
-
 
 	<div class="form-group">
      	<label>Average Walk Speed: <span class="notes" id="walkSpeedValue"></span></label>
@@ -223,6 +207,6 @@
             <input type="checkbox" id="showTransit"> {{I18n "analysis.show-transit"}}
          </label>
        </div>
-
+     </div>
   </div>
 </div>

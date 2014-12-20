@@ -12,7 +12,9 @@ libraryDependencies ++= Seq(
   "org.julienrf" %% "play-jsmessages" % "1.6.2",
   "commons-io" % "commons-io" % "2.4",
   "com.amazonaws" % "aws-java-sdk" % "1.7.13",
-  "com.typesafe.akka" % "akka-remote_2.10" % "2.3.5"
+  "com.typesafe.akka" % "akka-remote_2.10" % "2.3.5",
+  "org.opentripplanner" % "otp" % "1.0.0-SNAPSHOT",
+  "com.fasterxml.jackson.datatype" % "jackson-datatype-joda" % "2.4.0"
 )
 
 watchSources := (watchSources.value
@@ -20,3 +22,4 @@ watchSources := (watchSources.value
   --- baseDirectory.value / "conf" ** "*"
   --- baseDirectory.value / "public" ** "*").get
   
+resolvers += "Conveyal Maven Repository" at "http://maven.conveyal.com"

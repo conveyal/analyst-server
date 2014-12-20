@@ -31,6 +31,7 @@ import utils.ResultEnvelope.Which;
 import utils.TransportIndex;
 import utils.TransportIndex.TransitSegment;
 
+import com.google.common.base.Charsets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
@@ -61,7 +62,7 @@ public abstract class AnalystTileRequest {
 	
 	public int hashCode() {
 		HashFunction hashFunction = Hashing.md5();
-        HashCode hashCode = hashFunction.newHasher().putString(this.getId()).hash();
+        HashCode hashCode = hashFunction.newHasher().putString(this.getId(), Charsets.UTF_8).hash();
         
         return hashCode.asInt();
 	}

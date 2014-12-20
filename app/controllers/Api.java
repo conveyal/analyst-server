@@ -34,6 +34,8 @@ import org.geotools.geojson.feature.FeatureJSON;
 import org.geotools.geometry.Envelope2D;
 import org.geotools.geometry.jts.JTS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
+import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
 import org.opengis.referencing.operation.MathTransform;
 import org.opentripplanner.analyst.PointSet;
 import org.opentripplanner.analyst.ResultSet;
@@ -47,7 +49,10 @@ import org.opentripplanner.api.param.LatLon;
 import org.opentripplanner.api.resource.LIsochrone;
 import org.opentripplanner.common.geometry.DelaunayIsolineBuilder;
 import org.opentripplanner.common.model.GenericLocation;
+import org.opentripplanner.profile.ProfileRequest;
+import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.TraverseModeSet;
+import org.opentripplanner.routing.graph.Graph;
 
 import otp.Analyst;
 import otp.AnalystProfileRequest;
@@ -67,6 +72,7 @@ import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
@@ -93,6 +99,11 @@ public class Api extends Controller {
 	public static Analyst analyst = new Analyst();
 
 	private static ObjectMapper mapper = new ObjectMapper();
+	
+	static {
+		mapper.registerModule(new JodaModule());
+	}
+	
     private static JsonFactory jf = new JsonFactory();
 
 
@@ -115,38 +126,43 @@ public class Api extends Controller {
     }
 
     public static Promise<Result> surface(final String graphId, final Double lat, final Double lon, final String mode,
-    		final Double bikeSpeed, final Double walkSpeed, String which) {
+    		final Double bikeSpeed, final Double walkSpeed, String which, String date, final int fromTime, final int toTime) {
     	Promise<TimeSurfaceShort> promise;
 
 		ResultEnvelope.Which whichEnum_tmp;
+		
+		LocalDate jodaDate_tmp;
+		
 		try {
 			whichEnum_tmp = ResultEnvelope.Which.valueOf(which);
+			jodaDate_tmp = LocalDate.parse(date);
 		} catch (Exception e) {
 			// no need to pollute the console with a stack trace
 			return Promise.promise(new Function0<Result> () {
 				@Override
 				public Result apply() throws Throwable {
-				    return badRequest("Invalid value for which parameter");
+				    return badRequest("Invalid value for which or date parameter");
 				}
 			});
 		}
 
+		final LocalDate jodaDate = jodaDate_tmp;
 		final ResultEnvelope.Which whichEnum = whichEnum_tmp;
 
 		// temporarily disabling profile routing due to problems with large/dense graphs
-     	if (false) { // (new TraverseModeSet(mode).isTransit()) {
+     	if (false && new TraverseModeSet(mode).isTransit()) {
     		// transit search: use profile routing
     		promise = Promise.promise(
     				new Function0<TimeSurfaceShort>() {
     					public TimeSurfaceShort apply() {
     						LatLon latLon = new LatLon(String.format("%s,%s", lat, lon));
 
-    						AnalystProfileRequest request = analyst.buildProfileRequest(graphId, mode, latLon);
+    						ProfileRequest request = analyst.buildProfileRequest(mode, jodaDate, fromTime, toTime, latLon);
 
     						if(request == null)
     							return null;
 
-    						return request.createSurfaces(whichEnum);
+    						return AnalystProfileRequest.createSurfaces(request, graphId, 120, whichEnum);
     					}
     				}
     				);
@@ -156,14 +172,14 @@ public class Api extends Controller {
     				new Function0<TimeSurfaceShort>() {
 						public TimeSurfaceShort apply() throws Throwable {
 							GenericLocation latLon = new GenericLocation(lat, lon);
-							AnalystRequest req = analyst.buildRequest(graphId, latLon, mode, 120);
+							RoutingRequest req = analyst.buildRequest(graphId, jodaDate, fromTime, latLon, mode, 120);
 
 							if (req == null)
 								return null;
 
 							req.setRoutingContext(analyst.getGraph(graphId));
 
-							return req.createSurface();
+							return AnalystRequest.createSurface(req, 120);
 						}
     				});
     	}
@@ -181,6 +197,63 @@ public class Api extends Controller {
 					}
 				}
 		);
+    }
+    
+    /**
+     * Get a day that has ostensibly normal service, one would guess. Uses the next Tuesday that
+     * is covered by all transit feeds in the project.
+     */
+    public static Result getExemplarDay(String projectId) throws Exception {
+    	Collection<Scenario> scenarios = Scenario.getScenarios(projectId);
+    	
+    	LocalDate originalDate = new LocalDate().dayOfWeek().setCopy("Tuesday");
+    	LocalDate date = originalDate;
+    	
+    	// date is now a nearby Tuesday
+    	
+    	// don't loop an excessive amount 
+    	LocalDate dateBound = date.plusYears(2);
+    	
+    	// search forward first
+    	DATES: while (date.isBefore(dateBound)) {
+    		for (Scenario s : scenarios) {
+    			Graph graph = analyst.getGraph(s.id);
+    			
+    			long dateInLocalTime = date.toDateTimeAtStartOfDay(DateTimeZone.forTimeZone(graph.getTimeZone()))
+    					.toDate().getTime();
+    			if (!graph.transitFeedCovers(dateInLocalTime)) {
+    				date = date.plusWeeks(1);
+    				continue DATES;
+    			}
+    		}
+    		
+    		// if we got here, this date is within the transit service range for all graphs in the project
+    		return ok(date.toString());
+    	}
+    	
+    	// if we got here, there is no future date where all the graphs have service
+    	date = originalDate;
+    	dateBound = date.minusYears(2);
+    	
+    	// search forward first
+    	BDATES: while (date.isAfter(dateBound)) {
+    		for (Scenario s : scenarios) {
+    			Graph graph = analyst.getGraph(s.id);
+    			
+    			long dateInLocalTime = date.toDateTimeAtStartOfDay(DateTimeZone.forTimeZone(graph.getTimeZone()))
+    					.toDate().getTime();
+    			if (!graph.transitFeedCovers(dateInLocalTime)) {
+    				date = date.minusWeeks(1);
+    				continue BDATES;
+    			}
+    		}
+    		
+    		// if we got here, this date is within the transit service range for all graphs in the project
+    		return ok(date.toString());
+    	}
+    	
+    	// we don't have a date to return that is valid in all feeds
+    	return ok(originalDate.toString());
     }
 
     public static Result isochrone(Integer surfaceId, List<Integer> cutoffs) throws IOException {
@@ -206,7 +279,7 @@ public class Api extends Controller {
     }
 
     /**
-     * Get a ResultSet. ResultEnvelope.Which is embedded in the
+     * Get a ResultSet. ResultEnvelope.Which is embedded in the surface ID.
      * @param surfaceId
      * @param shapefileId
      * @return

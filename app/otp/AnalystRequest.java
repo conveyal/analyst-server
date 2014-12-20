@@ -56,14 +56,14 @@ public class AnalystRequest extends RoutingRequest{
 		return request;
 	}
 	
-	public TimeSurfaceShort createSurface() {
+	public static TimeSurfaceShort createSurface(RoutingRequest req, int cutoffMinutes) {
 		
 		EarliestArrivalSPTService sptService = new EarliestArrivalSPTService();
         sptService.maxDuration = 60 * cutoffMinutes;
         
-        ShortestPathTree spt = sptService.getShortestPathTree(this);
+        ShortestPathTree spt = sptService.getShortestPathTree(req);
        
-        this.cleanup();
+        req.cleanup();
         
         if (spt != null) {
    

@@ -32,13 +32,10 @@ public class AnalystProfileRequest extends ProfileRequest{
 	private static SurfaceCache profileResultCache = new SurfaceCache(100);
 
 	private static  Map<String, ResultSet> resultCache = new ConcurrentHashMap<String, ResultSet>();
-
-	public int cutoffMinutes;
-	public String graphId;
 	
-	public TimeSurfaceShort createSurfaces(ResultEnvelope.Which which) {
+	public static TimeSurfaceShort createSurfaces(ProfileRequest req, String graphId, int cutoffMinutes, ResultEnvelope.Which which) {
 		
-		ProfileRouter router = new ProfileRouter(Api.analyst.getGraph(graphId), this);
+		ProfileRouter router = new ProfileRouter(Api.analyst.getGraph(graphId), req);
 		
         try {
         	ProfileResponse response = router.route();

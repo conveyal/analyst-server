@@ -29,6 +29,27 @@ var Analyst = Analyst || {};
 
       var _this = this;
 
+      this.$('#date').datetimepicker({pickTime: false});
+      this.$('#fromTime').datetimepicker({pickDate: false});
+      this.$('#toTime').datetimepicker({pickDate: false});
+
+      // pick a reasonable default date
+      $.get('api/project/' + A.app.selectedProject + '/exemplarDay')
+      .done(function (data) {
+        var $d = _this.$('#date');
+
+        var sp = data.split('-');
+        // months are off by one in javascript
+        var date = new Date(sp[0], sp[1] - 1, sp[2]);
+
+        _this.$('#date').data('DateTimePicker').setDate(date);
+      });
+
+      // set default times
+      this.$('#fromTime').data('DateTimePicker').setDate(new Date(2014, 11, 15, 7, 0, 0));
+      this.$('#toTime')  .data('DateTimePicker').setDate(new Date(2014, 11, 15, 9, 0, 0));
+
+
       this.scenarios = new A.models.Scenarios();
       this.queries = new A.models.Queries();
       this.shapefiles = new A.models.Shapefiles();
@@ -77,10 +98,27 @@ var Analyst = Analyst || {};
           _this.updateAttributes();
         });
 
+      // pick a reasonable default date
+      $.get('api/project/' + A.app.selectedProject + '/exemplarDay')
+        .done(function (data) {
+          var $d = _this.$('#date');
+
+          // if the user has edited the date already don't overwrite
+          if ($d.val() === '') {
+            // data is the plain-text date
+            $d.val(data);
+          }
+        });
+
       this.mode = "WALK,TRANSIT";
 
       this.$('input[name=mode1]:radio').on('change', function(event) {
         _this.mode = _this.$('input:radio[name=mode1]:checked').val();
+        // profile routing needs a toTime
+        if (A.util.isTransit(_this.mode))
+          _this.$('#toTimeControls').removeClass('hidden');
+        else
+          _this.$('#toTimeControls').addClass('hidden');
       });
 
       this.$("#createQueryForm").hide();
@@ -122,8 +160,16 @@ var Analyst = Analyst || {};
         shapefileId: this.$('#shapefile').val(),
         attributeName: this.$('#shapefileColumn').val(),
         scenarioId: this.$('#scenario1').val(),
-        projectId: A.app.selectedProject
+        projectId: A.app.selectedProject,
+        fromTime: A.util.makeTime(this.$('#fromTime').data('DateTimePicker').getDate()),
+        date: this.$('#date').data('DateTimePicker').getDate().format('YYYY-MM-DD')
       };
+
+      // profile routing uses a to time as well
+      if (A.util.isTransit(this.mode))
+        data.toTime = A.util.makeTime(this.$('#toTime').data('DateTimePicker').getDate());
+      else
+        data.toTime = -1;
 
       var query = new A.models.Query();
       query.save(data, {

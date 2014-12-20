@@ -11,10 +11,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 
 import models.SpatialLayer;
 
+import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
+import org.joda.time.LocalDateTime;
 import org.opentripplanner.analyst.core.Sample;	
 import org.opentripplanner.api.model.TimeSurfaceShort;
 import org.opentripplanner.api.param.LatLon;
@@ -25,13 +29,15 @@ import org.opentripplanner.profile.ProfileRequest;
 import org.opentripplanner.profile.ProfileResponse;
 import org.opentripplanner.profile.ProfileRouter;
 import org.opentripplanner.routing.algorithm.EarliestArrivalSPTService;
+import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.TraverseModeSet;
 import org.opentripplanner.routing.error.VertexNotFoundException;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.services.GraphService;
 import org.opentripplanner.routing.spt.ShortestPathTree;
 
-import com.conveyal.otpac.JobItemCallback;
+import com.conveyal.otpac.PrototypeAnalystProfileRequest;
+import com.conveyal.otpac.PrototypeAnalystRequest;
 import com.conveyal.otpac.message.JobSpec;
 import com.conveyal.otpac.message.WorkResult;
 import com.conveyal.otpac.standalone.StandaloneCluster;
@@ -56,22 +62,25 @@ public class Analyst {
 	 * manually; this is because, in cluster mode, we don't want to serialize the routing context and send
 	 * it over the wire.
 	 */
-	public AnalystRequest buildRequest(String graphId, GenericLocation latLon, String mode, int cutoffMinutes) {
+	
+	public RoutingRequest buildRequest(String graphId, LocalDate date, int time, GenericLocation latLon, String mode, int cutoffMinutes) {
+		Graph graph = getGraph(graphId);
 		
 		// use center of graph extent if no location is specified
 		if(latLon == null)
-			latLon = new GenericLocation(this.graphService.getGraph(graphId).getExtent().centre().y, this.graphService.getGraph(graphId).getExtent().centre().x);
-		 
-		AnalystRequest req;
+			latLon = new GenericLocation(graph.getExtent().centre().y, graph.getExtent().centre().x);
 		
-		try {
-			req = AnalystRequest.create(graphId, latLon, cutoffMinutes);
-		} catch (NoSuchAlgorithmException | IOException e) {
-			Logger.error("unable to create request id");
-			return null;
-		}
+		// use graph time zone to build request
+		TimeZone tz = graph.getTimeZone();
 		
+		PrototypeAnalystRequest req = new PrototypeAnalystRequest();
+		
+		req.dateTime = date.toDateTimeAtStartOfDay(DateTimeZone.forTimeZone(tz)).toDate().getTime() / 1000;
+		req.dateTime += time;
 		req.modes = new TraverseModeSet(mode);
+		req.routerId = graphId;
+		req.from = latLon;
+		req.worstTime = req.dateTime + cutoffMinutes * 60;
 		
 		if (req.modes.isTransit()) {
 			Logger.warn("Building a non-profile transit routing request, this probably shouldn't be happening.");
@@ -79,17 +88,10 @@ public class Analyst {
 		}
 
 		return req;
-    }
+	}
 	
-	public AnalystProfileRequest buildProfileRequest(String graphId, String mode, LatLon latLon) {
-		
-		// use center of graph extent if no location is specified
-		if(latLon == null) {
-			Coordinate center = this.graphService.getGraph(graphId).getExtent().centre();
-			latLon = new LatLon(String.format("%f,%f", center.y, center.x));
-		}
-		
-		AnalystProfileRequest req = new AnalystProfileRequest();
+	public ProfileRequest buildProfileRequest(String mode, LocalDate date, int fromTime, int toTime, LatLon latLon) {
+		PrototypeAnalystProfileRequest req = new PrototypeAnalystProfileRequest();
 		
 		// split the modeset into two modes
 		TraverseModeSet modes = new TraverseModeSet(mode);
@@ -103,17 +105,16 @@ public class Analyst {
 		req.accessModes = req.egressModes = req.directModes = modes;
 		req.transitModes = transitModes;
 
-		req.graphId = graphId;
         req.from       = latLon;
         req.to		   = latLon; // not used but required
         req.analyst	   = true;
-        req.fromTime   = 7 * 60 * 60;
-        req.toTime     = 9 * 60 * 60;
+        req.fromTime   = fromTime;
+        req.toTime     = toTime;
         req.walkSpeed  = 1.4f;
         req.bikeSpeed  = 4.1f;
         req.carSpeed   = 20f;
         req.streetTime = 10;
-        req.date       = new YearMonthDay("2014-12-04").toJoda();
+        req.date       = date;
 		
         req.maxWalkTime = 20;
 		req.maxBikeTime = 20;
@@ -127,10 +128,7 @@ public class Analyst {
 		// doesn't matter for analyst requests
 		req.orderBy = Option.SortOrder.AVG;
 		
-		req.cutoffMinutes = 120;
-		
-        return req;
-        
+		return req;
 	}
 		
 	public Graph getGraph (String graphId) {
