@@ -39,6 +39,7 @@ data-manager.no-pointsets=No spatial data sets for this project.
 data-manager.pointset-description=Spatial data sets allow measurement of access to spatially distributed characteristics like population or jobs. Create one by clicking "Add" above and upload a Shapefile.
 
 data-manager.shapefile-description=Shapefile data sets are used to measure accessibility to spatially distributed characteristics like population or jobs.
+data-manager.shapefile-upload-description=Shapefiles must be zipped before uploading and in a common projection system.
 
 data-manager.no-scenarios=No transit scenarios for this project.
 data-manager.scenarios-description-a=Create a transport scenario by clicking "Add" above and uploading a GTFS feed, or create a GTFS feed using TransitMix or TransitWand.

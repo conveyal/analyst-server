@@ -19,3 +19,4 @@ watchSources := (watchSources.value
   --- baseDirectory.value / "app/assets" ** "*"
   --- baseDirectory.value / "conf" ** "*"
   --- baseDirectory.value / "public" ** "*").get
+  
