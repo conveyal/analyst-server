@@ -21,14 +21,18 @@ var Analyst = Analyst || {};
 		template: Handlebars.getTemplate('auth', 'auth-login'),
 
 		events : {
-			"click .login" : "doLogin"
+			"click .login" : "doLogin",
+			"submit #loginForm" : "doLogin"
 		},
 
 		initialize : function () {
 			_.bindAll(this, "doLogin")
 		},
 
-		doLogin : function() {
+		doLogin : function(evt) {
+
+			evt.stopPropagation();
+			evt.preventDefault();
 
 			var _this = this;
 
