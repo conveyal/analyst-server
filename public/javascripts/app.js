@@ -53,7 +53,7 @@ var Analyst = Analyst || {};
 
 		invokeSubRoute: function(project, x, y, z, namespace, subroute) {
 
-		    this.setProject(project);
+		  this.setProject(project);
 
 			if(!A.app.main) {
 				A.app.main = new A.app.Main();
@@ -64,7 +64,7 @@ var Analyst = Analyst || {};
 			this.setMap(x, y, z);
 
 			if(namespace)
-				this.setTab(namespace);
+				this.setTab(namespace, subroute);
 
 		},
 
@@ -82,7 +82,16 @@ var Analyst = Analyst || {};
 			A.app.controller.setProject();
 		},
 
+		setParams : function(params) {
+
+			// todo: pack 
+			//this.params = _.reduce(_.pairs(params), function(memo, param) { memmemo + param[0] + ":" +  param[1] + "/"});
+			//this.updateNav(true);
+		},
+
 		setProject : function(project) {
+
+			this.params = "";
 
 			if(project)
 				A.app.selectedProject = project;
@@ -103,6 +112,8 @@ var Analyst = Analyst || {};
 		},
 
 		setTab : function(tab) {
+
+			this.params = "";
 
 			this.selectedTab = tab;
 			this.updateNav(true);
@@ -144,7 +155,6 @@ var Analyst = Analyst || {};
 				A.app.main.showSidePanel(manageUsersView);
 			}
 
-
 		},
 
 		updateNav : function(replace) {
@@ -154,6 +164,9 @@ var Analyst = Analyst || {};
 
 				if(this.selectedTab)
 					baseUrl = baseUrl + '/' + this.selectedTab + "/";
+
+				if(this.params)
+					baseUrl = baseUrl + '/' + this.params + "/";
 
 				A.app.appRouter.navigate(baseUrl, {replace: replace});
 			}
@@ -218,7 +231,7 @@ var Analyst = Analyst || {};
 			A.map = L.map(this.$("#app-map")[0], { loadingControl: true,  zoomControl: false }).setView([0, -80.00], 4);
 
 			L.tileLayer('http://{s}.tiles.mapbox.com/v3/conveyal.hml987j0/{z}/{x}/{y}.png', {
-					attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
+					attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery � <a href="http://mapbox.com">Mapbox</a>',
 					maxZoom: 18
 				}).addTo(A.map);
 

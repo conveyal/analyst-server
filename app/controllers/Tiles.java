@@ -102,9 +102,9 @@ public class Tiles extends Controller {
 		return tileBuilder(tileRequest);
     }
 
-	public static Promise<Result> shape(String shapefileId, Integer x, Integer y, Integer z) {
+	public static Promise<Result> shape(String shapefileId, Integer x, Integer y, Integer z, String attributeName) {
 
-		AnalystTileRequest tileRequest = new ShapefileTile(shapefileId, x, y, z);
+		AnalystTileRequest tileRequest = new ShapefileTile(shapefileId, x, y, z, attributeName);
 		return tileBuilder(tileRequest);
     }
 

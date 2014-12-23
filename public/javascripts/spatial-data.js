@@ -133,16 +133,44 @@ A.spatialData = {};
 		tagName : "li",
 
 		events: {
-			'click #toggleLayer': 'toggleLayer',
-			'click #zoomToExtent': 'zoomToExtent'
+			'click #zoomToExtent': 'zoomToExtent',
+			'click #removeAttribute' : 'removeAttribute',
+			'click #addHidden' : 'addHidden',
+			'click #attributeRadio' : 'attributeRadio'
 		},
 
+		initialize : function () {
+			this.model.on('change', this.render);
+		},
 
 		onRender: function () {
 
 			var _this = this;
 
 			var nameField = "name";
+
+			if(this.shapefileOverlay) {
+				if(A.map.hasLayer(this.shapefileOverlay))
+					A.map.removeLayer(this.shapefileOverlay);
+
+				this.shapefileOverlay = false;
+			}
+
+			this.$('#colorPicker').colorpicker({
+				color: "ccf"
+			}).on('changeColor', function(evt) {
+
+				var attributeId = $(evt.target).data("id");
+				var color = evt.color.toHex();
+
+				$(this).css("background-color", color);
+
+				var match = _.find(_this.model.get("shapeAttributes"), function(val){return val.fieldName === attributeId});
+				match.color = color;
+
+			}).on('hidePicker', function(evt) {
+				_this.model.save();
+			});
 
 			this.$el.find("#shapefileName").editable({
 				type        : 'text',
@@ -195,9 +223,6 @@ A.spatialData = {};
 					});
 			});
 
-			this.$("#zoomToExtent").addClass("disabled");
-			this.$("#shapefileAttributes").hide();
-
 			this.$el.find("#shapefileDescription").editable({
 				type        : 'textarea',
 				name        : descriptionField,
@@ -213,14 +238,6 @@ A.spatialData = {};
 				_this.render();
 			});
 
-			if(this.shapefileOverlay) {
-
-				this.$("#zoomToExtent").removeClass("disabled");
-				this.$("#shapefileAttributes").show();
-
-				this.$("#toggleLayerIcon").addClass("glyphicon-eye-open");
-				this.$("#toggleLayerIcon").removeClass("glyphicon-eye-close");
-			}
 
 		},
 
@@ -238,35 +255,40 @@ A.spatialData = {};
 			A.map.fitBounds(bounds);
 		},
 
-		toggleLayer : function(evt) {
+		removeAttribute : function(evt) {
+			var attributeId = $(evt.target).data("id");
+
+			var match = _.find(this.model.get("shapeAttributes"), function(val){return val.fieldName === attributeId});
+			match.hide = true;
+			this.model.save();
+
+		},
+
+		addHidden : function(evt) {
+			var attributeId = this.$("#hiddenAttributes").val();
+
+			var match = _.find(this.model.get("shapeAttributes"), function(val){return val.fieldName === attributeId});
+			match.hide = false;
+			this.model.save();
+		},
+
+		attributeRadio : function(evt) {
 
 			// prevent bootstrap toggle state
 			evt.stopImmediatePropagation();
 
-			if(this.shapefileOverlay) {
+			var attributeId = $(evt.target).data("id");
 
+			if(this.shapefileOverlay) {
 				if(A.map.hasLayer(this.shapefileOverlay))
 					A.map.removeLayer(this.shapefileOverlay);
 
 				this.shapefileOverlay = false;
-
-				this.$("#zoomToExtent").addClass("disabled");
-				this.$("#shapefileAttributes").hide();
-
-				this.$("#toggleLayerIcon").removeClass("glyphicon-eye-open");
-				this.$("#toggleLayerIcon").addClass("glyphicon-eye-close");
-
 			}
-			else {
-				this.shapefileOverlay = L.tileLayer('/tile/shapefile?z={z}&x={x}&y={y}&shapefileId=' + this.model.id).addTo(A.map);
 
-				this.$("#zoomToExtent").removeClass("disabled");
-				this.$("#shapefileAttributes").show();
-
-				this.$("#toggleLayerIcon").addClass("glyphicon-eye-open");
-				this.$("#toggleLayerIcon").removeClass("glyphicon-eye-close");
-
-		 }
+			if(attributeId) {
+				this.shapefileOverlay = L.tileLayer('/tile/shapefile?z={z}&x={x}&y={y}&attributeName=' +  attributeId + '&shapefileId=' + this.model.id).addTo(A.map);
+			}
 		}
 
 	});

@@ -52,6 +52,7 @@ import org.opentripplanner.analyst.TimeSurface;
 import org.opentripplanner.analyst.core.SlippyTile;
 import org.opentripplanner.analyst.request.TileRequest;
 
+import otp.AnalystProfileRequest;
 import otp.AnalystRequest;
 
 import com.vividsolutions.jts.geom.Coordinate;
@@ -214,10 +215,74 @@ public class Gis extends Controller {
 	    }
     }
 	
+	
+	public static Result surface(Integer surfaceId, String shapefileId, String attributeName, Integer timeLimit, String compareTo) {
+    	
+		response().setHeader(CACHE_CONTROL, "no-cache, no-store, must-revalidate");
+		response().setHeader(PRAGMA, "no-cache");
+		response().setHeader(EXPIRES, "0");
+		
+	
+		String shapeName = (timeLimit / 60) + "_mins_" + shapefileId.toString().toLowerCase() + "_" + surfaceId.toString() + "_" + attributeName;
+    	
+    	try {
+	    
+			String queryKey = surfaceId + "_" + timeLimit + "_" + compareTo;
+			
+			Shapefile shp = Shapefile.getShapefile(shapefileId);
+
+			if(shp == null)
+				return null;
+
+    		ResultSetWithTimes result;
+    			    		
+    		try {
+    			result = AnalystProfileRequest.getResultWithTimes(surfaceId, shapefileId, attributeName);
+    		}
+    		catch (NullPointerException e) {
+    			// not a profile request
+    			result = AnalystRequest.getResultWithTimes(surfaceId, shapefileId, attributeName);
+    		}
+			       
+	        Collection<ShapeFeature> features = shp.getShapeFeatureStore().getAll();
+	     
+	        ArrayList<String> fields = new ArrayList<String>();
+        	
+        	fields.add(shp.name.replaceAll("\\W+", ""));
+        	
+        	ArrayList<GisShapeFeature> gisFeatures = new ArrayList<GisShapeFeature>();
+        	
+        	for(ShapeFeature feature : features) {
+            	
+        		
+            	Integer sampleTime = result.getTime(feature.id);
+
+        		GisShapeFeature gf = new GisShapeFeature();
+        		gf.geom = feature.geom;
+        		gf.id = feature.id;
+        		gf.time = result.getTime(feature.id);
+
+        		gf.fields.add(feature.getAttribute(attributeName));
+        		
+        		gisFeatures.add(gf);
+        	
+            }
+   
+   
+        	return ok(generateZippedShapefile(shapeName, fields, gisFeatures));
+       
+        	
+    	} catch (Exception e) {
+	    	e.printStackTrace();
+	    	return badRequest();
+	    }
+    }
+	
 	public static class GisShapeFeature {
 		
 		Geometry geom;
 		String id;
+		Integer time;
 		ArrayList<Object> fields = new ArrayList<Object>();
 		
 	}
@@ -253,7 +318,7 @@ public class Gis extends Controller {
 			ShapefileDataStore dataStore = (ShapefileDataStore)dataStoreFactory.createNewDataStore(params);
 			dataStore.forceSchemaCRS(DefaultGeographicCRS.WGS84);
 
-			String featureDefinition = "the_geom:MultiPolygon:srid=4326,id:String";
+			String featureDefinition = "the_geom:MultiPolygon:srid=4326,id:String,time:Integer";
 			
 			int fieldPosition = 0;
 			for(String fieldName : fieldNames) {
@@ -284,6 +349,11 @@ public class Gis extends Controller {
         	{
         		featureBuilder.add((MultiPolygon)feature.geom);
                 featureBuilder.add(feature.id);
+                
+                if(feature.time == null) 
+                	featureBuilder.add(0);
+                else
+                	featureBuilder.add(feature.time);
                
                 for(Object o : feature.fields)
                 	featureBuilder.add(o);

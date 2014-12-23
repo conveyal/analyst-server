@@ -6,6 +6,8 @@ import java.nio.charset.Charset;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import models.Attribute;
 import models.Query;
@@ -24,6 +26,7 @@ import otp.AnalystProfileRequest;
 import otp.AnalystRequest;
 import otp.ProfileResult;
 import utils.HaltonPoints;
+import utils.NaturalBreaksClassifier;
 import utils.QueryResults;
 import utils.QueryResults.QueryResultItem;
 import utils.ResultEnvelope;
@@ -40,6 +43,9 @@ import com.vividsolutions.jts.index.strtree.STRtree;
 public abstract class AnalystTileRequest {
 	
 	private static TransportIndex transitIndex = new TransportIndex();
+	
+	public static  Map<String, NaturalBreaksClassifier> naturalBreaksClassifierCache = new ConcurrentHashMap<String, NaturalBreaksClassifier>();
+	
 	
 	final public String type;
 	final public Integer x, y, z;
@@ -262,11 +268,13 @@ public abstract class AnalystTileRequest {
 	public static class ShapefileTile extends AnalystTileRequest {
 		
 		final String shapefileId;
+		final String attributeName;
 		
-		public ShapefileTile(String shapefileId, Integer x, Integer y, Integer z) {
+		public ShapefileTile(String shapefileId, Integer x, Integer y, Integer z, String attributeName) {
 			super(x, y, z, "spatial");
 			
 			this.shapefileId = shapefileId;
+			this.attributeName = attributeName;
 		}
 		
 		public String getId() {
@@ -276,17 +284,39 @@ public abstract class AnalystTileRequest {
 		public byte[] render(){
 			
 			Tile tile = new Tile(this);
-
+				
 			Shapefile shp = Shapefile.getShapefile(shapefileId);
-
-			if(shp == null)
-				return null;
-
+			
     	    List<ShapeFeature> features = shp.getShapefile(shapefileId).query(tile.envelope);
 
+    	    if(shp == null)
+				return null;
+    	    
+    	    Attribute attr = null;
+			
+			for(Attribute a : shp.getShapeAttributes()) {
+				if(a.fieldName.equals(attributeName)) {
+					attr = a;
+					break;
+				}
+			}
+			
+			if(attr == null)
+				return null;
+			
+			Color colorTemplate;
+			
+			if(attr.color != null ) {
+				Integer colorInt = Integer.parseInt(attr.color.replace("#", ""), 16);
+				colorTemplate = new Color(colorInt);
+			}
+			else
+				colorTemplate = new Color(0.0f,0.0f,0.0f,0.6f);
+			
+    	    
             for(ShapeFeature feature : features) {
-
-            	Color color = new Color(0.0f,0.0f,0.0f,0.1f);
+            	
+            	Color color = new Color(colorTemplate.getRed() / 255.0f, colorTemplate.getGreen() / 255.0f, colorTemplate.getBlue() / 255.0f, (float) (feature.getAttribute(attributeName) / attr.max));
         		Color stroke = new Color(0.0f,0.0f,0.0f,0.5f);
 
         		try {

@@ -74,3 +74,13 @@ Handlebars.registerHelper('I18n',
     return (Messages != undefined && Messages.messages[str] != undefined ? Messages.apply(window, args) : str);
   }
 );
+
+Handlebars.registerHelper('formatNumber',
+function(num){
+  if(num && num > -1000000000 && num < 1000000000)
+    return num.toFixed(1);
+  else
+    return "--"
+
+}
+);

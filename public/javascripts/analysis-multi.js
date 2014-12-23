@@ -495,6 +495,23 @@ var Analyst = Analyst || {};
           this.$('.whichMulti input[value="POINT_ESTIMATE"]').prop('checked', true).parent().addClass('active');
         }
 
+        var nameField = "name";
+
+        this.$el.find("#queryName").editable({
+          type        : 'text',
+          name        : nameField,
+          mode				: "inline",
+          value       : this.model.get(nameField),
+          pk          : this.model.get('id'),
+          url         : '',
+          success     : function(response, newValue) {
+            _this.model.set(nameField, newValue);
+            _this.model.save(nameField, newValue);
+          }
+        }).on("hidden", function(e, reason) {
+          _this.render();
+        });
+
 
         // Set up weight and group by select boxes
         // we weight and group by shapefiles. for weighting we also specify an attribute.

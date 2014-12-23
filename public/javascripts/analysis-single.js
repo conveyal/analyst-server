@@ -20,6 +20,8 @@ var Analyst = Analyst || {};
 		  'click #showPoints': 'updateMap',
 		  'click #showTransit': 'updateMap',
 		  'click .mode-selector' : 'updateMap',
+			'click #showSettings' : 'showSettings',
+			'click #downloadGis' : 'downloadGis'
 		},
 
 		regions: {
@@ -228,8 +230,9 @@ var Analyst = Analyst || {};
 			this.$('#comparisonChart').hide();
 			this.$('#compareLegend').hide();
 
-			this.$('#processing-query').hide();
-			this.$('#results-area').hide();
+			this.$('#queryProcessing').hide();
+			this.$('#showSettings').hide();
+			this.$('#queryResults').hide();
 
 		},
 
@@ -246,10 +249,12 @@ var Analyst = Analyst || {};
 			shp.getNumericAttributes().forEach(function (attr) {
 				var atName = A.models.Shapefile.attributeName(attr);
 
-				$('<option>')
-				.attr('value', attr.fieldName)
-				.text(atName)
-				.appendTo(_this.$('#shapefileColumn'));
+				if(!attr.hide) {
+					$('<option>')
+					.attr('value', attr.fieldName)
+					.text(atName)
+					.appendTo(_this.$('#shapefileColumn'));
+				}
 			});
 		},
 
@@ -316,8 +321,10 @@ var Analyst = Analyst || {};
 
 			var _this = this;
 
-			this.$('#results-area').hide();
-			this.$('#processing-query').show();
+			this.$('#querySettings').hide();
+			this.$('#showSettings').show();
+			this.$('#queryResults').hide();
+			this.$('#queryProcessing').show();
 
 			var date = this.$('#date').data('DateTimePicker').getDate().format('YYYY-MM-DD');
 			var fromTime = A.util.makeTime(this.$('#fromTime').data('DateTimePicker').getDate());
@@ -370,8 +377,8 @@ var Analyst = Analyst || {};
 
 			this.comparisonType = this.$('.scenario-comparison').val();
 
-			this.$('#processing-query').hide();
-			this.$('#results-area').show();
+			this.$('#queryProcessing').hide();
+			this.$('#queryResults').show();
 
 			if(this.comparisonType == 'compare') {
 
@@ -492,6 +499,22 @@ var Analyst = Analyst || {};
 					}).addTo(A.map);
 
 			}
+		},
+
+		downloadGis : function(evt) {
+			var shapefileId = this.$('#shapefile').val();
+			var attributeName = this.$('#shapefileColumn').val();
+			var surfaceId = this.surfaceId1;
+			var timeLimit = this.timeSlider.getValue()[1] * 60;
+
+			window.location.href = '/gis/surface?shapefileId=' + shapefileId + '&surfaceId=' + surfaceId + '&attributeName=' + attributeName + '&timeLimit=' + timeLimit;
+
+		},
+
+		showSettings : function(evt) {
+
+			this.$('#showSettings').hide();
+			this.$('#querySettings').show();
 		},
 
 		drawChart : function(res, barChart, divSelector, chartHeight) {
