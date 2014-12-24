@@ -35,7 +35,7 @@ GET     /api/shapefile					controllers.Api.getShapefile(id:String ?= null, proje
 GET     /api/shapefile/:id				controllers.Api.getShapefileById(id:String)
 POST    /api/shapefile/					controllers.Api.createShapefile()
 PUT     /api/shapefile/:id				controllers.Api.updateShapefile(id:String)
-DELETE  /api/shapfile/:id				controllers.Api.deleteShapefile(id:String)
+DELETE  /api/shapefile/:id				controllers.Api.deleteShapefile(id:String)
 
 GET     /api/scenario					controllers.Api.getScenario(id:String ?= null, projectId:String ?= null)
 GET     /api/scenario/:id				controllers.Api.getScenarioById(id:String)

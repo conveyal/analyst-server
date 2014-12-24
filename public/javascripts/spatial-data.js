@@ -134,6 +134,7 @@ A.spatialData = {};
 
 		events: {
 			'click #zoomToExtent': 'zoomToExtent',
+			'click #deleteShapefile': 'deleteShapefile',
 			'click #removeAttribute' : 'removeAttribute',
 			'click #addHidden' : 'addHidden',
 			'click #attributeRadio' : 'attributeRadio'
@@ -244,6 +245,10 @@ A.spatialData = {};
 		onClose : function() {
 			if(this.shapefileOverlay && A.map.hasLayer(this.shapefileOverlay))
 				A.map.removeLayer(this.shapefileOverlay);
+		},
+
+		deleteShapefile: function(evt) {
+			this.model.destroy();
 		},
 
 		zoomToExtent : function(evt) {
