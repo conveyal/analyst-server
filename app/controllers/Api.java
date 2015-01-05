@@ -297,7 +297,7 @@ public class Api extends Controller {
     	}
 
     	ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    	result.writeJson(baos, shp.getPointSet(attributeName));
+    	result.writeJson(baos, shp.getPointSet());
         ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
         response().setContentType("application/json");
     	return ok(bais);
@@ -625,9 +625,10 @@ public class Api extends Controller {
 
         if (file != null && file.getFile() != null) {
 
-        	Shapefile s = Shapefile.create(file.getFile(), body.asFormUrlEncoded().get("projectId")[0]);
+        	String projectId = body.asFormUrlEncoded().get("projectId")[0];
+        	String name = body.asFormUrlEncoded().get("name")[0];
+        	Shapefile s = Shapefile.create(file.getFile(), projectId, name);
 
-        	s.name = body.asFormUrlEncoded().get("name")[0];
         	s.description = body.asFormUrlEncoded().get("description")[0];
 
         	s.save();

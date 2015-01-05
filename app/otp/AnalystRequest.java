@@ -92,7 +92,7 @@ public class AnalystRequest extends RoutingRequest{
     			result = resultCache.get(resultId);
         	else {
         		TimeSurface surf =getSurface(surfaceId);
-        		PointSet ps = Shapefile.getShapefile(shapefileId).getPointSet(attributeName);
+        		PointSet ps = Shapefile.getShapefile(shapefileId).getPointSet();
         		SampleSet ss = ps.getSampleSet(Api.analyst.getGraph(surf.routerId));
         		result = new ResultSet(ss, surf);
         		resultCache.put(resultId, result);
@@ -113,7 +113,7 @@ public class AnalystRequest extends RoutingRequest{
     			resultWithTimes = (ResultSetWithTimes)resultCache.get(resultId);
         	else {
         		TimeSurface surf =getSurface(surfaceId);
-        		PointSet ps = Shapefile.getShapefile(shapefileId).getPointSet(attributeName);
+        		PointSet ps = Shapefile.getShapefile(shapefileId).getPointSet();
         		SampleSet ss = ps.getSampleSet(Api.analyst.getGraph(surf.routerId));
         		resultWithTimes = new ResultSetWithTimes(ss, surf);
         		resultCache.put(resultId, resultWithTimes);

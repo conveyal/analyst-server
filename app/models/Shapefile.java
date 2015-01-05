@@ -95,7 +95,8 @@ public class Shapefile implements Serializable {
 	@JsonIgnore
 	public HashMap<String,Attribute> attributes = new HashMap<String,Attribute>();
 
-	public static Map<String,PointSet> pointSetCache = new ConcurrentHashMap<String,PointSet>();
+	/** the pointset for this shapefile */
+	private transient PointSet pointSet;
 
 	@JsonIgnore
 	public File file;
@@ -109,7 +110,7 @@ public class Shapefile implements Serializable {
 	public Shapefile() {
 		
 	}
-	static public class ShapeFeature  implements Serializable, Comparable<ShapeFeature> {
+	static public class ShapeFeature implements Serializable, Comparable<ShapeFeature> {
 
 		private static final long serialVersionUID = 1L;
 		public String id;
@@ -238,63 +239,50 @@ public class Shapefile implements Serializable {
 	}
 
 	@JsonIgnore
-	public PointSet getPointSet(String attrName) {
+	public synchronized PointSet getPointSet() {
+		if (pointSet != null)
+			return pointSet;
 
-		String psId = this.id + "_" + attrName;
-		
-		synchronized (pointSetCache) {
-			if(pointSetCache.containsKey(psId))
-				return pointSetCache.get(psId);
+		pointSet = new PointSet(getFeatureCount());
 
-			PointSet ps = new PointSet(getFeatureCount());
+		String categoryId = Attribute.convertNameToId(this.name);
 
-			String categoryId = Attribute.convertNameToId(this.name);
+		pointSet.id = categoryId;
+		pointSet.label = this.name;
+		pointSet.description = this.description;
 
-			ps.id = categoryId;
-			ps.label = this.name;
-			ps.description = this.description;
+		int index = 0;
+		for(ShapeFeature sf :  this.getShapeFeatureStore().getAll()) {
 
-			int index = 0;
-			for(ShapeFeature sf :  this.getShapeFeatureStore().getAll()) {
+			HashMap<String,Integer> propertyData = new HashMap<String,Integer>();
 
-				HashMap<String,Integer> propertyData = new HashMap<String,Integer>();
-
-				Attribute a = this.attributes.get(attrName);
+			for (Attribute a : this.attributes.values()) {
 				String propertyId = categoryId + "." + Attribute.convertNameToId(a.name);
 				propertyData.put(propertyId, sf.getAttribute(a.fieldName));
-
-
-				PointFeature pf;
-				try {
-					pf = new PointFeature(sf.id.toString(), sf.geom, propertyData);
-					ps.addFeature(pf, index);
-				} catch (EmptyPolygonException | UnsupportedGeometryException e) {
-					e.printStackTrace();
-				}
-
-
-				index++;
 			}
 
-			ps.setLabel(categoryId, this.name);
 
-			Attribute attr = this.attributes.get(attrName);
-			String propertyId = categoryId + "." + Attribute.convertNameToId(attr.name);
-			ps.setLabel(propertyId, attr.name);
-			
-			if (attr.color != null)
-				ps.setStyle(propertyId, "color", attr.color);
+			PointFeature pf;
+			try {
+				pf = new PointFeature(sf.id.toString(), sf.geom, propertyData);
+				pointSet.addFeature(pf, index);
+			} catch (EmptyPolygonException | UnsupportedGeometryException e) {
+				e.printStackTrace();
+			}
 
-			pointSetCache.put(psId, ps);
 
-			return ps;
+			index++;
 		}
+
+		pointSet.setLabel(categoryId, this.name);
+
+		return pointSet;
 	}
 
-	public String writeToClusterCache(Boolean workOffline, String attrName) throws IOException {
+	private String writeToClusterCache() throws IOException {
 
-		PointSet ps = this.getPointSet(attrName);
-		String cachePointSetId = id + "_" + Attribute.convertNameToId(attrName) + ".json";
+		PointSet ps = this.getPointSet();
+		String cachePointSetId = id + ".json";
 
 		File f = new File(cachePointSetId);
 
@@ -304,6 +292,7 @@ public class Shapefile implements Serializable {
 
 		String s3credentials = Play.application().configuration().getString("cluster.s3credentials");
 		String bucket = Play.application().configuration().getString("cluster.pointsets-bucket");
+		boolean workOffline = Play.application().configuration().getBoolean("cluster.work-offline");
 		
 		PointSetDatastore datastore = new PointSetDatastore(10, s3credentials, workOffline, bucket);
 
@@ -390,7 +379,10 @@ public class Shapefile implements Serializable {
 
 	}
 
-	public static Shapefile create(File originalShapefileZip, String projectId) throws ZipException, IOException {
+	/**
+	 * Create a new shapefile with the given name.
+	 */
+	public static Shapefile create(File originalShapefileZip, String projectId, String name) throws ZipException, IOException {
 
 		String shapefileHash = HashUtils.hashFile(originalShapefileZip);
 
@@ -410,6 +402,8 @@ public class Shapefile implements Serializable {
 
 		shapefile.id = shapefileId;
 		shapefile.projectId = projectId;
+		
+		shapefile.name = name;
 
 		ZipFile zipFile = new ZipFile(originalShapefileZip);
 
@@ -445,7 +439,9 @@ public class Shapefile implements Serializable {
 	    	shapefile.setShapeFeatureStore(features);
 
 	    	shapefile.save();
-
+	    	
+	    	shapefile.writeToClusterCache();
+	    	
 	    	Logger.info("done loading shapefile " + shapefileId);
 	    }
 	    else

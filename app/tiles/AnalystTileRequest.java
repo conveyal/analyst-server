@@ -20,6 +20,7 @@ import org.opengis.referencing.operation.TransformException;
 import org.opentripplanner.analyst.PointSet;
 import org.opentripplanner.analyst.ResultSetDelta;
 import org.opentripplanner.analyst.ResultSetWithTimes;
+import org.opentripplanner.analyst.SampleSet;
 import org.opentripplanner.analyst.TimeSurface;
 
 import otp.AnalystProfileRequest;
@@ -39,6 +40,8 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.vividsolutions.jts.index.strtree.STRtree;
+
+import controllers.Api;
 
 public abstract class AnalystTileRequest {
 	
@@ -388,8 +391,12 @@ public abstract class AnalystTileRequest {
 			if (surf2 == null)
 				surf2 = AnalystRequest.getSurface(surfaceId2);
 			
-			PointSet ps = shp.getPointSet(attributeName);
-			ResultSetDelta resultDelta = new ResultSetDelta(ps.getSampleSet(surf1.routerId), ps.getSampleSet(surf2.routerId),  surf1, surf2);
+			PointSet ps = shp.getPointSet();
+			
+			// TODO: cache samples on multiple tile requests (should be a performance win)
+			SampleSet ss1 = ps.getSampleSet(Api.analyst.getGraph(surf1.routerId));
+			SampleSet ss2 = ps.getSampleSet(Api.analyst.getGraph(surf2.routerId));
+			ResultSetDelta resultDelta = new ResultSetDelta(ss1, ss2,  surf1, surf2);
 
 			List<ShapeFeature> features = shp.query(tile.envelope);
 

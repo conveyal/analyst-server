@@ -9,8 +9,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import models.Shapefile;
 import models.SpatialLayer;
 
+import org.opentripplanner.analyst.PointSet;
 import org.opentripplanner.analyst.ResultSet;
 import org.opentripplanner.analyst.ResultSetWithTimes;
+import org.opentripplanner.analyst.SampleSet;
 import org.opentripplanner.analyst.SurfaceCache;
 import org.opentripplanner.analyst.TimeSurface;
 import org.opentripplanner.api.model.TimeSurfaceShort;
@@ -80,7 +82,9 @@ public class AnalystProfileRequest extends ProfileRequest{
         	else {
         		TimeSurface surf =getSurface(surfaceId);
         		
-        		result = new ResultSet(Shapefile.getShapefile(shapefileId).getPointSet(attributeName).getSampleSet(surf.routerId), surf);
+        		PointSet ps = Shapefile.getShapefile(shapefileId).getPointSet();
+        		SampleSet ss = ps.getSampleSet(Api.analyst.getGraph(surf.routerId));
+        		result = new ResultSet(ss, surf);
         		resultCache.put(resultId, result);
         	}
     	}
@@ -104,7 +108,9 @@ public class AnalystProfileRequest extends ProfileRequest{
         	else {
         		TimeSurface surf = getSurface(surfaceId);
         			
-        		resultWithTimes = new ResultSetWithTimes(Shapefile.getShapefile(shapefileId).getPointSet(attributeName).getSampleSet(surf.routerId), surf);
+        		PointSet ps = Shapefile.getShapefile(shapefileId).getPointSet();
+        		SampleSet ss = ps.getSampleSet(Api.analyst.getGraph(surf.routerId));
+        		resultWithTimes = new ResultSetWithTimes(ss, surf);
         		resultCache.put(resultId, resultWithTimes);
         	}
     	}
