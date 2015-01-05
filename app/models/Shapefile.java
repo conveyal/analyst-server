@@ -247,7 +247,6 @@ public class Shapefile implements Serializable {
 				return pointSetCache.get(psId);
 
 			PointSet ps = new PointSet(getFeatureCount());
-			ps.setGraphService(Api.analyst.getGraphService());
 
 			String categoryId = Attribute.convertNameToId(this.name);
 

@@ -143,10 +143,6 @@ public class Analyst {
 		return graphService.getZippedGraph(graphId);
 	}
 	
-	public GraphSource getGraphService() {
-		return graphService;
-	}
-	
 	public Sample getSample (String graphId, double lon, double lat) {
 		return graphService.getGraph(graphId).getSampleFactory().getSample(lon, lat);
 	}

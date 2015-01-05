@@ -16,8 +16,10 @@ import javax.ws.rs.core.Response;
 import models.Shapefile;
 import models.SpatialLayer;
 
+import org.opentripplanner.analyst.PointSet;
 import org.opentripplanner.analyst.ResultSet;
 import org.opentripplanner.analyst.ResultSetWithTimes;
+import org.opentripplanner.analyst.SampleSet;
 import org.opentripplanner.analyst.SurfaceCache;
 import org.opentripplanner.analyst.TimeSurface;
 import org.opentripplanner.api.model.TimeSurfaceShort;
@@ -26,6 +28,7 @@ import org.opentripplanner.routing.algorithm.EarliestArrivalSPTService;
 import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.spt.ShortestPathTree;
 
+import com.amazonaws.services.elasticmapreduce.model.Application;
 import com.google.common.collect.Maps;
 
 import controllers.Api;
@@ -89,7 +92,9 @@ public class AnalystRequest extends RoutingRequest{
     			result = resultCache.get(resultId);
         	else {
         		TimeSurface surf =getSurface(surfaceId);
-        		result = new ResultSet(Shapefile.getShapefile(shapefileId).getPointSet(attributeName).getSampleSet(surf.routerId), surf);
+        		PointSet ps = Shapefile.getShapefile(shapefileId).getPointSet(attributeName);
+        		SampleSet ss = ps.getSampleSet(Api.analyst.getGraph(surf.routerId));
+        		result = new ResultSet(ss, surf);
         		resultCache.put(resultId, result);
         	}
     	}
@@ -108,7 +113,9 @@ public class AnalystRequest extends RoutingRequest{
     			resultWithTimes = (ResultSetWithTimes)resultCache.get(resultId);
         	else {
         		TimeSurface surf =getSurface(surfaceId);
-        		resultWithTimes = new ResultSetWithTimes(Shapefile.getShapefile(shapefileId).getPointSet(attributeName).getSampleSet(surf.routerId), surf);
+        		PointSet ps = Shapefile.getShapefile(shapefileId).getPointSet(attributeName);
+        		SampleSet ss = ps.getSampleSet(Api.analyst.getGraph(surf.routerId));
+        		resultWithTimes = new ResultSetWithTimes(ss, surf);
         		resultCache.put(resultId, resultWithTimes);
         	}
     	}
