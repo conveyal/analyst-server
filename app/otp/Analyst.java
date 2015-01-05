@@ -33,7 +33,7 @@ import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.TraverseModeSet;
 import org.opentripplanner.routing.error.VertexNotFoundException;
 import org.opentripplanner.routing.graph.Graph;
-import org.opentripplanner.routing.services.GraphService;
+import org.opentripplanner.routing.services.GraphSource;
 import org.opentripplanner.routing.spt.ShortestPathTree;
 
 import com.conveyal.otpac.PrototypeAnalystProfileRequest;
@@ -143,7 +143,7 @@ public class Analyst {
 		return graphService.getZippedGraph(graphId);
 	}
 	
-	public GraphService getGraphService() {
+	public GraphSource getGraphService() {
 		return graphService;
 	}
 	

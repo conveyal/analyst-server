@@ -11,14 +11,15 @@ import java.util.zip.ZipOutputStream;
 
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graph.Graph.LoadLevel;
-import org.opentripplanner.routing.services.GraphService;
+import org.opentripplanner.routing.services.GraphSource;
 import org.opentripplanner.routing.services.GraphSource;
 import org.opentripplanner.routing.services.GraphSource.Factory;
 
 import controllers.Application;
+import org.opentripplanner.standalone.Router;
 
 
-public class AnalystGraphService implements GraphService { 
+public class AnalystGraphService {
 	AnalystGraphCache graphCache = new AnalystGraphCache();
 	
 	public Graph getGraph(String graphId) {
@@ -62,53 +63,4 @@ public class AnalystGraphService implements GraphService {
 		return null;
 	}
 
-	@Override
-	public int evictAll() {
-		graphCache.clear();
-		return 0;
-	}
-
-	@Override
-	public boolean evictGraph(String graphId) {
-		graphCache.remove(graphId);
-		return false;
-	}
-
-	@Override
-	public Graph getGraph() {
-		if(graphCache.values().size() > 0)
-			return graphCache.values().iterator().next();
-		return null;
-	}
-
-	@Override
-	public Collection<String> getRouterIds() {
-		return graphCache.keySet();
-	}
-
-
-	public boolean registerGraph(String graphId, GraphSource gs) {
-		graphCache.put(graphId, gs.getGraph());
-		return true;
-	}
-
-
-	public boolean registerGraph(String arg0, Graph arg1) {
-		graphCache.put(arg0, arg1);
-		return  true;
-	}
-	
-    public void setDefaultRouterId (String routerId) {
-    	// do nothing
-    }
-
-	@Override
-	public Factory getGraphSourceFactory() {
-		return null;
-	}
-
-	@Override
-	public boolean reloadGraphs(boolean arg0) {
-		return false;
-	}
 }
