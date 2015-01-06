@@ -261,7 +261,7 @@ public class Shapefile implements Serializable {
 			HashMap<String,Integer> propertyData = new HashMap<String,Integer>();
 
 			for (Attribute a : this.attributes.values()) {
-				String propertyId = categoryId + "." + Attribute.convertNameToId(a.name);
+				String propertyId = categoryId + "." + a.fieldName;
 				propertyData.put(propertyId, sf.getAttribute(a.fieldName));
 				// TODO: update names when attribute name is edited.
 				pointSet.setLabel(propertyId, a.name);
@@ -537,26 +537,26 @@ public class Shapefile implements Serializable {
 			        for(Object attr : sFeature.getProperties()) {
 			        	if(attr instanceof Property) {
 			        		Property p = ((Property)attr);
-			        		String name = p.getName().toString();
+			        		String name = Attribute.convertNameToId(p.getName().toString());
 			        		PropertyType pt = p.getType();
 			        		Object value = p.getValue();
 			        		
 			        		updateAttributeStats(name, value);
 			        		
 			        		if(value != null && (value instanceof Long)) {
-			        			feature.attributes.put(p.getName().toString(), (int)(long)p.getValue());
+			        			feature.attributes.put(name, (int)(long)p.getValue());
 
-			        			fieldnamesFound.add(p.getName().toString());
+			        			fieldnamesFound.add(name);
 
 			        		} else if( value instanceof Integer) {
-			        			feature.attributes.put(p.getName().toString(), (int)p.getValue());
+			        			feature.attributes.put(name, (int)p.getValue());
 
-			        			fieldnamesFound.add(p.getName().toString());
+			        			fieldnamesFound.add(name);
 			        		}
 			        		else if(value != null && (value instanceof Double )) {
-			        			feature.attributes.put(p.getName().toString(), (int)(long)Math.round((Double)p.getValue()));
+			        			feature.attributes.put(name, (int)(long)Math.round((Double)p.getValue()));
 
-			        			fieldnamesFound.add(p.getName().toString());
+			        			fieldnamesFound.add(name);
 
 			        		}
 			        	}
