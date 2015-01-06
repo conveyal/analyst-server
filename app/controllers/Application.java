@@ -113,7 +113,7 @@ public class Application extends Controller {
 			e.printStackTrace();
 		}
 
-		return redirect("/#db7c31708ec68280a1a94a8ca633dae1/3.4064483642578125/6.526993773948091/12");
+		return redirect("/#db7c31708ec68280a1a94a8ca633dae1/-99.10929679870605/19.42223967548736/12");
 	}
 	
 	public static Result setPassword() {
