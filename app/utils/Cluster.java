@@ -46,15 +46,19 @@ public class Cluster {
 			else
 				akkaConfig = new HashMap<String, Object>();
 			
-			String s3cred = Play.application().configuration().getString("cluster.s3credentials");
-			
-			if (s3cred != null && !Play.application().configuration().getBoolean("cluster.work-offline")) {
-				// add the s3 credentials to the local akka system config
-				Map<String, ImmutableMap<String, String>> s3 = ImmutableMap.of(
-						"credentials", ImmutableMap.of("filename", s3cred)
-						);
+			// set up S3 credentials, but not if we're working offline
+			boolean workOffline = Play.application().configuration().getBoolean("cluster.work-offline", true);
+			if (!workOffline) {
+				String s3cred = Play.application().configuration().getString("cluster.s3credentials");
 				
-				akkaConfig.put("s3", s3);
+				if (s3cred != null && !Play.application().configuration().getBoolean("cluster.work-offline")) {
+					// add the s3 credentials to the local akka system config
+					Map<String, ImmutableMap<String, String>> s3 = ImmutableMap.of(
+							"credentials", ImmutableMap.of("filename", s3cred)
+							);
+					
+					akkaConfig.put("s3", s3);
+				}
 			}
 			
 			Config cfg = ConfigFactory.parseMap(akkaConfig);
@@ -69,10 +73,7 @@ public class Cluster {
 		if (executive == null) {
 			ActorSystem sys = getActorSystem();
 			
-			Boolean workOffline = Play.application().configuration().getBoolean("cluster.work-offline");
-			
-			if (workOffline == null)
-				workOffline = true;
+			boolean workOffline = Play.application().configuration().getBoolean("cluster.work-offline", true);
 			
 			String graphsBucket = Play.application().configuration().getString("cluster.graphs-bucket");
 			String pointsetsBucket = Play.application().configuration().getString("cluster.pointsets-bucket");
