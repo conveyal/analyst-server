@@ -259,6 +259,8 @@ public class Shapefile implements Serializable {
 			for (Attribute a : this.attributes.values()) {
 				String propertyId = categoryId + "." + Attribute.convertNameToId(a.name);
 				propertyData.put(propertyId, sf.getAttribute(a.fieldName));
+				// TODO: update names when attribute name is edited.
+				pointSet.setLabel(propertyId, a.name);
 			}
 
 

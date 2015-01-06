@@ -51,6 +51,13 @@ var Analyst = Analyst || {};
 			return _.filter(this.get('shapeAttributes'), function (a) {
 				return a.numeric;
 			})
+		},
+
+		/**
+		 * Get the category ID of this shapefile in a pointset. This does the same thing as Attribute.convertNameToId.
+		 */
+		getCategoryId : function () {
+			return this.get('name').toLowerCase().trim().replace(/ /g, '_').replace(/\W+/g, '');
 		}
 
 	});

@@ -380,37 +380,39 @@ var Analyst = Analyst || {};
 			this.$('#queryProcessing').hide();
 			this.$('#queryResults').show();
 
+			var categoryId = this.shapefiles.get(this.$("#shapefile").val()).getCategoryId();
+			var attributeId = this.$('#shapefileColumn').val()
+
 			if(this.comparisonType == 'compare') {
 
 				if(this.surfaceId1) {
-					var resUrl = '/api/result?shapefileId=' + this.$("#shapefile").val() + '&attributeName=' + this.$('#shapefileColumn').val() +
+					var resUrl = '/api/result?shapefileId=' + this.$("#shapefile").val() + '&attributeName=' + attributeId +
 						'&surfaceId=' + this.surfaceId1 +	'&which=' + this.$('input[name="which"]:checked').val();
 
 					$.getJSON(resUrl, function(res) {
-
 						_this.scenario1Data = res;
-						_this.drawChart(res, 1, "#barChart1", 175);
+						_this.drawChart(res, categoryId + '.' + attributeId, 1, "#barChart1", 175);
 
 					});
 				}
 
 				if(this.surfaceId2) {
-					var resUrl = '/api/result?shapefileId=' + this.$("#shapefile").val() + '&attributeName=' + this.$('#shapefileColumn').val() +
+					var resUrl = '/api/result?shapefileId=' + this.$("#shapefile").val() + '&attributeName=' + attributeId +
 					  '&surfaceId=' + this.surfaceId2 + '&which=' + this.$('input[name="which"]:checked').val();
 					$.getJSON(resUrl, function(res) {
 
 						_this.scenario2Data = res;
-						_this.drawChart(res, 2, "#barChart2", 175);
+						_this.drawChart(res, categoryId + '.' + attributeId, 2, "#barChart2", 175);
 
 					});
 				}
 			}
 			else {
-				var resUrl = '/api/result?shapefileId=' + this.$("#shapefile").val() + '&attributeName=' + this.$('#shapefileColumn').val() +
+				var resUrl = '/api/result?shapefileId=' + this.$("#shapefile").val() + '&attributeName=' + attributeId +
 					'&surfaceId=' + this.surfaceId1 +	'&which=' + this.$('input[name="which"]:checked').val();
 				$.getJSON(resUrl, function(res) {
 
-					_this.drawChart(res, 1, "#barChart1", 175);
+					_this.drawChart(res, categoryId + '.' + attributeId, 1, "#barChart1", 175);
 
 				});
 			}
@@ -517,125 +519,71 @@ var Analyst = Analyst || {};
 			this.$('#querySettings').show();
 		},
 
-		drawChart : function(res, barChart, divSelector, chartHeight) {
-
+    /**
+		 * Draw a chart using the given attribute contained within the given result, in the given div.
+		 * chartIdx is an integer [1,2] specifying whether to render the first or second chart.
+		 */
+		drawChart : function(result, attribute, chartIdx, divSelector, chartHeight) {
 			var _this = this;
 
-			var color = new Array();
-			var label = new Array();
-			var value = new Array();
-			var id = new Array();
+			var color = result.properties.schema[attribute].style.color;
 
+			var barChart = dc.barChart(divSelector);
 
-			$()
+			// pivot the data to make it ready for crossfilter
+			var data = [];
+			for (var i = 0; i < 120; i++) {
+				data.push({minute: i, value: result.data[attribute].sums[i]});
+			}
 
-			_.each(res.data, function(val,key) {
+			var cfData = crossfilter(data);
 
-				id.push(key);
-				value.push(val.sums);
-				label.push(res.properties.schema[key].label);
-				color.push(res.properties.schema[key].style.color);
-
+			var minuteDimension = cfData.dimension(function (d) {
+				return d.minute;
 			});
 
-			var transformedData = new Array();
+			// aggregate to bins
+			var aggregated = minuteDimension.group(function (minute) {
+				return Math.floor(minute / 5) * 5;
+			})
+			.reduceSum(function (d) {
+				return d.value;
+			});
 
-			var minute = 1;
-			var item = {};
+			var maxVal = aggregated.top(1)[0].value;
 
-			var maxVals = {};
-
-			for(i in id) {
-				item[id[i]] = 0;
-			}
-
-			for(var v in value[0]) {
-
-				maxVals[v] = 0;
-
-				if(minute % 1 == 0) {
-					item['min'] = Math.ceil(minute / 1);
-
-					for(i in id) {
-						item[id[i]] = item[id[i]] +  parseInt(value[i][v]);
-						maxVals[v] = maxVals[v] + parseInt(value[i][v]);
-					}
-
-					transformedData.push(item);
-
-					item = {};
-
-					for(i in id) {
-						item[id[i]] = 0;
-					}
-				}
-				else {
-					for(i in id) {
-						item[id[i]] = item[id[i]] +  parseInt(value[i][v]);
-					}
-				}
-
-				minute++;
-			}
-
-			for(var v in maxVals) {
-				if(maxVals[v] > this.maxChartValue)
-					this.maxChartValue = maxVals[v];
-			}
-
-			var minuteDimension;
-
-			if(barChart == 1) {
-				this.barChart1 = dc.barChart(divSelector);
-				this.cfData1 = crossfilter(transformedData);
-				minuteDimension = this.cfData1.dimension(function(d) {
-					return d.min;
-				});
-				barChart = this.barChart1;
-			}
-			else if(barChart == 2) {
-				this.barChart2 = dc.barChart(divSelector);
-				this.cfData2 = crossfilter(transformedData);
-				minuteDimension = this.cfData2.dimension(function(d) {
-					return d.min;
-				});
-				barChart = this.barChart2;
-			}
-
+			if (maxVal > this.maxChartValue)
+				this.maxChartValue = maxVal;
 
 			barChart
-                .width(400)
-                .height(chartHeight)
-                .margins({top: 10, right: 20, bottom: 10, left: 40})
-                .elasticY(false)
-                .y(d3.scale.linear().domain([0, this.maxChartValue]))
-                .dimension(minuteDimension)
-                .ordinalColors(color)
-                .xAxisLabel("Minutes")
-                .yAxisLabel("# " + res.properties.label)
-                .transitionDuration(0);
+				.width(400)
+				// maximize data:ink ratio
+				.gap(0.1)
+				.height(chartHeight)
+				.margins({top: 10, right: 20, bottom: 10, left: 40})
+				.elasticY(false)
+				.y(d3.scale.linear().domain([0, this.maxChartValue]))
+				.dimension(minuteDimension)
+				.ordinalColors([color])
+				.xAxisLabel("Minutes")
+				.yAxisLabel(result.properties.schema[attribute].label)
+				.transitionDuration(0)
+				.group(aggregated, result.properties.schema[attribute].label)
+				.x(d3.scale.linear().domain([0, 120]))
+				.renderHorizontalGridLines(true)
+				.centerBar(true)
+				.brushOn(false)
+				// get the number of bins so that the bar width is correct in the histogram.
+				// see https://github.com/dc-js/dc.js/issues/137
+				.xUnits(function () { return aggregated.size(); })
+				.xAxis().ticks(5).tickFormat(d3.format("d"));
 
+				this['barChart' + chartIdx] = barChart;
+				this['cfData' + chartIdx] = cfData;
 
-            for(i in id) {
-            	var group = minuteDimension.group().reduceSum(function(d){return d[id[i]]});
+				this.scaleBarCharts();
 
-            	if(i == 0)
-            		barChart.group(group, label[i])
-            	else
-            		barChart.stack(group, label[i])
-            }
-
-            barChart.x(d3.scale.linear().domain([0, 120]))
-                .renderHorizontalGridLines(true)
-                .centerBar(true)
-                .brushOn(false)
-                .legend(dc.legend().x(250).y(10))
-                .xAxis().ticks(5).tickFormat(d3.format("d"));
-
-            this.scaleBarCharts();
-
-         	dc.renderAll();
-
+				dc.renderAll();
 		},
 
 		/*updateSummary : function() {
