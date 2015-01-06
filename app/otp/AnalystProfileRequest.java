@@ -70,9 +70,9 @@ public class AnalystProfileRequest extends ProfileRequest{
 	 * Get the ResultSet for the given ID. Note that no ResultEnvelope.Which need be specified as each surface ID is unique to a particular
 	 * statistic.
 	 */
-	public static ResultSet getResult(Integer surfaceId, String shapefileId, String attributeName) {
+	public static ResultSet getResult(Integer surfaceId, String shapefileId) {
 		
-		String resultId = "resultId_" + surfaceId + "_" + shapefileId + "_" + attributeName;
+		String resultId = "resultId_" + surfaceId + "_" + shapefileId;
     	
 		ResultSet result;
     	
@@ -96,9 +96,9 @@ public class AnalystProfileRequest extends ProfileRequest{
 	 * Get the ResultSet for the given ID. Note that no min/max need be specified as each surface ID is unique to a particular
 	 * statistic.
 	 */
-	public static ResultSetWithTimes getResultWithTimes(Integer surfaceId, String shapefileId, String attributeName) {
+	public static ResultSetWithTimes getResultWithTimes(Integer surfaceId, String shapefileId) {
 		
-		String resultId = "resultWithTimesId_" + surfaceId + "_" + shapefileId + "_" + attributeName;
+		String resultId = "resultWithTimesId_" + surfaceId + "_" + shapefileId;
     	
 		ResultSetWithTimes resultWithTimes;
     	

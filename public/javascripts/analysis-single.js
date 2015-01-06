@@ -12,7 +12,7 @@ var Analyst = Analyst || {};
 		  'change #scenario2': 'createSurface',
 		  'change #shapefile': 'createSurface',
 			'cahnge .timesel': 'createSurface',
-			'change #shapefileColumn': 'createSurface',
+			'change #shapefileColumn': 'updateCharts',
 		  'change #chartType' : 'updateResults',
 			'change .which input' : 'updateEnvelope',
 			'change #shapefile' : 'updateAttributes',
@@ -380,41 +380,54 @@ var Analyst = Analyst || {};
 			this.$('#queryProcessing').hide();
 			this.$('#queryResults').show();
 
+			var df, df1, df2;
+			df = df1 = df2 = null;
+
+			if(this.comparisonType == 'compare') {
+				var res1Url = '/api/result?shapefileId=' + this.$("#shapefile").val() +
+					'&surfaceId=' + this.surfaceId1 +	'&which=' + this.$('input[name="which"]:checked').val();
+
+				df1 = $.get(res1Url);
+				df1.then(function (res) {
+					_this.scenario1Data = res;
+				});
+
+				var res2Url = '/api/result?shapefileId=' + this.$("#shapefile").val() +
+				  '&surfaceId=' + this.surfaceId2 + '&which=' + this.$('input[name="which"]:checked').val();
+
+				df2 = $.get(res2Url);
+				df2.then(function(res) {
+					_this.scenario2Data = res;
+				});
+
+				df = $.when(df1, df2);
+			}
+			else {
+				var resUrl = '/api/result?shapefileId=' + this.$("#shapefile").val() +
+					'&surfaceId=' + this.surfaceId1 +	'&which=' + this.$('input[name="which"]:checked').val();
+				df = $.get(resUrl)
+				df.then(function(res) {
+					_this.scenario1Data = res;
+					_this.scenario2Data = null;
+				});
+			}
+
+			df.then(function () {
+				_this.updateCharts();
+			});
+		},
+
+		/**
+		 * Draw the charts
+		 */
+		updateCharts: function () {
 			var categoryId = this.shapefiles.get(this.$("#shapefile").val()).getCategoryId();
 			var attributeId = this.$('#shapefileColumn').val()
 
-			if(this.comparisonType == 'compare') {
+			this.drawChart(this.scenario1Data, categoryId + '.' + attributeId, 1, '#barChart1', 175);
 
-				if(this.surfaceId1) {
-					var resUrl = '/api/result?shapefileId=' + this.$("#shapefile").val() + '&attributeName=' + attributeId +
-						'&surfaceId=' + this.surfaceId1 +	'&which=' + this.$('input[name="which"]:checked').val();
-
-					$.getJSON(resUrl, function(res) {
-						_this.scenario1Data = res;
-						_this.drawChart(res, categoryId + '.' + attributeId, 1, "#barChart1", 175);
-
-					});
-				}
-
-				if(this.surfaceId2) {
-					var resUrl = '/api/result?shapefileId=' + this.$("#shapefile").val() + '&attributeName=' + attributeId +
-					  '&surfaceId=' + this.surfaceId2 + '&which=' + this.$('input[name="which"]:checked').val();
-					$.getJSON(resUrl, function(res) {
-
-						_this.scenario2Data = res;
-						_this.drawChart(res, categoryId + '.' + attributeId, 2, "#barChart2", 175);
-
-					});
-				}
-			}
-			else {
-				var resUrl = '/api/result?shapefileId=' + this.$("#shapefile").val() + '&attributeName=' + attributeId +
-					'&surfaceId=' + this.surfaceId1 +	'&which=' + this.$('input[name="which"]:checked').val();
-				$.getJSON(resUrl, function(res) {
-
-					_this.drawChart(res, categoryId + '.' + attributeId, 1, "#barChart1", 175);
-
-				});
+			if (this.scenario2Data) {
+				this.drawChart(this.scenario1Data, categoryId + '.' + attributeId, 2, '#barChart2', 175);
 			}
 		},
 
@@ -485,7 +498,7 @@ var Analyst = Analyst || {};
 				if(A.map.tileOverlay && A.map.hasLayer(A.map.tileOverlay))
 		  			A.map.removeLayer(A.map.tileOverlay);
 
-				A.map.tileOverlay = L.tileLayer('/tile/surfaceComparison?z={z}&x={x}&y={y}&shapefileId=' + this.$('#shapefile').val() + '&attributeName=' + this.$('#shapefileColumn').val() +
+				A.map.tileOverlay = L.tileLayer('/tile/surfaceComparison?z={z}&x={x}&y={y}&shapefileId=' + this.$('#shapefile').val() +
 					'&minTime=' + minTime + '&timeLimit=' + timeLimit + '&surfaceId1=' + this.surfaceId1  + '&surfaceId2=' + this.surfaceId2 + '&showIso=' + showIso + '&showPoints=' +  showPoints, {}
 					).addTo(A.map);
 
@@ -495,7 +508,7 @@ var Analyst = Analyst || {};
 				if(A.map.tileOverlay && A.map.hasLayer(A.map.tileOverlay))
 		  			A.map.removeLayer(A.map.tileOverlay);
 
-				A.map.tileOverlay = L.tileLayer('/tile/surface?z={z}&x={x}&y={y}&shapefileId=' + this.$('#shapefile').val() + '&attributeName=' + this.$('#shapefileColumn').val() +
+				A.map.tileOverlay = L.tileLayer('/tile/surface?z={z}&x={x}&y={y}&shapefileId=' + this.$('#shapefile').val() +
 					'&minTime=' + minTime + '&timeLimit=' + timeLimit + '&showPoints=' + showPoints + '&showIso=' + showIso + '&surfaceId=' + this.surfaceId1, {
 
 					}).addTo(A.map);
@@ -509,7 +522,7 @@ var Analyst = Analyst || {};
 			var surfaceId = this.surfaceId1;
 			var timeLimit = this.timeSlider.getValue()[1] * 60;
 
-			window.location.href = '/gis/surface?shapefileId=' + shapefileId + '&surfaceId=' + surfaceId + '&attributeName=' + attributeName + '&timeLimit=' + timeLimit;
+			window.location.href = '/gis/surface?shapefileId=' + shapefileId + '&surfaceId=' + surfaceId + '&timeLimit=' + timeLimit;
 
 		},
 

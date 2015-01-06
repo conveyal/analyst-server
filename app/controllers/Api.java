@@ -284,16 +284,16 @@ public class Api extends Controller {
      * @param shapefileId
      * @return
      */
-    public static Result result(Integer surfaceId, String shapefileId, String attributeName) {
+    public static Result result(Integer surfaceId, String shapefileId) {
     	final Shapefile shp = Shapefile.getShapefile(shapefileId);
     	ResultSet result;
 
     	// it could be a profile request, or not
     	// The IDs are unique; they come from inside OTP.
     	try {
-    		result = AnalystProfileRequest.getResult(surfaceId, shapefileId, attributeName);
+    		result = AnalystProfileRequest.getResult(surfaceId, shapefileId);
     	} catch (NullPointerException e) {
-    		result = AnalystRequest.getResult(surfaceId, shapefileId, attributeName);
+    		result = AnalystRequest.getResult(surfaceId, shapefileId);
     	}
 
     	ByteArrayOutputStream baos = new ByteArrayOutputStream();

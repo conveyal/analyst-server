@@ -480,14 +480,12 @@ public abstract class AnalystTileRequest {
     		final Boolean showPoints;
     		final Integer timeLimit;
     		final Integer minTime;
-			final String attributeName;
     		
-    		public SurfaceTile(Integer surfaceId, String shapefileId, String attributeName, Integer x, Integer y, Integer z,
+    		public SurfaceTile(Integer surfaceId, String shapefileId, Integer x, Integer y, Integer z,
     				Boolean showIso, Boolean showPoints, Integer timeLimit, Integer minTime) {
     			super(x, y, z, "surface");
     			
     			this.shapefileId = shapefileId;
-    			this.attributeName = attributeName;
     			this.surfaceId = surfaceId;
     			this.showIso = showIso;
     			this.showPoints = showPoints;
@@ -496,7 +494,7 @@ public abstract class AnalystTileRequest {
     		}
     		
     		public String getId() {
-    			return super.getId() + "_" + shapefileId + "_" + attributeName + "_" + surfaceId + "_" + showIso + "_" + showPoints + "_" + timeLimit + "_" + minTime;
+    			return super.getId() + "_" + shapefileId + "_" + surfaceId + "_" + showIso + "_" + showPoints + "_" + timeLimit + "_" + minTime;
     		}
     		
     		public byte[] render(){
@@ -512,11 +510,11 @@ public abstract class AnalystTileRequest {
 	    		ResultSetWithTimes result;
 	    			    		
 	    		try {
-	    			result = AnalystProfileRequest.getResultWithTimes(surfaceId, shapefileId, attributeName);
+	    			result = AnalystProfileRequest.getResultWithTimes(surfaceId, shapefileId);
 	    		}
 	    		catch (NullPointerException e) {
 	    			// not a profile request
-	    			result = AnalystRequest.getResultWithTimes(surfaceId, shapefileId, attributeName);
+	    			result = AnalystRequest.getResultWithTimes(surfaceId, shapefileId);
 	    		}
 
 	            List<ShapeFeature> features = shp.query(tile.envelope);

@@ -216,14 +216,14 @@ public class Gis extends Controller {
     }
 	
 	
-	public static Result surface(Integer surfaceId, String shapefileId, String attributeName, Integer timeLimit, String compareTo) {
+	public static Result surface(Integer surfaceId, String shapefileId, Integer timeLimit, String compareTo) {
     	
 		response().setHeader(CACHE_CONTROL, "no-cache, no-store, must-revalidate");
 		response().setHeader(PRAGMA, "no-cache");
 		response().setHeader(EXPIRES, "0");
 		
 	
-		String shapeName = (timeLimit / 60) + "_mins_" + shapefileId.toString().toLowerCase() + "_" + surfaceId.toString() + "_" + attributeName;
+		String shapeName = (timeLimit / 60) + "_mins_" + shapefileId.toString().toLowerCase() + "_" + surfaceId.toString();
     	
     	try {
 	    
@@ -237,19 +237,23 @@ public class Gis extends Controller {
     		ResultSetWithTimes result;
     			    		
     		try {
-    			result = AnalystProfileRequest.getResultWithTimes(surfaceId, shapefileId, attributeName);
+    			result = AnalystProfileRequest.getResultWithTimes(surfaceId, shapefileId);
     		}
     		catch (NullPointerException e) {
     			// not a profile request
-    			result = AnalystRequest.getResultWithTimes(surfaceId, shapefileId, attributeName);
+    			result = AnalystRequest.getResultWithTimes(surfaceId, shapefileId);
     		}
 			       
 	        Collection<ShapeFeature> features = shp.getShapeFeatureStore().getAll();
 	     
 	        ArrayList<String> fields = new ArrayList<String>();
-        	
-        	fields.add(shp.name.replaceAll("\\W+", ""));
-        	
+	        
+	        for (Attribute a : shp.attributes.values()) {
+	        	if (a.numeric) {
+            		fields.add(a.name);
+	        	}
+	        }
+        	        	
         	ArrayList<GisShapeFeature> gisFeatures = new ArrayList<GisShapeFeature>();
         	
         	for(ShapeFeature feature : features) {
@@ -262,7 +266,12 @@ public class Gis extends Controller {
         		gf.id = feature.id;
         		gf.time = result.getTime(feature.id);
 
-        		gf.fields.add(feature.getAttribute(attributeName));
+        		// TODO: handle non-integer attributes
+        		for (Attribute a : shp.attributes.values()) {
+        			if (a.numeric) {
+                		gf.fields.add(feature.getAttribute(a.name));
+        			}
+        		}
         		
         		gisFeatures.add(gf);
         	
@@ -333,7 +342,7 @@ public class Gis extends Controller {
 					featureDefinition += "String";
 				if(features.get(0).fields.get(fieldPosition) instanceof Number)
 					featureDefinition += "Double";
-					fieldPosition++;
+				fieldPosition++;
 			}
 			
         	SimpleFeatureType featureType = DataUtilities.createType("Analyst", featureDefinition);

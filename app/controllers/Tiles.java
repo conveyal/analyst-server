@@ -108,10 +108,10 @@ public class Tiles extends Controller {
 		return tileBuilder(tileRequest);
     }
 
-	public static Promise<Result> surface(Integer surfaceId, String shapefileId, String attributeName, Integer x, Integer y, Integer z,
+	public static Promise<Result> surface(Integer surfaceId, String shapefileId, Integer x, Integer y, Integer z,
 			Boolean showIso, Boolean showPoints, Integer timeLimit, Integer minTime) {
 
-		AnalystTileRequest tileRequest = new SurfaceTile( surfaceId, shapefileId, attributeName, x, y, z, showIso, showPoints, timeLimit, minTime);
+		AnalystTileRequest tileRequest = new SurfaceTile( surfaceId, shapefileId, x, y, z, showIso, showPoints, timeLimit, minTime);
 		return tileBuilder(tileRequest);
 
     }
