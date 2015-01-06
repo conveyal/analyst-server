@@ -29,7 +29,7 @@ var Analyst = Analyst || {};
 		},
 
 		initialize: function(options){
-			_.bindAll(this, 'createSurface', 'updateMap', 'onMapClick', 'updateEnvelope', 'updateAttributes');
+			_.bindAll(this, 'createSurface', 'updateMap', 'onMapClick', 'updateEnvelope', 'updateAttributes', 'updateCharts');
 
 			this.transitOverlays = {};
 		},
@@ -297,10 +297,6 @@ var Analyst = Analyst || {};
 		  	this.scenario1Data = false;
 		  	this.scenario2Data = false;
 
-		  	this.maxChartValue = 0;
-
-		  	this.resetCharts();
-
 		  	if(this.comparisonType == 'compare') {
 		  		this.$('#comparisonChart').show();
 		  		this.$('#compareLegend').show();
@@ -421,8 +417,11 @@ var Analyst = Analyst || {};
 		 * Draw the charts
 		 */
 		updateCharts: function () {
-			var categoryId = this.shapefiles.get(this.$("#shapefile").val()).getCategoryId();
+			var categoryId = this.shapefiles.get(this.$("#shapefile").val()).get('categoryId');
 			var attributeId = this.$('#shapefileColumn').val()
+
+			// reset the maximum value in case it has changed.
+			this.maxChartValue = 0;
 
 			this.drawChart(this.scenario1Data, categoryId + '.' + attributeId, 1, '#barChart1', 175);
 
@@ -584,7 +583,7 @@ var Analyst = Analyst || {};
 				.group(aggregated, result.properties.schema[attribute].label)
 				.x(d3.scale.linear().domain([0, 120]))
 				.renderHorizontalGridLines(true)
-				.centerBar(true)
+				.centerBar(false)
 				.brushOn(false)
 				// get the number of bins so that the bar width is correct in the histogram.
 				// see https://github.com/dc-js/dc.js/issues/137
@@ -613,20 +612,6 @@ var Analyst = Analyst || {};
 
 			if(this.barChart2)
 				this.barChart2.y(d3.scale.linear().domain([0, this.maxChartValue]));
-		},
-
-		resetCharts : function() {
-
-			if(this.cfData1) {
-				this.cfData1.remove();
-			}
-
-			if(this.cfData2) {
-				this.cfData2.remove();
-			}
-
-			dc.renderAll();
-
 		},
 
 		onRender : function() {

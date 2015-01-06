@@ -588,11 +588,13 @@ public static class QueryTile extends AnalystTileRequest {
 		final Integer timeLimit;
 		final String weightByShapefile;
 		final String weightByAttribute;
+		final String attributeName;
 		final String groupBy;
 		final ResultEnvelope.Which which;
 		
 		public QueryTile(String queryId, Integer x, Integer y, Integer z, Integer timeLimit,
-				String weightByShapefile, String weightByAttribute, String groupBy, ResultEnvelope.Which which) {
+				String weightByShapefile, String weightByAttribute, String groupBy,
+				ResultEnvelope.Which which, String attributeName) {
 			super(x, y, z, "transit");
 			
 			this.queryId = queryId;
@@ -601,10 +603,11 @@ public static class QueryTile extends AnalystTileRequest {
 			this.weightByAttribute = weightByAttribute;
 			this.groupBy = groupBy;
 			this.which = which;
+			this.attributeName = attributeName;
 		}
 		
 		public String getId() {
-			return super.getId() + "_" + queryId + "_" + timeLimit +  "_" +  which + "_" + weightByShapefile + "_" + groupBy + "_" + weightByAttribute;
+			return super.getId() + "_" + queryId + "_" + timeLimit +  "_" +  which + "_" + weightByShapefile + "_" + groupBy + "_" + weightByAttribute + "_" + attributeName;
 		}
 		
 		public byte[] render(){
@@ -615,13 +618,13 @@ public static class QueryTile extends AnalystTileRequest {
 				return null;
 
 
-    		String queryKey = queryId + "_" + timeLimit + "_" + which;
+    		String queryKey = queryId + "_" + timeLimit + "_" + which + "_" + attributeName;
 			
 			QueryResults qr = null;
 
 			synchronized(QueryResults.queryResultsCache) {
 				if(!QueryResults.queryResultsCache.containsKey(queryKey)) {
-					qr = new QueryResults(query, timeLimit, which);
+					qr = new QueryResults(query, timeLimit, which, attributeName);
 					QueryResults.queryResultsCache.put(queryKey, qr);
 				}
 				else
@@ -724,8 +727,9 @@ public static class QueryTile extends AnalystTileRequest {
 		public final String compareTo;
 		
 		public QueryComparisonTile(String queryId, String compareTo, Integer x, Integer y, Integer z, Integer timeLimit,
-				String weightByShapefile, String weightByAttribute, String groupBy, ResultEnvelope.Which which) {
-			super(queryId, x, y, z, timeLimit, weightByShapefile, weightByAttribute, groupBy, which);
+				String weightByShapefile, String weightByAttribute, String groupBy, ResultEnvelope.Which which,
+				String attributeName) {
+			super(queryId, x, y, z, timeLimit, weightByShapefile, weightByAttribute, groupBy, which, attributeName);
 
 			this.compareTo = compareTo;
 		}
@@ -743,13 +747,13 @@ public static class QueryTile extends AnalystTileRequest {
 			if (q1 == null || q2 == null || !q1.shapefileId.equals(q2.shapefileId))
 				return null;
 			
-			String q1key = queryId + "_" + timeLimit + "_" + which;
-			String q2key = compareTo + "_" + timeLimit + "_" + which;
+			String q1key = queryId + "_" + timeLimit + "_" + which + "_" + attributeName;
+			String q2key = compareTo + "_" + timeLimit + "_" + which + "_" + attributeName;
 			
 			QueryResults qr1, qr2;
 			
 			if (!QueryResults.queryResultsCache.containsKey(q1key)) {
-				qr1 = new QueryResults(q1, timeLimit, which);
+				qr1 = new QueryResults(q1, timeLimit, which, attributeName);
 				QueryResults.queryResultsCache.put(q1key, qr1);
 			}
 			else {
@@ -757,7 +761,7 @@ public static class QueryTile extends AnalystTileRequest {
 			}
 			
 			if (!QueryResults.queryResultsCache.containsKey(q2key)) {
-				qr2 = new QueryResults(q2, timeLimit, which);
+				qr2 = new QueryResults(q2, timeLimit, which, attributeName);
 				QueryResults.queryResultsCache.put(q2key, qr2);
 			}
 			else {

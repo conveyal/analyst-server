@@ -51,15 +51,7 @@ var Analyst = Analyst || {};
 			return _.filter(this.get('shapeAttributes'), function (a) {
 				return a.numeric;
 			})
-		},
-
-		/**
-		 * Get the category ID of this shapefile in a pointset. This does the same thing as Attribute.convertNameToId.
-		 */
-		getCategoryId : function () {
-			return this.get('name').toLowerCase().trim().replace(/ /g, '_').replace(/\W+/g, '');
 		}
-
 	});
 
 	/** static function to get the human-readable, localized name of an attribute */
@@ -68,7 +60,7 @@ var Analyst = Analyst || {};
 			return attr.name;
 		else
 			return window.Messages('analysis.attribute-name', attr.name, attr.fieldName);
-	}
+	};
 
 	A.models.Shapefiles = Backbone.Collection.extend({
 	  type: 'Shapefiles',
@@ -121,8 +113,7 @@ var Analyst = Analyst || {};
 		},
 
 		pointSetName : function () {
-			var attrName = A.models.Shapefile.attributeName(this.get('attribute'));
-			return window.Messages('analysis.point-set-name', this.get('shapefileName'), attrName);
+			return this.get('shapefileName');
 		}
 
 	});

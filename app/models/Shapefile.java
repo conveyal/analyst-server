@@ -82,6 +82,12 @@ public class Shapefile implements Serializable {
 
 	public String id;
 	public String name;
+	
+	/**
+	 * The name of this shapefile in the pointset. Don't change.
+	 */
+	public String categoryId;
+	
 	public String description;
 	
 	public String filename;
@@ -245,8 +251,6 @@ public class Shapefile implements Serializable {
 
 		pointSet = new PointSet(getFeatureCount());
 
-		String categoryId = Attribute.convertNameToId(this.name);
-
 		pointSet.id = categoryId;
 		pointSet.label = this.name;
 		pointSet.description = this.description;
@@ -406,6 +410,8 @@ public class Shapefile implements Serializable {
 		shapefile.projectId = projectId;
 		
 		shapefile.name = name;
+		shapefile.categoryId = Attribute.convertNameToId(name);
+
 
 		ZipFile zipFile = new ZipFile(originalShapefileZip);
 

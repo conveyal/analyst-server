@@ -69,8 +69,6 @@ public class Query implements Serializable {
 	public String mode;
 	
 	public String shapefileId;
-
-	public String attributeName;
 	
 	public String scenarioId;
 	public String status;
@@ -121,18 +119,6 @@ public class Query implements Serializable {
 			return null;
 		
 		return new TraverseModeSet(this.mode).isTransit();
-	}
-	
-	/**
-	 * What attribute is this associated with?
-	 */
-	public Attribute getAttribute () {
-		Shapefile l = Shapefile.getShapefile(shapefileId);
-		
-		if (l == null)
-			return null;
-		
-		return l.attributes.get(attributeName);
 	}
 	
 	public void save() {
@@ -281,17 +267,19 @@ public class Query implements Serializable {
 				
 				JobSpec js;
 				
+				String pointSetId = sl.id + ".json";
+				
 				if (q.isTransit()) {
 					// create a profile request
 					ProfileRequest pr = Api.analyst.buildProfileRequest(q.mode, q.date, q.fromTime, q.toTime, null);
 					// the pointset is already in the cluster cache, from when it was uploaded.
 					// every pointset has all shapefile attributes.
-					js = new JobSpec(q.scenarioId, sl.id, sl.id, pr);
+					js = new JobSpec(q.scenarioId, pointSetId, pointSetId, pr);
 				}
 				else {
 					// this is not a transit request, no need for computationally-expensive profile routing 
 					RoutingRequest rr = Api.analyst.buildRequest(q.scenarioId, q.date, q.fromTime, null, q.mode, 120);
-					js = new JobSpec(q.scenarioId, sl.id, sl.id, rr);
+					js = new JobSpec(q.scenarioId, pointSetId, pointSetId, rr);
 				}
 
 				// plus a callback that registers how many work items have returned

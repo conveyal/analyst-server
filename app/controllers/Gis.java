@@ -81,7 +81,7 @@ public class Gis extends Controller {
 	static File TMP_PATH = new File("tmp/");
 	
 	public static Result query(String queryId, Integer timeLimit, String weightByShapefile, String weightByAttribute,
-			String groupBy, String which, String compareTo) {
+			String groupBy, String which, String attributeName, String compareTo) {
     	
 		response().setHeader(CACHE_CONTROL, "no-cache, no-store, must-revalidate");
 		response().setHeader(PRAGMA, "no-cache");
@@ -112,7 +112,7 @@ public class Gis extends Controller {
 
 			synchronized(QueryResults.queryResultsCache) {
 				if(!QueryResults.queryResultsCache.containsKey(queryKey)) {
-					qr = new QueryResults(query, timeLimit, whichEnum);
+					qr = new QueryResults(query, timeLimit, whichEnum, attributeName);
 					QueryResults.queryResultsCache.put(queryKey, qr);
 				}
 				else
@@ -122,7 +122,7 @@ public class Gis extends Controller {
 	    			String q2key = compareTo + "_" + timeLimit + "_" + which;
 	    			
 					if(!QueryResults.queryResultsCache.containsKey(q2key)) {
-						qr2 = new QueryResults(query2, timeLimit, whichEnum);
+						qr2 = new QueryResults(query2, timeLimit, whichEnum, attributeName);
 						QueryResults.queryResultsCache.put(q2key, qr2);
 					}
 					else {
@@ -257,10 +257,6 @@ public class Gis extends Controller {
         	ArrayList<GisShapeFeature> gisFeatures = new ArrayList<GisShapeFeature>();
         	
         	for(ShapeFeature feature : features) {
-            	
-        		
-            	Integer sampleTime = result.getTime(feature.id);
-
         		GisShapeFeature gf = new GisShapeFeature();
         		gf.geom = feature.geom;
         		gf.id = feature.id;

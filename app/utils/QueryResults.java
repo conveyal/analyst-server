@@ -25,6 +25,7 @@ import com.vividsolutions.jts.geom.prep.PreparedPolygon;
 import com.vividsolutions.jts.index.SpatialIndex;
 import com.vividsolutions.jts.index.strtree.STRtree;
 
+import models.Attribute;
 import models.Query;
 import models.Shapefile;
 import models.SpatialLayer;
@@ -88,7 +89,7 @@ public class QueryResults {
 		
 	}
 	
-	public QueryResults(Query q, Integer timeLimit, ResultEnvelope.Which which) {
+	public QueryResults(Query q, Integer timeLimit, ResultEnvelope.Which which, String attributeId) {
 		Shapefile sd = Shapefile.getShapefile(q.shapefileId);
 		
 		this.which = which;
@@ -116,7 +117,7 @@ public class QueryResults {
     	    	throw new RuntimeException("Unhandled envelope type"); 
     	   }
     	   
-           value = (double) feature.sum(timeLimit);
+           value = (double) feature.sum(timeLimit, sd.categoryId + "." + attributeId);
         	
         	if(maxValue == null || value > maxValue)
         		maxValue = value;
@@ -134,7 +135,7 @@ public class QueryResults {
        
        shapeFileId = sd.id;
        
-       attributeId = q.attributeName;
+       this.attributeId = attributeId;
        
        this.maxPossible = sd.attributes.get(attributeId).sum;
        

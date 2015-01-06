@@ -330,7 +330,7 @@ public class Api extends Controller {
     }
 
     public static Result queryBins(String queryId, Integer timeLimit, String weightByShapefile, String weightByAttribute, String groupBy,
-    		String which, String compareTo) {
+    		String which, String attributeName, String compareTo) {
     	
 		response().setHeader(CACHE_CONTROL, "no-cache, no-store, must-revalidate");
 		response().setHeader(PRAGMA, "no-cache");
@@ -360,13 +360,13 @@ public class Api extends Controller {
 	   	
     	try {
 
-    		String queryKey = queryId + "_" + timeLimit + "_" + which;
+    		String queryKey = queryId + "_" + timeLimit + "_" + which + "_" + attributeName;
 
     		QueryResults qr = null;
 
     		synchronized(QueryResults.queryResultsCache) {
     			if(!QueryResults.queryResultsCache.containsKey(queryKey)) {
-	    			qr = new QueryResults(query, timeLimit, whichEnum);
+	    			qr = new QueryResults(query, timeLimit, whichEnum, attributeName);
 	    			QueryResults.queryResultsCache.put(queryKey, qr);
 	    		}
 	    		else
@@ -376,9 +376,9 @@ public class Api extends Controller {
     		if (otherQuery != null) {
         		QueryResults otherQr = null;
         		
-    			queryKey = compareTo + "_" + timeLimit + "_" + which;
+    			queryKey = compareTo + "_" + timeLimit + "_" + which + "_" + attributeName;
     			if (!QueryResults.queryResultsCache.containsKey(queryKey)) {
-    				otherQr = new QueryResults(otherQuery, timeLimit, whichEnum);
+    				otherQr = new QueryResults(otherQuery, timeLimit, whichEnum, attributeName);
     				QueryResults.queryResultsCache.put(queryKey, otherQr);
     			}
     			else {
