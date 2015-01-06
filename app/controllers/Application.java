@@ -83,20 +83,37 @@ public class Application extends Controller {
 			return unauthorized();
 		}
 
-	}	
-	
-	public static Result createUser(String username, String password, String email) {
-		
+	}
+
+	public static Result createUserForm() {
+		return ok(create.render());
+	}
+
+	public static Result createUser() {
+
+		String username = request().body().asFormUrlEncoded().get("username")[0];
+		String password = request().body().asFormUrlEncoded().get("password")[0];
+		String email = request().body().asFormUrlEncoded().get("email")[0];
+
 		User u;
+
+		// hard coding demo user creation with id for DF project
 		try {
+
+			if(User.getUserByUsername(username) != null)
+				username = username + "_1";
+
 			u = new User(username, password, email);
+			u.addReadOnlyProjectPermission("db7c31708ec68280a1a94a8ca633dae1");
 			u.save();
+
+			session().put("username", u.username);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		return ok();
+
+		return redirect("/#db7c31708ec68280a1a94a8ca633dae1/3.4064483642578125/6.526993773948091/12");
 	}
 	
 	public static Result setPassword() {

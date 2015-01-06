@@ -84,7 +84,7 @@ var Analyst = Analyst || {};
 
 		setParams : function(params) {
 
-			// todo: pack 
+			// todo: pack
 			//this.params = _.reduce(_.pairs(params), function(memo, param) { memmemo + param[0] + ":" +  param[1] + "/"});
 			//this.updateNav(true);
 		},
@@ -663,6 +663,19 @@ var Analyst = Analyst || {};
 				return "Delete Project"
 		}
 	);
+
+	Handlebars.registerHelper('writeAllowed',
+	function(options){
+
+		var permissions = _.find(A.app.user.get("projectPermissions"), function(val) {return val.projectId === A.app.selectedProject});
+
+		if(permissions && permissions.write) {
+			return options.fn(this);
+		}
+
+		return false;
+	}
+);
 
 })(Analyst, jQuery);
 

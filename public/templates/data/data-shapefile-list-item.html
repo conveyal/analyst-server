@@ -2,7 +2,7 @@
 
     <div class="btn-group btn-group-sm pull-right" aria-label="">
       <button type="button" class="btn btn-default"  id="zoomToExtent"><span class="glyphicon glyphicon-fullscreen"></span></button>
-      <button type="button" class="btn btn-default" id="deleteShapefile"><span class="glyphicon glyphicon-trash"></span></button>
+      {{#writeAllowed}}<button type="button" class="btn btn-default" id="deleteShapefile"><span class="glyphicon glyphicon-trash"></span></button>{{/writeAllowed}}
     </div>
 
   <span class="glyphicon glyphicon-globe"></span> <span id="shapefileName"><strong>{{#if name}}{{name}}{{else}}<em>[no name]</em>{{/if}}</strong></span>
