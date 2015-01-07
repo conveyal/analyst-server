@@ -123,6 +123,18 @@ public class AnalystGraphCache extends CacheLoader<String, Graph> {
 	 
 	 @Override
 	 public Graph load(final String graphId) throws Exception {
+ 		 graphsUploading.add(graphId);
+    	 
+ 		 // put the graph into the cluster cache and s3 if necessary
+         String s3cred = Play.application().configuration().getString("cluster.s3credentials");
+ 		 Boolean workOffline = Play.application().configuration().getBoolean("cluster.work-offline");
+ 		 String bucket = Play.application().configuration().getString("cluster.graphs-bucket");
+ 		
+ 		 ClusterGraphService cgs = new ClusterGraphService(s3cred, workOffline, bucket);
+ 		 
+ 		 cgs.addGraphFile(Api.analyst.getZippedGraph(graphId));
+ 		 
+ 		 graphsUploading.remove(graphId);
 		 
     	 graphsBuilding.add(graphId);
     	  
@@ -149,19 +161,6 @@ public class AnalystGraphCache extends CacheLoader<String, Graph> {
     	 }
  		  		 
  		 graphsBuilding.remove(graphId);
- 		 graphsUploading.add(graphId);
-    	 
- 		 // put the graph into the cluster cache and s3 if necessary
-         String s3cred = Play.application().configuration().getString("cluster.s3credentials");
- 		 Boolean workOffline = Play.application().configuration().getBoolean("cluster.work-offline");
- 		 String bucket = Play.application().configuration().getString("cluster.graphs-bucket");
- 		
- 		 ClusterGraphService cgs = new ClusterGraphService(s3cred, workOffline, bucket);
- 		 
- 		 cgs.addGraphFile(Api.analyst.getZippedGraph(graphId));
- 		 
- 		 graphsUploading.remove(graphId);
- 		 
 		 return g;
 	 }	 
 }

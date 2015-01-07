@@ -173,23 +173,6 @@ public class ProcessTransitScenarioJob implements Runnable {
 
 			System.out.println("osm pbf retrieved");
 			
-			// copy everything to the cluster cache and S3
-			// build a zip file
-			File graphFile = new File(scenario.getScenarioDataPath(), scenario.id + ".zip");
-			
-			ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(graphFile));
-			// GTFS is already zipped, and PBF is gzipped, so no need to attempt to compress further
-			//zos.setMethod(ZipOutputStream.STORED);
-			
-			for (File file : graphFiles) {
-				zos.putNextEntry(new ZipEntry(file.getName()));
-				is = new FileInputStream(file);
-				ByteStreams.copy(is, zos);
-				is.close();
-				zos.closeEntry();
-			}
-			
-			zos.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.out.println("Failed to process gtfs");
