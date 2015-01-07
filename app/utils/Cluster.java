@@ -80,14 +80,14 @@ public class Cluster {
 			
 			executive = sys.actorOf(Props.create(Executive.class, workOffline, graphsBucket, pointsetsBucket), "executive");
 			
-			//if (workOffline) {
+			if (workOffline) {
 				// give it a worker
 				WorkerFactory factory = new ThreadWorkerFactory(sys, workOffline, graphsBucket, pointsetsBucket);
 				factory.createWorkerManagers(1, executive);
-		//	}
-			//else {
-		//		Logger.info("Started executive, but no workers started. Start a cluster worker to see analysis results.");
-		//	}
+			}
+			else {
+				Logger.info("Started executive, but no workers started. Start a cluster worker to see analysis results.");
+			}
 		}
 		
 		return executive;
