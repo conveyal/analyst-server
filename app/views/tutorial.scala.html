@@ -93,7 +93,7 @@
 
               <br clear="all"/>
 
-              <h3>GTFS</h3>
+              <h3>Transport Data</h3>
 
               <figure class="inline-left">
                 <img src="/assets/tutorial/img/transport_baseline.png">
@@ -148,8 +148,8 @@
                           <img src="/assets/tutorial/img/sp_detail.png">
                         </figure>
 
-                        <p>The basis for all analysis in Transport Analyst the access to or from a given point location as a measure or what can be reach in a given time window. Single-origin analysis can be conducted by selecting the
-                          variable to measure (e.g. jobs) and clicking on the map to define a start location. A travel time and access plot is created showing the distribution of the selected variable with travel time.</p>
+                        <p>The basis for all analysis in Transport Analyst is the access to or from a given point location as a measure or what can be reached in a given time window. Single-origin analysis can be conducted by selecting the
+                          variable to measure (e.g. jobs) and clicking on the map to define a start location. A travel time and access plot is created showing the distribution of travel times to the selected location and variable.</p>
 
                           <p>Settings allow selection of accessibility measurement variable, transport scenario, travel mode, date and time window for analysis. Travel times are reported as best case, worst case or average for the given time window. This data can be exported as a Shapefile or a tabular data set for use in external analysis applications.</p>
 
@@ -164,7 +164,7 @@
                             <img src="/assets/tutorial/img/regional_analysis.png">
                           </figure>
 
-                          <p>Regional Analysis functions allow the automation of many single-point queries, from each potential origin or destination location. Once computed regional analysis outputs show variation in
+                          <p>Regional Analysis functions allow the automation of many single-point queries, from each potential origin or destination location. Once computed, regional analysis outputs show variation in
                             travel accessibility for potential users at any location within the study area. Due to the number of queries involved these may take from minutes to hours to compute.</p>
 
                             <strong class="pull-right"><a href="  /#db7c31708ec68280a1a94a8ca633dae1/-99.1093397140503/19.422280148671245/14/analysis-regional/">Explore Regional Analysis functions &raquo;</a></strong>
@@ -174,19 +174,19 @@
 
                             <h3>Aggregation and Bertaud Measure</h3>
 
+
                             <figure class="inline-left">
                               <img src="/assets/tutorial/img/aggregate_analysis.png">
+                              <img src="/assets/tutorial/img/bertaud_formula.png">
                             </figure>
 
 
                             <p>Once analysis has been conducted at a regional scale it often makes sense to aggregate data to a larger spatial unit. For example, job access at a block-level might be aggregated to a neighborhood or even city scale.</p>
 
-                            <p>One useful and easily calculated measure is defined Alain Bertaud's paper <a href="http://marroninstitute.nyu.edu/uploads/content/Cities_as_Labor_Markets.pdf"><em>Cities as Labor Markets</em></a>. This measures the average number of jobs that can be accessed within 60 minutes weighted by population.
+                            <p>One useful and easily calculated measure is defined in Alain Bertaud's paper <a href="http://marroninstitute.nyu.edu/uploads/content/Cities_as_Labor_Markets.pdf"><em>Cities as Labor Markets</em></a>. This measures the average number of jobs that can be accessed within 60 minutes weighted by population.
                               This enables fine-grain calculation of job access at a block level to be summed and converted to an average metric of access at a municipal scale.</p>
 
-                              <figure class="inline-left">
-                                <img src="/assets/tutorial/img/bertaud_formula.png">
-                              </figure>
+
                               <p>To create the Bertaud measure, first calculate regional job access at the smallest spatial resolution possible (e.g. block-level job access). Next upload a Shapefile containing population figures, if not already included in the job data set, and a Shapefile with the larger geographic area you wish to aggregated up to. Then select the larger area as what you are "aggregating to" and the shapefile and attribute name containing the population figures. Then click calculate. Depending on the size of the study area and the number of points included this may take a few minutes.</p>
 
 
