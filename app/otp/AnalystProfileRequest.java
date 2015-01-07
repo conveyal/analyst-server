@@ -37,9 +37,9 @@ public class AnalystProfileRequest extends ProfileRequest {
 	public int cutoffMinutes;
 	public String graphId;
 	
-	public TimeSurfaceShort createSurfaces(ResultEnvelope.Which which) {
+	public static TimeSurfaceShort createSurfaces(ProfileRequest req, String graphId, int cutoffMinutes, ResultEnvelope.Which which) {
 		TimeSurfaceShort ts = null;
-		AnalystProfileRouterPrototype router = new AnalystProfileRouterPrototype(Api.analyst.getGraph(graphId), this);
+		AnalystProfileRouterPrototype router = new AnalystProfileRouterPrototype(Api.analyst.getGraph(graphId), req);
 
 		try {
 
@@ -47,16 +47,21 @@ public class AnalystProfileRequest extends ProfileRequest {
 
 			result.min.cutoffMinutes = cutoffMinutes;
 			result.max.cutoffMinutes = cutoffMinutes;
+			result.avg.cutoffMinutes = cutoffMinutes;
             
             // add both the min surface and the max surface to the cache; they will be retrieved later on by ID
             profileResultCache.add(result.min);
             profileResultCache.add(result.max);
+            profileResultCache.add(result.avg);
 
-			if(which == ResultEnvelope.Which.WORST_CASE) {
+			if (which == ResultEnvelope.Which.WORST_CASE) {
 				ts = new TimeSurfaceShort(result.max);
 			}
-			else if(which == ResultEnvelope.Which.BEST_CASE) {
+			else if (which == ResultEnvelope.Which.BEST_CASE) {
 				ts = new TimeSurfaceShort(result.min);
+			}
+			else if (which == ResultEnvelope.Which.POINT_ESTIMATE) {
+				ts = new TimeSurfaceShort(result.avg);
 			}
         }
         catch (Exception e) {

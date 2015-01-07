@@ -150,7 +150,6 @@ public class Api extends Controller {
 		final LocalDate jodaDate = jodaDate_tmp;
 		final ResultEnvelope.Which whichEnum = whichEnum_tmp;
 
-		// temporarily disabling profile routing due to problems with large/dense graphs
      	if (new TraverseModeSet(mode).isTransit()) {
     		// transit search: use profile routing
     		promise = Promise.promise(
@@ -158,14 +157,12 @@ public class Api extends Controller {
     					public TimeSurfaceShort apply() {
     						LatLon latLon = new LatLon(String.format("%s,%s", lat, lon));
 
-							AnalystProfileRequest request = analyst.buildProfileRequest(mode, jodaDate, fromTime, toTime, latLon);
-							request.graphId = graphId;
-							request.cutoffMinutes = 120;
+							ProfileRequest request = analyst.buildProfileRequest(mode, jodaDate, fromTime, toTime, latLon);;
 
     						if(request == null)
     							return null;
 
-    						return request.createSurfaces(whichEnum);
+    						return AnalystProfileRequest.createSurfaces(request, graphId, 120, whichEnum);
     					}
     				}
     				);

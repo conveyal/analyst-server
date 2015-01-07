@@ -90,8 +90,8 @@ public class Analyst {
 		return req;
 	}
 	
-	public AnalystProfileRequest buildProfileRequest(String mode, LocalDate date, int fromTime, int toTime, LatLon latLon) {
-		AnalystProfileRequest req = new AnalystProfileRequest();
+	public ProfileRequest buildProfileRequest(String mode, LocalDate date, int fromTime, int toTime, LatLon latLon) {
+		ProfileRequest req = new PrototypeAnalystProfileRequest();
 		
 		// split the modeset into two modes
 		TraverseModeSet modes = new TraverseModeSet(mode);
