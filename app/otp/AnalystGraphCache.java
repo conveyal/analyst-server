@@ -38,6 +38,8 @@ public class AnalystGraphCache extends CacheLoader<String, Graph> {
 	 private HashSet<String> graphsBuilding = new HashSet<String>();
 	 /** Graphs that failed to build */
 	 private HashSet<String> graphsInError = new HashSet<String>();
+	 /** Graphs that are currently being uploaded to S3 */
+	 private HashSet<String> graphsUploading = new HashSet<String>();
 
 	 private int size = 200;
 	 private int concurrency = 4;
@@ -68,6 +70,8 @@ public class AnalystGraphCache extends CacheLoader<String, Graph> {
 			 	return "ERROR";
 			 else if (graphsBuilding.contains(graphId))
 				 return "BUILDING_GRAPH";
+			 else if (graphsUploading.contains(graphId))
+				 return "UPLOADING_GRAPH";
 			 else
 				 return "UNBUILT";
 		 }
@@ -143,9 +147,10 @@ public class AnalystGraphCache extends CacheLoader<String, Graph> {
     		 // rethrow
     		 throw e;
     	 }
- 		 
+ 		  		 
  		 graphsBuilding.remove(graphId);
- 		 
+ 		 graphsUploading.add(graphId);
+    	 
  		 // put the graph into the cluster cache and s3 if necessary
          String s3cred = Play.application().configuration().getString("cluster.s3credentials");
  		 Boolean workOffline = Play.application().configuration().getBoolean("cluster.work-offline");
@@ -154,7 +159,9 @@ public class AnalystGraphCache extends CacheLoader<String, Graph> {
  		 ClusterGraphService cgs = new ClusterGraphService(s3cred, workOffline, bucket);
  		 
  		 cgs.addGraphFile(Api.analyst.getZippedGraph(graphId));
- 	
+ 		 
+ 		 graphsUploading.remove(graphId);
+ 		 
 		 return g;
 	 }	 
 }
