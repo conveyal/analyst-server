@@ -21,6 +21,11 @@ public class ResultEnvelope implements Serializable {
 	 * The lower bound (e.g. number of jobs reachable under worst-case travel time)
 	 */
 	public ResultSet worstCase;
+
+	/**
+	 * The average case
+	 */
+	public ResultSet avgCase;
 	
 	/**
 	 * The point estimate of the accessibility. If profile = false, this is the journey
@@ -53,6 +58,7 @@ public class ResultEnvelope implements Serializable {
 			this.profile = true;
 			this.bestCase = res.getBestCase();
 			this.worstCase = res.getWorstCase();
+			this.avgCase = res.getAvgCase();
 			this.pointEstimate = null;
 			this.spread = null;
 			this.id = this.bestCase.id;

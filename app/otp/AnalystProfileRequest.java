@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import models.Shapefile;
-import models.SpatialLayer;
 
 import org.opentripplanner.analyst.ResultSet;
 import org.opentripplanner.analyst.ResultSetWithTimes;
@@ -19,49 +18,56 @@ import org.opentripplanner.profile.ProfileRequest;
 import org.opentripplanner.profile.ProfileResponse;
 import org.opentripplanner.profile.ProfileRouter;
 
+import org.opentripplanner.profile.AnalystProfileRouterPrototype;
+
 import utils.ResultEnvelope;
 
 import com.google.common.collect.Lists;
 
 import controllers.Api;
 
-public class AnalystProfileRequest extends ProfileRequest{
+public class AnalystProfileRequest extends ProfileRequest {
 	
 	private static final long serialVersionUID = 1L;
 
 	private static SurfaceCache profileResultCache = new SurfaceCache(100);
 
 	private static  Map<String, ResultSet> resultCache = new ConcurrentHashMap<String, ResultSet>();
+
+	public int cutoffMinutes;
+	public String graphId;
 	
-	public static TimeSurfaceShort createSurfaces(ProfileRequest req, String graphId, int cutoffMinutes, ResultEnvelope.Which which) {
-		
-		ProfileRouter router = new ProfileRouter(Api.analyst.getGraph(graphId), req);
-		
-        try {
-        	ProfileResponse response = router.route();
-    
-            router.minSurface.cutoffMinutes = cutoffMinutes;
-            router.maxSurface.cutoffMinutes = cutoffMinutes;
+	public TimeSurfaceShort createSurfaces(ResultEnvelope.Which which) {
+		TimeSurfaceShort ts = null;
+		AnalystProfileRouterPrototype router = new AnalystProfileRouterPrototype(Api.analyst.getGraph(graphId), this);
+
+		try {
+
+			TimeSurface.RangeSet result = router.route();
+
+			result.min.cutoffMinutes = cutoffMinutes;
+			result.max.cutoffMinutes = cutoffMinutes;
             
             // add both the min surface and the max surface to the cache; they will be retrieved later on by ID
-            profileResultCache.add(router.minSurface);
-            profileResultCache.add(router.maxSurface);
+            profileResultCache.add(result.min);
+            profileResultCache.add(result.max);
+
+			if(which == ResultEnvelope.Which.WORST_CASE) {
+				ts = new TimeSurfaceShort(result.max);
+			}
+			else if(which == ResultEnvelope.Which.BEST_CASE) {
+				ts = new TimeSurfaceShort(result.min);
+			}
         }
         catch (Exception e) {
         	e.printStackTrace();
         }
         finally {
-            router.cleanup(); // destroy routing contexts even when an exception happens
+			router.cleanup(); // destroy routing contexts even when an exception happens
         }
-        
-        switch(which) {
-        case BEST_CASE:
-        	return new TimeSurfaceShort(router.minSurface);
-        case WORST_CASE:
-        	return new TimeSurfaceShort(router.maxSurface);
-        default:
-        	return null;
-        }
+
+		return ts;
+
   	}
 	
 	/**
@@ -80,7 +86,7 @@ public class AnalystProfileRequest extends ProfileRequest{
         	else {
         		TimeSurface surf =getSurface(surfaceId);
         		
-        		result = new ResultSet(Shapefile.getShapefile(shapefileId).getPointSet(attributeName).getSampleSet(surf.routerId), surf);
+        		result = new ResultSet(Shapefile.getShapefile(shapefileId).getPointSet(attributeName).getSampleSet(Api.analyst.getGraph(surf.routerId)), surf);
         		resultCache.put(resultId, result);
         	}
     	}
@@ -103,8 +109,8 @@ public class AnalystProfileRequest extends ProfileRequest{
     			resultWithTimes = (ResultSetWithTimes)resultCache.get(resultId);
         	else {
         		TimeSurface surf = getSurface(surfaceId);
-        			
-        		resultWithTimes = new ResultSetWithTimes(Shapefile.getShapefile(shapefileId).getPointSet(attributeName).getSampleSet(surf.routerId), surf);
+
+				resultWithTimes = new ResultSetWithTimes(Shapefile.getShapefile(shapefileId).getPointSet(attributeName).getSampleSet(Api.analyst.getGraph(surf.routerId)), surf);
         		resultCache.put(resultId, resultWithTimes);
         	}
     	}

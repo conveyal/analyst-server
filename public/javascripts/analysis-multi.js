@@ -482,7 +482,7 @@ var Analyst = Analyst || {};
       var _this = this;
 
       if (this.isComplete()) {
-        if (this.model.get('transit') && false) {
+        if (this.model.get('transit')) {
           // we have transit modes, so it's a profile request
           this.$('.whichMulti input[value="POINT_ESTIMATE"]').parent().remove();
           this.$('.whichMulti input[value="SPREAD"]').parent().remove();

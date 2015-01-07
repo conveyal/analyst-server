@@ -1,6 +1,7 @@
 package otp;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -8,6 +9,7 @@ import java.util.zip.ZipFile;
 import org.opentripplanner.graph_builder.GraphBuilderTask;
 import org.opentripplanner.graph_builder.impl.EmbeddedConfigGraphBuilderImpl;
 import org.opentripplanner.graph_builder.impl.GtfsGraphBuilderImpl;
+import org.opentripplanner.graph_builder.impl.DirectTransferGenerator;
 import org.opentripplanner.graph_builder.impl.PruneFloatingIslands;
 import org.opentripplanner.graph_builder.impl.TransitToStreetNetworkGraphBuilderImpl;
 import org.opentripplanner.graph_builder.impl.ned.ElevationGraphBuilderImpl;
@@ -21,6 +23,8 @@ import org.opentripplanner.openstreetmap.impl.AnyFileBasedOpenStreetMapProviderI
 import org.opentripplanner.openstreetmap.services.OpenStreetMapProvider;
 import org.opentripplanner.routing.impl.DefaultFareServiceFactory;
 
+import org.opentripplanner.standalone.CommandLineParameters;
+import org.opentripplanner.standalone.OTPConfigurator;
 import play.Logger;
 
 import com.google.common.collect.Lists;
@@ -74,7 +78,9 @@ public class AnalystGraphBuilder {
             osmBuilder.setDefaultWayPropertySetSource(defaultWayPropertySetSource);
             osmBuilder.skipVisibility = false;
             graphBuilder.addGraphBuilder(osmBuilder);
-            graphBuilder.addGraphBuilder(new PruneFloatingIslands());            
+            graphBuilder.addGraphBuilder(new PruneFloatingIslands());
+            graphBuilder.addGraphBuilder(new DirectTransferGenerator());
+
         }
         if ( hasGTFS ) {
             List<GtfsBundle> gtfsBundles = Lists.newArrayList();
@@ -94,6 +100,15 @@ public class AnalystGraphBuilder {
 
         }
         graphBuilder.serializeGraph = false;
+
+        CommandLineParameters params = new CommandLineParameters();
+        params.build = new ArrayList<File>(1);
+        params.build.add(dir);
+        params.inMemory = true;
+        params.longDistance = true;
+        graphBuilder = new OTPConfigurator(params).builderFromParameters();
+
+
         return graphBuilder;
     }
 	

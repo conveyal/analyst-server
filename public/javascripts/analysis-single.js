@@ -67,7 +67,7 @@ var Analyst = Analyst || {};
 		  var mode = this.mode;
 		  var inps = this.$('.which');
 
-		  if (false && A.util.isTransit(mode)) {
+		  if (A.util.isTransit(mode)) {
 		    // transit request, we're doing profile routing
 		    inps.find('[value="WORST_CASE"]').prop('disabled', false).parent().removeClass('hidden');
 		    inps.find('[value="BEST_CASE"]').prop('disabled', false).parent().removeClass('hidden');

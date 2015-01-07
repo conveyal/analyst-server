@@ -26,6 +26,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 
+import com.conveyal.otpac.PrototypeAnalystProfileRequest;
 import org.geotools.coverage.grid.GridEnvelope2D;
 import org.geotools.coverage.grid.GridGeometry2D;
 import org.geotools.data.simple.SimpleFeatureCollection;
@@ -150,19 +151,21 @@ public class Api extends Controller {
 		final ResultEnvelope.Which whichEnum = whichEnum_tmp;
 
 		// temporarily disabling profile routing due to problems with large/dense graphs
-     	if (false && new TraverseModeSet(mode).isTransit()) {
+     	if (new TraverseModeSet(mode).isTransit()) {
     		// transit search: use profile routing
     		promise = Promise.promise(
     				new Function0<TimeSurfaceShort>() {
     					public TimeSurfaceShort apply() {
     						LatLon latLon = new LatLon(String.format("%s,%s", lat, lon));
 
-    						ProfileRequest request = analyst.buildProfileRequest(mode, jodaDate, fromTime, toTime, latLon);
+							AnalystProfileRequest request = analyst.buildProfileRequest(mode, jodaDate, fromTime, toTime, latLon);
+							request.graphId = graphId;
+							request.cutoffMinutes = 120;
 
     						if(request == null)
     							return null;
 
-    						return AnalystProfileRequest.createSurfaces(request, graphId, 120, whichEnum);
+    						return request.createSurfaces(whichEnum);
     					}
     				}
     				);
