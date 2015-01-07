@@ -198,7 +198,12 @@ public class Scenario implements Serializable {
 	static public void buildAll() throws IOException {
 		
 		for(Scenario s : getScenarios(null)) {
-			s.build();
+			try {
+				s.build();
+			} catch (Exception e) {
+				Logger.error("Exception during scenario build");
+				e.printStackTrace();
+			}
 		}
 	}
 	

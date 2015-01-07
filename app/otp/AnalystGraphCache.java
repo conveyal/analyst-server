@@ -13,6 +13,7 @@ import org.opentripplanner.graph_builder.GraphBuilderTask;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.impl.DefaultStreetVertexIndexFactory;
 
+import play.Logger;
 import play.Play;
 import play.libs.Akka;
 import play.libs.Json;
@@ -35,6 +36,8 @@ public class AnalystGraphCache extends CacheLoader<String, Graph> {
 	 private LoadingCache<String, Graph> graphCache;
 	 
 	 private HashSet<String> graphsBuilding = new HashSet<String>();
+	 /** Graphs that failed to build */
+	 private HashSet<String> graphsInError = new HashSet<String>();
 
 	 private int size = 200;
 	 private int concurrency = 4;
@@ -61,7 +64,9 @@ public class AnalystGraphCache extends CacheLoader<String, Graph> {
 			 return "BUILT";
 		 }
 		 else {
-			 if(graphsBuilding.contains(graphId))
+			 if (graphsInError.contains(graphId))
+			 	return "ERROR";
+			 else if (graphsBuilding.contains(graphId))
 				 return "BUILDING_GRAPH";
 			 else
 				 return "UNBUILT";
@@ -117,13 +122,27 @@ public class AnalystGraphCache extends CacheLoader<String, Graph> {
 		 
     	 graphsBuilding.add(graphId);
     	  
-    	 GraphBuilderTask gbt = AnalystGraphBuilder.createBuilder(new File(new File(Application.dataPath,"graphs"), graphId));
- 		 gbt.run();
- 		 
- 		 Graph g = gbt.getGraph();
- 		 g.routerId = graphId;
- 		 
- 		 g.index(new DefaultStreetVertexIndexFactory());
+    	 Graph g;
+    	 try {
+	    	 GraphBuilderTask gbt = AnalystGraphBuilder.createBuilder(new File(new File(Application.dataPath,"graphs"), graphId));
+	 		 gbt.run();
+	 		 
+	 		 g = gbt.getGraph();
+	 		 g.routerId = graphId;
+	 		 
+	 		 g.index(new DefaultStreetVertexIndexFactory());
+    	 } catch (Exception e) {
+    		 // catch, clean up state, and rethrow to let the caller worry about it.
+    		 
+    		 Logger.error("Exception building graph " + graphId);
+
+    		 e.printStackTrace();
+    		 graphsInError.add(graphId);
+    		 graphsBuilding.remove(graphId);
+    		 
+    		 // rethrow
+    		 throw e;
+    	 }
  		 
  		 graphsBuilding.remove(graphId);
  		 
