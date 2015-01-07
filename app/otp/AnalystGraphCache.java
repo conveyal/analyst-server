@@ -13,6 +13,7 @@ import org.opentripplanner.graph_builder.GraphBuilderTask;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.impl.DefaultStreetVertexIndexFactory;
 
+import play.Play;
 import play.libs.Akka;
 import play.libs.Json;
 import play.libs.F.Function;
@@ -22,10 +23,12 @@ import play.mvc.Result;
 import scala.concurrent.ExecutionContext;
 import scala.concurrent.duration.Duration;
 
+import com.conveyal.otpac.ClusterGraphService;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
+import controllers.Api;
 import controllers.Application;
 
 public class AnalystGraphCache extends CacheLoader<String, Graph> {
@@ -123,6 +126,15 @@ public class AnalystGraphCache extends CacheLoader<String, Graph> {
  		 g.index(new DefaultStreetVertexIndexFactory());
  		 
  		 graphsBuilding.remove(graphId);
+ 		 
+ 		 // put the graph into the cluster cache and s3 if necessary
+         String s3cred = Play.application().configuration().getString("cluster.s3credentials");
+ 		 Boolean workOffline = Play.application().configuration().getBoolean("cluster.work-offline");
+ 		 String bucket = Play.application().configuration().getString("cluster.graphs-bucket");
+ 		
+ 		 ClusterGraphService cgs = new ClusterGraphService(s3cred, workOffline, bucket);
+ 		 
+ 		 cgs.addGraphFile(Api.analyst.getZippedGraph(graphId));
  	
 		 return g;
 	 }	 

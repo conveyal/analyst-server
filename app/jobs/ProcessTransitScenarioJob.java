@@ -173,10 +173,6 @@ public class ProcessTransitScenarioJob implements Runnable {
 
 			System.out.println("osm pbf retrieved");
 			
-			String s3cred = Play.application().configuration().getString("cluster.s3credentials");
-			Boolean workOffline = Play.application().configuration().getBoolean("cluster.work-offline");
-			String bucket = Play.application().configuration().getString("cluster.graphs-bucket");
-			
 			// copy everything to the cluster cache and S3
 			// build a zip file
 			File graphFile = new File(scenario.getScenarioDataPath(), scenario.id + ".zip");
@@ -194,10 +190,6 @@ public class ProcessTransitScenarioJob implements Runnable {
 			}
 			
 			zos.close();
-			
-			ClusterGraphService cgs = new ClusterGraphService(s3cred, workOffline, bucket);
-			 
-			cgs.addGraphFile(graphFile);
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.out.println("Failed to process gtfs");
