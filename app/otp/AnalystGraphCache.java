@@ -140,6 +140,8 @@ public class AnalystGraphCache extends CacheLoader<String, Graph> {
  		 
  		 graphsUploading.remove(graphId);
 		 
+ 		 Logger.info("building graph " + graphId);
+ 		 
     	 graphsBuilding.add(graphId);
     	  
     	 Graph g;
