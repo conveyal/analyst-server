@@ -132,7 +132,11 @@ public class AnalystGraphCache extends CacheLoader<String, Graph> {
  		
  		 ClusterGraphService cgs = new ClusterGraphService(s3cred, workOffline, bucket);
  		 
- 		 cgs.addGraphFile(Api.analyst.getZippedGraph(graphId));
+ 		 Logger.info("preparing to upload graph " + graphId);
+ 		 File zippedGraph = Api.analyst.getZippedGraph(graphId);
+ 		 
+ 		 Logger.info("uploading graph " + graphId);
+ 		 cgs.addGraphFile(zippedGraph);
  		 
  		 graphsUploading.remove(graphId);
 		 
