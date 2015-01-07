@@ -3,6 +3,8 @@
 # ~~~~
 GET           /                                   controllers.Application.index()
 
+GET           /tutorial                                   controllers.Application.tutorial()
+
 GET           /login                              controllers.Application.login()
 
 GET           /create		                      controllers.Application.createUserForm()

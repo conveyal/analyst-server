@@ -58,23 +58,29 @@ public class Application extends Controller {
 
 	@Security.Authenticated(Secured.class)
 	public static Result index() throws IOException  {
-		return ok(index.render());	
+		return ok(index.render());
     }
 
+	public static Result tutorial() throws IOException  {
+
+		String username = session().get("username");
+		return ok(tutorial.render(username));
+	}
+
 	public static Result login() throws IOException  {
-		return ok(login.render());	
+		return ok(login.render());
     }
-	
+
 	public static Result doLogin() throws IOException  {
-    	
+
 		String username = request().body().asFormUrlEncoded().get("username")[0];
 		String password = request().body().asFormUrlEncoded().get("password")[0];
-		
+
 		User user = User.getUserByUsername(username);
-		
+
 		if(user == null)
 			return notFound();
-		
+
 		if(user.checkPassword(password)) {
 			session().put("username", user.username);
 			return ok();
@@ -115,12 +121,12 @@ public class Application extends Controller {
 
 		return redirect("/#db7c31708ec68280a1a94a8ca633dae1/-99.10929679870605/19.42223967548736/12/analysis-single/");
 	}
-	
+
 	public static Result setPassword() {
-		
+
 		String userId = request().body().asFormUrlEncoded().get("userId")[0];
 		String password = request().body().asFormUrlEncoded().get("password")[0];
-		
+
 		User u = User.getUser(userId);
 		try {
 			u.passwordHash = User.getPasswordHash(password);
@@ -129,23 +135,23 @@ public class Application extends Controller {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 		return ok();
 	}
-	
+
 	public static Result linkUserProject(String username, String projectId) {
-				
+
 		User u = User.getUserByUsername(username);
 		u.addProjectPermission(projectId);
 		u.save();
 		return ok();
 	}
-	
+
 	public static Result logout() throws IOException  {
 		session().clear();
-		return redirect(routes.Application.login());	
+		return redirect(routes.Application.login());
     }
-	
+
 	public static Result jsMessages() {
 	    return ok(messages.generate("window.Messages"));
 	}
