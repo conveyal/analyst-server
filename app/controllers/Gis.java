@@ -78,7 +78,7 @@ import utils.TransportIndex.TransitSegment;
 @Security.Authenticated(Secured.class)
 public class Gis extends Controller {
 	
-	static File TMP_PATH = new File("tmp/");
+	static File TMP_PATH = new File(Application.tmpPath);
 	
 	public static Result query(String queryId, Integer timeLimit, String weightByShapefile, String weightByAttribute,
 			String groupBy, String which, String compareTo) {

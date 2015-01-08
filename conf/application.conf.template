@@ -10,6 +10,9 @@ application.secret="cAb`]/Ynfo55ehWX:6gv^>gtsNn`:Wg?xSBojvieIDf1dNLAT>kOSEBYIQsb
 # Path for data files
 application.data=data/
 
+# path to temp files
+application.tmp=tmp/
+
 # Path to bin files (geom2gtfs)
 application.bin=bin/
 
