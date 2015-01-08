@@ -59,6 +59,7 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.LineString;
+import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.index.strtree.STRtree;
 
@@ -318,7 +319,13 @@ public class Gis extends Controller {
 			ShapefileDataStore dataStore = (ShapefileDataStore)dataStoreFactory.createNewDataStore(params);
 			dataStore.forceSchemaCRS(DefaultGeographicCRS.WGS84);
 
-			String featureDefinition = "the_geom:MultiPolygon:srid=4326,id:String,time:Integer";
+
+			String featureDefinition = null;
+
+			if(features.size() > 0 && features.get(0).geom instanceof Point)
+				featureDefinition = "the_geom:Point:srid=4326,id:String,time:Integer";
+			else
+				featureDefinition = "the_geom:MultiPolygon:srid=4326,id:String,time:Integer";
 			
 			int fieldPosition = 0;
 			for(String fieldName : fieldNames) {
@@ -347,7 +354,10 @@ public class Gis extends Controller {
         	
         	for(GisShapeFeature feature : features)
         	{
-        		featureBuilder.add((MultiPolygon)feature.geom);
+				if(feature.geom instanceof Point)
+					featureBuilder.add((Point)feature.geom);
+				else
+					featureBuilder.add((MultiPolygon)feature.geom);
                 featureBuilder.add(feature.id);
                 
                 if(feature.time == null) 
