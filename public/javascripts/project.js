@@ -63,6 +63,9 @@ var Analyst = Analyst || {};
 			project.save(data, {success: function(model){
 					A.app.controller.setProject(model.id)
 					A.app.projects.fetch({reset: true, success: A.app.controller.initProjects});
+
+					// refetch user so that projectPermissions are fresh
+					A.app.user.fetch();
 			}});
 
 			A.app.instance.vent.trigger("closeSidePanel");
