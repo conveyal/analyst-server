@@ -104,7 +104,8 @@ application.langs="en"
 # by providing an application-logger.xml file in the conf directory.
 
 # Root logger:
-logger.root=ERROR
+# This controls the messages that come from OTP.
+logger.root=INFO
 
 # Logger used by the framework:
 logger.play=INFO
