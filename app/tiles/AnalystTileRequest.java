@@ -395,11 +395,13 @@ public abstract class AnalystTileRequest {
 
             for(ShapeFeature feature : features) {
 
-            	if(resultDelta.timeIdMap.get(feature.id) == 0 &&  resultDelta.times2IdMap.get(feature.id) == 0)
-            		continue;
+            	int featIdx = ps.getIndexForFeature(feature.id);
 
-            	int time1 = resultDelta.timeIdMap.get(feature.id);
-            	int time2 = resultDelta.times2IdMap.get(feature.id);
+            	int time1 = resultDelta.times[featIdx];
+            	int time2 = resultDelta.times2[featIdx];
+            	
+            	if (time1 == 0 && time2 == 0)
+            		continue;
 
             	if(time1 == Integer.MAX_VALUE && time2 == Integer.MAX_VALUE)
             		continue;
@@ -516,7 +518,8 @@ public abstract class AnalystTileRequest {
 
 	            for(ShapeFeature feature : features) {
 
-	            	Integer sampleTime = result.getTime(feature.id);
+	            	PointSet ps = Shapefile.getShapefile(shapefileId).getPointSet(attributeName);
+	            	Integer sampleTime = result.times[ps.getIndexForFeature(feature.id)];
 	            	if(sampleTime == null)
 	            		continue;
 
