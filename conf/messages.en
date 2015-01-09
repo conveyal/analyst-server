@@ -151,6 +151,7 @@ analysis.statistic=Statistic
 # the -suffix versions are displayed in the legend title
 analysis.worst-case-option=Worst case
 analysis.best-case-option=Best case
+analysis.average-option=Average
 analysis.point-estimate-option=Estimated accessibility
 
 # spread is some measure of dispersion, e.g. standard deviation or interquartile range
@@ -158,6 +159,7 @@ analysis.spread-option=spread
 
 analysis.worst-case-suffix=(worst case)
 analysis.best-case-suffix=(best case)
+analysis.average-suffix=(average)
 analysis.point-estimate-suffix=
 analysis.spread-suffix=(spread)
 analysis.compare=Compare

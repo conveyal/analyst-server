@@ -381,6 +381,9 @@ var Analyst = Analyst || {};
       else if (this.which == 'BEST_CASE')
         legendTitle += window.Messages('analysis.best-case-suffix');
 
+      else if (this.which == 'AVERAGE')
+          legendTitle += window.Messages('analysis.spread-suffix');
+
       else if (this.which == 'SPREAD')
         legendTitle += window.Messages('analysis.spread-suffix');
 
@@ -503,7 +506,7 @@ var Analyst = Analyst || {};
           // we have transit modes, so it's a profile request
           this.$('.whichMulti input[value="POINT_ESTIMATE"]').parent().remove();
           this.$('.whichMulti input[value="SPREAD"]').parent().remove();
-          this.$('.whichMulti input[value="WORST_CASE"]').prop('checked', true).parent().addClass('active');
+          this.$('.whichMulti input[value="AVERAGE"]').prop('checked', true).parent().addClass('active');
         } else {
           // it's a stock/vanilla request
           this.$('.whichMulti input[value="WORST_CASE"]').parent().remove();

@@ -60,7 +60,7 @@ public class AnalystProfileRequest extends ProfileRequest {
 			else if (which == ResultEnvelope.Which.BEST_CASE) {
 				ts = new TimeSurfaceShort(result.min);
 			}
-			else if (which == ResultEnvelope.Which.POINT_ESTIMATE) {
+			else if (which == ResultEnvelope.Which.AVERAGE) {
 				ts = new TimeSurfaceShort(result.avg);
 			}
         }
