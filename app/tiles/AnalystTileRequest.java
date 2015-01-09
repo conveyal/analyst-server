@@ -33,6 +33,7 @@ import utils.ResultEnvelope;
 import utils.ResultEnvelope.Which;
 import utils.TransportIndex;
 import utils.TransportIndex.TransitSegment;
+import controllers.Api;
 
 import com.google.common.base.Charsets;
 import com.google.common.hash.HashCode;
@@ -389,7 +390,7 @@ public abstract class AnalystTileRequest {
 				surf2 = AnalystRequest.getSurface(surfaceId2);
 			
 			PointSet ps = shp.getPointSet(attributeName);
-			ResultSetDelta resultDelta = new ResultSetDelta(ps.getSampleSet(surf1.routerId), ps.getSampleSet(surf2.routerId),  surf1, surf2);
+			ResultSetDelta resultDelta = new ResultSetDelta(ps.getSampleSet(Api.analyst.getGraph(surf1.routerId)), ps.getSampleSet(Api.analyst.getGraph(surf2.routerId)),  surf1, surf2);
 
 			List<ShapeFeature> features = shp.query(tile.envelope);
 
