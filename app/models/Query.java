@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.joda.time.LocalDate;
 import org.opentripplanner.analyst.ResultSet;
+import org.opentripplanner.analyst.ResultSetWithTimes;
 import org.opentripplanner.profile.ProfileRequest;
 import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.TraverseModeSet;
@@ -361,7 +362,9 @@ public class Query implements Serializable {
 		
 		@Override
 		public synchronized void onWorkResult(WorkResult res) {
-			Query.saveQueryResult(id, new ResultEnvelope(res));
+			if (res.getAvgCase() instanceof ResultSetWithTimes || res.getResult() instanceof ResultSetWithTimes)
+				Logger.info("received result set including times");
+//			Query.saveQueryResult(id, new ResultEnvelope(res));
 		}
 	}
 }
