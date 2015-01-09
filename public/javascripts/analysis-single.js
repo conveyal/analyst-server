@@ -71,13 +71,14 @@ var Analyst = Analyst || {};
 		    // transit request, we're doing profile routing
 		    inps.find('[value="WORST_CASE"]').prop('disabled', false).parent().removeClass('hidden');
 		    inps.find('[value="BEST_CASE"]').prop('disabled', false).parent().removeClass('hidden');
+				inps.find('[value="AVERAGE"]').prop('disabled', true).parent().removeClass('hidden');
 		    inps.find('[value="SPREAD"]').prop('disabled', true).parent().addClass('hidden');
 		    inps.find('[value="POINT_ESTIMATE"]').prop('disabled', true).parent().addClass('hidden');
 
 		    if (inps.find(':checked:disabled').length > 0 || inps.find(':checked').length == 0) {
 		      // we have disabled the currently selected envelope parameter, choose a reasonable default
 		      inps.find('input').prop('checked', false).parent().removeClass('active');
-		      inps.find('[value="WORST_CASE"]').prop('checked', true).parent().addClass('active');
+		      inps.find('[value="AVERAGE"]').prop('checked', true).parent().addClass('active');
 		    }
 
 				this.$('#toTimeControls').removeClass('hidden');
@@ -85,6 +86,7 @@ var Analyst = Analyst || {};
 		    // non-transit request, we're doing vanilla routing with point estimates only
 		    inps.find('[value="WORST_CASE"]').prop('disabled', true).parent().addClass('hidden');
 		    inps.find('[value="BEST_CASE"]').prop('disabled', true).parent().addClass('hidden');
+				inps.find('[value="AVERAGE"]').prop('disabled', true).parent().addClass('hidden');
 		    inps.find('[value="SPREAD"]').prop('disabled', true).parent().addClass('hidden');
 
 		    // since there is only one option, we may as well go ahead and check it

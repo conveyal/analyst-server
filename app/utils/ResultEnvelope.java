@@ -81,6 +81,6 @@ public class ResultEnvelope implements Serializable {
 	}
 	
 	public static enum Which {
-		BEST_CASE, WORST_CASE, POINT_ESTIMATE, SPREAD;
+		BEST_CASE, WORST_CASE, POINT_ESTIMATE, SPREAD, AVERAGE
 	}
 }
