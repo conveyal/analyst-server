@@ -36,6 +36,7 @@ cluster.work-offline=true
 #      provider = "akka.remote.RemoteActorRefProvider"
 #    }
 #    remote {
+#      watch-failure-detector.acceptable-heartbeat-pause = 60 s
 #      enabled-transports = ["akka.remote.netty.tcp"]
 #      netty.tcp {
 #        hostname = "127.0.0.1"
