@@ -45,6 +45,7 @@ import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.referencing.operation.MathTransform;
+import org.opentripplanner.analyst.PointSet;
 import org.opentripplanner.analyst.ResultSet;
 import org.opentripplanner.analyst.ResultSetDelta;
 import org.opentripplanner.analyst.ResultSetWithTimes;
@@ -255,13 +256,13 @@ public class Gis extends Controller {
         	
         	for(ShapeFeature feature : features) {
             	
-        		
-            	Integer sampleTime = result.getTime(feature.id);
+        		PointSet ps = Shapefile.getShapefile(shapefileId).getPointSet(attributeName);
+            	Integer sampleTime = result.times[ps.getIndexForFeature(feature.id)];
 
         		GisShapeFeature gf = new GisShapeFeature();
         		gf.geom = feature.geom;
         		gf.id = feature.id;
-        		gf.time = result.getTime(feature.id);
+        		gf.time = sampleTime;
 
         		gf.fields.add(feature.getAttribute(attributeName));
         		
