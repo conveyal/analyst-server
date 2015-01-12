@@ -517,9 +517,10 @@ public abstract class AnalystTileRequest {
 
 	            List<ShapeFeature> features = shp.query(tile.envelope);
 
+            	PointSet ps = Shapefile.getShapefile(shapefileId).getPointSet(attributeName);
+	            
 	            for(ShapeFeature feature : features) {
 
-	            	PointSet ps = Shapefile.getShapefile(shapefileId).getPointSet(attributeName);
 	            	Integer sampleTime = result.times[ps.getIndexForFeature(feature.id)];
 	            	if(sampleTime == null)
 	            		continue;
