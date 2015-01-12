@@ -253,10 +253,11 @@ public class Gis extends Controller {
         	fields.add(shp.name.replaceAll("\\W+", ""));
         	
         	ArrayList<GisShapeFeature> gisFeatures = new ArrayList<GisShapeFeature>();
-        	
-        	for(ShapeFeature feature : features) {
+
+        	PointSet ps = Shapefile.getShapefile(shapefileId).getPointSet(attributeName);
+
+        	for (ShapeFeature feature : features) {
             	
-        		PointSet ps = Shapefile.getShapefile(shapefileId).getPointSet(attributeName);
             	Integer sampleTime = result.times[ps.getIndexForFeature(feature.id)];
 
         		GisShapeFeature gf = new GisShapeFeature();
