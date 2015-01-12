@@ -91,7 +91,7 @@ public class Analyst {
 	}
 	
 	public ProfileRequest buildProfileRequest(String mode, LocalDate date, int fromTime, int toTime, LatLon latLon) {
-		PrototypeAnalystProfileRequest req = new PrototypeAnalystProfileRequest();
+		ProfileRequest req = new PrototypeAnalystProfileRequest();
 		
 		// split the modeset into two modes
 		TraverseModeSet modes = new TraverseModeSet(mode);
@@ -113,7 +113,7 @@ public class Analyst {
         req.walkSpeed  = 1.4f;
         req.bikeSpeed  = 4.1f;
         req.carSpeed   = 20f;
-        req.streetTime = 10;
+        req.streetTime = 15;
         req.date       = date;
 		
         req.maxWalkTime = 20;
@@ -134,7 +134,7 @@ public class Analyst {
 	public Graph getGraph (String graphId) {
 		return graphService.getGraph(graphId);
 	}
-	
+
 	public String getGraphStatus (String graphId) {
 		return graphService.getGraphStatus(graphId);
 	}

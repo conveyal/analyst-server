@@ -39,4 +39,4 @@ Repeat as desired.
 #### Securing cluster
 
 You can add a secure cookie for [Akka remoting](http://doc.akka.io/docs/akka/snapshot/scala/remoting.html). Uncomment the
-secure cookie lines in application.conf, then pass in `-Dakka.remote.secure-cookie=COOKIE -Dakka.remore.require-cookie=on`.
+secure cookie lines in application.conf, then pass in `-Dakka.remote.secure-cookie=COOKIE -Dakka.remote.require-cookie=on` when you start the worker.

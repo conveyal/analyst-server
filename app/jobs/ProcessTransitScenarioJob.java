@@ -173,31 +173,6 @@ public class ProcessTransitScenarioJob implements Runnable {
 
 			System.out.println("osm pbf retrieved");
 			
-			String s3cred = Play.application().configuration().getString("cluster.s3credentials");
-			Boolean workOffline = Play.application().configuration().getBoolean("cluster.work-offline");
-			String bucket = Play.application().configuration().getString("cluster.graphs-bucket");
-			
-			// copy everything to the cluster cache and S3
-			// build a zip file
-			File graphFile = new File(scenario.getScenarioDataPath(), scenario.id + ".zip");
-			
-			ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(graphFile));
-			// GTFS is already zipped, and PBF is gzipped, so no need to attempt to compress further
-			//zos.setMethod(ZipOutputStream.STORED);
-			
-			for (File file : graphFiles) {
-				zos.putNextEntry(new ZipEntry(file.getName()));
-				is = new FileInputStream(file);
-				ByteStreams.copy(is, zos);
-				is.close();
-				zos.closeEntry();
-			}
-			
-			zos.close();
-			
-			ClusterGraphService cgs = new ClusterGraphService(s3cred, workOffline, bucket);
-			 
-			cgs.addGraphFile(graphFile);
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.out.println("Failed to process gtfs");

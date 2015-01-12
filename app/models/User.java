@@ -111,6 +111,32 @@ public class User implements Serializable {
 		pp.admin = true;
 		
 	}
+
+	public void addReadOnlyProjectPermission(String projectId) {
+
+		if(projectPermissions == null) {
+			projectPermissions = new ArrayList<ProjectPermissions>();
+		}
+
+		ProjectPermissions pp = null;
+
+		for(ProjectPermissions pp1 : projectPermissions) {
+
+			if(pp1.projectId.equals(projectId))
+				pp = new ProjectPermissions();
+		}
+
+		if(pp == null) {
+			pp = new ProjectPermissions();
+			pp.projectId = projectId;
+			projectPermissions.add(pp);
+		}
+
+		pp.read = true;
+		pp.write = false;
+		pp.admin = false;
+
+	}
 	
 	public Boolean hasPermission(Project p) {
 		for(ProjectPermissions pp : projectPermissions) {

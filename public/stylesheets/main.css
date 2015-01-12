@@ -4,6 +4,7 @@ html, body,  #app, #app-map,#app-body {
   overflow: hidden;
   padding: 0px;
   margin: 0px;
+  font-family: 'Open Sans', sans-serif;
 }
 
 #app-side-panel {
@@ -17,7 +18,7 @@ html, body,  #app, #app-map,#app-body {
 }
 
 .panel-body{
-     padding: 5px;
+     padding: 0px;
 }
 
 .login-body{

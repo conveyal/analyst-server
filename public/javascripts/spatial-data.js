@@ -137,7 +137,8 @@ A.spatialData = {};
 			'click #deleteShapefile': 'deleteShapefile',
 			'click #removeAttribute' : 'removeAttribute',
 			'click #addHidden' : 'addHidden',
-			'click #attributeRadio' : 'attributeRadio'
+			'click #attributeRadio' : 'attributeRadio',
+			'click #removeAllAttributes' : 'removeAllAttributes'
 		},
 
 		initialize : function () {
@@ -261,10 +262,27 @@ A.spatialData = {};
 		},
 
 		removeAttribute : function(evt) {
+
+
 			var attributeId = $(evt.target).data("id");
 
 			var match = _.find(this.model.get("shapeAttributes"), function(val){return val.fieldName === attributeId});
 			match.hide = true;
+			this.model.save();
+
+		},
+
+		removeAllAttributes : function(evt) {
+
+			evt.preventDefault();
+			evt.stopImmediatePropagation();
+
+			var newAttributes = _.map(this.model.get("shapeAttributes"), function(val){
+				val.hide = true
+				return val;
+			});
+
+			this.model.set("shapeAttributes", newAttributes);
 			this.model.save();
 
 		},

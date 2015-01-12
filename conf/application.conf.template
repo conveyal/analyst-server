@@ -10,6 +10,9 @@ application.secret="cAb`]/Ynfo55ehWX:6gv^>gtsNn`:Wg?xSBojvieIDf1dNLAT>kOSEBYIQsb
 # Path for data files
 application.data=data/
 
+# path to temp files
+application.tmp=tmp/
+
 # Path to bin files (geom2gtfs)
 application.bin=bin/
 
@@ -33,6 +36,7 @@ cluster.work-offline=true
 #      provider = "akka.remote.RemoteActorRefProvider"
 #    }
 #    remote {
+#      watch-failure-detector.acceptable-heartbeat-pause = 60 s
 #      enabled-transports = ["akka.remote.netty.tcp"]
 #      netty.tcp {
 #        hostname = "127.0.0.1"
@@ -101,7 +105,8 @@ application.langs="en"
 # by providing an application-logger.xml file in the conf directory.
 
 # Root logger:
-logger.root=ERROR
+# This controls the messages that come from OTP.
+logger.root=INFO
 
 # Logger used by the framework:
 logger.play=INFO

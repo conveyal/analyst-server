@@ -34,6 +34,7 @@ import utils.ResultEnvelope;
 import utils.ResultEnvelope.Which;
 import utils.TransportIndex;
 import utils.TransportIndex.TransitSegment;
+import controllers.Api;
 
 import com.google.common.base.Charsets;
 import com.google.common.hash.HashCode;
@@ -398,15 +399,18 @@ public abstract class AnalystTileRequest {
 			SampleSet ss2 = ps.getSampleSet(Api.analyst.getGraph(surf2.routerId));
 			ResultSetDelta resultDelta = new ResultSetDelta(ss1, ss2,  surf1, surf2);
 
+
 			List<ShapeFeature> features = shp.query(tile.envelope);
 
             for(ShapeFeature feature : features) {
 
-            	if(resultDelta.timeIdMap.get(feature.id) == 0 &&  resultDelta.times2IdMap.get(feature.id) == 0)
-            		continue;
+            	int featIdx = ps.getIndexForFeature(feature.id);
 
-            	int time1 = resultDelta.timeIdMap.get(feature.id);
-            	int time2 = resultDelta.times2IdMap.get(feature.id);
+            	int time1 = resultDelta.times[featIdx];
+            	int time2 = resultDelta.times2[featIdx];
+            	
+            	if (time1 == 0 && time2 == 0)
+            		continue;
 
             	if(time1 == Integer.MAX_VALUE && time2 == Integer.MAX_VALUE)
             		continue;
@@ -519,9 +523,11 @@ public abstract class AnalystTileRequest {
 
 	            List<ShapeFeature> features = shp.query(tile.envelope);
 
+            	PointSet ps = Shapefile.getShapefile(shapefileId).getPointSet();
+	            
 	            for(ShapeFeature feature : features) {
 
-	            	Integer sampleTime = result.getTime(feature.id);
+	            	Integer sampleTime = result.times[ps.getIndexForFeature(feature.id)];
 	            	if(sampleTime == null)
 	            		continue;
 

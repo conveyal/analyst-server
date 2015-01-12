@@ -75,6 +75,7 @@ Handlebars.registerHelper('I18n',
   }
 );
 
+
 Handlebars.registerHelper('formatNumber',
 function(num){
   if(num && num > -1000000000 && num < 1000000000)

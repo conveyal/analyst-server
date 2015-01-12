@@ -13,6 +13,8 @@ import org.opentripplanner.graph_builder.GraphBuilderTask;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.impl.DefaultStreetVertexIndexFactory;
 
+import play.Logger;
+import play.Play;
 import play.libs.Akka;
 import play.libs.Json;
 import play.libs.F.Function;
@@ -22,16 +24,22 @@ import play.mvc.Result;
 import scala.concurrent.ExecutionContext;
 import scala.concurrent.duration.Duration;
 
+import com.conveyal.otpac.ClusterGraphService;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
+import controllers.Api;
 import controllers.Application;
 
 public class AnalystGraphCache extends CacheLoader<String, Graph> {
 	 private LoadingCache<String, Graph> graphCache;
 	 
 	 private HashSet<String> graphsBuilding = new HashSet<String>();
+	 /** Graphs that failed to build */
+	 private HashSet<String> graphsInError = new HashSet<String>();
+	 /** Graphs that are currently being uploaded to S3 */
+	 private HashSet<String> graphsUploading = new HashSet<String>();
 
 	 private int size = 200;
 	 private int concurrency = 4;
@@ -58,8 +66,12 @@ public class AnalystGraphCache extends CacheLoader<String, Graph> {
 			 return "BUILT";
 		 }
 		 else {
-			 if(graphsBuilding.contains(graphId))
+			 if (graphsInError.contains(graphId))
+			 	return "ERROR";
+			 else if (graphsBuilding.contains(graphId))
 				 return "BUILDING_GRAPH";
+			 else if (graphsUploading.contains(graphId))
+				 return "UPLOADING_GRAPH";
 			 else
 				 return "UNBUILT";
 		 }
@@ -111,19 +123,55 @@ public class AnalystGraphCache extends CacheLoader<String, Graph> {
 	 
 	 @Override
 	 public Graph load(final String graphId) throws Exception {
-		 
+
+		 Boolean workOffline = Play.application().configuration().getBoolean("cluster.work-offline");
+
+		 if(!workOffline) {
+
+			 graphsUploading.add(graphId);
+
+			 // put the graph into the cluster cache and s3 if necessary
+			 String s3cred = Play.application().configuration().getString("cluster.s3credentials");
+			 String bucket = Play.application().configuration().getString("cluster.graphs-bucket");
+
+			 ClusterGraphService cgs = new ClusterGraphService(s3cred, workOffline, bucket);
+
+			 Logger.info("preparing to upload graph " + graphId);
+			 File zippedGraph = Api.analyst.getZippedGraph(graphId);
+
+			 Logger.info("uploading graph " + graphId);
+			 cgs.addGraphFile(zippedGraph);
+
+			 graphsUploading.remove(graphId);
+		 }
+
+ 		 Logger.info("building graph " + graphId);
+ 		 
     	 graphsBuilding.add(graphId);
     	  
-    	 GraphBuilderTask gbt = AnalystGraphBuilder.createBuilder(new File(new File(Application.dataPath,"graphs"), graphId));
- 		 gbt.run();
- 		 
- 		 Graph g = gbt.getGraph();
- 		 g.routerId = graphId;
- 		 
- 		 g.index(new DefaultStreetVertexIndexFactory());
- 		 
+    	 Graph g;
+    	 try {
+	    	 GraphBuilderTask gbt = AnalystGraphBuilder.createBuilder(new File(new File(Application.dataPath,"graphs"), graphId));
+	 		 gbt.run();
+	 		 
+	 		 g = gbt.getGraph();
+	 		 g.routerId = graphId;
+	 		 
+	 		 g.index(new DefaultStreetVertexIndexFactory());
+    	 } catch (Exception e) {
+    		 // catch, clean up state, and rethrow to let the caller worry about it.
+    		 
+    		 Logger.error("Exception building graph " + graphId);
+
+    		 e.printStackTrace();
+    		 graphsInError.add(graphId);
+    		 graphsBuilding.remove(graphId);
+    		 
+    		 // rethrow
+    		 throw e;
+    	 }
+ 		  		 
  		 graphsBuilding.remove(graphId);
- 	
 		 return g;
 	 }	 
 }

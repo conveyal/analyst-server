@@ -1,0 +1,206 @@
+@(username: String = "")
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>Transport Analyst</title>
+  <meta name="viewport" content="width=device-width">
+
+  <!-- open sans -->
+  <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Open+Sans:400,300">
+
+
+  <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css">
+  <link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="@routes.Assets.at("/tutorial/tutorial.css")">
+
+  <script async="" src="//www.google-analytics.com/analytics.js"></script><script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-45854426-1', 'conveyal.com');
+  ga('send', 'pageview');
+  </script>
+
+</head>
+<body class>
+  <nav class="navbar navbar-fixed-top navbar-default" role="navigation">
+    <div class="container">
+      <!-- Brand and toggle get grouped for better mobile display -->
+      <div class="navbar-header">
+
+        <a class="navbar-brand" href="/"><img src="@routes.Assets.at("/images/logo.png")" width="30px"> Transport Analyst</a>
+      </div>
+
+      <!-- Collect the nav links, forms, and other content for toggling -->
+      <div class="collapse navbar-collapse" id="navbar-collapse">
+
+        <ul class="nav navbar-nav navbar-right">
+          <!--<li><a href="/projects">projects</a></li>-->
+
+          @if(username != null  && username != "") {
+            <li><a href="/">@username, return to app</a></li>
+            <li><a href="/logout">log out</a></li>
+          } else {
+            <li><a href="/login">log in</a></li>
+            <li><a href="/create">create account</a></li>
+          }
+
+        </ul>
+      </div><!-- /.navbar-collapse -->
+    </div>
+  </nav>
+
+  <div class="hero-image" style="background-image: url(http://conveyal.com/img/projects/analyst-hero-image.jpg);">
+
+  </div>
+  <div class="container">
+    <div class="row">
+      <article class="col-sm-12 project">
+        <h2 id="data-driven-transportation-planning">Concept</h2>
+        <p> Transport Analyst enables the measurement of access to spatially distributed variables (people, jobs, schools, etc.)
+          via public transport, walking, biking or driving. Common applications include measuring access to jobs, workforce, or key locations as an indicator
+          of transport effectiveness. Indicators can be combined to create composite regional measures, such as a population-weighted average job access for a neighborhood or an entire city.
+        </p><p>
+          The application does not prescribe specific research questions. It accepts data in standard Shapefile (spatial) and <a href="https://developers.google.com/transit/gtfs/">GTFS</a>
+          (public transport) formats. Users may import and analyze any data set matching these formats.
+        </p>
+        <p>Before continuing this tutorial be sure to login or create an account using the links above. You can jump directly to sections of the application using the links embedded in this tutorial. The demo data for Mexico City, included by default in your account, is read-only. To experiment with creating new data sets, create new a project. </p>
+
+        <h2 id="data-driven-transportation-planning">Data management</h2>
+
+        <h3>Shapefiles</h3>
+
+
+        <figure class="inline-left">
+          <img src="/assets/tutorial/img/shapefile_ageb.png">
+          A thematic data set imported from a Shapefile.
+        </figure>
+
+        <p>Shapefiles provide the basis for all measurements within Transport Analyst. Upload spatial variables either as a point or thematic data set.
+          The numeric attributes within the data set can be summed as part of the accessibility measure (e.g. total job access from location x).</p>
+          <p>Use the Shapefile data manager, found under the "Data" menu, to upload new Shapefiles and enter easily read names and descriptions of the data set and attributes. You can also select a color for different attributes
+            and visualize as a map overlay.</p>
+
+            <p>Before uploading a Shapefile be sure the file is in a common projection and datum (e.g. WGS84 or UTM) and zip the entire collection of files,
+              including the .prj projection metadata, into a single zip archive. Upload only the zipped collection of files.</p>
+
+              <strong class="pull-right"><a href="/#db7c31708ec68280a1a94a8ca633dae1/-99.13182735443115/19.459106565337933/14/spatial-data-shapefiles/">Explore Shapefile functions &raquo;</a></strong>
+
+              <br clear="all"/>
+
+              <h3>Transport Data</h3>
+
+              <figure class="inline-left">
+                <img src="/assets/tutorial/img/transport_baseline.png">
+                The Transit Data Manager and GTFS-derived overlay
+              </figure>
+
+              <p>Public transport routes and schedules are imported from GTFS data sets using the Transport Data interface under the "Data" menu. Simply upload a valid, zipped GTFS archive and Transport Analyst will
+                automatically create a transport model for the area included in the feed. You can view the routes in the GTFS data set by clicking the "eye" button in the feed listing.</p>
+
+                <p>Create as many different transport scenarios as you wish. Each scenario can be analyzed separately or compared against the others to measure accessibility
+                  impact of different transport systems, either existing or hypothetical.
+
+                  <p>When uploading GTFS data you either create a new layer containing only the data uploaded or augment an existing layer.</p>
+
+
+                  <strong class="pull-right"><a href="/#db7c31708ec68280a1a94a8ca633dae1/-99.11569118499754/19.440411120923223/14/transport-data/">Explore GTFS functions &raquo;</a></strong>
+
+                  <br clear="all"/>
+
+                  <h3>Creating GTFS</h3>
+                  <p>If GTFS is not already available an approximate transit network and schedule can be derived from a GIS data set containing route alignments
+                    and, optionally, stop locations. Export the GIS layer as a Shapefile, and zip it as before. Include a small metadata file in the zipped Shapefile. This metadata defines critical information
+                    about timing and speed. For more information on the metadata files see the <a href="https://github.com/conveyal/geom2gtfs"/>documentation for geom2GTFS</a>.</p>
+
+                    <p>Alternatively you can use <a href="https://github.com/conveyal/gtfs-editor">GTFS Editor</a>, a web-based visual tool for creating and maintaining
+                      transit schedules.</p>
+
+
+                      <h3>OpenStreetMap</h3>
+
+                      <figure class="inline-left">
+                        <img src="/assets/tutorial/img/id_editor.png">
+                        THe OpenStreetMap iD Editor.
+                      </figure>
+
+                      <p>Data for pedestrians, bicycles and cars is imported directly from <a href="http://www.openstreetmap.org/">OpenStreetMap</a>. To make corrections or updates visit the OSM website to learn more. Note that
+                        OSM data does not contain reliable  speed information. By default Transport Analyst uses free-flow travel speeds for North American roadway classifications.
+                        To accurately model car travel speeds, data must be incorporated from a third-party source (e.g. roadway loop detectors or a regional traffic model). This
+                        data does not exist in a standard format and at present must be manually imported.</p>
+
+
+                        <h2 id="data-driven-transportation-planning">Accessibility Analysis</h2>
+
+                        <figure>
+                          <img src="/assets/tutorial/img/analyst_vis.png">
+                          Analysis showing the before and after impact of a hypothetical infrastructure change. Colors indicate change in access (yellow: no change, blue: faster access, pink: previously inaccessible within time limit).
+                        </figure>
+
+                        <h3>Single-point Analysis</h3>
+
+                        <figure class="inline-left">
+                          <img src="/assets/tutorial/img/sp_detail.png">
+                        </figure>
+
+                        <p>The basis for all analysis in Transport Analyst is the access to or from a given point location (or origin) as a measure or what can be reached in a given time window. Single-origin analysis can be conducted by selecting the
+                          variable to measure (e.g. jobs) and clicking on the map to define a start location. A travel time and access plot is created showing the distribution of travel times to the selected location and variable.</p>
+
+                          <p>Settings allow selection of the transport scenario, travel mode, date, time window, and variable to measure accessibility to. Travel times are reported as best case, worst case or average for the given time window. This data can be exported as a Shapefile or a tabular data set for use in external analysis applications.</p>
+
+
+                          <strong class="pull-right"><a href="  /#db7c31708ec68280a1a94a8ca633dae1/-99.1093397140503/19.422280148671245/14/analysis-single/">Explore Single-point Analysis functions &raquo;</a></strong>
+
+                          <br clear="all"/>
+
+                          <h3>Regional Analysis</h3>
+
+                          <figure class="inline-left">
+                            <img src="/assets/tutorial/img/regional_analysis.png">
+                          </figure>
+
+                          <p>Regional Analysis functions allow the automation of many single-point queries, one from each potential origin location (for example, every Census block). Once computed, regional analysis outputs show variation in
+                            travel accessibility for potential users at any location within the study area. Due to the number of queries involved these may take from minutes to hours to compute.</p>
+
+                            <strong class="pull-right"><a href="  /#db7c31708ec68280a1a94a8ca633dae1/-99.1093397140503/19.422280148671245/14/analysis-regional/">Explore Regional Analysis functions &raquo;</a></strong>
+
+                            <br clear="all"/>
+
+
+                            <h3>Aggregation and Bertaud Measure</h3>
+
+
+                            <figure class="inline-left">
+                              <img src="/assets/tutorial/img/aggregate_analysis.png">
+                              <img src="/assets/tutorial/img/bertaud_formula.png">
+                            </figure>
+
+
+                            <p>Once analysis has been conducted at a regional scale it often makes sense to aggregate data to a larger spatial unit. For example, job access at a block-level might be aggregated to a neighborhood or even city scale.</p>
+
+                            <p>For example, one useful and easily calculated measure is defined in Alain Bertaud's paper <a href="http://marroninstitute.nyu.edu/uploads/content/Cities_as_Labor_Markets.pdf"><em>Cities as Labor Markets</em></a>. This measures the average number of jobs that can be accessed within 60 minutes weighted by population.
+                              This enables fine-grain calculation of job access at a block level to be summed and converted to an average metric of access at a municipal scale.</p>
+
+
+                              <p>To create the Bertaud measure, first calculate regional job access at the smallest spatial resolution possible (e.g. block-level job access). Next upload a Shapefile containing population figures, if not already included in the job data set, and a Shapefile with the larger geographic area you wish to aggregated up to. Then select the larger area as what you are "aggregating to" and the shapefile and attribute name containing the population figures. Then click calculate. Depending on the size of the study area and the number of points included, this may take a few minutes.
+                              The results will then be displayed on the map.</p>
+
+
+
+                              <strong class="pull-right"><a href="  /#db7c31708ec68280a1a94a8ca633dae1/-99.1093397140503/19.422280148671245/14/analysis-regional/">Explore Aggregation functions &raquo;</a></strong>
+
+                              <br clear="all"/>
+
+
+                            </article>
+                          </div>
+                        </div>
+
+                        <footer><small>© Conveyal 2015</small></footer>
+                      </body>
+                      </html>

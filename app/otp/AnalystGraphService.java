@@ -16,7 +16,10 @@ import org.opentripplanner.routing.services.GraphSource;
 import org.opentripplanner.routing.services.GraphSource.Factory;
 
 import controllers.Application;
+
 import org.opentripplanner.standalone.Router;
+
+import play.Logger;
 
 
 public class AnalystGraphService {
@@ -44,6 +47,11 @@ public class AnalystGraphService {
 			byte[] buffer = new byte[1024];
 			
 			for(File f : graphDataDir.listFiles()) {
+				if (f.isDirectory()) {
+					Logger.warn("not zipping directory " + f.getName() + " when zipping graph " + graphId);
+					continue;
+				}
+				
 				ZipEntry zipEntry = new ZipEntry(f.getName());
 				zipOutputStream.putNextEntry(zipEntry);
 	    		FileInputStream fileInput = new FileInputStream(f);

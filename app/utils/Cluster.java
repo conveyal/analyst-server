@@ -31,7 +31,7 @@ public class Cluster {
 	private static ActorSystem actorSystem = null;
 	private static ActorRef executive = null;
 	
-	public static ActorSystem getActorSystem () {
+	public static synchronized ActorSystem getActorSystem () {
 		// lazy-initialize the actor system
 		if (actorSystem == null) {
 			// the config isn't large, so it's fine to just copy it to a string
@@ -69,7 +69,7 @@ public class Cluster {
 		return actorSystem;
 	}
 	
-	public static ActorRef getExecutive () {
+	public static synchronized ActorRef getExecutive () {
 		if (executive == null) {
 			ActorSystem sys = getActorSystem();
 			

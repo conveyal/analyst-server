@@ -357,6 +357,9 @@ var Analyst = Analyst || {};
       else if (this.which == 'BEST_CASE')
         legendTitle += window.Messages('analysis.best-case-suffix');
 
+      else if (this.which == 'AVERAGE')
+          legendTitle += window.Messages('analysis.spread-suffix');
+
       else if (this.which == 'SPREAD')
         legendTitle += window.Messages('analysis.spread-suffix');
 
@@ -457,12 +460,29 @@ var Analyst = Analyst || {};
 
       var _this = this;
 
+      var nameField = "name";
+
+      this.$el.find("#queryName").editable({
+        type        : 'text',
+        name        : nameField,
+        mode				: "inline",
+        value       : this.model.get(nameField),
+        pk          : this.model.get('id'),
+        url         : '',
+        success     : function(response, newValue) {
+          _this.model.set(nameField, newValue);
+          _this.model.save(nameField, newValue);
+        }
+      }).on("hidden", function(e, reason) {
+        _this.render();
+      });
+
       if (this.isComplete()) {
-        if (this.model.get('transit') && false) {
+        if (this.model.get('transit')) {
           // we have transit modes, so it's a profile request
           this.$('.whichMulti input[value="POINT_ESTIMATE"]').parent().remove();
           this.$('.whichMulti input[value="SPREAD"]').parent().remove();
-          this.$('.whichMulti input[value="WORST_CASE"]').prop('checked', true).parent().addClass('active');
+          this.$('.whichMulti input[value="AVERAGE"]').prop('checked', true).parent().addClass('active');
         } else {
           // it's a stock/vanilla request
           this.$('.whichMulti input[value="WORST_CASE"]').parent().remove();
@@ -470,24 +490,6 @@ var Analyst = Analyst || {};
           this.$('.whichMulti input[value="SPREAD"]').parent().remove();
           this.$('.whichMulti input[value="POINT_ESTIMATE"]').prop('checked', true).parent().addClass('active');
         }
-
-        var nameField = "name";
-
-        this.$el.find("#queryName").editable({
-          type        : 'text',
-          name        : nameField,
-          mode				: "inline",
-          value       : this.model.get(nameField),
-          pk          : this.model.get('id'),
-          url         : '',
-          success     : function(response, newValue) {
-            _this.model.set(nameField, newValue);
-            _this.model.save(nameField, newValue);
-          }
-        }).on("hidden", function(e, reason) {
-          _this.render();
-        });
-
 
         // Set up weight and group by select boxes
         // we weight and group by shapefiles. for weighting we also specify an attribute.

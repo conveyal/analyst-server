@@ -15,7 +15,7 @@
           Query Settings
         </h5>
       </div>
-      <div id="querySettings" class="panel-body">
+      <div id="querySettings" class="panel-body" style="padding: 5px;">
 
            <div class="form-group">
            <label for="shapefile">{{I18n "analysis.shapefile"}}</label>
@@ -55,6 +55,11 @@
            <label class="btn btn-default">
              <input type="radio" name="which" value="POINT_ESTIMATE" />
              {{ I18n "analysis.point-estimate-option" }}
+           </label>
+
+           <label class="btn btn-default">
+             <input type="radio" name="which" value="AVERAGE" />
+             {{ I18n "analysis.average-option" }}
            </label>
 
            <label class="btn btn-default">
@@ -223,7 +228,7 @@
 
 
           <button id="downloadGis" type="button" class="btn btn-default btn-xs pull-right"> <span class="glyphicon glyphicon-download"></span> Download GIS</button>
-          
+
         </div>
 
 

@@ -745,4 +745,7 @@ A.data = {};
 	});
 
 
+
+
+
 })(Analyst, jQuery);

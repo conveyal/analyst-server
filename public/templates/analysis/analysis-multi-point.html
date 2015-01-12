@@ -1,5 +1,5 @@
 <div class="pannel-header">
-     <button id="newQuery" type="button" class="btn btn-default btn-xs pull-right"> Run new query</button>
+  {{#writeAllowed}}<button id="newQuery" type="button" class="btn btn-default btn-xs pull-right"> Run new query</button>{{/writeAllowed}}
      <span class="glyphicon glyphicon-cog"></span> Regional Analysis
 </div>
 
@@ -18,7 +18,7 @@
                Create Query
            </h5>
          </div>
-         <div id="collapseOne" class="panel-body">
+         <div id="collapseOne" class="panel-body" style="padding: 5px;">
              <div class="form-group">
                <label for="name">{{I18n "analysis.create-new-query-name"}}</label>
                <input type="text" class="form-control" id="name" name="name" placeholder="{{I18n "analysis.create-new-query-name"}}" value="">

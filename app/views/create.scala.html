@@ -1,0 +1,30 @@
+
+@main("Create") {
+
+	<div class="login-body">
+
+		<h4><strong><span style="color: #98b8eb;"><img src="/assets/images/logo.png" style="height: 50px; margin-top: -5px; margin-right: 5px;"/> Transport</span></strong> Analyst</h4>
+
+
+		<p>Create a user account to access a demo version of the application and sample data from Mexico City.</p>
+
+		<form id="loginForm" action="/createUser" method="POST">
+			<div class="form-group">
+				<label for="username">Username</label>
+				<input type="text" class="form-control" id="username" name="username" placeholder="" value="">
+			</div>
+			<div class="form-group">
+				<label for="email">Email</label>
+				<input type="text" class="form-control" id="email" name="email" placeholder="" value="">
+			</div>
+			<div class="form-group">
+				<label for="password">Password</label>
+				<input type="password" class="form-control" id="password" name="password" placeholder="" value="">
+			</div>
+
+
+			<button type="submit" class="login btn btn-primary">Create User</button>  <a href="/login" class="login btn btn-default">Login</a> <a href="/tutorial" class="login btn btn-default">Tutorial</a>
+		</form>
+	</div>
+
+}

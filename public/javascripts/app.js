@@ -12,24 +12,26 @@ var Analyst = Analyst || {};
 
 
 	A.app.instance.addInitializer(function(options){
-
-		A.app.user = new A.models.User({id:"self"});
-		A.app.user.fetch();
-
-		A.app.projects  = new A.models.Projects();
-
 		A.app.allProjects = new A.models.Projects();
 
 		A.app.allProjects.url = "/api/allProjects"
 		A.app.allProjects.fetch();
 
-		A.app.controller =  new A.app.AppController();
+		A.app.user = new A.models.User({id:"self"});
 
-		A.app.appRouter = new A.app.Router({controller: A.app.controller});
+		// don't start the app until the user has loaded, because the user is needed to assess
+		// permissions. See issue #56.
+		A.app.user.fetch().always(function () {
+			A.app.controller =  new A.app.AppController();
 
-		A.app.projects.fetch({reset: true, success: A.app.controller.initProjects});
+			A.app.projects  = new A.models.Projects();
+			A.app.projects.fetch({reset: true, success: A.app.controller.initProjects});
 
-		if( ! Backbone.History.started) Backbone.history.start();
+			A.app.appRouter = new A.app.Router({controller: A.app.controller});
+
+			if( ! Backbone.History.started) Backbone.history.start();
+
+		});
 
 	});
 
@@ -84,7 +86,7 @@ var Analyst = Analyst || {};
 
 		setParams : function(params) {
 
-			// todo: pack 
+			// todo: pack
 			//this.params = _.reduce(_.pairs(params), function(memo, param) { memmemo + param[0] + ":" +  param[1] + "/"});
 			//this.updateNav(true);
 		},
@@ -663,6 +665,19 @@ var Analyst = Analyst || {};
 				return "Delete Project"
 		}
 	);
+
+	Handlebars.registerHelper('writeAllowed',
+	function(options){
+
+		var permissions = _.find(A.app.user.get("projectPermissions"), function(val) {return val.projectId === A.app.selectedProject});
+
+		if(permissions && permissions.write) {
+			return options.fn(this);
+		}
+
+		return false;
+	}
+);
 
 })(Analyst, jQuery);
 

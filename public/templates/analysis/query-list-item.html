@@ -10,7 +10,7 @@
 	{{/unless}}
 
 	{{#if starting}}
-		<small>starting up...</smal>
+		<small>queued for calculation...</smal>
 	{{else}}
 		{{#unless complete}}
 			<small>({{completePoints}} of {{totalPoints}} complete)<small>
@@ -53,6 +53,10 @@
 							{{ I18n "analysis.point-estimate-option" }}
 						</label>
 
+						<label class="btn btn-default">
+							<input type="radio" name="which" value="AVERAGE" />
+							{{ I18n "analysis.average-option" }}
+						</label>
 						<label class="btn btn-default">
 							<input type="radio" name="which" value="BEST_CASE" />
 							{{ I18n "analysis.best-case-option" }}
