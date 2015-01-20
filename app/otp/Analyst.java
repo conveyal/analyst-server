@@ -90,7 +90,7 @@ public class Analyst {
 		return req;
 	}
 	
-	public ProfileRequest buildProfileRequest(String mode, LocalDate date, int fromTime, int toTime, LatLon latLon) {
+	public ProfileRequest buildProfileRequest(String mode, LocalDate date, int fromTime, int toTime, double lat, double lon) {
 		ProfileRequest req = new PrototypeAnalystProfileRequest();
 		
 		// split the modeset into two modes
@@ -105,8 +105,10 @@ public class Analyst {
 		req.accessModes = req.egressModes = req.directModes = modes;
 		req.transitModes = transitModes;
 
-        req.from       = latLon;
-        req.to		   = latLon; // not used but required
+        req.fromLat    = lat;
+        req.fromLon    = lon;
+        req.toLat	   = lat; // not used but required
+        req.toLon      = lon;
         req.analyst	   = true;
         req.fromTime   = fromTime;
         req.toTime     = toTime;

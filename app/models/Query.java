@@ -271,7 +271,7 @@ public class Query implements Serializable {
 				
 				if (q.isTransit()) {
 					// create a profile request
-					ProfileRequest pr = Api.analyst.buildProfileRequest(q.mode, q.date, q.fromTime, q.toTime, null);
+					ProfileRequest pr = Api.analyst.buildProfileRequest(q.mode, q.date, q.fromTime, q.toTime, 0, 0);
 					// the pointset is already in the cluster cache, from when it was uploaded.
 					// every pointset has all shapefile attributes.
 					js = new JobSpec(q.scenarioId, pointSetId, pointSetId, pr);

@@ -155,9 +155,7 @@ public class Api extends Controller {
     		promise = Promise.promise(
     				new Function0<TimeSurfaceShort>() {
     					public TimeSurfaceShort apply() {
-    						LatLon latLon = new LatLon(String.format("%s,%s", lat, lon));
-
-							ProfileRequest request = analyst.buildProfileRequest(mode, jodaDate, fromTime, toTime, latLon);;
+							ProfileRequest request = analyst.buildProfileRequest(mode, jodaDate, fromTime, toTime, lat, lon);
 
     						if(request == null)
     							return null;
