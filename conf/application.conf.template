@@ -34,6 +34,7 @@ cluster.work-offline=true
 #  akka {
 #    actor {
 #      provider = "akka.remote.RemoteActorRefProvider"
+#      guardian-supervisor-strategy = "com.conveyal.otpac.RootSupervisionStrategy"
 #    }
 #    remote {
 #      watch-failure-detector.acceptable-heartbeat-pause = 60 s
@@ -41,6 +42,9 @@ cluster.work-offline=true
 #      netty.tcp {
 #        hostname = "127.0.0.1"
 #        port = 2552
+#        send-buffer-size = 256m
+#        receive-buffer-size = 256m
+#        maximum-frame-size = 32m
 #      }
 #
 #      # secure akka settings
