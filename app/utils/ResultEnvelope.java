@@ -61,7 +61,10 @@ public class ResultEnvelope implements Serializable {
 			this.avgCase = res.getAvgCase();
 			this.pointEstimate = null;
 			this.spread = null;
-			this.id = this.bestCase.id;
+			// use the point ID in case the work result failed.
+			// note that point ID's may be null in general, but not in Analyst Server
+			// because of how we generate pointsets from shapefiles.
+			this.id = res.point.getId();
 		}
 		else {
 			this.profile = false;
@@ -69,7 +72,7 @@ public class ResultEnvelope implements Serializable {
 			this.bestCase = null;
 			this.worstCase = null;
 			this.spread = null;
-			this.id = this.pointEstimate.id;
+			this.id = res.point.getId()
 		}
 	}
 	
