@@ -139,7 +139,7 @@ public class Query implements Serializable {
 	
 	public void run() {
 		
-		ActorRef queryActor = Akka.system().actorOf(Props.create(QueryActor.class));
+		ActorRef queryActor = Cluster.getActorSystem().actorOf(Props.create(QueryActor.class));
 		System.out.println(queryActor.path());
 		
 		queryActor.tell(this, null);
@@ -349,7 +349,9 @@ public class Query implements Serializable {
 		
 		@Override
 		public synchronized void onWorkResult(WorkResult res) {
-			Query.saveQueryResult(id, new ResultEnvelope(res));
+			if (res.success) {
+				Query.saveQueryResult(id, new ResultEnvelope(res));
+			}
 		}
 	}
 }
