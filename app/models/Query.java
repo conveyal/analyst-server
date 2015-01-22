@@ -203,49 +203,11 @@ public class Query implements Serializable {
 
 		if(q == null)
 			return;
-
-		ArrayList<ResultEnvelope> writeList = null;
 		
-		synchronized(resultsQueue) {
-			if(!resultsQueue.containsKey(id))
-				resultsQueue.put(id, new ArrayList<ResultEnvelope>());
-			resultsQueue.get(id).add(resultEnvelope);
-			
-			if(resultsQueue.get(id).size() > 10) {
-				writeList = new ArrayList<ResultEnvelope>(resultsQueue.get(id));
-				resultsQueue.get(id).clear();
-				Logger.info("flushing queue...");
-			}
-			
-		}
+		q.getResults().saveWithoutCommit(resultEnvelope.id, resultEnvelope);
 		
-		if(writeList != null){
-				for(ResultEnvelope rf1 : writeList)
-					q.getResults().saveWithoutCommit(rf1.id, rf1);
-			
-				q.getResults().commit();
-				
-				Tiles.resetQueryCache(id);
-		}
-					
-		
-	}
-	
-	static void updateStatus(String id, JobStatus js) {
-		
-		Query q = getQuery(id);
-		
-		if(q == null)
-			return;
-		
-		synchronized(q) {
-			q.totalPoints = (int)js.total;
-			q.completePoints = (int)js.complete;
-			q.jobId = js.curJobId;
-			q.save();
-		}
-		
-		Logger.info("status update: " + js.complete + "/" + js.total);
+		if (q.totalPoints == q.completePoints)
+			q.getResults().commit();
 	}
 	
 	public static class QueryActor extends UntypedActor {
@@ -269,6 +231,9 @@ public class Query implements Serializable {
 				
 				String pointSetId = sl.id + ".json";
 				
+				q.totalPoints = sl.getFeatureCount();
+				q.completePoints = 0;
+				
 				if (q.isTransit()) {
 					// create a profile request
 					ProfileRequest pr = Api.analyst.buildProfileRequest(q.mode, q.date, q.fromTime, q.toTime, 0, 0);
@@ -283,34 +248,11 @@ public class Query implements Serializable {
 				}
 
 				// plus a callback that registers how many work items have returned
-				ActorRef callback = system.actorOf(Props.create(SaveQueryCallback.class, q.id));
+				ActorRef callback = system.actorOf(Props.create(SaveQueryCallback.class, q.id, q.totalPoints));
 				js.setCallback(callback);
 
 				// start the job
-				Timeout timeout = new Timeout(Duration.create(60, "seconds"));
-				Future<Object> future = Patterns.ask(executive, js, timeout);
-				
-				int jobId = ((JobId) Await.result(future, timeout.duration())).jobId;
-				
-				JobStatus status = null;
-				
-				// wait for job to complete
-				do {
-					Thread.sleep(500);
-					try {
-						status = Cluster.getStatus(jobId);
-						
-						if(status != null)
-							Query.updateStatus(q.id, status);
-						else
-							Logger.debug("waiting for job status messages, incomplete");
-					}
-					catch (Exception e) {
-						Logger.debug("waiting for job status messages");
-					}
-					
-					
-				} while(status == null || !status.isComplete());				
+				executive.tell(js, ActorRef.noSender());							
 			}
 		} 
 	}
@@ -339,18 +281,36 @@ public class Query implements Serializable {
 		/** the query ID */
 		public final String id;
 		
+		/** the number of points completed so far */
+		public int complete; 
+		
+		/** the number of points we expect to complete */
+		public final int totalPoints;
+		
 		/**
 		 * Create a new save query callback.
 		 * @param id the query ID.
 		 */
-		public SaveQueryCallback(String id) {
+		public SaveQueryCallback(String id, int totalPoints) {
 			this.id = id;
+			this.totalPoints = totalPoints;
+			complete = 0;
 		}
 		
 		@Override
-		public synchronized void onWorkResult(WorkResult res) {
+		public synchronized void onWorkResult(WorkResult res) {			
 			if (res.success) {
 				Query.saveQueryResult(id, new ResultEnvelope(res));
+			}
+			
+			// update complete after query has been saved
+			complete++;
+			
+			// only update client every 200 points or when the query is done
+			if (complete % 200 == 0 || complete == totalPoints) {
+				Query query = Query.getQuery(id);
+				query.completePoints = complete;
+				query.save();
 			}
 		}
 	}
