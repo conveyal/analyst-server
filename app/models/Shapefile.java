@@ -49,6 +49,7 @@ import org.opentripplanner.analyst.core.Sample;
 
 import play.Logger;
 import play.Play;
+import play.libs.Akka;
 
 import com.conveyal.otpac.PointSetDatastore;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -63,6 +64,8 @@ import com.vividsolutions.jts.index.strtree.STRtree;
 
 import controllers.Api;
 import controllers.Application;
+import scala.concurrent.ExecutionContext;
+import scala.concurrent.duration.Duration;
 import utils.Bounds;
 import utils.DataStore;
 import utils.HaltonPoints;
@@ -285,7 +288,7 @@ public class Shapefile implements Serializable {
 		return pointSet;
 	}
 
-	private String writeToClusterCache() throws IOException {
+	public String writeToClusterCache() throws IOException {
 
 		PointSet ps = this.getPointSet();
 		String cachePointSetId = id + ".json";
@@ -447,9 +450,7 @@ public class Shapefile implements Serializable {
 	    	shapefile.setShapeFeatureStore(features);
 
 	    	shapefile.save();
-	    	
-	    	shapefile.writeToClusterCache();
-	    	
+	    		    	
 	    	Logger.info("done loading shapefile " + shapefileId);
 	    }
 	    else
@@ -677,5 +678,23 @@ public class Shapefile implements Serializable {
 			return data;
 		}
 
+	}
+
+	public static void writeAllToClusterCache() {
+		ExecutionContext ctx = Akka.system().dispatchers().defaultGlobalDispatcher();
+		
+		for (final Shapefile shapefile : getShapfiles(null)) {
+			Akka.system().scheduler().scheduleOnce(Duration.create(10, "milliseconds"), new Runnable() {
+				
+				@Override
+				public void run() {
+					try {
+						shapefile.writeToClusterCache();
+					} catch (Exception e) {
+						Logger.error("Exception writing " + shapefile + " to cluster cache: " + e);
+					}
+				}
+			}, ctx);
+		}
 	}
 }
