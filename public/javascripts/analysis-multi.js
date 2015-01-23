@@ -236,7 +236,7 @@ var Analyst = Analyst || {};
     },
 
     isStarting: function() {
-      return this.model.get("totalPoints") === null || this.model.get('totalPoints') == -1;
+      return this.model.get("completePoints") === 0;
     },
 
     isComplete: function() {
