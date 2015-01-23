@@ -160,7 +160,9 @@ public class Query implements Serializable {
 	public synchronized DataStore<ResultEnvelope> getResults() {
 		
 		if(results == null) {
-			results = new DataStore<ResultEnvelope>(new File(Application.dataPath, "results"), "r_" + id);
+			// use a non-transactional store to save disk space and increase performance.
+			// if the query dies we might need to throw away the query anyhow.
+			results = new DataStore<ResultEnvelope>(new File(Application.dataPath, "results"), "r_" + id, false);
 		}
 		
 		return results;
@@ -205,9 +207,6 @@ public class Query implements Serializable {
 			return;
 		
 		q.getResults().saveWithoutCommit(resultEnvelope.id, resultEnvelope);
-		
-		if (q.totalPoints == q.completePoints)
-			q.getResults().commit();
 	}
 	
 	public static class QueryActor extends UntypedActor {
@@ -309,6 +308,12 @@ public class Query implements Serializable {
 			// only update client every 200 points or when the query is done
 			if (complete % 200 == 0 || complete == totalPoints) {
 				Query query = Query.getQuery(id);
+				
+				// flush to disk before saying the query is done
+				// transactional support is off, so this is important
+				if (complete == totalPoints)
+					query.getResults().commit();
+				
 				query.completePoints = complete;
 				query.save();
 			}

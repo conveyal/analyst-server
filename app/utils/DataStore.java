@@ -28,12 +28,26 @@ public class DataStore<T> {
 	DB db;
 	Map<String,T> map;
 	
+	/** Create a new data store in the default location with transactional support enabled */
 	public DataStore(String dataFile) {
 	
-		this(new File(Application.dataPath), dataFile);
+		this(new File(Application.dataPath), dataFile, true);
 	}
 
+	/**
+	 * Create a new datastore with transactional support enabled.
+	 */
 	public DataStore(File directory, String dataFile) {
+		this(directory, dataFile, true);
+	}
+	
+	/**
+	 * Create a new DataStore.
+	 * @param directory Where should it be created?
+	 * @param dataFile What should it be called?
+	 * @param transactional Should MapDB's transactional support be enabled?
+	 */
+	public DataStore(File directory, String dataFile, boolean transactional) {
 	
 		if(!directory.exists())
 			directory.mkdirs();
@@ -45,9 +59,13 @@ public class DataStore<T> {
 			e.printStackTrace();
 		}
 		
-		db = DBMaker.newFileDB(new File(directory, dataFile + ".db"))
-			.closeOnJvmShutdown()
-	        .make();
+		DBMaker dbm = DBMaker.newFileDB(new File(directory, dataFile + ".db"))
+			.closeOnJvmShutdown();
+		
+		if (!transactional)
+			dbm.transactionDisable();
+		
+	    db = dbm.make();
 		
 		map = db.getTreeMap(dataFile);
 	}
