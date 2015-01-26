@@ -21,3 +21,4 @@ s3credentials
 conf/application.conf
 /bin
 /cache/
+*~
