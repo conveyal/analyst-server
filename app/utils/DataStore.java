@@ -61,11 +61,6 @@ public class DataStore<T> {
 		}
 		
 		DBMaker dbm = DBMaker.newFileDB(new File(directory, dataFile + ".db"))
-			// make it fast, we need this so we don't have queues backing up during multipoint jobs
-		    // note that on a 32 bit machine this will fall back to random access files
-			// and the writes will be slow, mailboxes may back up, OOME's may occur, etc.
-		    // on a 32bit machine, proceed at your own risk.
-			//.mmapFileEnableIfSupported()
 			.closeOnJvmShutdown();
 		
 		if (!transactional)
