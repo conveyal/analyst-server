@@ -28,17 +28,17 @@ public class DataStore<T> {
 	DB db;
 	Map<String,T> map;
 	
-	/** Create a new data store in the default location with transactional support enabled */
+	/** Create a new data store in the default location with transactional support enabled and the default cache */
 	public DataStore(String dataFile) {
 	
-		this(new File(Application.dataPath), dataFile, true);
+		this(new File(Application.dataPath), dataFile, true, false);
 	}
 
 	/**
-	 * Create a new datastore with transactional support enabled.
+	 * Create a new datastore with transactional support enabled and a default cache.
 	 */
 	public DataStore(File directory, String dataFile) {
-		this(directory, dataFile, true);
+		this(directory, dataFile, true, false);
 	}
 	
 	/**
@@ -46,8 +46,9 @@ public class DataStore<T> {
 	 * @param directory Where should it be created?
 	 * @param dataFile What should it be called?
 	 * @param transactional Should MapDB's transactional support be enabled?
+	 * @param weakRefCache Should we use a weak reference cache instead of the default fixed-size cache?
 	 */
-	public DataStore(File directory, String dataFile, boolean transactional) {
+	public DataStore(File directory, String dataFile, boolean transactional, boolean weakRefCache) {
 	
 		if(!directory.exists())
 			directory.mkdirs();
@@ -60,10 +61,18 @@ public class DataStore<T> {
 		}
 		
 		DBMaker dbm = DBMaker.newFileDB(new File(directory, dataFile + ".db"))
+			// make it fast, we need this so we don't have queues backing up during multipoint jobs
+		    // note that on a 32 bit machine this will fall back to random access files
+			// and the writes will be slow, mailboxes may back up, OOME's may occur, etc.
+		    // on a 32bit machine, proceed at your own risk.
+			//.mmapFileEnableIfSupported()
 			.closeOnJvmShutdown();
 		
 		if (!transactional)
-			dbm.transactionDisable();
+			dbm = dbm.transactionDisable();
+		
+		if (weakRefCache)
+			dbm = dbm.cacheWeakRefEnable();
 		
 	    db = dbm.make();
 		

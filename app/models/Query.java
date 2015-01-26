@@ -162,7 +162,7 @@ public class Query implements Serializable {
 		if(results == null) {
 			// use a non-transactional store to save disk space and increase performance.
 			// if the query dies we might need to throw away the query anyhow.
-			results = new DataStore<ResultEnvelope>(new File(Application.dataPath, "results"), "r_" + id, false);
+			results = new DataStore<ResultEnvelope>(new File(Application.dataPath, "results"), "r_" + id, false, true);
 		}
 		
 		return results;
