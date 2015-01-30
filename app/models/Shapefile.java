@@ -359,7 +359,9 @@ public class Shapefile implements Serializable {
 	private void buildIndex() {
 		Logger.info("building index for shapefile " + this.id);
 
-		spatialIndex = new STRtree(getShapeFeatureStore().size());
+		// it's not possible to make an R-tree with only one node, so we make an r-tree with two
+		// nodes and leave one empty.
+		spatialIndex = new STRtree(Math.max(getShapeFeatureStore().size(), 2));
 
 		for(ShapeFeature feature : getShapeFeatureStore().getAll()) {
 			spatialIndex.insert(feature.geom.getEnvelopeInternal(), feature);

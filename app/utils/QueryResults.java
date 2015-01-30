@@ -383,7 +383,9 @@ public class QueryResults {
 	 */
 	public SpatialIndex getSpatialIndex (boolean forceRebuild) {
 		if (forceRebuild || spIdx == null) {
-			spIdx = new STRtree(items.size());
+			// we can't build an STRtree with only one node, so we make sure we make a minimum of
+			// two nodes even if we leave one empty
+			spIdx = new STRtree(Math.max(items.size(), 2));
 			
 			for (QueryResultItem i : this.items.values()) {
 				spIdx.insert(i.feature.geom.getEnvelopeInternal(), i);
