@@ -63,7 +63,7 @@ GET     /tile/query	                    controllers.Tiles.query(queryId:String, 
 
 GET           /tile/transit                       controllers.Tiles.transit(scenarioId:String, x:Integer, y:Integer, z:Integer)
 GET           /tile/transitComparison             controllers.Tiles.transitComparison(scenarioId1:String, scenarioId2:String, x:Integer, y:Integer, z:Integer)
-GET           /tile/surfaceComparison             controllers.Tiles.surfaceComparison(surfaceId1:Integer, surfaceId2:Integer, shapefileId:String, attributeName:String, x:Integer, y:Integer, z:Integer, showIso:Boolean ?= false, showPoints:Boolean ?= false, timeLimit:Integer ?= 3600, minTime:Integer ?= null)
+GET           /tile/surfaceComparison             controllers.Tiles.surfaceComparison(surfaceId1:Integer, surfaceId2:Integer, shapefileId:String, x:Integer, y:Integer, z:Integer, showIso:Boolean ?= false, showPoints:Boolean ?= false, timeLimit:Integer ?= 3600, minTime:Integer ?= null)
 
 GET     /gis/query	                    controllers.Gis.query(queryId:String, timeLimit:Integer ?= 3600, weightByShapefile:String ?= null, weightByAttribute:String ?= null, groupBy:String ?= null, which: String, attributeName: String, compareTo:String ?= null)
 GET     /gis/surface	                controllers.Gis.surface(surfaceId:Integer, shapefileId:String, timeLimit:Integer ?= 3600, compareTo:String ?= null)

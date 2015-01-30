@@ -116,10 +116,10 @@ public class Tiles extends Controller {
 
     }
 
-	public static Promise<Result> surfaceComparison(Integer surfaceId1, Integer surfaceId2, String shapefileId, String attributeName,
+	public static Promise<Result> surfaceComparison(Integer surfaceId1, Integer surfaceId2, String shapefileId,
 			Integer x, Integer y, Integer z, Boolean showIso, Boolean showPoints, Integer timeLimit, Integer minTime) {
 
-		AnalystTileRequest tileRequest = new SurfaceComparisonTile(surfaceId1, surfaceId2, shapefileId, attributeName, x, y, z, showIso, showPoints, timeLimit, minTime);
+		AnalystTileRequest tileRequest = new SurfaceComparisonTile(surfaceId1, surfaceId2, shapefileId, x, y, z, showIso, showPoints, timeLimit, minTime);
 		return tileBuilder(tileRequest);
     }
 

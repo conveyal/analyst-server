@@ -349,7 +349,6 @@ public abstract class AnalystTileRequest {
 	public static class SurfaceComparisonTile extends AnalystTileRequest {
 		
 		final String shapefileId;
-		final String attributeName;
 		final Integer surfaceId1;
 		final Integer surfaceId2;
 		final Boolean showIso;
@@ -357,12 +356,11 @@ public abstract class AnalystTileRequest {
 		final Integer timeLimit;
 		final Integer minTime;
 		
-		public SurfaceComparisonTile(Integer surfaceId1, Integer surfaceId2, String shapefileId,  String attributeName,
+		public SurfaceComparisonTile(Integer surfaceId1, Integer surfaceId2, String shapefileId,
 				Integer x, Integer y, Integer z, Boolean showIso, Boolean showPoints, Integer timeLimit, Integer minTime) {
 			super(x, y, z, "surface");
 			
 			this.shapefileId = shapefileId;
-			this.attributeName = attributeName;
 			this.surfaceId1 = surfaceId1;
 			this.surfaceId2 = surfaceId2;
 			this.showIso = showIso;
@@ -372,7 +370,7 @@ public abstract class AnalystTileRequest {
 		}
 		
 		public String getId() {
-			return super.getId() + "_" + shapefileId + "_" + attributeName + "_" + surfaceId1 + "_" + surfaceId2 + "_" + showIso + "_" + showPoints + "_" + timeLimit + "_" + minTime;
+			return super.getId() + "_" + shapefileId + "_" + surfaceId1 + "_" + surfaceId2 + "_" + showIso + "_" + showPoints + "_" + timeLimit + "_" + minTime;
 		}
 		
 		public byte[] render(){
