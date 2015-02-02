@@ -78,7 +78,10 @@ import utils.HashUtils;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Shapefile implements Serializable {
 
-	private static final long serialVersionUID = 1L;
+	/**
+	 * Increment this every time you change the fields of this class.
+	 */
+	private static final long serialVersionUID = 2L;
 
 	@JsonIgnore
 	static private DataStore<Shapefile> shapefilesData = new DataStore<Shapefile>("shapes");
