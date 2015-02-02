@@ -57,7 +57,7 @@ public class Query implements Serializable {
 	
 	private static final long serialVersionUID = 1L;
 
-	static DataStore<Query> queryData = new DataStore<Query>("queries");
+	static DataStore<Query> queryData = new DataStore<Query>("queries", true);
 
 	public String id;
 	public String projectId;
@@ -161,8 +161,10 @@ public class Query implements Serializable {
 		
 		if(results == null) {
 			// use a non-transactional store to save disk space and increase performance.
-			// if the query dies we might need to throw away the query anyhow.
-			results = new DataStore<ResultEnvelope>(new File(Application.dataPath, "results"), "r_" + id, false, true);
+			// if the query dies we need to throw away the query anyhow.
+			// we use mapdb serialization because we're more concerned about speed than data durability.
+			// (this data can be easily reconstructed; this is basically a persistent cache)
+			results = new DataStore<ResultEnvelope>(new File(Application.dataPath, "results"), "r_" + id, false, true, false);
 		}
 		
 		return results;

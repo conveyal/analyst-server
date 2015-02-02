@@ -16,7 +16,7 @@ public class Project implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	static private DataStore<Project> projectData = new DataStore<Project>("projects");
+	static private DataStore<Project> projectData = new DataStore<Project>("projects", true);
 	
 	public String id;
 	public String name;

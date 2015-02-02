@@ -23,7 +23,7 @@ public class User implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	static private DataStore<User> userData = new DataStore<User>("users");
+	static private DataStore<User> userData = new DataStore<User>("users", true);
 	
 	public String id;
 	public String username;

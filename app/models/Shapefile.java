@@ -77,14 +77,12 @@ import utils.HashUtils;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Shapefile implements Serializable {
-
-	/**
-	 * Increment this every time you change the fields of this class.
-	 */
+	// this should remain constant unless we make a change where we explicitly want to break deserialization
+	// so that users have to start fresh.
 	private static final long serialVersionUID = 2L;
 
 	@JsonIgnore
-	static private DataStore<Shapefile> shapefilesData = new DataStore<Shapefile>("shapes");
+	static private DataStore<Shapefile> shapefilesData = new DataStore<Shapefile>("shapes", true);
 
 	public String id;
 	public String name;
@@ -250,6 +248,9 @@ public class Shapefile implements Serializable {
 		return spatialIndex;
 	}
 
+	/**
+	 * Get the pointset.
+	 */
 	@JsonIgnore
 	public synchronized PointSet getPointSet() {
 		if (pointSet != null)
@@ -291,6 +292,9 @@ public class Shapefile implements Serializable {
 		return pointSet;
 	}
 
+	/**
+	 * Write the shapefile to the cluster cache and to S3.
+	 */
 	public String writeToClusterCache() throws IOException {
 
 		PointSet ps = this.getPointSet();
@@ -665,7 +669,6 @@ public class Shapefile implements Serializable {
 	}
 
 	static public Collection<Shapefile> getShapfiles(String projectId) {
-
 		if(projectId == null)
 			return shapefilesData.getAll();
 
