@@ -7,7 +7,8 @@ import org.geotools.geometry.Envelope2D;
 import com.vividsolutions.jts.geom.Envelope;
 
 public class Bounds implements Serializable {
-
+	private static final long serialVersionUID = 1L;
+	
 	public Double west, east, south, north;
 	
 	public Bounds() {
