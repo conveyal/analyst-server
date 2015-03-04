@@ -7,21 +7,13 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import org.opentripplanner.api.model.TimeSurfaceShort;
-import org.opentripplanner.common.model.GenericLocation;
-import org.opentripplanner.graph_builder.GraphBuilderTask;
+import org.opentripplanner.graph_builder.GraphBuilder;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.impl.DefaultStreetVertexIndexFactory;
 
 import play.Logger;
 import play.Play;
 import play.libs.Akka;
-import play.libs.Json;
-import play.libs.F.Function;
-import play.libs.F.Function0;
-import play.libs.F.Promise;
-import play.mvc.Result;
-import scala.concurrent.ExecutionContext;
 import scala.concurrent.duration.Duration;
 
 import com.conveyal.otpac.ClusterGraphService;
@@ -151,10 +143,10 @@ public class AnalystGraphCache extends CacheLoader<String, Graph> {
     	  
     	 Graph g;
     	 try {
-	    	 GraphBuilderTask gbt = AnalystGraphBuilder.createBuilder(new File(new File(Application.dataPath,"graphs"), graphId));
-	 		 gbt.run();
+	    	 GraphBuilder gb = AnalystGraphBuilder.createBuilder(new File(new File(Application.dataPath,"graphs"), graphId));
+	 		 gb.run();
 	 		 
-	 		 g = gbt.getGraph();
+	 		 g = gb.getGraph();
 	 		 g.routerId = graphId;
 	 		 
 	 		 g.index(new DefaultStreetVertexIndexFactory());

@@ -1,20 +1,9 @@
 package otp;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.math.BigInteger;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.List;
 import java.util.Map;
-import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.ws.rs.core.Response;
-
 import models.Shapefile;
-import models.SpatialLayer;
 
 import org.opentripplanner.analyst.PointSet;
 import org.opentripplanner.analyst.ResultSet;
@@ -24,12 +13,9 @@ import org.opentripplanner.analyst.SurfaceCache;
 import org.opentripplanner.analyst.TimeSurface;
 import org.opentripplanner.api.model.TimeSurfaceShort;
 import org.opentripplanner.common.model.GenericLocation;
-import org.opentripplanner.routing.algorithm.EarliestArrivalSPTService;
+import org.opentripplanner.routing.algorithm.EarliestArrivalSearch;
 import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.spt.ShortestPathTree;
-
-import com.amazonaws.services.elasticmapreduce.model.Application;
-import com.google.common.collect.Maps;
 
 import controllers.Api;
 
@@ -44,7 +30,7 @@ public class AnalystRequest extends RoutingRequest{
 
 	public int cutoffMinutes;
 	
-	static public AnalystRequest create(String graphId, GenericLocation latLon, int cutoffMinutes) throws IOException, NoSuchAlgorithmException {
+	static public AnalystRequest create(String graphId, GenericLocation latLon, int cutoffMinutes)  {
 		
 		AnalystRequest request = new PrototypeAnalystRequest();
 		
@@ -61,7 +47,7 @@ public class AnalystRequest extends RoutingRequest{
 	
 	public static TimeSurfaceShort createSurface(RoutingRequest req, int cutoffMinutes) {
 		
-		EarliestArrivalSPTService sptService = new EarliestArrivalSPTService();
+		EarliestArrivalSearch sptService = new EarliestArrivalSearch();
         sptService.maxDuration = 60 * cutoffMinutes;
         
         ShortestPathTree spt = sptService.getShortestPathTree(req);
