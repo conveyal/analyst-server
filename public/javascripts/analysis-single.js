@@ -428,7 +428,7 @@ var Analyst = Analyst || {};
 			this.drawChart(this.scenario1Data, categoryId + '.' + attributeId, 1, '#barChart1', 175);
 
 			if (this.scenario2Data) {
-				this.drawChart(this.scenario1Data, categoryId + '.' + attributeId, 2, '#barChart2', 175);
+				this.drawChart(this.scenario2Data, categoryId + '.' + attributeId, 2, '#barChart2', 175);
 			}
 		},
 
