@@ -2,6 +2,7 @@ package otp;
 
 import com.conveyal.otpac.PrototypeAnalystProfileRequest;
 import com.conveyal.otpac.PrototypeAnalystRequest;
+
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.opentripplanner.analyst.core.Sample;
@@ -11,6 +12,8 @@ import org.opentripplanner.profile.ProfileRequest;
 import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.TraverseModeSet;
 import org.opentripplanner.routing.graph.Graph;
+import org.opentripplanner.routing.spt.DominanceFunction;
+
 import play.Logger;
 
 import java.io.File;
@@ -49,6 +52,7 @@ public class Analyst {
 		req.modes = new TraverseModeSet(mode);
 		req.routerId = graphId;
 		req.from = latLon;
+		req.dominanceFunction = new DominanceFunction.EarliestArrival();
 		req.worstTime = req.dateTime + cutoffMinutes * 60;
 		
 		if (req.modes.isTransit()) {

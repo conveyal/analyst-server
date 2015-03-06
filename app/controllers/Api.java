@@ -56,8 +56,6 @@ import org.opentripplanner.routing.core.TraverseModeSet;
 import org.opentripplanner.routing.graph.Graph;
 
 import otp.Analyst;
-import otp.AnalystProfileRequest;
-import otp.AnalystRequest;
 import otp.ProfileResult;
 import models.Attribute;
 import models.Project;
@@ -104,7 +102,7 @@ public class Api extends Controller {
 	static {
 		mapper.registerModule(new JodaModule());
 	}
-	
+
     private static JsonFactory jf = new JsonFactory();
 
 
@@ -124,77 +122,6 @@ public class Api extends Controller {
     private static class AccesibilitySummary {
     	public Long total = 0l;
     	public Long accessible = 0l;
-    }
-
-    public static Promise<Result> surface(final String graphId, final Double lat, final Double lon, final String mode,
-    		final Double bikeSpeed, final Double walkSpeed, String which, String date, final int fromTime, final int toTime) {
-    	Promise<TimeSurfaceShort> promise;
-
-		ResultEnvelope.Which whichEnum_tmp;
-		
-		LocalDate jodaDate_tmp;
-		
-		try {
-			whichEnum_tmp = ResultEnvelope.Which.valueOf(which);
-			jodaDate_tmp = LocalDate.parse(date);
-		} catch (Exception e) {
-			// no need to pollute the console with a stack trace
-			return Promise.promise(new Function0<Result> () {
-				@Override
-				public Result apply() throws Throwable {
-				    return badRequest("Invalid value for which or date parameter");
-				}
-			});
-		}
-
-		final LocalDate jodaDate = jodaDate_tmp;
-		final ResultEnvelope.Which whichEnum = whichEnum_tmp;
-
-     	if (new TraverseModeSet(mode).isTransit()) {
-    		// transit search: use profile routing
-    		promise = Promise.promise(
-    				new Function0<TimeSurfaceShort>() {
-    					public TimeSurfaceShort apply() {
-							ProfileRequest request = analyst.buildProfileRequest(mode, jodaDate, fromTime, toTime, lat, lon);
-
-    						if(request == null)
-    							return null;
-
-    						return AnalystProfileRequest.createSurfaces(request, graphId, 120, whichEnum);
-    					}
-    				}
-    				);
-    	}
-    	else {
-    		promise = Promise.promise(
-    				new Function0<TimeSurfaceShort>() {
-						public TimeSurfaceShort apply() throws Throwable {
-							GenericLocation latLon = new GenericLocation(lat, lon);
-							RoutingRequest req = analyst.buildRequest(graphId, jodaDate, fromTime, latLon, mode, 120);
-
-							if (req == null)
-								return null;
-
-							req.setRoutingContext(analyst.getGraph(graphId));
-
-							return AnalystRequest.createSurface(req, 120);
-						}
-    				});
-    	}
-
-		return promise.map(
-				new Function<TimeSurfaceShort, Result>() {
-					public Result apply(TimeSurfaceShort response) {
-
-						if(response == null)
-							return notFound();
-
-
-						return ok(Json.toJson(response));
-
-					}
-				}
-		);
     }
     
     /**
@@ -252,79 +179,6 @@ public class Api extends Controller {
     	
     	// we don't have a date to return that is valid in all feeds
     	return ok(originalDate.toString());
-    }
-
-    public static Result isochrone(Integer surfaceId, List<Integer> cutoffs) throws IOException {
-
-    	 final TimeSurface surf = AnalystRequest.getSurface(surfaceId);
-         if (surf == null) return badRequest("Invalid TimeSurface ID.");
-         if (cutoffs == null || cutoffs.isEmpty()) {
-        	 cutoffs = new ArrayList<Integer>();
-             cutoffs.add(surf.cutoffMinutes);
-             cutoffs.add(surf.cutoffMinutes / 2);
-         }
-
-         List<IsochroneData> isochrones = getIsochronesAccumulative(surf, cutoffs);
-         final SimpleFeatureCollection fc = LIsochrone.makeContourFeatures(isochrones);
-
-         FeatureJSON fj = new FeatureJSON();
-         ByteArrayOutputStream os = new ByteArrayOutputStream();
-         fj.writeFeatureCollection(fc, os);
-         String fcString = new String(os.toByteArray(),"UTF-8");
-
-         response().setContentType("application/json");
-         return ok(fcString);
-    }
-
-    /**
-     * Get a ResultSet. ResultEnvelope.Which is embedded in the surface ID.
-     * @param surfaceId
-     * @param shapefileId
-     * @return
-     */
-    public static Result result(Integer surfaceId, String shapefileId) {
-    	final Shapefile shp = Shapefile.getShapefile(shapefileId);
-    	ResultSet result;
-
-    	// it could be a profile request, or not
-    	// The IDs are unique; they come from inside OTP.
-    	try {
-    		result = AnalystProfileRequest.getResult(surfaceId, shapefileId);
-    	} catch (NullPointerException e) {
-    		result = AnalystRequest.getResult(surfaceId, shapefileId);
-    	}
-
-    	ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    	result.writeJson(baos, shp.getPointSet());
-        ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-        response().setContentType("application/json");
-    	return ok(bais);
-    }
-
-    /**
-     * Use Laurent's accumulative grid sampler. Cutoffs in minutes.
-     * The grid and delaunay triangulation are cached, so subsequent requests are very fast.
-     */
-    public static List<IsochroneData> getIsochronesAccumulative(TimeSurface surf, List<Integer> cutoffs) {
-
-        long t0 = System.currentTimeMillis();
-        DelaunayIsolineBuilder<WTWD> isolineBuilder = new DelaunayIsolineBuilder<WTWD>(
-                surf.sampleGrid.delaunayTriangulate(), new WTWD.IsolineMetric());
-
-        double D0 = 400.0; // TODO ? Set properly
-        List<IsochroneData> isochrones = new ArrayList<IsochroneData>();
-        for (int cutoffSec : cutoffs) {
-
-            WTWD z0 = new WTWD();
-            z0.w = 1.0;
-            z0.wTime = cutoffSec;
-            z0.d = D0;
-            IsochroneData isochrone = new IsochroneData(cutoffSec, isolineBuilder.computeIsoline(z0));
-            isochrones.add(isochrone);
-        }
-
-        long t1 = System.currentTimeMillis();
-        return isochrones;
     }
 
     public static Result queryBins(String queryId, Integer timeLimit, String weightByShapefile, String weightByAttribute, String groupBy,

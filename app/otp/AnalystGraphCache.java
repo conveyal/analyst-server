@@ -118,24 +118,22 @@ public class AnalystGraphCache extends CacheLoader<String, Graph> {
 
 		 Boolean workOffline = Play.application().configuration().getBoolean("cluster.work-offline");
 
-		 if(!workOffline) {
+		 graphsUploading.add(graphId);
 
-			 graphsUploading.add(graphId);
+		 // put the graph into the cluster cache and s3 if necessary
+		 String s3cred = Play.application().configuration().getString("cluster.s3credentials");
+		 String bucket = Play.application().configuration().getString("cluster.graphs-bucket");
 
-			 // put the graph into the cluster cache and s3 if necessary
-			 String s3cred = Play.application().configuration().getString("cluster.s3credentials");
-			 String bucket = Play.application().configuration().getString("cluster.graphs-bucket");
+		 ClusterGraphService cgs = new ClusterGraphService(s3cred, workOffline, bucket);
 
-			 ClusterGraphService cgs = new ClusterGraphService(s3cred, workOffline, bucket);
+		 Logger.info("preparing to upload graph " + graphId);
+		 File zippedGraph = Api.analyst.getZippedGraph(graphId);
 
-			 Logger.info("preparing to upload graph " + graphId);
-			 File zippedGraph = Api.analyst.getZippedGraph(graphId);
+		 Logger.info("uploading graph " + graphId);
+		 cgs.addGraphFile(zippedGraph);
 
-			 Logger.info("uploading graph " + graphId);
-			 cgs.addGraphFile(zippedGraph);
-
-			 graphsUploading.remove(graphId);
-		 }
+		 graphsUploading.remove(graphId);
+		
 
  		 Logger.info("building graph " + graphId);
  		 

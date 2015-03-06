@@ -21,15 +21,10 @@ public class ResultEnvelope implements Serializable {
 	 * The lower bound (e.g. number of jobs reachable under worst-case travel time)
 	 */
 	public ResultSet worstCase;
-
-	/**
-	 * The average case
-	 */
-	public ResultSet avgCase;
 	
 	/**
 	 * The point estimate of the accessibility. If profile = false, this is the journey
-	 * time returned by OTP. If profile = true, this will eventually be the central
+	 * time returned by OTP. If profile = true, this is the central
 	 * tendency.
 	 */
 	public ResultSet pointEstimate;
@@ -58,19 +53,35 @@ public class ResultEnvelope implements Serializable {
 			this.profile = true;
 			this.bestCase = res.getBestCase();
 			this.worstCase = res.getWorstCase();
-			this.avgCase = res.getAvgCase();
-			this.pointEstimate = null;
+			this.pointEstimate = res.getPointEstimate();
 			this.spread = null;
 			// the surface will never be null, because it is only created if the workresult was successful
 			this.id = this.bestCase.id;
 		}
 		else {
 			this.profile = false;
-			this.pointEstimate = res.getResult();
+			this.pointEstimate = res.getPointEstimate();
 			this.bestCase = null;
 			this.worstCase = null;
 			this.spread = null;
 			this.id = this.pointEstimate.id;
+		}
+	}
+
+	/** Get the result set for the given Which */
+	public ResultSet get (Which which) {
+		switch (which) {
+			case BEST_CASE:
+				return bestCase;
+			case WORST_CASE:
+				return worstCase;
+			case POINT_ESTIMATE:
+				return pointEstimate;
+			case SPREAD:
+				return spread;
+			default:
+				// can't happen
+				throw new IllegalStateException("Unknown envelope parameter");
 		}
 	}
 	
@@ -82,6 +93,6 @@ public class ResultEnvelope implements Serializable {
 	}
 	
 	public static enum Which {
-		BEST_CASE, WORST_CASE, POINT_ESTIMATE, SPREAD, AVERAGE
+		BEST_CASE, WORST_CASE, POINT_ESTIMATE, SPREAD
 	}
 }

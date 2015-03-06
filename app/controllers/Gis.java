@@ -53,9 +53,6 @@ import org.opentripplanner.analyst.TimeSurface;
 import org.opentripplanner.analyst.core.SlippyTile;
 import org.opentripplanner.analyst.request.TileRequest;
 
-import otp.AnalystProfileRequest;
-import otp.AnalystRequest;
-
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
@@ -238,12 +235,13 @@ public class Gis extends Controller {
 
     		ResultSetWithTimes result;
     			    		
+    		// TODO fix
     		try {
-    			result = AnalystProfileRequest.getResultWithTimes(surfaceId, shapefileId);
+    			result = null;//AnalystProfileRequest.getResultWithTimes(surfaceId, shapefileId);
     		}
     		catch (NullPointerException e) {
     			// not a profile request
-    			result = AnalystRequest.getResultWithTimes(surfaceId, shapefileId);
+    			result = null;//AnalystRequest.getResultWithTimes(surfaceId, shapefileId);
     		}
 			       
 	        Collection<ShapeFeature> features = shp.getShapeFeatureStore().getAll();

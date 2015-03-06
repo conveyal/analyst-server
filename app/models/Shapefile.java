@@ -24,6 +24,7 @@ import java.util.zip.ZipFile;
 
 import javax.smartcardio.ATR;
 
+import com.google.common.io.Files;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.geotools.data.DataStoreFinder;
@@ -300,7 +301,7 @@ public class Shapefile implements Serializable {
 		PointSet ps = this.getPointSet();
 		String cachePointSetId = id + ".json";
 
-		File f = new File(cachePointSetId);
+		File f = File.createTempFile(id, ".json");
 
 		FileOutputStream fos = new FileOutputStream(f);
 		ps.writeJson(fos, true);

@@ -1,51 +1,25 @@
 package controllers;
 
-import java.awt.Color;
 import java.io.ByteArrayInputStream;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
-import models.Query;
-import models.Shapefile.ShapeFeature;
-import models.SpatialLayer;
-import models.Attribute;
-
-import org.opentripplanner.analyst.ResultSetDelta;
-import org.opentripplanner.analyst.ResultSetWithTimes;
-import org.opentripplanner.analyst.TimeSurface;
-import org.opentripplanner.api.model.TimeSurfaceShort;
-import org.opentripplanner.common.model.GenericLocation;
-
-import otp.AnalystRequest;
-
-import com.vividsolutions.jts.index.strtree.STRtree;
 
 import play.libs.Akka;
-import play.libs.Json;
 import play.libs.F.Function;
 import play.libs.F.Function0;
 import play.libs.F.Promise;
 import play.mvc.*;
 import scala.concurrent.ExecutionContext;
-import tiles.Tile;
 import tiles.AnalystTileRequest;
 import tiles.AnalystTileRequest.TransitTile;
 import tiles.AnalystTileRequest.TransitComparisonTile;
 import tiles.AnalystTileRequest.SpatialTile;
-import tiles.AnalystTileRequest.SurfaceTile;
-import tiles.AnalystTileRequest.SurfaceComparisonTile;
+import tiles.SurfaceTile;
+import tiles.SurfaceComparisonTile;
 import tiles.AnalystTileRequest.QueryTile;
 import tiles.AnalystTileRequest.QueryComparisonTile;
 import tiles.AnalystTileRequest.ShapefileTile;
 import tiles.TileCache;
-import utils.HaltonPoints;
 import utils.QueryResults;
-import utils.QueryResults.QueryResultItem;
 import utils.ResultEnvelope;
-import utils.TransportIndex;
-import utils.TransportIndex.TransitSegment;
 
 @Security.Authenticated(Secured.class)
 public class Tiles extends Controller {
@@ -108,10 +82,13 @@ public class Tiles extends Controller {
 		return tileBuilder(tileRequest);
     }
 
-	public static Promise<Result> surface(Integer surfaceId, String shapefileId, Integer x, Integer y, Integer z,
-			Boolean showIso, Boolean showPoints, Integer timeLimit, Integer minTime) {
+	public static Promise<Result> surface(String shapefile, String graphId, Double lat, Double lon, String mode,
+			   Double bikeSpeed, Double walkSpeed, String which, String date, int fromTime, int toTime, Integer x, Integer y, Integer z,
+			   Boolean showIso, Boolean showPoints, Integer timeLimit, Integer minTime) {
 
-		AnalystTileRequest tileRequest = new SurfaceTile( surfaceId, shapefileId, x, y, z, showIso, showPoints, timeLimit, minTime);
+		AnalystTileRequest tileRequest = new SurfaceTile(graphId, lat, lon, mode, shapefile,
+				   bikeSpeed, walkSpeed, which, date, fromTime, toTime, x, y, z,
+				   showIso, showPoints, timeLimit, minTime);
 		return tileBuilder(tileRequest);
 
     }

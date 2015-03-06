@@ -107,9 +107,6 @@ public class QueryResults {
     	   case BEST_CASE:
     		   feature = env.bestCase;
     		   break;
-		   case AVERAGE:
-			   feature = env.avgCase;
-			   break;
     	   case POINT_ESTIMATE:
     		   feature = env.pointEstimate;
     		   break;

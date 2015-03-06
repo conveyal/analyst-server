@@ -16,7 +16,6 @@ import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.TraverseModeSet;
 
 import otp.Analyst;
-import otp.AnalystProfileRequest;
 import play.Logger;
 import play.Play;
 import play.libs.Akka;

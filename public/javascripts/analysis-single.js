@@ -8,10 +8,10 @@ var Analyst = Analyst || {};
 
 		events: {
 		  'change #scenarioComparison': 'selectComparisonType',
-		  'change #scenario1': 'createSurface',
-		  'change #scenario2': 'createSurface',
-		  'change #shapefile': 'createSurface',
-			'cahnge .timesel': 'createSurface',
+		  'change #scenario1': 'updateResults',
+		  'change #scenario2': 'updateResults',
+		  'change #shapefile': 'updateResults',
+			'cahnge .timesel': 'updateResults',
 			'change #shapefileColumn': 'updateCharts',
 		  'change #chartType' : 'updateResults',
 			'change .which input' : 'updateEnvelope',
@@ -29,7 +29,7 @@ var Analyst = Analyst || {};
 		},
 
 		initialize: function(options){
-			_.bindAll(this, 'createSurface', 'updateMap', 'onMapClick', 'updateEnvelope', 'updateAttributes', 'updateCharts');
+			_.bindAll(this, 'updateResults', 'updateMap', 'onMapClick', 'updateEnvelope', 'updateAttributes', 'updateCharts');
 
 			this.transitOverlays = {};
 		},
@@ -71,14 +71,13 @@ var Analyst = Analyst || {};
 		    // transit request, we're doing profile routing
 		    inps.find('[value="WORST_CASE"]').prop('disabled', false).parent().removeClass('hidden');
 		    inps.find('[value="BEST_CASE"]').prop('disabled', false).parent().removeClass('hidden');
-				inps.find('[value="AVERAGE"]').prop('disabled', true).parent().removeClass('hidden');
 		    inps.find('[value="SPREAD"]').prop('disabled', true).parent().addClass('hidden');
 		    inps.find('[value="POINT_ESTIMATE"]').prop('disabled', true).parent().addClass('hidden');
 
 		    if (inps.find(':checked:disabled').length > 0 || inps.find(':checked').length == 0) {
 		      // we have disabled the currently selected envelope parameter, choose a reasonable default
 		      inps.find('input').prop('checked', false).parent().removeClass('active');
-		      inps.find('[value="AVERAGE"]').prop('checked', true).parent().addClass('active');
+		      inps.find('[value="WORST_CASE"]').prop('checked', true).parent().addClass('active');
 		    }
 
 				this.$('#toTimeControls').removeClass('hidden');
@@ -86,7 +85,6 @@ var Analyst = Analyst || {};
 		    // non-transit request, we're doing vanilla routing with point estimates only
 		    inps.find('[value="WORST_CASE"]').prop('disabled', true).parent().addClass('hidden');
 		    inps.find('[value="BEST_CASE"]').prop('disabled', true).parent().addClass('hidden');
-				inps.find('[value="AVERAGE"]').prop('disabled', true).parent().addClass('hidden');
 		    inps.find('[value="SPREAD"]').prop('disabled', true).parent().addClass('hidden');
 
 		    // since there is only one option, we may as well go ahead and check it
@@ -110,7 +108,7 @@ var Analyst = Analyst || {};
 		updateEnvelope : function (e) {
 			// prevent it from being run twice: once for uncheck and once for check
 			if (e.target.checked && this.envelopeParametersChangingProgramatically !== true) {
-				this.createSurface();
+				this.updateResults();
 			}
 		},
 
@@ -119,11 +117,11 @@ var Analyst = Analyst || {};
 			var _this = this;
 
 			this.$('#date').datetimepicker({pickTime: false})
-				.on('dp.hide', this.createSurface);
+				.on('dp.hide', this.updateResults);
 			this.$('#fromTime').datetimepicker({pickDate: false})
-				.on('dp.hide', this.createSurface);
+				.on('dp.hide', this.updateResults);
 			this.$('#toTime').datetimepicker({pickDate: false})
-				.on('dp.hide', this.createSurface);
+				.on('dp.hide', this.updateResults);
 
 			// pick a reasonable default date
 			$.get('api/project/' + A.app.selectedProject + '/exemplarDay')
@@ -178,7 +176,7 @@ var Analyst = Analyst || {};
 					}
 				}).on('slideStop', function(value) {
 
-				_this.createSurface();
+				_this.updateResults();
 			}).data('slider');
 
 			this.bikeSpeedSlider = this.$('#bikeSpeedSlider').slider({
@@ -188,7 +186,7 @@ var Analyst = Analyst || {};
 					}
 				}).on('slideStop', function(value) {
 
-				_this.createSurface();
+				_this.updateResults();
 			}).data('slider');
 
 			this.mode = 'TRANSIT,WALK';
@@ -198,7 +196,7 @@ var Analyst = Analyst || {};
 		    this.$('input[name=mode]:radio').on('change', function(event) {
 				_this.mode = _this.$('input:radio[name=mode]:checked').val();
 				_this.updateAvailableEnvelopeParameters();
-				_this.createSurface();
+				_this.updateResults();
 		    });
 
 			this.shapefiles.fetch({reset: true, data : {projectId: A.app.selectedProject}})
@@ -282,16 +280,13 @@ var Analyst = Analyst || {};
 
 		 },
 
-		createSurface : function() {
+		updateResults : function() {
 
 			if(!A.map.marker)
 				return;
 
 			if(A.map.tileOverlay && A.map.hasLayer(A.map.tileOverlay))
 		  		A.map.removeLayer(A.map.tileOverlay);
-
-		  	this.surfaceId1 = false;
-		  	this.surfaceId2 = false;
 
 		  	this.barChart1 = false;
 		  	this.barChart2 = false;
@@ -332,87 +327,43 @@ var Analyst = Analyst || {};
 			if (A.util.isTransit(this.mode))
 				dateTime += '&toTime=' + A.util.makeTime(this.$('#toTime').data('DateTimePicker').getDate());
 
-			var surfaceUrl1 = '/api/surface?graphId=' + graphId1 + '&lat=' + A.map.marker.getLatLng().lat + '&lon=' +
+			this.params1 = 'graphId=' + graphId1 + '&lat=' + A.map.marker.getLatLng().lat + '&lon=' +
 				A.map.marker.getLatLng().lng + '&mode=' + this.mode + '&bikeSpeed=' + bikeSpeed + '&walkSpeed=' + walkSpeed +
-				'&which=' + which + dateTime;
+				'&which=' + which + dateTime + '&shapefile=' + this.$('#shapefile').val();
 
-		    $.getJSON(surfaceUrl1, function(data) {
+		    $.getJSON('/api/result?' + this.params1, function(data) {
 
-		  	  _this.surfaceId1 = data.id;
+					_this.scenario1Data = data;
 
-		  	  if(!this.comparisonType || _this.surfaceId2) {
-		  	 	_this.updateMap();
-		  	 	_this.updateResults();
+		  	  if(_this.comparisonType == 'no-comparison' || !_this.comparisonType || _this.scenario2Data) {
+						_this.updateMap();
+						_this.updateCharts();
+						_this.$('#queryResults').show();
+						_this.$('#queryProcessing').hide();
 		  	  }
-
 		    });
 
-		    if(this.comparisonType == 'compare') {
+		    if (this.comparisonType == 'compare') {
 
 		    	var graphId2 = this.$('#scenario2').val();
 					var which = this.$('input[name="which"]:checked').val();
 
-		    	var surfaceUrl2 = '/api/surface?graphId=' + graphId2 + '&lat=' + A.map.marker.getLatLng().lat + '&lon=' +
+		    	this.params2 = 'graphId=' + graphId2 + '&lat=' + A.map.marker.getLatLng().lat + '&lon=' +
 						A.map.marker.getLatLng().lng + '&mode=' + this.mode + '&bikeSpeed=' + bikeSpeed +
-						'&walkSpeed=' + walkSpeed + '&which=' + which + dateTime;
-		    	$.getJSON(surfaceUrl2, function(data) {
+						'&walkSpeed=' + walkSpeed + '&which=' + which + dateTime + '&shapefile=' + this.$('#shapefile').val();
+		    	$.getJSON('/api/result?' + this.params2, function(data) {
 
-			  	  _this.surfaceId2 = data.id;
+			  	  _this.scenario2Data = data.id;
 
-			  	  if(_this.surfaceId1) {
+			  	  if(_this.scenario1Data) {
 			  	  	_this.updateMap();
-			  	  	_this.updateResults();
+							_this.updateCharts();
+							_this.$('#queryResults').show();
+							_this.$('#queryProcessing').hide();
 			  	  }
-
 			    });
 
 		    }
-		},
-
-		updateResults : function (timeUpdateOnly) {
-
-			var _this = this;
-
-			this.comparisonType = this.$('.scenario-comparison').val();
-
-			this.$('#queryProcessing').hide();
-			this.$('#queryResults').show();
-
-			var df, df1, df2;
-			df = df1 = df2 = null;
-
-			if(this.comparisonType == 'compare') {
-				var res1Url = '/api/result?shapefileId=' + this.$("#shapefile").val() +
-					'&surfaceId=' + this.surfaceId1 +	'&which=' + this.$('input[name="which"]:checked').val();
-
-				df1 = $.get(res1Url);
-				df1.then(function (res) {
-					_this.scenario1Data = res;
-				});
-
-				var res2Url = '/api/result?shapefileId=' + this.$("#shapefile").val() +
-				  '&surfaceId=' + this.surfaceId2 + '&which=' + this.$('input[name="which"]:checked').val();
-
-				df2 = $.get(res2Url);
-				df2.then(function(res) {
-					_this.scenario2Data = res;
-				});
-
-				df = $.when(df1, df2);
-			}
-			else {
-				var resUrl = '/api/result?shapefileId=' + this.$("#shapefile").val() +
-					'&surfaceId=' + this.surfaceId1 +	'&which=' + this.$('input[name="which"]:checked').val();
-				df = $.get(resUrl)
-				df.then(function(res) {
-					_this.scenario1Data = res;
-					_this.scenario2Data = null;
-				});
-			}
-
-			df.then(function () {
-				_this.updateCharts();
-			});
 		},
 
 		/**
@@ -479,7 +430,7 @@ var Analyst = Analyst || {};
 
 			}
 
-			if(!this.surfaceId1 && (this.surfaceId2 || this.comparisonType != 'compare'))
+			if(!(this.scenario1Data && (this.scenario2Data || this.comparisonType != 'compare')))
 				return;
 
 			$('#results1').hide();
@@ -493,15 +444,15 @@ var Analyst = Analyst || {};
 
 			if(this.comparisonType == 'compare') {
 
-				if(!this.surfaceId1 || !this.surfaceId2)
+				if(!this.scenario1Data || !this.scenario2Data)
 					return;
 
 				if(A.map.tileOverlay && A.map.hasLayer(A.map.tileOverlay))
 		  			A.map.removeLayer(A.map.tileOverlay);
 
-				A.map.tileOverlay = L.tileLayer('/tile/surfaceComparison?z={z}&x={x}&y={y}&shapefileId=' + this.$('#shapefile').val() +
+				/*A.map.tileOverlay = L.tileLayer('/tile/surfaceComparison?z={z}&x={x}&y={y}&shapefileId=' + this.$('#shapefile').val() +
 					'&minTime=' + minTime + '&timeLimit=' + timeLimit + '&surfaceId1=' + this.surfaceId1  + '&surfaceId2=' + this.surfaceId2 + '&showIso=' + showIso + '&showPoints=' +  showPoints, {}
-					).addTo(A.map);
+				).addTo(A.map);*/
 
 			}
 			else {
@@ -509,10 +460,9 @@ var Analyst = Analyst || {};
 				if(A.map.tileOverlay && A.map.hasLayer(A.map.tileOverlay))
 		  			A.map.removeLayer(A.map.tileOverlay);
 
-				A.map.tileOverlay = L.tileLayer('/tile/surface?z={z}&x={x}&y={y}&shapefileId=' + this.$('#shapefile').val() +
-					'&minTime=' + minTime + '&timeLimit=' + timeLimit + '&showPoints=' + showPoints + '&showIso=' + showIso + '&surfaceId=' + this.surfaceId1, {
-
-					}).addTo(A.map);
+				A.map.tileOverlay = L.tileLayer('/tile/surface?z={z}&x={x}&y={y}&' + '&showIso=' + showIso +
+					'&showPoints=' +  showPoints + '&minTime=' + minTime + '&timeLimit=' + timeLimit  + '&' + this.params1, {})
+					.addTo(A.map);
 
 			}
 		},
@@ -637,11 +587,11 @@ var Analyst = Analyst || {};
 
 	  		A.map.marker = new L.marker(evt.latlng, {draggable:'true'});
 
-	  		A.map.marker.on('dragend', this.createSurface);
+	  		A.map.marker.on('dragend', this.updateResults);
 
 		    	A.map.addLayer(A.map.marker);
 
-	    		this.createSurface();
+	    		this.updateResults();
 
 		},
 
@@ -656,7 +606,7 @@ var Analyst = Analyst || {};
 				$('#scenario2-controls').hide();
 			}
 
-			this.createSurface();
+			this.updateResults();
 		}
 	});
 
