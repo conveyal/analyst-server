@@ -9,7 +9,7 @@ GET           /login                              controllers.Application.login(
 
 GET           /create		                      controllers.Application.createUserForm()
 POST          /createUser		                  controllers.Application.createUser()
-
+POST 		  /createDemoProject 				  controllers.Application.createDemoProject()
 
 GET           /logout                             controllers.Application.logout()
 

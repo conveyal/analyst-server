@@ -146,6 +146,22 @@ public class Application extends Controller {
 		u.save();
 		return ok();
 	}
+	
+	public static Result createDemoProject() {
+		
+		if(Project.getProject("db7c31708ec68280a1a94a8ca633dae1") == null) {
+			Project demoProject = new Project();
+			demoProject.id = "db7c31708ec68280a1a94a8ca633dae1";
+			demoProject.name = "DF Demo";
+			demoProject.defaultLat = -99.1092967987060;
+			demoProject.defaultLon = 19.42223967;
+			demoProject.defaultZoom = 12;
+				
+			demoProject.save();
+		}
+		
+		return ok();
+	}
 
 	public static Result logout() throws IOException  {
 		session().clear();
