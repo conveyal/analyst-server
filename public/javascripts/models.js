@@ -52,7 +52,6 @@ var Analyst = Analyst || {};
 				return a.numeric;
 			})
 		}
-
 	});
 
 	/** static function to get the human-readable, localized name of an attribute */
@@ -61,7 +60,7 @@ var Analyst = Analyst || {};
 			return attr.name;
 		else
 			return window.Messages('analysis.attribute-name', attr.name, attr.fieldName);
-	}
+	};
 
 	A.models.Shapefiles = Backbone.Collection.extend({
 	  type: 'Shapefiles',
@@ -114,8 +113,7 @@ var Analyst = Analyst || {};
 		},
 
 		pointSetName : function () {
-			var attrName = A.models.Shapefile.attributeName(this.get('attribute'));
-			return window.Messages('analysis.point-set-name', this.get('shapefileName'), attrName);
+			return this.get('shapefileName');
 		}
 
 	});

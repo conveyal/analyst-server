@@ -1,52 +1,21 @@
 package otp;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
-import java.util.concurrent.ConcurrentHashMap;
-
-import models.SpatialLayer;
-
+import com.conveyal.otpac.PrototypeAnalystProfileRequest;
+import com.conveyal.otpac.PrototypeAnalystRequest;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
-import org.joda.time.LocalDateTime;
-import org.opentripplanner.analyst.core.Sample;	
-import org.opentripplanner.api.model.TimeSurfaceShort;
-import org.opentripplanner.api.param.LatLon;
-import org.opentripplanner.api.param.YearMonthDay;
+import org.opentripplanner.analyst.core.Sample;
 import org.opentripplanner.common.model.GenericLocation;
 import org.opentripplanner.profile.Option;
 import org.opentripplanner.profile.ProfileRequest;
-import org.opentripplanner.profile.ProfileResponse;
-import org.opentripplanner.profile.ProfileRouter;
-import org.opentripplanner.routing.algorithm.EarliestArrivalSPTService;
 import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.TraverseModeSet;
-import org.opentripplanner.routing.error.VertexNotFoundException;
 import org.opentripplanner.routing.graph.Graph;
-import org.opentripplanner.routing.services.GraphSource;
-import org.opentripplanner.routing.spt.ShortestPathTree;
-
-import com.conveyal.otpac.PrototypeAnalystProfileRequest;
-import com.conveyal.otpac.PrototypeAnalystRequest;
-import com.conveyal.otpac.message.JobSpec;
-import com.conveyal.otpac.message.WorkResult;
-import com.conveyal.otpac.standalone.StandaloneCluster;
-import com.conveyal.otpac.standalone.StandaloneExecutive;
-import com.conveyal.otpac.standalone.StandaloneWorker;
-import com.google.common.collect.Lists;
-import com.vividsolutions.jts.geom.Coordinate;
-
 import play.Logger;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.TimeZone;
 
 
 public class Analyst { 
@@ -90,7 +59,7 @@ public class Analyst {
 		return req;
 	}
 	
-	public ProfileRequest buildProfileRequest(String mode, LocalDate date, int fromTime, int toTime, LatLon latLon) {
+	public ProfileRequest buildProfileRequest(String mode, LocalDate date, int fromTime, int toTime, double lat, double lon) {
 		ProfileRequest req = new PrototypeAnalystProfileRequest();
 		
 		// split the modeset into two modes
@@ -99,14 +68,16 @@ public class Analyst {
 
 		TraverseModeSet transitModes = new TraverseModeSet(mode);
 		transitModes.setBicycle(false);
-		transitModes.setDriving(false);
+		transitModes.setCar(false);
 		transitModes.setWalk(false);
 
 		req.accessModes = req.egressModes = req.directModes = modes;
 		req.transitModes = transitModes;
 
-        req.from       = latLon;
-        req.to		   = latLon; // not used but required
+        req.fromLat    = lat;
+        req.fromLon    = lon;
+        req.toLat	   = lat; // not used but required
+        req.toLon      = lon;
         req.analyst	   = true;
         req.fromTime   = fromTime;
         req.toTime     = toTime;

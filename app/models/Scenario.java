@@ -62,7 +62,7 @@ public class Scenario implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	static DataStore<Scenario> scenarioData = new DataStore<Scenario>("scenario");
+	static DataStore<Scenario> scenarioData = new DataStore<Scenario>("scenario", true);
 
 	public String id;
 	public String projectId;

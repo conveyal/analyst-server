@@ -9,8 +9,7 @@ var Analyst = Analyst || {};
     events: {
       'click #createQuery': 'createQuery',
       'click #cancelQuery': 'cancelQuery',
-      'click #newQuery': 'newQuery',
-      'change #shapefile': 'updateAttributes'
+      'click #newQuery': 'newQuery'
     },
 
     regions: {
@@ -18,7 +17,7 @@ var Analyst = Analyst || {};
     },
 
     initialize: function(options) {
-      _.bindAll(this, 'createQuery', 'cancelQuery', 'updateAttributes');
+      _.bindAll(this, 'createQuery', 'cancelQuery');
     },
 
     onRender: function() {
@@ -93,10 +92,8 @@ var Analyst = Analyst || {};
               .attr('value', shp.id)
               .text(shp.get('name'))
               .appendTo(this.$('#shapefile'));
-          });
-
-          _this.updateAttributes();
         });
+      });
 
       // pick a reasonable default date
       $.get('api/project/' + A.app.selectedProject + '/exemplarDay')
@@ -130,26 +127,6 @@ var Analyst = Analyst || {};
       this.main.show(queryListLayout);
     },
 
-    /**
-     * Update the attributes select to show the attributes of the current shapefile
-     */
-    updateAttributes: function () {
-      var shpId = this.$('#shapefile').val();
-      var shp = this.shapefiles.get(shpId);
-      var _this = this;
-
-      this.$('#shapefileColumn').empty();
-
-      shp.getNumericAttributes().forEach(function (attr) {
-        var atName = A.models.Shapefile.attributeName(attr);
-
-        $('<option>')
-          .attr('value', attr.fieldName)
-          .text(atName)
-          .appendTo(_this.$('#shapefileColumn'));
-      });
-    },
-
     createQuery: function(evt) {
 
       var _this = this;
@@ -158,7 +135,6 @@ var Analyst = Analyst || {};
         name: this.$("#name").val(),
         mode: this.mode,
         shapefileId: this.$('#shapefile').val(),
-        attributeName: this.$('#shapefileColumn').val(),
         scenarioId: this.$('#scenario1').val(),
         projectId: A.app.selectedProject,
         fromTime: A.util.makeTime(this.$('#fromTime').data('DateTimePicker').getDate()),
@@ -260,7 +236,7 @@ var Analyst = Analyst || {};
     },
 
     isStarting: function() {
-      return this.model.get("totalPoints") === null || this.model.get('totalPoints') == -1;
+      return this.model.get("completePoints") === 0;
     },
 
     isComplete: function() {
@@ -282,7 +258,7 @@ var Analyst = Analyst || {};
 
       var timeLimit = this.timeSlider.getValue() * 60;
 
-      var url = '/gis/query?queryId=' + this.model.id + '&timeLimit=' + timeLimit;
+      var url = '/gis/query?queryId=' + this.model.id + '&timeLimit=' + timeLimit + '&attributeName=' + this.$('#shapefileColumn').val();
 
       if (this.groupById)
         url = url + "&groupBy=" + this.groupById;
@@ -395,7 +371,7 @@ var Analyst = Analyst || {};
 
         var timeLimit = this.timeSlider.getValue() * 60;
 
-        var url = 'queryId=' + this.model.id + '&timeLimit=' + timeLimit;
+        var url = 'queryId=' + this.model.id + '&timeLimit=' + timeLimit + '&attributeName=' + this.$('#shapefileColumn').val();
 
         if (this.groupById)
           url = url + "&groupBy=" + this.groupById;
@@ -536,6 +512,18 @@ var Analyst = Analyst || {};
                 .attr('value', shapefile.id)
                 .text(shapefile.get('name'))
                 .appendTo(_this.$('#groupBy'));
+            });
+
+            // append attribute names for the shapefile for this query
+            _this.shapefiles.get(_this.model.get('shapefileId')).getNumericAttributes().forEach(function (attr) {
+              var atName = A.models.Shapefile.attributeName(attr);
+
+              if(!attr.hide) {
+                $('<option>')
+                .attr('value', attr.fieldName)
+                .text(atName)
+                .appendTo(_this.$('#shapefileColumn'));
+              }
             });
 
             _this.updateAttributes();

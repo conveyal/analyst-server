@@ -83,7 +83,7 @@ public class Gis extends Controller {
 	static File TMP_PATH = new File(Application.tmpPath);
 	
 	public static Result query(String queryId, Integer timeLimit, String weightByShapefile, String weightByAttribute,
-			String groupBy, String which, String compareTo) {
+			String groupBy, String which, String attributeName, String compareTo) {
     	
 		response().setHeader(CACHE_CONTROL, "no-cache, no-store, must-revalidate");
 		response().setHeader(PRAGMA, "no-cache");
@@ -114,7 +114,7 @@ public class Gis extends Controller {
 
 			synchronized(QueryResults.queryResultsCache) {
 				if(!QueryResults.queryResultsCache.containsKey(queryKey)) {
-					qr = new QueryResults(query, timeLimit, whichEnum);
+					qr = new QueryResults(query, timeLimit, whichEnum, attributeName);
 					QueryResults.queryResultsCache.put(queryKey, qr);
 				}
 				else
@@ -124,7 +124,7 @@ public class Gis extends Controller {
 	    			String q2key = compareTo + "_" + timeLimit + "_" + which;
 	    			
 					if(!QueryResults.queryResultsCache.containsKey(q2key)) {
-						qr2 = new QueryResults(query2, timeLimit, whichEnum);
+						qr2 = new QueryResults(query2, timeLimit, whichEnum, attributeName);
 						QueryResults.queryResultsCache.put(q2key, qr2);
 					}
 					else {
@@ -218,14 +218,14 @@ public class Gis extends Controller {
     }
 	
 	
-	public static Result surface(Integer surfaceId, String shapefileId, String attributeName, Integer timeLimit, String compareTo) {
+	public static Result surface(Integer surfaceId, String shapefileId, Integer timeLimit, String compareTo) {
     	
 		response().setHeader(CACHE_CONTROL, "no-cache, no-store, must-revalidate");
 		response().setHeader(PRAGMA, "no-cache");
 		response().setHeader(EXPIRES, "0");
 		
 	
-		String shapeName = (timeLimit / 60) + "_mins_" + shapefileId.toString().toLowerCase() + "_" + surfaceId.toString() + "_" + attributeName;
+		String shapeName = (timeLimit / 60) + "_mins_" + shapefileId.toString().toLowerCase() + "_" + surfaceId.toString();
     	
     	try {
 	    
@@ -239,33 +239,41 @@ public class Gis extends Controller {
     		ResultSetWithTimes result;
     			    		
     		try {
-    			result = AnalystProfileRequest.getResultWithTimes(surfaceId, shapefileId, attributeName);
+    			result = AnalystProfileRequest.getResultWithTimes(surfaceId, shapefileId);
     		}
     		catch (NullPointerException e) {
     			// not a profile request
-    			result = AnalystRequest.getResultWithTimes(surfaceId, shapefileId, attributeName);
+    			result = AnalystRequest.getResultWithTimes(surfaceId, shapefileId);
     		}
 			       
 	        Collection<ShapeFeature> features = shp.getShapeFeatureStore().getAll();
 	     
 	        ArrayList<String> fields = new ArrayList<String>();
-        	
-        	fields.add(shp.name.replaceAll("\\W+", ""));
-        	
+	        
+	        for (Attribute a : shp.attributes.values()) {
+	        	if (a.numeric) {
+            		fields.add(a.name);
+	        	}
+	        }
+        	        	
         	ArrayList<GisShapeFeature> gisFeatures = new ArrayList<GisShapeFeature>();
 
-        	PointSet ps = Shapefile.getShapefile(shapefileId).getPointSet(attributeName);
+        	PointSet ps = Shapefile.getShapefile(shapefileId).getPointSet();
 
         	for (ShapeFeature feature : features) {
             	
             	Integer sampleTime = result.times[ps.getIndexForFeature(feature.id)];
-
         		GisShapeFeature gf = new GisShapeFeature();
         		gf.geom = feature.geom;
         		gf.id = feature.id;
         		gf.time = sampleTime;
 
-        		gf.fields.add(feature.getAttribute(attributeName));
+        		// TODO: handle non-integer attributes
+        		for (Attribute a : shp.attributes.values()) {
+        			if (a.numeric) {
+                		gf.fields.add(feature.getAttribute(a.name));
+        			}
+        		}
         		
         		gisFeatures.add(gf);
         	
@@ -342,7 +350,7 @@ public class Gis extends Controller {
 					featureDefinition += "String";
 				if(features.get(0).fields.get(fieldPosition) instanceof Number)
 					featureDefinition += "Double";
-					fieldPosition++;
+				fieldPosition++;
 			}
 			
         	SimpleFeatureType featureType = DataUtilities.createType("Analyst", featureDefinition);

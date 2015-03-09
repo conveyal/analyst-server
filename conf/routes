@@ -57,23 +57,23 @@ DELETE        /api/query/:id                      controllers.Api.deleteQuery(id
 
 GET           /tile/shapefile                     controllers.Tiles.shape(shapefileId:String, x:Integer, y:Integer, z:Integer, attributeName:String ?= null)
 
-GET           /tile/spatial                       controllers.Tiles.spatial(shapefileId:String, x:Integer, y:Integer, z:Integer, selectedAttributes:String	)
-GET           /tile/surface                       controllers.Tiles.surface(surfaceId:Integer, shapefileId:String, attributeName:String, x:Integer, y:Integer, z:Integer, showIso:Boolean ?= false, showPoints:Boolean ?= true, timeLimit:Integer ?= 3600, minTime:Integer ?= null)
-GET           /tile/query                         controllers.Tiles.query(queryId:String, x:Integer, y:Integer, z:Integer, timeLimit:Integer ?= 3600, weightByShapefile:String ?= null, weightByAttribute:String ?= null, groupBy:String ?= null, which: String, compareTo:String ?= null)
+GET     /tile/spatial                  	controllers.Tiles.spatial(shapefileId:String, x:Integer, y:Integer, z:Integer, selectedAttributes:String	)
+GET     /tile/surface                  	controllers.Tiles.surface(surfaceId:Integer, shapefileId:String, x:Integer, y:Integer, z:Integer, showIso:Boolean ?= false, showPoints:Boolean ?= true, timeLimit:Integer ?= 3600, minTime:Integer ?= null)
+GET     /tile/query	                    controllers.Tiles.query(queryId:String, x:Integer, y:Integer, z:Integer, timeLimit:Integer ?= 3600, weightByShapefile:String ?= null, weightByAttribute:String ?= null, groupBy:String ?= null, which: String, attributeName:String, compareTo:String ?= null)
 
 GET           /tile/transit                       controllers.Tiles.transit(scenarioId:String, x:Integer, y:Integer, z:Integer)
 GET           /tile/transitComparison             controllers.Tiles.transitComparison(scenarioId1:String, scenarioId2:String, x:Integer, y:Integer, z:Integer)
-GET           /tile/surfaceComparison             controllers.Tiles.surfaceComparison(surfaceId1:Integer, surfaceId2:Integer, shapefileId:String, attributeName:String, x:Integer, y:Integer, z:Integer, showIso:Boolean ?= false, showPoints:Boolean ?= false, timeLimit:Integer ?= 3600, minTime:Integer ?= null)
+GET           /tile/surfaceComparison             controllers.Tiles.surfaceComparison(surfaceId1:Integer, surfaceId2:Integer, shapefileId:String, x:Integer, y:Integer, z:Integer, showIso:Boolean ?= false, showPoints:Boolean ?= false, timeLimit:Integer ?= 3600, minTime:Integer ?= null)
 
-GET           /gis/query                          controllers.Gis.query(queryId:String, timeLimit:Integer ?= 3600, weightByShapefile:String ?= null, weightByAttribute:String ?= null, groupBy:String ?= null, which: String, compareTo:String ?= null)
-GET           /gis/surface                        controllers.Gis.surface(surfaceId:Integer, shapefileId:String, attributeName:String, timeLimit:Integer ?= 3600, compareTo:String ?= null)
+GET     /gis/query	                    controllers.Gis.query(queryId:String, timeLimit:Integer ?= 3600, weightByShapefile:String ?= null, weightByAttribute:String ?= null, groupBy:String ?= null, which: String, attributeName: String, compareTo:String ?= null)
+GET     /gis/surface	                controllers.Gis.surface(surfaceId:Integer, shapefileId:String, timeLimit:Integer ?= 3600, compareTo:String ?= null)
 
 
-GET           /api/queryBins                      controllers.Api.queryBins(queryId:String, timeLimit:Integer ?= 3600, weightByShapefile:String ?= null, weightByAttribute:String ?= null, groupBy:String ?= null, which: String, compareTo: String ?= null)
+GET     /api/queryBins	                controllers.Api.queryBins(queryId:String, timeLimit:Integer ?= 3600, weightByShapefile:String ?= null, weightByAttribute:String ?= null, groupBy:String ?= null, which: String, attributeName: String, compareTo: String ?= null)
 
-GET           /api/surface                        controllers.Api.surface(graphId:String, lat:Double, lon:Double, mode:String, bikeSpeed:Double, walkSpeed:Double, which:String, date:String, fromTime:Integer, toTime:Integer ?= -1)
-GET           /api/isochrone                      controllers.Api.isochrone(surfaceId:Integer, cutoffs:java.util.List[Integer])
-GET           /api/result                         controllers.Api.result(surfaceId:Integer, shapefileId:String, attributeName:String)
+GET     /api/surface                    controllers.Api.surface(graphId:String, lat:Double, lon:Double, mode:String, bikeSpeed:Double, walkSpeed:Double, which:String, date:String, fromTime:Integer, toTime:Integer ?= -1)
+GET	    /api/isochrone					controllers.Api.isochrone(surfaceId:Integer, cutoffs:java.util.List[Integer])
+GET     /api/result						controllers.Api.result(surfaceId:Integer, shapefileId:String)
 
 
 # Map static resources from the /public folder to the /assets URL path

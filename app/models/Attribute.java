@@ -53,7 +53,11 @@ public class Attribute implements Serializable {
 		count++;
 	}
 	
-	static String convertNameToId(String name) {
+	/**
+	 * Sanitize a name for use as a category ID. Also implemented in the client:
+	 * A.models.Shapefile.getCategoryName()
+	 */
+	public static String convertNameToId(String name) {
 		return name.toLowerCase().trim().replaceAll(" ", "_").replaceAll("\\W","");
 	}
 	

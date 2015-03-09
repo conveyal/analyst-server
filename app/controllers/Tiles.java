@@ -108,23 +108,24 @@ public class Tiles extends Controller {
 		return tileBuilder(tileRequest);
     }
 
-	public static Promise<Result> surface(Integer surfaceId, String shapefileId, String attributeName, Integer x, Integer y, Integer z,
+	public static Promise<Result> surface(Integer surfaceId, String shapefileId, Integer x, Integer y, Integer z,
 			Boolean showIso, Boolean showPoints, Integer timeLimit, Integer minTime) {
 
-		AnalystTileRequest tileRequest = new SurfaceTile( surfaceId, shapefileId, attributeName, x, y, z, showIso, showPoints, timeLimit, minTime);
+		AnalystTileRequest tileRequest = new SurfaceTile( surfaceId, shapefileId, x, y, z, showIso, showPoints, timeLimit, minTime);
 		return tileBuilder(tileRequest);
 
     }
 
-	public static Promise<Result> surfaceComparison(Integer surfaceId1, Integer surfaceId2, String shapefileId, String attributeName,
+	public static Promise<Result> surfaceComparison(Integer surfaceId1, Integer surfaceId2, String shapefileId,
 			Integer x, Integer y, Integer z, Boolean showIso, Boolean showPoints, Integer timeLimit, Integer minTime) {
 
-		AnalystTileRequest tileRequest = new SurfaceComparisonTile(surfaceId1, surfaceId2, shapefileId, attributeName, x, y, z, showIso, showPoints, timeLimit, minTime);
+		AnalystTileRequest tileRequest = new SurfaceComparisonTile(surfaceId1, surfaceId2, shapefileId, x, y, z, showIso, showPoints, timeLimit, minTime);
 		return tileBuilder(tileRequest);
     }
 
 	public static Promise<Result> query(String queryId, Integer x, Integer y, Integer z,
-			Integer timeLimit, String weightByShapefile, String weightByAttribute, String groupBy, String which, String compareTo) {
+			Integer timeLimit, String weightByShapefile, String weightByAttribute, String groupBy,
+			String which, String attributeName, String compareTo) {
 
 		ResultEnvelope.Which whichEnum;
 		try {
@@ -142,9 +143,9 @@ public class Tiles extends Controller {
 		AnalystTileRequest tileRequest;
 		
 		if (compareTo == null)
-			tileRequest = new QueryTile(queryId, x, y, z, timeLimit, weightByShapefile, weightByAttribute, groupBy, whichEnum);
+			tileRequest = new QueryTile(queryId, x, y, z, timeLimit, weightByShapefile, weightByAttribute, groupBy, whichEnum, attributeName);
 		else
-			tileRequest = new QueryComparisonTile(queryId, compareTo, x, y, z, timeLimit, weightByShapefile, weightByAttribute, groupBy, whichEnum);
+			tileRequest = new QueryComparisonTile(queryId, compareTo, x, y, z, timeLimit, weightByShapefile, weightByAttribute, groupBy, whichEnum, attributeName);
 		
 		return tileBuilder(tileRequest);
     }

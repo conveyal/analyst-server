@@ -8,8 +8,10 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import models.Shapefile;
 
+import org.opentripplanner.analyst.PointSet;
 import org.opentripplanner.analyst.ResultSet;
 import org.opentripplanner.analyst.ResultSetWithTimes;
+import org.opentripplanner.analyst.SampleSet;
 import org.opentripplanner.analyst.SurfaceCache;
 import org.opentripplanner.analyst.TimeSurface;
 import org.opentripplanner.api.model.TimeSurfaceShort;
@@ -79,9 +81,9 @@ public class AnalystProfileRequest extends ProfileRequest {
 	 * Get the ResultSet for the given ID. Note that no ResultEnvelope.Which need be specified as each surface ID is unique to a particular
 	 * statistic.
 	 */
-	public static ResultSet getResult(Integer surfaceId, String shapefileId, String attributeName) {
+	public static ResultSet getResult(Integer surfaceId, String shapefileId) {
 		
-		String resultId = "resultId_" + surfaceId + "_" + shapefileId + "_" + attributeName;
+		String resultId = "resultId_" + surfaceId + "_" + shapefileId;
     	
 		ResultSet result;
     	
@@ -91,7 +93,10 @@ public class AnalystProfileRequest extends ProfileRequest {
         	else {
         		TimeSurface surf =getSurface(surfaceId);
         		
-        		result = new ResultSet(Shapefile.getShapefile(shapefileId).getPointSet(attributeName).getSampleSet(Api.analyst.getGraph(surf.routerId)), surf);
+        		PointSet ps = Shapefile.getShapefile(shapefileId).getPointSet();
+        		SampleSet ss = ps.getSampleSet(Api.analyst.getGraph(surf.routerId));
+        		result = new ResultSet(ss, surf);
+
         		resultCache.put(resultId, result);
         	}
     	}
@@ -103,9 +108,9 @@ public class AnalystProfileRequest extends ProfileRequest {
 	 * Get the ResultSet for the given ID. Note that no min/max need be specified as each surface ID is unique to a particular
 	 * statistic.
 	 */
-	public static ResultSetWithTimes getResultWithTimes(Integer surfaceId, String shapefileId, String attributeName) {
+	public static ResultSetWithTimes getResultWithTimes(Integer surfaceId, String shapefileId) {
 		
-		String resultId = "resultWithTimesId_" + surfaceId + "_" + shapefileId + "_" + attributeName;
+		String resultId = "resultWithTimesId_" + surfaceId + "_" + shapefileId;
     	
 		ResultSetWithTimes resultWithTimes;
     	
@@ -114,8 +119,10 @@ public class AnalystProfileRequest extends ProfileRequest {
     			resultWithTimes = (ResultSetWithTimes)resultCache.get(resultId);
         	else {
         		TimeSurface surf = getSurface(surfaceId);
-
-				resultWithTimes = new ResultSetWithTimes(Shapefile.getShapefile(shapefileId).getPointSet(attributeName).getSampleSet(Api.analyst.getGraph(surf.routerId)), surf);
+        			
+        		PointSet ps = Shapefile.getShapefile(shapefileId).getPointSet();
+        		SampleSet ss = ps.getSampleSet(Api.analyst.getGraph(surf.routerId));
+        		resultWithTimes = new ResultSetWithTimes(ss, surf);
         		resultCache.put(resultId, resultWithTimes);
         	}
     	}

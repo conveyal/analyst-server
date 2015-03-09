@@ -5,10 +5,10 @@ Analyst.util = Analyst.util || {};
 /** Is an OTP mode string a transit mode? */
 _.extend(Analyst.util, {
   isTransit: function (mode) {
-  return mode.includes('TRANSIT') || mode.includes('TRAINISH') || mode.includes('BUSISH') ||
-  mode.includes('FERRY') || mode.includes('FUNICULAR') || mode.includes('GONDOLA') ||
-  mode.includes('CABLE_CAR') || mode.includes('RAIL') || mode.includes('SUBWAY') ||
-  mode.includes('TRAM') || mode.includes('BUS');
+  return mode.indexOf('TRANSIT') !== -1 || mode.indexOf('TRAINISH') !== -1 || mode.indexOf('BUSISH') !== -1 ||
+  mode.indexOf('FERRY') !== -1 || mode.indexOf('FUNICULAR') !== -1 || mode.indexOf('GONDOLA') !== -1 ||
+  mode.indexOf('CABLE_CAR') !== -1 || mode.indexOf('RAIL') !== -1 || mode.indexOf('SUBWAY') !== -1 ||
+  mode.indexOf('TRAM') !== -1 || mode.indexOf('BUS') !== -1;
 },
 
 /** Turn a date into seconds since noon - 12h */

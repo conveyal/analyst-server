@@ -24,6 +24,11 @@
 				<div class="legendTitle">{{ I18n "analysis.accessibility-to" pointSetName }}</div>
 
 				<div class="form-group">
+					<label for="shapefileColumn">{{I18n "analysis.shapefile-field"}}</label>
+					<select id="shapefileColumn" class="primary-indicator form-control"></select>
+				</div>
+
+				<div class="form-group">
 					<label>Travel Time Range: <span class="notes" id="timeLimitValue"></span></label>
 
 					<input id="timeSlider" data-slider-id="timeSlider" style="width: 380px;" type="text" data-slider-min="0" data-slider-max="120" data-slider-step="5" data-slider-value="60"/>

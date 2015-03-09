@@ -57,7 +57,7 @@ public class Query implements Serializable {
 	
 	private static final long serialVersionUID = 1L;
 
-	static DataStore<Query> queryData = new DataStore<Query>("queries");
+	static DataStore<Query> queryData = new DataStore<Query>("queries", true);
 
 	public String id;
 	public String projectId;
@@ -69,8 +69,6 @@ public class Query implements Serializable {
 	public String mode;
 	
 	public String shapefileId;
-
-	public String attributeName;
 	
 	public String scenarioId;
 	public String status;
@@ -123,18 +121,6 @@ public class Query implements Serializable {
 		return new TraverseModeSet(this.mode).isTransit();
 	}
 	
-	/**
-	 * What attribute is this associated with?
-	 */
-	public Attribute getAttribute () {
-		Shapefile l = Shapefile.getShapefile(shapefileId);
-		
-		if (l == null)
-			return null;
-		
-		return l.attributes.get(attributeName);
-	}
-	
 	public void save() {
 		
 		// assign id at save
@@ -153,7 +139,7 @@ public class Query implements Serializable {
 	
 	public void run() {
 		
-		ActorRef queryActor = Akka.system().actorOf(Props.create(QueryActor.class));
+		ActorRef queryActor = Cluster.getActorSystem().actorOf(Props.create(QueryActor.class));
 		System.out.println(queryActor.path());
 		
 		queryActor.tell(this, null);
@@ -174,7 +160,11 @@ public class Query implements Serializable {
 	public synchronized DataStore<ResultEnvelope> getResults() {
 		
 		if(results == null) {
-			results = new DataStore<ResultEnvelope>(new File(Application.dataPath, "results"), "r_" + id);
+			// use a non-transactional store to save disk space and increase performance.
+			// if the query dies we need to throw away the query anyhow.
+			// we use mapdb serialization because we're more concerned about speed than data durability.
+			// (this data can be easily reconstructed; this is basically a persistent cache)
+			results = new DataStore<ResultEnvelope>(new File(Application.dataPath, "results"), "r_" + id, false, true, false);
 		}
 		
 		return results;
@@ -217,49 +207,8 @@ public class Query implements Serializable {
 
 		if(q == null)
 			return;
-
-		ArrayList<ResultEnvelope> writeList = null;
 		
-		synchronized(resultsQueue) {
-			if(!resultsQueue.containsKey(id))
-				resultsQueue.put(id, new ArrayList<ResultEnvelope>());
-			resultsQueue.get(id).add(resultEnvelope);
-			
-			if(resultsQueue.get(id).size() > 10) {
-				writeList = new ArrayList<ResultEnvelope>(resultsQueue.get(id));
-				resultsQueue.get(id).clear();
-				Logger.info("flushing queue...");
-			}
-			
-		}
-		
-		if(writeList != null){
-				for(ResultEnvelope rf1 : writeList)
-					q.getResults().saveWithoutCommit(rf1.id, rf1);
-			
-				q.getResults().commit();
-				
-				Tiles.resetQueryCache(id);
-		}
-					
-		
-	}
-	
-	static void updateStatus(String id, JobStatus js) {
-		
-		Query q = getQuery(id);
-		
-		if(q == null)
-			return;
-		
-		synchronized(q) {
-			q.totalPoints = (int)js.total;
-			q.completePoints = (int)js.complete;
-			q.jobId = js.curJobId;
-			q.save();
-		}
-		
-		Logger.info("status update: " + js.complete + "/" + js.total);
+		q.getResults().saveWithoutCommit(resultEnvelope.id, resultEnvelope);
 	}
 	
 	public static class QueryActor extends UntypedActor {
@@ -276,53 +225,35 @@ public class Query implements Serializable {
 				if (workOffline == null)
 					workOffline = true;
 				
-				String pointSetCachedName = sl.writeToClusterCache(workOffline, q.attributeName);
-				
 				ActorSystem system = Cluster.getActorSystem();
 				ActorRef executive = Cluster.getExecutive();
 				
 				JobSpec js;
 				
+				String pointSetId = sl.id + ".json";
+				
+				q.totalPoints = sl.getFeatureCount();
+				q.completePoints = 0;
+				
 				if (q.isTransit()) {
 					// create a profile request
-					ProfileRequest pr = Api.analyst.buildProfileRequest(q.mode, q.date, q.fromTime, q.toTime, null);
-					js = new JobSpec(q.scenarioId, pointSetCachedName, pointSetCachedName, pr);
+					ProfileRequest pr = Api.analyst.buildProfileRequest(q.mode, q.date, q.fromTime, q.toTime, 0, 0);
+					// the pointset is already in the cluster cache, from when it was uploaded.
+					// every pointset has all shapefile attributes.
+					js = new JobSpec(q.scenarioId, pointSetId, pointSetId, pr);
 				}
 				else {
 					// this is not a transit request, no need for computationally-expensive profile routing 
 					RoutingRequest rr = Api.analyst.buildRequest(q.scenarioId, q.date, q.fromTime, null, q.mode, 120);
-					js = new JobSpec(q.scenarioId, pointSetCachedName, pointSetCachedName, rr);
+					js = new JobSpec(q.scenarioId, pointSetId, pointSetId, rr);
 				}
 
 				// plus a callback that registers how many work items have returned
-				ActorRef callback = system.actorOf(Props.create(SaveQueryCallback.class, q.id));
+				ActorRef callback = system.actorOf(Props.create(SaveQueryCallback.class, q.id, q.totalPoints));
 				js.setCallback(callback);
 
 				// start the job
-				Timeout timeout = new Timeout(Duration.create(60, "seconds"));
-				Future<Object> future = Patterns.ask(executive, js, timeout);
-				
-				int jobId = ((JobId) Await.result(future, timeout.duration())).jobId;
-				
-				JobStatus status = null;
-				
-				// wait for job to complete
-				do {
-					Thread.sleep(500);
-					try {
-						status = Cluster.getStatus(jobId);
-						
-						if(status != null)
-							Query.updateStatus(q.id, status);
-						else
-							Logger.debug("waiting for job status messages, incomplete");
-					}
-					catch (Exception e) {
-						Logger.debug("waiting for job status messages");
-					}
-					
-					
-				} while(status == null || !status.isComplete());				
+				executive.tell(js, ActorRef.noSender());							
 			}
 		} 
 	}
@@ -351,17 +282,43 @@ public class Query implements Serializable {
 		/** the query ID */
 		public final String id;
 		
+		/** the number of points completed so far */
+		public int complete; 
+		
+		/** the number of points we expect to complete */
+		public final int totalPoints;
+		
 		/**
 		 * Create a new save query callback.
 		 * @param id the query ID.
 		 */
-		public SaveQueryCallback(String id) {
+		public SaveQueryCallback(String id, int totalPoints) {
 			this.id = id;
+			this.totalPoints = totalPoints;
+			complete = 0;
 		}
 		
 		@Override
-		public synchronized void onWorkResult(WorkResult res) {
-			Query.saveQueryResult(id, new ResultEnvelope(res));
+		public synchronized void onWorkResult(WorkResult res) {			
+			if (res.success) {
+				Query.saveQueryResult(id, new ResultEnvelope(res));
+			}
+			
+			// update complete after query has been saved
+			complete++;
+			
+			// only update client every 200 points or when the query is done
+			if (complete % 200 == 0 || complete == totalPoints) {
+				Query query = Query.getQuery(id);
+				
+				// flush to disk before saying the query is done
+				// transactional support is off, so this is important
+				if (complete == totalPoints)
+					query.getResults().commit();
+				
+				query.completePoints = complete;
+				query.save();
+			}
 		}
 	}
 }

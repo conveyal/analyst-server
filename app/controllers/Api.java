@@ -155,9 +155,7 @@ public class Api extends Controller {
     		promise = Promise.promise(
     				new Function0<TimeSurfaceShort>() {
     					public TimeSurfaceShort apply() {
-    						LatLon latLon = new LatLon(String.format("%s,%s", lat, lon));
-
-							ProfileRequest request = analyst.buildProfileRequest(mode, jodaDate, fromTime, toTime, latLon);;
+							ProfileRequest request = analyst.buildProfileRequest(mode, jodaDate, fromTime, toTime, lat, lon);
 
     						if(request == null)
     							return null;
@@ -284,20 +282,20 @@ public class Api extends Controller {
      * @param shapefileId
      * @return
      */
-    public static Result result(Integer surfaceId, String shapefileId, String attributeName) {
+    public static Result result(Integer surfaceId, String shapefileId) {
     	final Shapefile shp = Shapefile.getShapefile(shapefileId);
     	ResultSet result;
 
     	// it could be a profile request, or not
     	// The IDs are unique; they come from inside OTP.
     	try {
-    		result = AnalystProfileRequest.getResult(surfaceId, shapefileId, attributeName);
+    		result = AnalystProfileRequest.getResult(surfaceId, shapefileId);
     	} catch (NullPointerException e) {
-    		result = AnalystRequest.getResult(surfaceId, shapefileId, attributeName);
+    		result = AnalystRequest.getResult(surfaceId, shapefileId);
     	}
 
     	ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    	result.writeJson(baos, shp.getPointSet(attributeName));
+    	result.writeJson(baos, shp.getPointSet());
         ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
         response().setContentType("application/json");
     	return ok(bais);
@@ -330,7 +328,7 @@ public class Api extends Controller {
     }
 
     public static Result queryBins(String queryId, Integer timeLimit, String weightByShapefile, String weightByAttribute, String groupBy,
-    		String which, String compareTo) {
+    		String which, String attributeName, String compareTo) {
     	
 		response().setHeader(CACHE_CONTROL, "no-cache, no-store, must-revalidate");
 		response().setHeader(PRAGMA, "no-cache");
@@ -360,13 +358,13 @@ public class Api extends Controller {
 	   	
     	try {
 
-    		String queryKey = queryId + "_" + timeLimit + "_" + which;
+    		String queryKey = queryId + "_" + timeLimit + "_" + which + "_" + attributeName;
 
     		QueryResults qr = null;
 
     		synchronized(QueryResults.queryResultsCache) {
     			if(!QueryResults.queryResultsCache.containsKey(queryKey)) {
-	    			qr = new QueryResults(query, timeLimit, whichEnum);
+	    			qr = new QueryResults(query, timeLimit, whichEnum, attributeName);
 	    			QueryResults.queryResultsCache.put(queryKey, qr);
 	    		}
 	    		else
@@ -376,9 +374,9 @@ public class Api extends Controller {
     		if (otherQuery != null) {
         		QueryResults otherQr = null;
         		
-    			queryKey = compareTo + "_" + timeLimit + "_" + which;
+    			queryKey = compareTo + "_" + timeLimit + "_" + which + "_" + attributeName;
     			if (!QueryResults.queryResultsCache.containsKey(queryKey)) {
-    				otherQr = new QueryResults(otherQuery, timeLimit, whichEnum);
+    				otherQr = new QueryResults(otherQuery, timeLimit, whichEnum, attributeName);
     				QueryResults.queryResultsCache.put(queryKey, otherQr);
     			}
     			else {
@@ -625,9 +623,10 @@ public class Api extends Controller {
 
         if (file != null && file.getFile() != null) {
 
-        	Shapefile s = Shapefile.create(file.getFile(), body.asFormUrlEncoded().get("projectId")[0]);
+        	String projectId = body.asFormUrlEncoded().get("projectId")[0];
+        	String name = body.asFormUrlEncoded().get("name")[0];
+        	Shapefile s = Shapefile.create(file.getFile(), projectId, name);
 
-        	s.name = body.asFormUrlEncoded().get("name")[0];
         	s.description = body.asFormUrlEncoded().get("description")[0];
 
         	s.save();

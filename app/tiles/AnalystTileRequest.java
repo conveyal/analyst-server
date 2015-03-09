@@ -20,6 +20,7 @@ import org.opengis.referencing.operation.TransformException;
 import org.opentripplanner.analyst.PointSet;
 import org.opentripplanner.analyst.ResultSetDelta;
 import org.opentripplanner.analyst.ResultSetWithTimes;
+import org.opentripplanner.analyst.SampleSet;
 import org.opentripplanner.analyst.TimeSurface;
 
 import otp.AnalystProfileRequest;
@@ -40,6 +41,8 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.vividsolutions.jts.index.strtree.STRtree;
+
+import controllers.Api;
 
 public abstract class AnalystTileRequest {
 	
@@ -346,7 +349,6 @@ public abstract class AnalystTileRequest {
 	public static class SurfaceComparisonTile extends AnalystTileRequest {
 		
 		final String shapefileId;
-		final String attributeName;
 		final Integer surfaceId1;
 		final Integer surfaceId2;
 		final Boolean showIso;
@@ -354,12 +356,11 @@ public abstract class AnalystTileRequest {
 		final Integer timeLimit;
 		final Integer minTime;
 		
-		public SurfaceComparisonTile(Integer surfaceId1, Integer surfaceId2, String shapefileId,  String attributeName,
+		public SurfaceComparisonTile(Integer surfaceId1, Integer surfaceId2, String shapefileId,
 				Integer x, Integer y, Integer z, Boolean showIso, Boolean showPoints, Integer timeLimit, Integer minTime) {
 			super(x, y, z, "surface");
 			
 			this.shapefileId = shapefileId;
-			this.attributeName = attributeName;
 			this.surfaceId1 = surfaceId1;
 			this.surfaceId2 = surfaceId2;
 			this.showIso = showIso;
@@ -369,7 +370,7 @@ public abstract class AnalystTileRequest {
 		}
 		
 		public String getId() {
-			return super.getId() + "_" + shapefileId + "_" + attributeName + "_" + surfaceId1 + "_" + surfaceId2 + "_" + showIso + "_" + showPoints + "_" + timeLimit + "_" + minTime;
+			return super.getId() + "_" + shapefileId + "_" + surfaceId1 + "_" + surfaceId2 + "_" + showIso + "_" + showPoints + "_" + timeLimit + "_" + minTime;
 		}
 		
 		public byte[] render(){
@@ -389,8 +390,13 @@ public abstract class AnalystTileRequest {
 			if (surf2 == null)
 				surf2 = AnalystRequest.getSurface(surfaceId2);
 			
-			PointSet ps = shp.getPointSet(attributeName);
-			ResultSetDelta resultDelta = new ResultSetDelta(ps.getSampleSet(Api.analyst.getGraph(surf1.routerId)), ps.getSampleSet(Api.analyst.getGraph(surf2.routerId)),  surf1, surf2);
+			PointSet ps = shp.getPointSet();
+			
+			// TODO: cache samples on multiple tile requests (should be a performance win)
+			SampleSet ss1 = ps.getSampleSet(Api.analyst.getGraph(surf1.routerId));
+			SampleSet ss2 = ps.getSampleSet(Api.analyst.getGraph(surf2.routerId));
+			ResultSetDelta resultDelta = new ResultSetDelta(ss1, ss2,  surf1, surf2);
+
 
 			List<ShapeFeature> features = shp.query(tile.envelope);
 
@@ -476,14 +482,12 @@ public abstract class AnalystTileRequest {
     		final Boolean showPoints;
     		final Integer timeLimit;
     		final Integer minTime;
-			final String attributeName;
     		
-    		public SurfaceTile(Integer surfaceId, String shapefileId, String attributeName, Integer x, Integer y, Integer z,
+    		public SurfaceTile(Integer surfaceId, String shapefileId, Integer x, Integer y, Integer z,
     				Boolean showIso, Boolean showPoints, Integer timeLimit, Integer minTime) {
     			super(x, y, z, "surface");
     			
     			this.shapefileId = shapefileId;
-    			this.attributeName = attributeName;
     			this.surfaceId = surfaceId;
     			this.showIso = showIso;
     			this.showPoints = showPoints;
@@ -492,7 +496,7 @@ public abstract class AnalystTileRequest {
     		}
     		
     		public String getId() {
-    			return super.getId() + "_" + shapefileId + "_" + attributeName + "_" + surfaceId + "_" + showIso + "_" + showPoints + "_" + timeLimit + "_" + minTime;
+    			return super.getId() + "_" + shapefileId + "_" + surfaceId + "_" + showIso + "_" + showPoints + "_" + timeLimit + "_" + minTime;
     		}
     		
     		public byte[] render(){
@@ -508,16 +512,16 @@ public abstract class AnalystTileRequest {
 	    		ResultSetWithTimes result;
 	    			    		
 	    		try {
-	    			result = AnalystProfileRequest.getResultWithTimes(surfaceId, shapefileId, attributeName);
+	    			result = AnalystProfileRequest.getResultWithTimes(surfaceId, shapefileId);
 	    		}
 	    		catch (NullPointerException e) {
 	    			// not a profile request
-	    			result = AnalystRequest.getResultWithTimes(surfaceId, shapefileId, attributeName);
+	    			result = AnalystRequest.getResultWithTimes(surfaceId, shapefileId);
 	    		}
 
 	            List<ShapeFeature> features = shp.query(tile.envelope);
 
-            	PointSet ps = Shapefile.getShapefile(shapefileId).getPointSet(attributeName);
+            	PointSet ps = Shapefile.getShapefile(shapefileId).getPointSet();
 	            
 	            for(ShapeFeature feature : features) {
 
@@ -588,11 +592,13 @@ public static class QueryTile extends AnalystTileRequest {
 		final Integer timeLimit;
 		final String weightByShapefile;
 		final String weightByAttribute;
+		final String attributeName;
 		final String groupBy;
 		final ResultEnvelope.Which which;
 		
 		public QueryTile(String queryId, Integer x, Integer y, Integer z, Integer timeLimit,
-				String weightByShapefile, String weightByAttribute, String groupBy, ResultEnvelope.Which which) {
+				String weightByShapefile, String weightByAttribute, String groupBy,
+				ResultEnvelope.Which which, String attributeName) {
 			super(x, y, z, "transit");
 			
 			this.queryId = queryId;
@@ -601,10 +607,11 @@ public static class QueryTile extends AnalystTileRequest {
 			this.weightByAttribute = weightByAttribute;
 			this.groupBy = groupBy;
 			this.which = which;
+			this.attributeName = attributeName;
 		}
 		
 		public String getId() {
-			return super.getId() + "_" + queryId + "_" + timeLimit +  "_" +  which + "_" + weightByShapefile + "_" + groupBy + "_" + weightByAttribute;
+			return super.getId() + "_" + queryId + "_" + timeLimit +  "_" +  which + "_" + weightByShapefile + "_" + groupBy + "_" + weightByAttribute + "_" + attributeName;
 		}
 		
 		public byte[] render(){
@@ -615,13 +622,13 @@ public static class QueryTile extends AnalystTileRequest {
 				return null;
 
 
-    		String queryKey = queryId + "_" + timeLimit + "_" + which;
+    		String queryKey = queryId + "_" + timeLimit + "_" + which + "_" + attributeName;
 			
 			QueryResults qr = null;
 
 			synchronized(QueryResults.queryResultsCache) {
 				if(!QueryResults.queryResultsCache.containsKey(queryKey)) {
-					qr = new QueryResults(query, timeLimit, which);
+					qr = new QueryResults(query, timeLimit, which, attributeName);
 					QueryResults.queryResultsCache.put(queryKey, qr);
 				}
 				else
@@ -724,8 +731,9 @@ public static class QueryTile extends AnalystTileRequest {
 		public final String compareTo;
 		
 		public QueryComparisonTile(String queryId, String compareTo, Integer x, Integer y, Integer z, Integer timeLimit,
-				String weightByShapefile, String weightByAttribute, String groupBy, ResultEnvelope.Which which) {
-			super(queryId, x, y, z, timeLimit, weightByShapefile, weightByAttribute, groupBy, which);
+				String weightByShapefile, String weightByAttribute, String groupBy, ResultEnvelope.Which which,
+				String attributeName) {
+			super(queryId, x, y, z, timeLimit, weightByShapefile, weightByAttribute, groupBy, which, attributeName);
 
 			this.compareTo = compareTo;
 		}
@@ -743,13 +751,13 @@ public static class QueryTile extends AnalystTileRequest {
 			if (q1 == null || q2 == null || !q1.shapefileId.equals(q2.shapefileId))
 				return null;
 			
-			String q1key = queryId + "_" + timeLimit + "_" + which;
-			String q2key = compareTo + "_" + timeLimit + "_" + which;
+			String q1key = queryId + "_" + timeLimit + "_" + which + "_" + attributeName;
+			String q2key = compareTo + "_" + timeLimit + "_" + which + "_" + attributeName;
 			
 			QueryResults qr1, qr2;
 			
 			if (!QueryResults.queryResultsCache.containsKey(q1key)) {
-				qr1 = new QueryResults(q1, timeLimit, which);
+				qr1 = new QueryResults(q1, timeLimit, which, attributeName);
 				QueryResults.queryResultsCache.put(q1key, qr1);
 			}
 			else {
@@ -757,7 +765,7 @@ public static class QueryTile extends AnalystTileRequest {
 			}
 			
 			if (!QueryResults.queryResultsCache.containsKey(q2key)) {
-				qr2 = new QueryResults(q2, timeLimit, which);
+				qr2 = new QueryResults(q2, timeLimit, which, attributeName);
 				QueryResults.queryResultsCache.put(q2key, qr2);
 			}
 			else {

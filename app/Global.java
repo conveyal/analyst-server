@@ -1,6 +1,7 @@
 import java.io.IOException;
 
 import models.Scenario;
+import models.Shapefile;
 import models.User;
 import controllers.Api;
 import play.Application;
@@ -17,6 +18,7 @@ public class Global extends GlobalSettings {
 		
 		try {
 			Scenario.buildAll();
+			Shapefile.writeAllToClusterCache();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

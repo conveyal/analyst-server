@@ -8,12 +8,14 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import models.Shapefile.ShapeFeature;
 
 import org.mapdb.BTreeKeySerializer;
 import org.mapdb.BTreeMap;
 import org.mapdb.DB;
+import org.mapdb.DB.BTreeMapMaker;
 import org.mapdb.DBMaker;
 import org.mapdb.Fun;
 import org.mapdb.Pump;
@@ -28,12 +30,37 @@ public class DataStore<T> {
 	DB db;
 	Map<String,T> map;
 	
-	public DataStore(String dataFile) {
+	public static String dataPath = null;
 	
-		this(new File(Application.dataPath), dataFile);
+	/** Create a new data store in the default location with transactional support enabled and the default cache and serializer */
+	public DataStore(String dataFile) {
+		
+		// allow models to be used outside of the application by specifying a data path directly
+		this(new File(dataPath != null ? dataPath : Application.dataPath), dataFile, true, false, false);
 	}
 
+	/** Create a new data store in the default location with transactional support enabled and the default cache */
+	public DataStore(String dataFile, boolean useJavaSerialization) {
+	
+		this(new File(dataPath != null ? dataPath : Application.dataPath), dataFile, true, false, useJavaSerialization);
+	}
+	
+	/**
+	 * Create a new datastore with transactional support enabled and a default cache.
+	 */
 	public DataStore(File directory, String dataFile) {
+		this(directory, dataFile, true, false, false);
+	}
+	
+	/**
+	 * Create a new DataStore.
+	 * @param directory Where should it be created?
+	 * @param dataFile What should it be called?
+	 * @param transactional Should MapDB's transactional support be enabled?
+	 * @param weakRefCache Should we use a weak reference cache instead of the default fixed-size cache?
+	 * @param useJavaSerialization Should java serialization be used instead of mapdb serialization (more tolerant to class version changes)?
+	 */
+	public DataStore(File directory, String dataFile, boolean transactional, boolean weakRefCache, boolean useJavaSerialization) {
 	
 		if(!directory.exists())
 			directory.mkdirs();
@@ -45,13 +72,27 @@ public class DataStore<T> {
 			e.printStackTrace();
 		}
 		
-		db = DBMaker.newFileDB(new File(directory, dataFile + ".db"))
-			.closeOnJvmShutdown()
-	        .make();
+		DBMaker dbm = DBMaker.newFileDB(new File(directory, dataFile + ".db"))
+			.closeOnJvmShutdown();
 		
-		map = db.getTreeMap(dataFile);
+		if (!transactional)
+			dbm = dbm.transactionDisable();
+		
+		if (weakRefCache)
+			dbm = dbm.cacheWeakRefEnable();
+		
+	    db = dbm.make();
+		
+	    BTreeMapMaker maker = db.createTreeMap(dataFile);
+	    
+	    // this probably ought to cache the serializer.
+	    if (useJavaSerialization)
+	    	maker = maker.valueSerializer(new ClassLoaderSerializer());
+	    
+		map = maker.makeOrGet();
 	}
 	
+	// TODO: add all the other arguments about what kind of serialization, transactions, etc.
 	public DataStore(File directory, String dataFile, List<Fun.Tuple2<String,T>>inputData) {
 		
 		if(!directory.exists())
@@ -129,6 +170,10 @@ public class DataStore<T> {
 	
 	public Collection<T> getAll() {
 		return map.values();
+	}
+	
+	public Collection<Entry<String, T>> getEntries () {
+		return map.entrySet();
 	}
 	
 	public Integer size() {

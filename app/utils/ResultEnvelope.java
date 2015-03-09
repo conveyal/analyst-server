@@ -61,6 +61,7 @@ public class ResultEnvelope implements Serializable {
 			this.avgCase = res.getAvgCase();
 			this.pointEstimate = null;
 			this.spread = null;
+			// the surface will never be null, because it is only created if the workresult was successful
 			this.id = this.bestCase.id;
 		}
 		else {

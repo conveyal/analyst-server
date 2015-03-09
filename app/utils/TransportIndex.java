@@ -57,7 +57,8 @@ public class TransportIndex {
 				if (Edge instanceof PlainStreetEdge.class)
 			}*/
 			
-			STRtree spatialIndex = new STRtree(segments.size());
+			// R-trees have to have a minimum of two nodes
+			STRtree spatialIndex = new STRtree(Math.max(segments.size(), 2));
 			
 			for(TransitSegment ts : segments) {
 				spatialIndex.insert(ts.geom.getEnvelopeInternal(), ts);

@@ -98,20 +98,11 @@ public class Cluster {
 	 */
 	public static JobStatus getStatus(int jobId) {
 		Timeout timeout = new Timeout(Duration.create(5, "seconds"));
-		Future<Object> future = Patterns.ask(executive, new JobStatusQuery(), timeout);
-		ArrayList<JobStatus> result;
+		Future<Object> future = Patterns.ask(executive, new JobStatusQuery(jobId), timeout);
 		try {
-			result = (ArrayList<JobStatus>) Await.result(future, timeout.duration());
+			return (JobStatus) Await.result(future, timeout.duration());
 		} catch (Exception e) {
 			return null;
 		}
-		
-		for (JobStatus s : result) {
-			if (s.curJobId == jobId) {
-				return s;
-			}
-		}
-		
-		return null;
 	}
 }

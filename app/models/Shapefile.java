@@ -49,6 +49,7 @@ import org.opentripplanner.analyst.core.Sample;
 
 import play.Logger;
 import play.Play;
+import play.libs.Akka;
 
 import com.conveyal.otpac.PointSetDatastore;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -63,6 +64,8 @@ import com.vividsolutions.jts.index.strtree.STRtree;
 
 import controllers.Api;
 import controllers.Application;
+import scala.concurrent.ExecutionContext;
+import scala.concurrent.duration.Duration;
 import utils.Bounds;
 import utils.DataStore;
 import utils.HaltonPoints;
@@ -74,14 +77,21 @@ import utils.HashUtils;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Shapefile implements Serializable {
-
-	private static final long serialVersionUID = 1L;
+	// this should remain constant unless we make a change where we explicitly want to break deserialization
+	// so that users have to start fresh.
+	private static final long serialVersionUID = 2L;
 
 	@JsonIgnore
-	static private DataStore<Shapefile> shapefilesData = new DataStore<Shapefile>("shapes");
+	static private DataStore<Shapefile> shapefilesData = new DataStore<Shapefile>("shapes", true);
 
 	public String id;
 	public String name;
+	
+	/**
+	 * The name of this shapefile in the pointset. Don't change.
+	 */
+	public String categoryId;
+	
 	public String description;
 	
 	public String filename;
@@ -95,7 +105,8 @@ public class Shapefile implements Serializable {
 	@JsonIgnore
 	public HashMap<String,Attribute> attributes = new HashMap<String,Attribute>();
 
-	public static Map<String,PointSet> pointSetCache = new ConcurrentHashMap<String,PointSet>();
+	/** the pointset for this shapefile */
+	private transient PointSet pointSet;
 
 	@JsonIgnore
 	public File file;
@@ -109,7 +120,7 @@ public class Shapefile implements Serializable {
 	public Shapefile() {
 		
 	}
-	static public class ShapeFeature  implements Serializable, Comparable<ShapeFeature> {
+	static public class ShapeFeature implements Serializable, Comparable<ShapeFeature> {
 
 		private static final long serialVersionUID = 1L;
 		public String id;
@@ -237,64 +248,57 @@ public class Shapefile implements Serializable {
 		return spatialIndex;
 	}
 
+	/**
+	 * Get the pointset.
+	 */
 	@JsonIgnore
-	public PointSet getPointSet(String attrName) {
+	public synchronized PointSet getPointSet() {
+		if (pointSet != null)
+			return pointSet;
 
-		String psId = this.id + "_" + attrName;
-		
-		synchronized (pointSetCache) {
-			if(pointSetCache.containsKey(psId))
-				return pointSetCache.get(psId);
+		pointSet = new PointSet(getFeatureCount());
 
-			PointSet ps = new PointSet(getFeatureCount());
+		pointSet.id = categoryId;
+		pointSet.label = this.name;
+		pointSet.description = this.description;
 
-			String categoryId = Attribute.convertNameToId(this.name);
+		int index = 0;
+		for(ShapeFeature sf :  this.getShapeFeatureStore().getAll()) {
 
-			ps.id = categoryId;
-			ps.label = this.name;
-			ps.description = this.description;
+			HashMap<String,Integer> propertyData = new HashMap<String,Integer>();
 
-			int index = 0;
-			for(ShapeFeature sf :  this.getShapeFeatureStore().getAll()) {
-
-				HashMap<String,Integer> propertyData = new HashMap<String,Integer>();
-
-				Attribute a = this.attributes.get(attrName);
-				String propertyId = categoryId + "." + Attribute.convertNameToId(a.name);
+			for (Attribute a : this.attributes.values()) {
+				String propertyId = categoryId + "." + a.fieldName;
 				propertyData.put(propertyId, sf.getAttribute(a.fieldName));
-
-
-				PointFeature pf;
-				try {
-					pf = new PointFeature(sf.id.toString(), sf.geom, propertyData);
-					ps.addFeature(pf, index);
-				} catch (EmptyPolygonException | UnsupportedGeometryException e) {
-					e.printStackTrace();
-				}
-
-
-				index++;
+				// TODO: update names when attribute name is edited.
+				pointSet.setLabel(propertyId, a.name);
 			}
 
-			ps.setLabel(categoryId, this.name);
 
-			Attribute attr = this.attributes.get(attrName);
-			String propertyId = categoryId + "." + Attribute.convertNameToId(attr.name);
-			ps.setLabel(propertyId, attr.name);
-			
-			if (attr.color != null)
-				ps.setStyle(propertyId, "color", attr.color);
+			PointFeature pf;
+			try {
+				pf = new PointFeature(sf.id.toString(), sf.geom, propertyData);
+				pointSet.addFeature(pf, index);
+			} catch (EmptyPolygonException | UnsupportedGeometryException e) {
+				e.printStackTrace();
+			}
 
-			pointSetCache.put(psId, ps);
 
-			return ps;
+			index++;
 		}
+
+		pointSet.setLabel(categoryId, this.name);
+
+		return pointSet;
 	}
 
-	public String writeToClusterCache(Boolean workOffline, String attrName) throws IOException {
+	/**
+	 * Write the shapefile to the cluster cache and to S3.
+	 */
+	public String writeToClusterCache() throws IOException {
 
-		PointSet ps = this.getPointSet(attrName);
-		String cachePointSetId = id + "_" + Attribute.convertNameToId(attrName) + ".json";
+		PointSet ps = this.getPointSet();
+		String cachePointSetId = id + ".json";
 
 		File f = new File(cachePointSetId);
 
@@ -304,6 +308,7 @@ public class Shapefile implements Serializable {
 
 		String s3credentials = Play.application().configuration().getString("cluster.s3credentials");
 		String bucket = Play.application().configuration().getString("cluster.pointsets-bucket");
+		boolean workOffline = Play.application().configuration().getBoolean("cluster.work-offline");
 		
 		PointSetDatastore datastore = new PointSetDatastore(10, s3credentials, workOffline, bucket);
 
@@ -361,7 +366,9 @@ public class Shapefile implements Serializable {
 	private void buildIndex() {
 		Logger.info("building index for shapefile " + this.id);
 
-		spatialIndex = new STRtree(getShapeFeatureStore().size());
+		// it's not possible to make an R-tree with only one node, so we make an r-tree with two
+		// nodes and leave one empty.
+		spatialIndex = new STRtree(Math.max(getShapeFeatureStore().size(), 2));
 
 		for(ShapeFeature feature : getShapeFeatureStore().getAll()) {
 			spatialIndex.insert(feature.geom.getEnvelopeInternal(), feature);
@@ -390,7 +397,10 @@ public class Shapefile implements Serializable {
 
 	}
 
-	public static Shapefile create(File originalShapefileZip, String projectId) throws ZipException, IOException {
+	/**
+	 * Create a new shapefile with the given name.
+	 */
+	public static Shapefile create(File originalShapefileZip, String projectId, String name) throws ZipException, IOException {
 
 		String shapefileHash = HashUtils.hashFile(originalShapefileZip);
 
@@ -410,6 +420,10 @@ public class Shapefile implements Serializable {
 
 		shapefile.id = shapefileId;
 		shapefile.projectId = projectId;
+		
+		shapefile.name = name;
+		shapefile.categoryId = Attribute.convertNameToId(name);
+
 
 		ZipFile zipFile = new ZipFile(originalShapefileZip);
 
@@ -445,7 +459,7 @@ public class Shapefile implements Serializable {
 	    	shapefile.setShapeFeatureStore(features);
 
 	    	shapefile.save();
-
+	    		    	
 	    	Logger.info("done loading shapefile " + shapefileId);
 	    }
 	    else
@@ -533,26 +547,26 @@ public class Shapefile implements Serializable {
 			        for(Object attr : sFeature.getProperties()) {
 			        	if(attr instanceof Property) {
 			        		Property p = ((Property)attr);
-			        		String name = p.getName().toString();
+			        		String name = Attribute.convertNameToId(p.getName().toString());
 			        		PropertyType pt = p.getType();
 			        		Object value = p.getValue();
 			        		
 			        		updateAttributeStats(name, value);
 			        		
 			        		if(value != null && (value instanceof Long)) {
-			        			feature.attributes.put(p.getName().toString(), (int)(long)p.getValue());
+			        			feature.attributes.put(name, (int)(long)p.getValue());
 
-			        			fieldnamesFound.add(p.getName().toString());
+			        			fieldnamesFound.add(name);
 
 			        		} else if( value instanceof Integer) {
-			        			feature.attributes.put(p.getName().toString(), (int)p.getValue());
+			        			feature.attributes.put(name, (int)p.getValue());
 
-			        			fieldnamesFound.add(p.getName().toString());
+			        			fieldnamesFound.add(name);
 			        		}
 			        		else if(value != null && (value instanceof Double )) {
-			        			feature.attributes.put(p.getName().toString(), (int)(long)Math.round((Double)p.getValue()));
+			        			feature.attributes.put(name, (int)(long)Math.round((Double)p.getValue()));
 
-			        			fieldnamesFound.add(p.getName().toString());
+			        			fieldnamesFound.add(name);
 
 			        		}
 			        	}
@@ -655,7 +669,6 @@ public class Shapefile implements Serializable {
 	}
 
 	static public Collection<Shapefile> getShapfiles(String projectId) {
-
 		if(projectId == null)
 			return shapefilesData.getAll();
 
@@ -673,5 +686,23 @@ public class Shapefile implements Serializable {
 			return data;
 		}
 
+	}
+
+	public static void writeAllToClusterCache() {
+		ExecutionContext ctx = Akka.system().dispatchers().defaultGlobalDispatcher();
+		
+		for (final Shapefile shapefile : getShapfiles(null)) {
+			Akka.system().scheduler().scheduleOnce(Duration.create(10, "milliseconds"), new Runnable() {
+				
+				@Override
+				public void run() {
+					try {
+						shapefile.writeToClusterCache();
+					} catch (Exception e) {
+						Logger.error("Exception writing " + shapefile + " to cluster cache: " + e);
+					}
+				}
+			}, ctx);
+		}
 	}
 }
