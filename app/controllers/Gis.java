@@ -71,9 +71,6 @@ import utils.HashUtils;
 import utils.QueryResults;
 import utils.ResultEnvelope;
 import utils.QueryResults.QueryResultItem;
-import utils.TransportIndex;
-import utils.TransportIndex.TransitSegment;
-
 @Security.Authenticated(Secured.class)
 public class Gis extends Controller {
 	

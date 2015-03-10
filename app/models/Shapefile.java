@@ -8,9 +8,6 @@ import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -22,9 +19,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
-import javax.smartcardio.ATR;
-
-import com.google.common.io.Files;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.geotools.data.DataStoreFinder;
@@ -46,7 +40,6 @@ import org.opentripplanner.analyst.EmptyPolygonException;
 import org.opentripplanner.analyst.PointFeature;
 import org.opentripplanner.analyst.PointSet;
 import org.opentripplanner.analyst.UnsupportedGeometryException;
-import org.opentripplanner.analyst.core.Sample;
 
 import play.Logger;
 import play.Play;
@@ -58,12 +51,10 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.MultiPolygon;
-import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.geom.prep.PreparedPolygon;
 import com.vividsolutions.jts.index.strtree.STRtree;
 
-import controllers.Api;
 import controllers.Application;
 import scala.concurrent.ExecutionContext;
 import scala.concurrent.duration.Duration;

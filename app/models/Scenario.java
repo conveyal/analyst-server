@@ -37,6 +37,7 @@ import com.conveyal.gtfs.GTFSFeed;
 import com.conveyal.gtfs.model.Stop;
 import com.conveyal.otpac.ClusterGraphService;
 import com.conveyal.otpac.PointSetDatastore;
+import com.vividsolutions.jts.index.strtree.STRtree;
 
 import org.opentripplanner.routing.graph.Graph;
 
@@ -55,6 +56,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.io.ByteStreams;
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.LineString;
 
 import controllers.Api;
 import controllers.Application;
@@ -90,10 +92,36 @@ public class Scenario implements Serializable {
 	
 	public Bounds bounds;
 	
-	public Scenario() {
+	/** spatial index of transit layer. */
+	private transient STRtree spIdx;
+	
+	/** TODO: should probably be in separate map in mapdb */
+	@JsonIgnore
+	public List<LineString> shapes = new ArrayList<LineString>();
+	
+	@JsonIgnore
+	public STRtree getSpatialIndex () {
+		if (spIdx == null) {
+			buildSpatialIndexIfNeeded();
+		}
 		
+		return spIdx;
 	}
 	
+	/** build the spatial index */
+	private synchronized void buildSpatialIndexIfNeeded () {
+		if (spIdx != null)
+			return;
+		
+		spIdx = new STRtree(Math.max(shapes.size(), 2));
+		
+		for (LineString geom : shapes) {
+			spIdx.insert(geom.getEnvelopeInternal(), geom);
+		}
+	}
+	
+	public Scenario() {}
+		
 	public String getStatus() {
 		
 		if(processingGtfs)

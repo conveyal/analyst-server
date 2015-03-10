@@ -11,9 +11,11 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
@@ -25,11 +27,20 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.geotools.geometry.Envelope2D;
 import org.joda.time.DateTimeZone;
+import org.mapdb.Fun;
+import org.mapdb.Fun.Tuple2;
 
 import com.conveyal.gtfs.GTFSFeed;
 import com.conveyal.gtfs.model.Agency;
+import com.conveyal.gtfs.model.Shape;
 import com.conveyal.gtfs.model.Stop;
+import com.conveyal.gtfs.model.StopTime;
+import com.conveyal.gtfs.model.Trip;
 import com.conveyal.otpac.ClusterGraphService;
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.LineString;
+import com.vividsolutions.jts.index.strtree.STRtree;
 
 import play.Logger;
 import play.Play;
@@ -37,6 +48,8 @@ import utils.Bounds;
 import utils.HashUtils;
 import utils.ZipUtils;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteStreams;
 
@@ -126,7 +139,7 @@ public class ProcessTransitScenarioJob implements Runnable {
 			Envelope2D envelope = new Envelope2D();
 			for(File f : scenario.getScenarioDataPath().listFiles()) {
 				if(f.getName().toLowerCase().endsWith(".zip")) {
-					GTFSFeed feed = GTFSFeed.fromFile(f.getAbsolutePath());
+					final GTFSFeed feed = GTFSFeed.fromFile(f.getAbsolutePath());
 
 					for(Stop s : feed.stops.values()) {
 						envelope.include(s.stop_lon, s.stop_lat);
@@ -134,6 +147,49 @@ public class ProcessTransitScenarioJob implements Runnable {
 					
 					Agency a = feed.agency.values().iterator().next();
 					scenario.timeZone = DateTimeZone.forID(a.agency_timezone);
+					
+					// build the spatial index for the map view
+					Collection<Trip> exemplarTrips =
+							Collections2.transform(feed.findPatterns().values(), new Function<List<String>, Trip> () {
+								public Trip apply(List<String> tripIds) {
+									return feed.trips.get(tripIds.get(0));
+								}
+							});
+					
+					GeometryFactory gf = new GeometryFactory();
+					
+					for (Trip trip : exemplarTrips) {
+						// if it has a shape, use that
+						Coordinate[] coords;
+						if (trip.shape_id != null) {
+							Map<Integer, Shape> shape = feed.shapes.get(trip.shape_id);
+							
+							coords = new Coordinate[shape.size()];
+							
+							int i = 0;
+							
+							int lastKey = Integer.MIN_VALUE;
+							for (Entry<Integer, Shape> e : shape.entrySet()) {
+								if (e.getKey() < lastKey)
+									throw new IllegalStateException("Non-sequential shape keys.");
+								
+								coords[i++] = new Coordinate(e.getValue().shape_pt_lon, e.getValue().shape_pt_lat);
+							}
+						}
+						else {
+							Collection<StopTime> stopTimes = feed.stop_times.subMap(new Tuple2(trip.trip_id, null), new Tuple2(trip.trip_id, Fun.HI)).values();
+							coords = new Coordinate[stopTimes.size()];
+							int i = 0;
+							for (StopTime st : stopTimes) {
+								Stop stop = feed.stops.get(st.stop_id);
+								coords[i++] = new Coordinate(stop.stop_lon, stop.stop_lat);
+							}
+						}
+						
+						LineString geom = gf.createLineString(coords);
+						
+						scenario.shapes.add(geom);
+					}
 				}
 			}
 

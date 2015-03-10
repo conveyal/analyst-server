@@ -11,6 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import models.Attribute;
 import models.Query;
+import models.Scenario;
 import models.Shapefile;
 import models.Shapefile.ShapeFeature;
 import models.SpatialLayer;
@@ -30,8 +31,6 @@ import utils.QueryResults;
 import utils.QueryResults.QueryResultItem;
 import utils.ResultEnvelope;
 import utils.ResultEnvelope.Which;
-import utils.TransportIndex;
-import utils.TransportIndex.TransitSegment;
 import controllers.Api;
 
 import com.google.common.base.Charsets;
@@ -39,12 +38,11 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.vividsolutions.jts.index.strtree.STRtree;
+import com.vividsolutions.jts.geom.LineString;
 
 import controllers.Api;
 
 public abstract class AnalystTileRequest {
-	
-		private static TransportIndex transitIndex = new TransportIndex();
 		
 		public static  Map<String, NaturalBreaksClassifier> naturalBreaksClassifierCache = new ConcurrentHashMap<String, NaturalBreaksClassifier>();
 	
@@ -96,18 +94,16 @@ public abstract class AnalystTileRequest {
 			
 			Tile tile = new Tile(this);
 			
-			HashSet<String> defaultEdges = new HashSet<String>();
+            STRtree index = Scenario.getScenario(scenarioId).getSpatialIndex();
+    		List<LineString> segments = index.query(tile.envelope);
 
-    		STRtree index = transitIndex.getIndexForGraph(scenarioId);
-    		List<TransitSegment> segments = index.query(tile.envelope);
-
-    		for(TransitSegment ts : segments) {
+    		for(LineString geom : segments) {
     			Color color;
 
     			color = new Color(0.6f,0.6f,1.0f,0.25f);
 
     			try {
-					tile.renderLineString(ts.geom, color, null);
+					tile.renderLineString(geom, color, null);
 				} catch (MismatchedDimensionException | TransformException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -144,13 +140,13 @@ public abstract class AnalystTileRequest {
 		public byte[] render(){
 			
 			Tile tile = new Tile(this);
-			
+			/*
 			HashSet<String> defaultEdges = new HashSet<String>();
 
 			STRtree index1 = transitIndex.getIndexForGraph(scenario1Id);
-			List<TransitSegment> segments1 = index1.query(tile.envelope);
+			List<LineString> segments1 = null;//index1.query(tile.envelope);
 
-			for(TransitSegment ts : segments1) {
+			for(LineString ts : segments1) {
 				defaultEdges.add(ts.edgeId);
 			}
     		
@@ -180,8 +176,10 @@ public abstract class AnalystTileRequest {
 				e.printStackTrace();
 				return null;
 			}
-			
+                        */
+                        return null;	
 		}
+                       
 	}
 	
 	public static class SpatialTile extends AnalystTileRequest {
