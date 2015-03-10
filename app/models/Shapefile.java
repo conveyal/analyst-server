@@ -202,26 +202,6 @@ public class Shapefile implements Serializable {
 
 		}
 
-		@JsonIgnore
-		transient private Map<String,Sample> graphSampleMap;
-
-		@JsonIgnore
-		public Sample getSampe(String graphId) {
-
-			if(graphSampleMap == null)
-				graphSampleMap = new ConcurrentHashMap<String,Sample>();
-
-			if(!graphSampleMap.containsKey(graphId)) {
-				Point p = geom.getCentroid();
-				Sample s = Api.analyst.getSample(graphId, p.getX(), p.getY());
-
-				if(s != null)
-					graphSampleMap.put(graphId, s);
-			}
-
-			return graphSampleMap.get(graphId);
-		}
-
 		Map<String,Object> attributes = new HashMap<String,Object>();
 
 		@Override

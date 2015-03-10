@@ -24,11 +24,14 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.geotools.geometry.Envelope2D;
+import org.joda.time.DateTimeZone;
 
 import com.conveyal.gtfs.GTFSFeed;
+import com.conveyal.gtfs.model.Agency;
 import com.conveyal.gtfs.model.Stop;
 import com.conveyal.otpac.ClusterGraphService;
 
+import play.Logger;
 import play.Play;
 import utils.Bounds;
 import utils.HashUtils;
@@ -128,6 +131,9 @@ public class ProcessTransitScenarioJob implements Runnable {
 					for(Stop s : feed.stops.values()) {
 						envelope.include(s.stop_lon, s.stop_lat);
 					}
+					
+					Agency a = feed.agency.values().iterator().next();
+					scenario.timeZone = DateTimeZone.forID(a.agency_timezone);
 				}
 			}
 
@@ -186,7 +192,12 @@ public class ProcessTransitScenarioJob implements Runnable {
 		scenario.processingGtfs = false;
 		scenario.processingOsm = false;
 		scenario.save();
-
-		scenario.build();
+		
+		try {
+			scenario.writeToClusterCache();
+		} catch (IOException e) {
+			e.printStackTrace();
+			Logger.error("Failed to write graph to cluster cache");
+		}
 	}
 }

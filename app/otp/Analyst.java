@@ -21,10 +21,7 @@ import java.io.IOException;
 import java.util.TimeZone;
 
 
-public class Analyst { 
-	
-	private AnalystGraphService graphService = new AnalystGraphService();
-	
+public class Analyst { 	
 	public Analyst() {
 		
 	}
@@ -35,19 +32,10 @@ public class Analyst {
 	 * it over the wire.
 	 */
 	
-	public RoutingRequest buildRequest(String graphId, LocalDate date, int time, GenericLocation latLon, String mode, int cutoffMinutes) {
-		Graph graph = getGraph(graphId);
-		
-		// use center of graph extent if no location is specified
-		if(latLon == null)
-			latLon = new GenericLocation(graph.getExtent().centre().y, graph.getExtent().centre().x);
-		
-		// use graph time zone to build request
-		TimeZone tz = graph.getTimeZone();
-		
+	public RoutingRequest buildRequest(String graphId, LocalDate date, int time, GenericLocation latLon, String mode, int cutoffMinutes, DateTimeZone tz) {		
 		PrototypeAnalystRequest req = new PrototypeAnalystRequest();
 		
-		req.dateTime = date.toDateTimeAtStartOfDay(DateTimeZone.forTimeZone(tz)).toDate().getTime() / 1000;
+		req.dateTime = date.toDateTimeAtStartOfDay(tz).toDate().getTime() / 1000;
 		req.dateTime += time;
 		req.modes = new TraverseModeSet(mode);
 		req.routerId = graphId;
@@ -104,22 +92,5 @@ public class Analyst {
 		req.orderBy = Option.SortOrder.AVG;
 		
 		return req;
-	}
-		
-	public Graph getGraph (String graphId) {
-		return graphService.getGraph(graphId);
-	}
-
-	public String getGraphStatus (String graphId) {
-		return graphService.getGraphStatus(graphId);
-	}
-	
-	public File getZippedGraph (String graphId) throws IOException {
-		return graphService.getZippedGraph(graphId);
-	}
-	
-	public Sample getSample (String graphId, double lon, double lat) {
-		return graphService.getGraph(graphId).getSampleFactory().getSample(lon, lat);
-	}
-	
+	}	
 }

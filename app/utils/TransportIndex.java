@@ -41,6 +41,8 @@ public class TransportIndex {
 	}
 	
 	public STRtree getIndexForGraph(String graphId) {
+		return null;
+		/*
 		if(!indexMap.containsKey(graphId)) {
 		
 			List<TransitSegment> segments = new ArrayList<TransitSegment>();
@@ -53,10 +55,6 @@ public class TransportIndex {
 				}
 			}
 			
-			/*for(Edge edge : Api.analyst.getGraph(graphId).getEdges()) {
-				if (Edge instanceof PlainStreetEdge.class)
-			}*/
-			
 			// R-trees have to have a minimum of two nodes
 			STRtree spatialIndex = new STRtree(Math.max(segments.size(), 2));
 			
@@ -67,7 +65,7 @@ public class TransportIndex {
 			indexMap.put(graphId, spatialIndex);
 		}
 		
-		return indexMap.get(graphId);
+		return indexMap.get(graphId);*/
 	}
 
 }

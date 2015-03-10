@@ -16,14 +16,13 @@ public class Global extends GlobalSettings {
 		// start up the Akka server
 		Cluster.getExecutive();
 		
+		// upload to S3
 		try {
-			Scenario.buildAll();
+			Scenario.writeAllToClusterCache();
 			Shapefile.writeAllToClusterCache();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			throw new RuntimeException(e);
 		}
-		
-	}  
-
+	}
 }

@@ -242,8 +242,9 @@ public class Query implements Serializable {
 					js = new JobSpec(q.scenarioId, pointSetId, pointSetId, pr);
 				}
 				else {
-					// this is not a transit request, no need for computationally-expensive profile routing 
-					RoutingRequest rr = Api.analyst.buildRequest(q.scenarioId, q.date, q.fromTime, null, q.mode, 120);
+					// this is not a transit request, no need for computationally-intensive profile routing 
+					Scenario s = Scenario.getScenario(q.scenarioId);
+					RoutingRequest rr = Api.analyst.buildRequest(q.scenarioId, q.date, q.fromTime, null, q.mode, 120, s.timeZone);
 					js = new JobSpec(q.scenarioId, pointSetId, pointSetId, rr);
 				}
 

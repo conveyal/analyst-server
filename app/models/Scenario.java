@@ -29,11 +29,14 @@ import jobs.ProcessTransitScenarioJob;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.geotools.geometry.Envelope2D;
+import org.joda.time.DateTimeZone;
 import org.mapdb.Bind;
 import org.mapdb.Fun;
 
 import com.conveyal.gtfs.GTFSFeed;
 import com.conveyal.gtfs.model.Stop;
+import com.conveyal.otpac.ClusterGraphService;
+import com.conveyal.otpac.PointSetDatastore;
 
 import org.opentripplanner.routing.graph.Graph;
 
@@ -61,6 +64,16 @@ import controllers.Application;
 public class Scenario implements Serializable {
 
 	private static final long serialVersionUID = 1L;
+	
+	private static ClusterGraphService clusterGraphService;
+	
+	static {
+		String s3credentials = Play.application().configuration().getString("cluster.s3credentials");
+		String bucket = Play.application().configuration().getString("cluster.graphs-bucket");
+		boolean workOffline = Play.application().configuration().getBoolean("cluster.work-offline");
+		clusterGraphService = new ClusterGraphService(s3credentials, workOffline, bucket);
+	}
+	
 
 	static DataStore<Scenario> scenarioData = new DataStore<Scenario>("scenario", true);
 
@@ -68,6 +81,8 @@ public class Scenario implements Serializable {
 	public String projectId;
 	public String name;
 	public String description;
+	
+	public DateTimeZone timeZone;
 	
 	public Boolean processingGtfs = false;
 	public Boolean processingOsm = false;
@@ -86,7 +101,7 @@ public class Scenario implements Serializable {
 		else if(processingOsm) 
 			return "PROCESSSING_OSM";
 		else 
-			return Api.analyst.getGraphStatus(id);
+			return "BUILT";
 		
 	}
 	
@@ -166,45 +181,19 @@ public class Scenario implements Serializable {
 			);
 	}
 	
-	public void build() {
-		
-		this.processingGtfs = false;
-    	this.processingOsm = false;
-    	this.failed = false;
-    	this.save();
+	public void writeToClusterCache () throws IOException {
+		clusterGraphService.addGraphFile(getScenarioDataPath());
+	}
 	
-		ExecutionContext graphBuilderContext = Akka.system().dispatchers().lookup("contexts.graph-builder-analyst-context");
-
-		final String graphId = id;
-		
-		Akka.system().scheduler().scheduleOnce(
-			        Duration.create(10, TimeUnit.MILLISECONDS),
-			        new Runnable() {
-			            public void run() {
-			            	
-			            	Api.analyst.getGraph(graphId);
-			            }
-			        },
-			        graphBuilderContext
-			);
-		
+	static public void writeAllToClusterCache () throws IOException {
+		for (Scenario s : scenarioData.getAll()) {
+			s.writeToClusterCache();
+		}
 	}
 
 	static public Scenario getScenario(String id) {
 		
 		return scenarioData.getById(id);	
-	}
-	
-	static public void buildAll() throws IOException {
-		
-		for(Scenario s : getScenarios(null)) {
-			try {
-				s.build();
-			} catch (Exception e) {
-				Logger.error("Exception during scenario build");
-				e.printStackTrace();
-			}
-		}
 	}
 	
 	static public Collection<Scenario> getScenarios(String projectId) throws IOException {

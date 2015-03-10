@@ -139,7 +139,10 @@ public class Api extends Controller {
     	// don't loop an excessive amount 
     	LocalDate dateBound = date.plusYears(2);
     	
-    	// search forward first
+    	// TODO: actually infer a date
+    	return ok(originalDate.toString());
+    	
+    	/*// search forward first
     	DATES: while (date.isBefore(dateBound)) {
     		for (Scenario s : scenarios) {
     			Graph graph = analyst.getGraph(s.id);
@@ -178,7 +181,7 @@ public class Api extends Controller {
     	}
     	
     	// we don't have a date to return that is valid in all feeds
-    	return ok(originalDate.toString());
+    	return ok(originalDate.toString());*/
     }
 
     public static Result queryBins(String queryId, Integer timeLimit, String weightByShapefile, String weightByAttribute, String groupBy,
