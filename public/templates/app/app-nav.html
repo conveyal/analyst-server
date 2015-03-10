@@ -30,7 +30,7 @@
                          <li id="analysisTabRegional"><a href="#">Regional & Aggregate Analysis</a></li>
                     </ul>
              </li>
-             <li id="projectSettingsTab" class="{{#if settingsActive}}active{{/if}}"><a href="#"><span class="glyphicon glyphicon-wrench"></span> Project Settings</a></li>
+             {{#writeAllowed}}<li id="projectSettingsTab" class="{{#if settingsActive}}active{{/if}}"><a href="#"><span class="glyphicon glyphicon-wrench"></span> Project Settings</a></li>{{/writeAllowed}}
            </ul>
 
       {{/if}}
