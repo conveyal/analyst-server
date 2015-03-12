@@ -136,64 +136,7 @@ public class ProcessTransitScenarioJob implements Runnable {
 				}
 			}
 
-			Envelope2D envelope = new Envelope2D();
-			for(File f : scenario.getScenarioDataPath().listFiles()) {
-				if(f.getName().toLowerCase().endsWith(".zip")) {
-					final GTFSFeed feed = GTFSFeed.fromFile(f.getAbsolutePath());
-
-					for(Stop s : feed.stops.values()) {
-						envelope.include(s.stop_lon, s.stop_lat);
-					}
-					
-					Agency a = feed.agency.values().iterator().next();
-					scenario.timeZone = DateTimeZone.forID(a.agency_timezone);
-					
-					// build the spatial index for the map view
-					Collection<Trip> exemplarTrips =
-							Collections2.transform(feed.findPatterns().values(), new Function<List<String>, Trip> () {
-								public Trip apply(List<String> tripIds) {
-									return feed.trips.get(tripIds.get(0));
-								}
-							});
-					
-					GeometryFactory gf = new GeometryFactory();
-					
-					for (Trip trip : exemplarTrips) {
-						// if it has a shape, use that
-						Coordinate[] coords;
-						if (trip.shape_id != null) {
-							Map<Integer, Shape> shape = feed.shapes.get(trip.shape_id);
-							
-							coords = new Coordinate[shape.size()];
-							
-							int i = 0;
-							
-							int lastKey = Integer.MIN_VALUE;
-							for (Entry<Integer, Shape> e : shape.entrySet()) {
-								if (e.getKey() < lastKey)
-									throw new IllegalStateException("Non-sequential shape keys.");
-								
-								coords[i++] = new Coordinate(e.getValue().shape_pt_lon, e.getValue().shape_pt_lat);
-							}
-						}
-						else {
-							Collection<StopTime> stopTimes = feed.stop_times.subMap(new Tuple2(trip.trip_id, null), new Tuple2(trip.trip_id, Fun.HI)).values();
-							coords = new Coordinate[stopTimes.size()];
-							int i = 0;
-							for (StopTime st : stopTimes) {
-								Stop stop = feed.stops.get(st.stop_id);
-								coords[i++] = new Coordinate(stop.stop_lon, stop.stop_lat);
-							}
-						}
-						
-						LineString geom = gf.createLineString(coords);
-						
-						scenario.shapes.add(geom);
-					}
-				}
-			}
-
-			scenario.bounds = new Bounds(envelope);
+			scenario.processGtfs();
 			scenario.processingGtfs = false;
 			scenario.processingOsm = true;
 			scenario.save();

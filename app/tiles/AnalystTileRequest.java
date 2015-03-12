@@ -13,6 +13,7 @@ import models.Attribute;
 import models.Query;
 import models.Scenario;
 import models.Shapefile;
+import models.Scenario.TransitSegment;
 import models.Shapefile.ShapeFeature;
 import models.SpatialLayer;
 
@@ -95,15 +96,15 @@ public abstract class AnalystTileRequest {
 			Tile tile = new Tile(this);
 			
             STRtree index = Scenario.getScenario(scenarioId).getSpatialIndex();
-    		List<LineString> segments = index.query(tile.envelope);
+    		List<TransitSegment> segments = index.query(tile.envelope);
 
-    		for(LineString geom : segments) {
+    		for(TransitSegment seg : segments) {
     			Color color;
 
     			color = new Color(0.6f,0.6f,1.0f,0.25f);
 
     			try {
-					tile.renderLineString(geom, color, null);
+					tile.renderLineString(seg.geom, color, null);
 				} catch (MismatchedDimensionException | TransformException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();

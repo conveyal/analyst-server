@@ -9,6 +9,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.opentripplanner.analyst.ResultSet;
 import org.opentripplanner.profile.ProfileRequest;
@@ -244,7 +245,7 @@ public class Query implements Serializable {
 				else {
 					// this is not a transit request, no need for computationally-intensive profile routing 
 					Scenario s = Scenario.getScenario(q.scenarioId);
-					RoutingRequest rr = Api.analyst.buildRequest(q.scenarioId, q.date, q.fromTime, null, q.mode, 120, s.timeZone);
+					RoutingRequest rr = Api.analyst.buildRequest(q.scenarioId, q.date, q.fromTime, null, q.mode, 120, DateTimeZone.forID(s.timeZone));
 					js = new JobSpec(q.scenarioId, pointSetId, pointSetId, rr);
 				}
 

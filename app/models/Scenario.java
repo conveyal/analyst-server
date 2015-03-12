@@ -19,6 +19,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
+import java.util.Map.Entry;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
@@ -30,11 +32,20 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.geotools.geometry.Envelope2D;
 import org.joda.time.DateTimeZone;
+import org.mapdb.Atomic;
+import org.mapdb.BTreeMap;
 import org.mapdb.Bind;
+import org.mapdb.DB;
+import org.mapdb.DBMaker;
 import org.mapdb.Fun;
+import org.mapdb.Fun.Tuple2;
 
 import com.conveyal.gtfs.GTFSFeed;
+import com.conveyal.gtfs.model.Agency;
+import com.conveyal.gtfs.model.Shape;
 import com.conveyal.gtfs.model.Stop;
+import com.conveyal.gtfs.model.StopTime;
+import com.conveyal.gtfs.model.Trip;
 import com.conveyal.otpac.ClusterGraphService;
 import com.conveyal.otpac.PointSetDatastore;
 import com.vividsolutions.jts.index.strtree.STRtree;
@@ -49,13 +60,18 @@ import play.libs.F.Promise;
 import scala.concurrent.ExecutionContext;
 import scala.concurrent.duration.Duration;
 import utils.Bounds;
+import utils.ClassLoaderSerializer;
 import utils.DataStore;
 import utils.HashUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
 import com.google.common.io.ByteStreams;
+import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LineString;
 
 import controllers.Api;
@@ -78,13 +94,22 @@ public class Scenario implements Serializable {
 	
 
 	static DataStore<Scenario> scenarioData = new DataStore<Scenario>("scenario", true);
+	
+	// a db to hold the shapes. uses tuple indexing, so we can't use datastore
+	static DB segmentsDb = DBMaker.newFileDB(new File(Application.dataPath, "scenario_shapes.db"))
+				.cacheSize(2000)
+				.make();
+	
+	// the long is just to differentiate entries . . . this should really be a multimap
+	static BTreeMap<Tuple2<String, Long>, TransitSegment> segments = segmentsDb.createTreeMap("segments").valueSerializer(new ClassLoaderSerializer()).makeOrGet();
+	static Atomic.Long nextSegmentId = segmentsDb.getAtomicLong("segmentId");
 
 	public String id;
 	public String projectId;
 	public String name;
 	public String description;
 	
-	public DateTimeZone timeZone;
+	public String timeZone;
 	
 	public Boolean processingGtfs = false;
 	public Boolean processingOsm = false;
@@ -93,11 +118,13 @@ public class Scenario implements Serializable {
 	public Bounds bounds;
 	
 	/** spatial index of transit layer. */
+	// TODO: this can be large, and large numbers of scenarios can be cached . . . perhaps use a SoftReference?
 	private transient STRtree spIdx;
 	
-	/** TODO: should probably be in separate map in mapdb */
 	@JsonIgnore
-	public List<LineString> shapes = new ArrayList<LineString>();
+	public Collection<TransitSegment> getSegments () {
+		return segments.subMap(new Tuple2(this.id, null), new Tuple2(this.id, Fun.HI)).values();
+	}
 	
 	@JsonIgnore
 	public STRtree getSpatialIndex () {
@@ -113,10 +140,12 @@ public class Scenario implements Serializable {
 		if (spIdx != null)
 			return;
 		
+		Collection<TransitSegment> shapes = getSegments();
+		
 		spIdx = new STRtree(Math.max(shapes.size(), 2));
 		
-		for (LineString geom : shapes) {
-			spIdx.insert(geom.getEnvelopeInternal(), geom);
+		for (TransitSegment seg : shapes) {
+			spIdx.insert(seg.geom.getEnvelopeInternal(), seg);
 		}
 	}
 	
@@ -211,6 +240,88 @@ public class Scenario implements Serializable {
 	
 	public void writeToClusterCache () throws IOException {
 		clusterGraphService.addGraphFile(getScenarioDataPath());
+		
+		// if the shapes are null, compute them.
+		// They are built on upload, but older databases may not have them.
+		if (this.getSegments().isEmpty() || this.timeZone == null) {
+			processGtfs();
+		}
+	}
+	
+	public void processGtfs () {		
+		Envelope2D envelope = new Envelope2D();
+
+		for(File f : getScenarioDataPath().listFiles()) {			
+			if(f.getName().toLowerCase().endsWith(".zip")) {
+				final GTFSFeed feed = GTFSFeed.fromFile(f.getAbsolutePath());
+				
+				// this is not a gtfs feed
+				if (feed.agency.isEmpty())
+					continue;
+
+				for(Stop s : feed.stops.values()) {
+					envelope.include(s.stop_lon, s.stop_lat);
+				}
+				
+				Agency a = feed.agency.values().iterator().next();
+				this.timeZone = a.agency_timezone;
+				
+				// build the spatial index for the map view
+				Collection<Trip> exemplarTrips =
+						Collections2.transform(feed.findPatterns().values(), new Function<List<String>, Trip> () {
+							public Trip apply(List<String> tripIds) {
+								return feed.trips.get(tripIds.get(0));
+							}
+						});
+				
+				GeometryFactory gf = new GeometryFactory();
+				
+				for (Trip trip : exemplarTrips) {
+					// if it has a shape, use that
+					Coordinate[] coords;
+					if (trip.shape_id != null) {
+						Map<Tuple2<String, Integer>, Shape> shape = feed.shapePoints.subMap(new Tuple2(trip.shape_id, null), new Tuple2(trip.shape_id, Fun.HI));
+						
+						coords = new Coordinate[shape.size()];
+						
+						int i = 0;
+						
+						int lastKey = Integer.MIN_VALUE;
+						for (Entry<Tuple2<String, Integer>, Shape> e : shape.entrySet()) {
+							if (e.getKey().b < lastKey)
+								throw new IllegalStateException("Non-sequential shape keys.");
+							
+							lastKey = e.getKey().b;
+							
+							coords[i++] = new Coordinate(e.getValue().shape_pt_lon, e.getValue().shape_pt_lat);
+						}
+					}
+					else {
+						Collection<StopTime> stopTimes = feed.stop_times.subMap(new Tuple2(trip.trip_id, null), new Tuple2(trip.trip_id, Fun.HI)).values();
+						coords = new Coordinate[stopTimes.size()];
+						int i = 0;
+						for (StopTime st : stopTimes) {
+							Stop stop = feed.stops.get(st.stop_id);
+							coords[i++] = new Coordinate(stop.stop_lon, stop.stop_lat);
+						}
+					}
+					
+					if (coords.length < 2)
+						continue;
+					
+					LineString geom = gf.createLineString(coords);
+					TransitSegment seg = new TransitSegment(geom);
+					
+					this.segments.put(new Tuple2(this.id, this.nextSegmentId.getAndIncrement()), seg);
+				}
+			}
+		}
+		
+		this.segmentsDb.commit();
+		
+		this.bounds = new Bounds(envelope);
+		
+		this.save();
 	}
 	
 	static public void writeAllToClusterCache () throws IOException {
@@ -253,6 +364,16 @@ public class Scenario implements Serializable {
 		shapeDirPath.mkdirs();
 		
 		return shapeDirPath;
+	}
+	
+	/** represents a transit line on the map */
+	public static class TransitSegment implements Serializable {
+		private static final long serialVersionUID = 1L;
+		public LineString geom;
+		
+		public TransitSegment(LineString geom) {
+			this.geom = geom;
+		}
 	}
 	
 }

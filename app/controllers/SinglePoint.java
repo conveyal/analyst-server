@@ -12,6 +12,7 @@ import com.conveyal.otpac.message.WorkResult;
 import models.Scenario;
 import models.Shapefile;
 
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.mapdb.DBMaker;
 import org.opentripplanner.analyst.ResultSet;
@@ -81,7 +82,7 @@ public class SinglePoint extends Controller {
             }
             else {
             	Scenario s = Scenario.getScenario(graphId);
-                RoutingRequest req = Api.analyst.buildRequest(graphId,jodaDate, fromTime, new GenericLocation(lat, lon), mode, 120, s.timeZone);
+                RoutingRequest req = Api.analyst.buildRequest(graphId,jodaDate, fromTime, new GenericLocation(lat, lon), mode, 120, DateTimeZone.forID(s.timeZone));
                 spec = new SinglePointJobSpec(graphId, shapefile + ".json", req);
             }
 
