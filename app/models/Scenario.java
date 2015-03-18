@@ -157,6 +157,8 @@ public class Scenario implements Serializable {
 			return "PROCESSSING_GTFS";
 		else if(processingOsm) 
 			return "PROCESSSING_OSM";
+		else if (failed)
+			return "ERROR";
 		else 
 			return "BUILT";
 		
@@ -243,7 +245,8 @@ public class Scenario implements Serializable {
 		
 		// if the shapes are null, compute them.
 		// They are built on upload, but older databases may not have them.
-		if (this.getSegments().isEmpty() || this.timeZone == null) {
+		// but don't rebuild failed uploads every time the server is started
+		if ((this.getSegments().isEmpty() || this.timeZone == null) && this.failed != null && !this.failed) {
 			processGtfs();
 		}
 	}
@@ -253,7 +256,17 @@ public class Scenario implements Serializable {
 
 		for(File f : getScenarioDataPath().listFiles()) {			
 			if(f.getName().toLowerCase().endsWith(".zip")) {
-				final GTFSFeed feed = GTFSFeed.fromFile(f.getAbsolutePath());
+				final GTFSFeed feed;
+				
+				try {
+					feed = GTFSFeed.fromFile(f.getAbsolutePath());
+				} catch (RuntimeException e) {
+					if (e.getCause() instanceof ZipException) {
+						Logger.error("Unable to process GTFS file for scenario %s, project %s", this.name, Project.getProject(this.projectId).name);
+						continue;
+					}
+					throw e;
+				}
 				
 				// this is not a gtfs feed
 				if (feed.agency.isEmpty())
@@ -317,9 +330,13 @@ public class Scenario implements Serializable {
 			}
 		}
 		
-		this.segmentsDb.commit();
+		// if we've done all that and we still don't have a time zone, then this was a failure
+		if (this.timeZone == null)
+			this.failed = true;
+		else
+			this.bounds = new Bounds(envelope);
 		
-		this.bounds = new Bounds(envelope);
+		this.segmentsDb.commit();
 		
 		this.save();
 	}
