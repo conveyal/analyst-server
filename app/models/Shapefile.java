@@ -664,7 +664,11 @@ public class Shapefile implements Serializable {
 		ExecutionContext ctx = Akka.system().dispatchers().defaultGlobalDispatcher();
 		
 		for (Shapefile shapefile : getShapfiles(null)) {
-			shapefile.writeToClusterCache();
+			try {
+				shapefile.writeToClusterCache();
+			} catch (IOException e) {
+				continue;
+			}
 		}
 	}
 }
