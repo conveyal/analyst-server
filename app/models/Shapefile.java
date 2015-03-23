@@ -663,18 +663,8 @@ public class Shapefile implements Serializable {
 	public static void writeAllToClusterCache() {
 		ExecutionContext ctx = Akka.system().dispatchers().defaultGlobalDispatcher();
 		
-		for (final Shapefile shapefile : getShapfiles(null)) {
-			Akka.system().scheduler().scheduleOnce(Duration.create(10, "milliseconds"), new Runnable() {
-				
-				@Override
-				public void run() {
-					try {
-						shapefile.writeToClusterCache();
-					} catch (Exception e) {
-						Logger.error("Exception writing " + shapefile + " to cluster cache: " + e);
-					}
-				}
-			}, ctx);
+		for (Shapefile shapefile : getShapfiles(null)) {
+			shapefile.writeToClusterCache();
 		}
 	}
 }
