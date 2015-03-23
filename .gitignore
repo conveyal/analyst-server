@@ -22,3 +22,4 @@ conf/application.conf
 /bin
 /cache/
 *~
+nbproject
