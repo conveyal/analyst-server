@@ -474,7 +474,10 @@ var Analyst = Analyst || {};
 			var surfaceId = this.surfaceId1;
 			var timeLimit = this.timeSlider.getValue()[1] * 60;
 
-			window.location.href = '/gis/surface?shapefileId=' + shapefileId + '&surfaceId=' + surfaceId + '&timeLimit=' + timeLimit;
+			if (this.scenario2Data)
+				window.location.href = '/gis/resultComparison?' + this.params1 + '&graphId2=' + this.graphId2;
+			else
+				window.location.href = '/gis/result?' + this.params1;
 
 		},
 

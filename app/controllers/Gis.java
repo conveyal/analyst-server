@@ -1,5 +1,7 @@
 package controllers;
 
+import static utils.PromiseUtils.resolveNow;
+
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Polygon;
@@ -14,6 +16,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -42,6 +45,7 @@ import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.geometry.Envelope2D;
 import org.geotools.geometry.jts.JTS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
+import org.joda.time.LocalDate;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.referencing.operation.MathTransform;
@@ -63,6 +67,7 @@ import com.vividsolutions.jts.index.strtree.STRtree;
 
 import play.Logger;
 import play.Play;
+import play.libs.F;
 import play.mvc.*;
 import tiles.Tile;
 import utils.DirectoryZip;
@@ -158,7 +163,7 @@ public class Gis extends Controller {
             	shapeName += "access_" + shp.name.replaceAll("\\W+", "").toLowerCase() +
             			(query2 != null ? "_compare_" + query2.name : "");
             	
-            	return ok(generateZippedShapefile(shapeName, fields, gisFeatures));
+            	return ok(generateZippedShapefile(shapeName, fields, gisFeatures, false));
             	
             }
             else {
@@ -202,7 +207,7 @@ public class Gis extends Controller {
                 	shapeName += "_" + shp.name.replaceAll("\\W+", "") + "_norm_" + shpNorm.name.replaceAll("\\W+", "") + "_group_" +
                 			aggregateToSf.name.replaceAll("\\W+", "").toLowerCase() + (query2 != null ? "_compare_" + query2.name : "");
                 	
-                	return ok(generateZippedShapefile(shapeName, fields, gisFeatures));
+                	return ok(generateZippedShapefile(shapeName, fields, gisFeatures, false));
             	}
             }     	
     	} catch (Exception e) {
@@ -212,34 +217,32 @@ public class Gis extends Controller {
     }
 	
 	
-	public static Result surface(Integer surfaceId, String shapefileId, Integer timeLimit, String compareTo) {
-    	
-		response().setHeader(CACHE_CONTROL, "no-cache, no-store, must-revalidate");
-		response().setHeader(PRAGMA, "no-cache");
-		response().setHeader(EXPIRES, "0");
-		
-	
-		String shapeName = (timeLimit / 60) + "_mins_" + shapefileId.toString().toLowerCase() + "_" + surfaceId.toString();
-    	
-    	try {
-	    
-			String queryKey = surfaceId + "_" + timeLimit + "_" + compareTo;
-			
-			Shapefile shp = Shapefile.getShapefile(shapefileId);
+	/**
+     * Get a ResultSet.
+     */
+    public static Result result(String shapefile, String graphId, Double lat, Double lon, String mode,
+                                           Double bikeSpeed, Double walkSpeed, String which, String date, int fromTime, int toTime) {
 
-			if(shp == null)
-				return null;
+        ResultEnvelope.Which whichEnum;
+        LocalDate jodaDate;
 
-    		ResultSetWithTimes result;
-    			    		
-    		// TODO fix
-    		try {
-    			result = null;//AnalystProfileRequest.getResultWithTimes(surfaceId, shapefileId);
-    		}
-    		catch (NullPointerException e) {
-    			// not a profile request
-    			result = null;//AnalystRequest.getResultWithTimes(surfaceId, shapefileId);
-    		}
+        try {
+            whichEnum = ResultEnvelope.Which.valueOf(which);
+            jodaDate = LocalDate.parse(date);
+        } catch (Exception e) {
+            // no need to pollute the console with a stack trace
+            return badRequest("Invalid value for which or date parameter");
+        }
+
+        // note that this does not include which, as it is a key to ResultEnvelopes, not ResultSets
+        final String key = String.format(Locale.US, "%s_%.6f_%.6f_%s_%.2f_%.2f_%d_%d_%d_%d_%d_%s", graphId, lat, lon, mode,
+                bikeSpeed, walkSpeed, jodaDate.getYear(), jodaDate.getMonthOfYear(), jodaDate.getDayOfMonth(),
+                fromTime, toTime, shapefile);
+        
+        try {
+        	ResultSetWithTimes result = (ResultSetWithTimes) SinglePoint.getResultSet(key).get(whichEnum);
+        	
+        	final Shapefile shp = Shapefile.getShapefile(shapefile);
 			       
 	        Collection<ShapeFeature> features = shp.getShapeFeatureStore().getAll();
 	     
@@ -253,15 +256,15 @@ public class Gis extends Controller {
         	        	
         	ArrayList<GisShapeFeature> gisFeatures = new ArrayList<GisShapeFeature>();
 
-        	PointSet ps = Shapefile.getShapefile(shapefileId).getPointSet();
+        	PointSet ps = shp.getPointSet();
 
         	for (ShapeFeature feature : features) {
             	
-            	Integer sampleTime = result.times[ps.getIndexForFeature(feature.id)];
+            	int sampleTime = result.times[ps.getIndexForFeature(feature.id)];
         		GisShapeFeature gf = new GisShapeFeature();
         		gf.geom = feature.geom;
         		gf.id = feature.id;
-        		gf.time = sampleTime;
+        		gf.time = sampleTime != Integer.MAX_VALUE ? sampleTime : null; 
 
         		// TODO: handle non-integer attributes
         		for (Attribute a : shp.attributes.values()) {
@@ -274,8 +277,94 @@ public class Gis extends Controller {
         	
             }
    
+        	String shapeName = shp.name.toLowerCase().replaceAll("\\W", "") + "_time";
    
-        	return ok(generateZippedShapefile(shapeName, fields, gisFeatures));
+        	return ok(generateZippedShapefile(shapeName, fields, gisFeatures, false));
+       
+        	
+    	} catch (Exception e) {
+	    	e.printStackTrace();
+	    	return badRequest();
+	    }
+    }
+    
+	/**
+     * Get a comparison.
+     */
+    public static Result resultComparison(String shapefile, String graphId, String graphId2, Double lat, Double lon, String mode,
+                                           Double bikeSpeed, Double walkSpeed, String which, String date, int fromTime, int toTime) {
+
+        ResultEnvelope.Which whichEnum;
+        LocalDate jodaDate;
+
+        try {
+            whichEnum = ResultEnvelope.Which.valueOf(which);
+            jodaDate = LocalDate.parse(date);
+        } catch (Exception e) {
+            // no need to pollute the console with a stack trace
+            return badRequest("Invalid value for which or date parameter");
+        }
+
+        // note that this does not include which, as it is a key to ResultEnvelopes, not ResultSets
+        String key = String.format(Locale.US, "%s_%.6f_%.6f_%s_%.2f_%.2f_%d_%d_%d_%d_%d_%s", graphId, lat, lon, mode,
+                bikeSpeed, walkSpeed, jodaDate.getYear(), jodaDate.getMonthOfYear(), jodaDate.getDayOfMonth(),
+                fromTime, toTime, shapefile);
+        
+        String key2 = String.format(Locale.US, "%s_%.6f_%.6f_%s_%.2f_%.2f_%d_%d_%d_%d_%d_%s", graphId2, lat, lon, mode,
+                bikeSpeed, walkSpeed, jodaDate.getYear(), jodaDate.getMonthOfYear(), jodaDate.getDayOfMonth(),
+                fromTime, toTime, shapefile);
+        
+        try {
+        	ResultSetWithTimes result = (ResultSetWithTimes) SinglePoint.getResultSet(key).get(whichEnum);
+        	ResultSetWithTimes result2 = (ResultSetWithTimes) SinglePoint.getResultSet(key2).get(whichEnum);
+        	
+        	final Shapefile shp = Shapefile.getShapefile(shapefile);
+			       
+	        Collection<ShapeFeature> features = shp.getShapeFeatureStore().getAll();
+	     
+	        ArrayList<String> fields = new ArrayList<String>();
+	        
+	        for (Attribute a : shp.attributes.values()) {
+	        	if (a.numeric) {
+            		fields.add(a.name);
+	        	}
+	        }
+        	        	
+        	ArrayList<GisShapeFeature> gisFeatures = new ArrayList<GisShapeFeature>();
+
+        	PointSet ps = shp.getPointSet();
+
+        	for (ShapeFeature feature : features) {
+            	
+        		int fidx = ps.getIndexForFeature(feature.id);
+        		GisShapeFeature gf = new GisShapeFeature();
+        		gf.geom = feature.geom;
+        		gf.id = feature.id;
+        		
+        		int time1 = result.times[fidx];
+        		gf.time = time1 != Integer.MAX_VALUE ? time1 : null;
+        		int time2 = result2.times[fidx];
+        		gf.time2 = time2 != Integer.MAX_VALUE ? time2 : null;
+        		
+        		if (gf.time != null && gf.time2 != null)
+        			gf.difference = gf.time2 - gf.time;
+        		else
+        			gf.difference = null;
+
+        		// TODO: handle non-integer attributes
+        		for (Attribute a : shp.attributes.values()) {
+        			if (a.numeric) {
+                		gf.fields.add(feature.getAttribute(a.name));
+        			}
+        		}
+        		
+        		gisFeatures.add(gf);
+        	
+            }
+   
+        	String shapeName = shp.name.toLowerCase().replaceAll("\\W", "") + "_time_diff";
+   
+        	return ok(generateZippedShapefile(shapeName, fields, gisFeatures, true));
        
         	
     	} catch (Exception e) {
@@ -289,11 +378,13 @@ public class Gis extends Controller {
 		Geometry geom;
 		String id;
 		Integer time;
+		Integer time2;
+		Integer difference;
 		ArrayList<Object> fields = new ArrayList<Object>();
 		
 	}
 	
-	static File generateZippedShapefile(String fileName, ArrayList<String> fieldNames, List<GisShapeFeature> features) {
+	static File generateZippedShapefile(String fileName, ArrayList<String> fieldNames, List<GisShapeFeature> features, boolean difference) {
 			
 		String shapeFileId = HashUtils.hashString("shapefile_" + (new Date()).toString()).substring(0, 6) + "_" + fileName;
 		
@@ -332,6 +423,9 @@ public class Gis extends Controller {
 			else
 				featureDefinition = "the_geom:MultiPolygon:srid=4326,id:String,time:Integer";
 			
+			if (difference)
+				featureDefinition += ",time2:Integer,difference:Integer";
+			
 			int fieldPosition = 0;
 			for(String fieldName : fieldNames) {
 
@@ -365,10 +459,13 @@ public class Gis extends Controller {
 					featureBuilder.add((MultiPolygon)feature.geom);
                 featureBuilder.add(feature.id);
                 
-                if(feature.time == null) 
-                	featureBuilder.add(0);
-                else
-                	featureBuilder.add(feature.time);
+                featureBuilder.add(feature.time);
+                
+                if (difference) {
+                	featureBuilder.add(feature.time2);
+                	featureBuilder.add(feature.difference);
+                }
+                	
                
                 for(Object o : feature.fields)
                 	featureBuilder.add(o);
