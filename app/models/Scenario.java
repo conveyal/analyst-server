@@ -153,12 +153,12 @@ public class Scenario implements Serializable {
 		
 	public String getStatus() {
 		
-		if(processingGtfs)
+		if (failed)
+			return "ERROR";
+		else if(processingGtfs)
 			return "PROCESSSING_GTFS";
 		else if(processingOsm) 
 			return "PROCESSSING_OSM";
-		else if (failed)
-			return "ERROR";
 		else 
 			return "BUILT";
 		

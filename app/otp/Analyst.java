@@ -10,9 +10,13 @@ import org.opentripplanner.common.model.GenericLocation;
 import org.opentripplanner.profile.Option;
 import org.opentripplanner.profile.ProfileRequest;
 import org.opentripplanner.routing.core.RoutingRequest;
+import org.opentripplanner.routing.core.TraverseMode;
+import org.opentripplanner.api.parameter.QualifiedMode;
+import org.opentripplanner.api.parameter.QualifiedModeSet;
 import org.opentripplanner.routing.core.TraverseModeSet;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.spt.DominanceFunction;
+import org.python.google.common.collect.Collections2;
 
 import play.Logger;
 
@@ -54,8 +58,8 @@ public class Analyst {
 	public ProfileRequest buildProfileRequest(String mode, LocalDate date, int fromTime, int toTime, double lat, double lon) {
 		ProfileRequest req = new PrototypeAnalystProfileRequest();
 		
-		// split the modeset into two modes
-		TraverseModeSet modes = new TraverseModeSet(mode);
+		// split the modeset into two modes, using the logic in TraverseModeSet
+                TraverseModeSet modes = new TraverseModeSet(mode);
 		modes.setTransit(false);
 
 		TraverseModeSet transitModes = new TraverseModeSet(mode);
@@ -63,7 +67,14 @@ public class Analyst {
 		transitModes.setCar(false);
 		transitModes.setWalk(false);
 
-		req.accessModes = req.egressModes = req.directModes = modes;
+        QualifiedModeSet qModes = new QualifiedModeSet("WALK");
+        qModes.qModes.clear();
+        for (TraverseMode tm : modes.getModes()) {
+        	QualifiedMode qMode = new QualifiedMode(tm.toString());
+        	qModes.qModes.add(qMode);
+        }
+
+		req.accessModes = req.egressModes = req.directModes = qModes;
 		req.transitModes = transitModes;
 
         req.fromLat    = lat;

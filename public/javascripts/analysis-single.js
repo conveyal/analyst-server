@@ -309,7 +309,7 @@ var Analyst = Analyst || {};
 		  	var bikeSpeed = (this.bikeSpeedSlider.getValue() * 1000 / 60 / 60 );
 		  	var walkSpeed = (this.walkSpeedSlider.getValue() * 1000 / 60 / 60 );
 
- 			var graphId1 = this.$('#scenario1').val();
+ 			this.graphId1 = this.$('#scenario1').val();
 			var which = this.$('input[name="which"]:checked').val();
 
 			var _this = this;
@@ -327,7 +327,7 @@ var Analyst = Analyst || {};
 			if (A.util.isTransit(this.mode))
 				dateTime += '&toTime=' + A.util.makeTime(this.$('#toTime').data('DateTimePicker').getDate());
 
-			this.params1 = 'graphId=' + graphId1 + '&lat=' + A.map.marker.getLatLng().lat + '&lon=' +
+			this.params1 = 'graphId=' + this.graphId1 + '&lat=' + A.map.marker.getLatLng().lat + '&lon=' +
 				A.map.marker.getLatLng().lng + '&mode=' + this.mode + '&bikeSpeed=' + bikeSpeed + '&walkSpeed=' + walkSpeed +
 				'&which=' + which + dateTime + '&shapefile=' + this.$('#shapefile').val();
 
@@ -345,15 +345,15 @@ var Analyst = Analyst || {};
 
 		    if (this.comparisonType == 'compare') {
 
-		    	var graphId2 = this.$('#scenario2').val();
+		      this.graphId2 = this.$('#scenario2').val();
 					var which = this.$('input[name="which"]:checked').val();
 
-		    	this.params2 = 'graphId=' + graphId2 + '&lat=' + A.map.marker.getLatLng().lat + '&lon=' +
+		    	this.params2 = 'graphId=' + this.graphId2 + '&lat=' + A.map.marker.getLatLng().lat + '&lon=' +
 						A.map.marker.getLatLng().lng + '&mode=' + this.mode + '&bikeSpeed=' + bikeSpeed +
 						'&walkSpeed=' + walkSpeed + '&which=' + which + dateTime + '&shapefile=' + this.$('#shapefile').val();
 		    	$.getJSON('/api/result?' + this.params2, function(data) {
 
-			  	  _this.scenario2Data = data.id;
+			  	  _this.scenario2Data = data;
 
 			  	  if(_this.scenario1Data) {
 			  	  	_this.updateMap();
@@ -450,9 +450,10 @@ var Analyst = Analyst || {};
 				if(A.map.tileOverlay && A.map.hasLayer(A.map.tileOverlay))
 		  			A.map.removeLayer(A.map.tileOverlay);
 
-				/*A.map.tileOverlay = L.tileLayer('/tile/surfaceComparison?z={z}&x={x}&y={y}&shapefileId=' + this.$('#shapefile').val() +
-					'&minTime=' + minTime + '&timeLimit=' + timeLimit + '&surfaceId1=' + this.surfaceId1  + '&surfaceId2=' + this.surfaceId2 + '&showIso=' + showIso + '&showPoints=' +  showPoints, {}
-				).addTo(A.map);*/
+				A.map.tileOverlay = L.tileLayer('/tile/surfaceComparison?z={z}&x={x}&y={y}' +
+				'&showIso=' + showIso +
+				'&showPoints=' +  showPoints + '&minTime=' + minTime + '&timeLimit=' + timeLimit + '&' + this.params1 + '&graphId2=' + this.graphId2)
+					.addTo(A.map);
 
 			}
 			else {
