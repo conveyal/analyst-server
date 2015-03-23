@@ -488,6 +488,8 @@ public class Api extends Controller {
 
         	s.save();
 
+        	s.writeToClusterCache();
+        	
             return ok(Api.toJson(s, false));
         }
         else {
