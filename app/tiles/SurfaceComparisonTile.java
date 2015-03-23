@@ -90,18 +90,14 @@ public class SurfaceComparisonTile extends AnalystTileRequest {
         	return null;
         }
         
-        // TODO: cache deltas between requests
-        // we want result2 - result1, because result2 is presumed to be the better one
-        ResultSetDelta resultDelta = new ResultSetDelta(result2, result1);
-        
         List<Shapefile.ShapeFeature> features = shp.query(tile.envelope);
 
-for(Shapefile.ShapeFeature feature : features) {
+        for(Shapefile.ShapeFeature feature : features) {
 
             int featIdx = ps.getIndexForFeature(feature.id);
 
-            int time1 = resultDelta.times[featIdx];
-            int time2 = resultDelta.times2[featIdx];
+            int time1 = result1.times[featIdx];
+            int time2 = result2.times[featIdx];
 
             if (time1 == 0 && time2 == 0)
                 continue;
@@ -113,7 +109,7 @@ for(Shapefile.ShapeFeature feature : features) {
 
             if(showIso) {
 
-                 if((time2 == time1 || time2 > time1) && time1 > minTime && time1 < timeLimit){
+                 if((Math.abs(time1 - time2) < 60 || time2 > time1) && time1 > minTime && time1 < timeLimit){
                      float opacity = 1.0f - (float)((float)time1 / (float)timeLimit);
                      color = new Color(0.9f,0.7f,0.2f,opacity);
                  }
