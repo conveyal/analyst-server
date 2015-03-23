@@ -22,4 +22,4 @@ watchSources := (watchSources.value
   --- baseDirectory.value / "conf" ** "*"
   --- baseDirectory.value / "public" ** "*").get
   
-resolvers += "Conveyal Maven Repository" at "file:///home/matthewc/.m2/repository"
+resolvers += "Conveyal Maven Repository" at "http://maven.conveyal.com/"
