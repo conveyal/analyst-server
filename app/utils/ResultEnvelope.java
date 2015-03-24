@@ -29,8 +29,7 @@ public class ResultEnvelope implements Serializable {
 	
 	/**
 	 * The point estimate of the accessibility. If profile = false, this is the journey
-	 * time returned by OTP. If profile = true, this will eventually be the central
-	 * tendency.
+	 * time returned by OTP.
 	 */
 	public ResultSet pointEstimate;
 	
@@ -58,7 +57,7 @@ public class ResultEnvelope implements Serializable {
 			this.profile = true;
 			this.bestCase = res.getBestCase();
 			this.worstCase = res.getWorstCase();
-			this.avgCase = res.getAvgCase();
+			this.avgCase = res.getPointEstimate();
 			this.pointEstimate = null;
 			this.spread = null;
 			// the surface will never be null, because it is only created if the workresult was successful
@@ -66,11 +65,29 @@ public class ResultEnvelope implements Serializable {
 		}
 		else {
 			this.profile = false;
-			this.pointEstimate = res.getResult();
+			this.pointEstimate = res.getPointEstimate();
+			this.avgCase = null;
 			this.bestCase = null;
 			this.worstCase = null;
 			this.spread = null;
 			this.id = this.pointEstimate.id;
+		}
+	}
+	
+	public ResultSet get (Which key) {
+		switch (key) {
+		case BEST_CASE:
+			return this.bestCase;
+		case WORST_CASE:
+			return this.worstCase;
+		case POINT_ESTIMATE:
+			return this.pointEstimate;
+		case SPREAD:
+			return this.spread;
+		case AVERAGE:
+			return this.avgCase;
+		default:
+			throw new IllegalStateException("Invalid result type!");
 		}
 	}
 	

@@ -113,6 +113,9 @@ public class QueryResults {
     	   case SPREAD:
     		   feature = env.spread;
     		   break;
+    	   case AVERAGE:
+    		   feature = env.avgCase;
+    		   break;
     	   default:
     	    	throw new RuntimeException("Unhandled envelope type"); 
     	   }
