@@ -72,7 +72,7 @@ GET     /gis/resultComparison           controllers.Gis.resultComparison(shapefi
 
 GET     /api/queryBins	                controllers.Api.queryBins(queryId:String, timeLimit:Integer ?= 3600, weightByShapefile:String ?= null, weightByAttribute:String ?= null, groupBy:String ?= null, which: String, attributeName: String, compareTo: String ?= null)
 
-GET     /api/result                    controllers.SinglePoint.result(shapefile: String, graphId:String, lat:Double, lon:Double, mode:String, bikeSpeed:Double, walkSpeed:Double, which:String, date:String, fromTime:Integer, toTime:Integer ?= -1)
+GET     /api/result                    controllers.SinglePoint.result(shapefile: String, graphId:String, lat:Double, lon:Double, mode:String, bikeSpeed:Double, walkSpeed:Double, date:String, fromTime:Integer, toTime:Integer ?= -1)
 
 # Map static resources from the /public folder to the /assets URL path
 GET           /assets/*file                       controllers.Assets.at(path="/public", file)

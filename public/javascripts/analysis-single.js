@@ -487,71 +487,40 @@ var Analyst = Analyst || {};
 			this.$('#querySettings').show();
 		},
 
-    /**
-		 * Draw a chart using the given attribute contained within the given result, in the given div.
-		 * chartIdx is an integer [1,2] specifying whether to render the first or second chart.
-		 */
-		drawChart : function(result, attribute, chartIdx, divSelector, chartHeight) {
-			var _this = this;
+		drawChart : function(result, attribute, color) {
+			// pivot the data into an object array for MetricsGraphics
+			var histograms = result.data[attribute];
+			var plotData = [];
 
-			var color = result.properties.schema[attribute].style.color;
+			// make cumulative distributions
+			var cWorst = 0, cEst = 0, cBest = 0;
 
-			var barChart = dc.barChart(divSelector);
-
-			// pivot the data to make it ready for crossfilter
-			var data = [];
 			for (var i = 0; i < 120; i++) {
-				data.push({minute: i, value: result.data[attribute].sums[i]});
+				plotData[i] = {};
+
+				if (histograms.worstCase !== undefined)
+					cWorst = plotData[i].worstCase = cWorst + (histograms.worstCase.sums[i] !== undefined ? histograms.worstCase.sums[i] : 0);
+
+				if (histograms.pointEstimate !== undefined)
+					cEst = plotData[i].pointEstimate = cEst + (histograms.pointEstimate.sums[i] !== undefined ? histograms.pointEstimate.sums[i] : 0)
+
+				if (histograms.bestCase !== undefined)
+					cBest = plotData[i].bestCase = cBest + (histograms.bestCase.sums[i] !== undefined ? histograms.bestCase.sums[i] : 0)
+
+				plotData[i].minute = i;
 			}
 
-			var cfData = crossfilter(data);
-
-			var minuteDimension = cfData.dimension(function (d) {
-				return d.minute;
+			MG.data_graphic({
+				title: window.Messages('analysis.accessibility-to', result.properties.schema[attribute].label),
+				width: 400,
+				height: 175,
+				data: plotData,
+				target: '#chart',
+				area: false,
+				y_accessor: 'pointEstimate',
+				x_accessor: 'minute',
+				show_confidence_band: ['worstCase', 'bestCase']
 			});
-
-			// aggregate to bins
-			var aggregated = minuteDimension.group(function (minute) {
-				return Math.floor(minute / 5) * 5;
-			})
-			.reduceSum(function (d) {
-				return d.value;
-			});
-
-			var maxVal = aggregated.top(1)[0].value;
-
-			if (maxVal > this.maxChartValue)
-				this.maxChartValue = maxVal;
-
-			barChart
-				.width(400)
-				// maximize data:ink ratio
-				.gap(0.1)
-				.height(chartHeight)
-				.margins({top: 10, right: 20, bottom: 10, left: 40})
-				.elasticY(false)
-				.y(d3.scale.linear().domain([0, this.maxChartValue]))
-				.dimension(minuteDimension)
-				.ordinalColors([color])
-				.xAxisLabel("Minutes")
-				.yAxisLabel(result.properties.schema[attribute].label)
-				.transitionDuration(0)
-				.group(aggregated, result.properties.schema[attribute].label)
-				.x(d3.scale.linear().domain([0, 120]))
-				.renderHorizontalGridLines(true)
-				.centerBar(false)
-				.brushOn(false)
-				// get the number of bins so that the bar width is correct in the histogram.
-				// see https://github.com/dc-js/dc.js/issues/137
-				.xUnits(function () { return aggregated.size(); })
-				.xAxis().ticks(5).tickFormat(d3.format("d"));
-
-				this['barChart' + chartIdx] = barChart;
-				this['cfData' + chartIdx] = cfData;
-
-				this.scaleBarCharts();
-
-				dc.renderAll();
 		},
 
 		/*updateSummary : function() {
