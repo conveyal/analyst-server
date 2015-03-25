@@ -96,7 +96,7 @@ public class QueryResults {
 
        double value;
 
-       for(ResultEnvelope env : q.getResults().getAll()) {
+       for(ResultEnvelope env : q.getResults().getAll(sd.categoryId + "." + attributeId)) {
     	   
     	   ResultSet feature;
     	   

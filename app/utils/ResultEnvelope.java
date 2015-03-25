@@ -1,6 +1,8 @@
 package utils;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.opentripplanner.analyst.ResultSet;
 
@@ -89,6 +91,56 @@ public class ResultEnvelope implements Serializable {
 		default:
 			throw new IllegalStateException("Invalid result type!");
 		}
+	}
+	
+	public void put (Which key, ResultSet val) {
+		switch (key) {
+		case BEST_CASE:
+			this.bestCase = val;
+			break;
+		case WORST_CASE:
+			this.worstCase = val;
+			break;
+		case POINT_ESTIMATE:
+			this.pointEstimate = val;
+			break;
+		case SPREAD:
+			this.spread = val;
+			break;
+		case AVERAGE:
+			this.avgCase = val;
+			break;
+		}
+	}
+	
+	/**
+	 * Explode this result envelope into a result envelope for each contained attribute
+	 * We do this because we need to retrieve all of the values for a particular variable quickly, in order to display the map,
+	 * and looping over 10GB of data to do this is not tractable.
+	 */
+	public Map<String, ResultEnvelope> explode () {
+		Map<String, ResultEnvelope> exploded = new HashMap<String, ResultEnvelope>();
+		
+		// find a non-null resultset
+		for (String attr : (pointEstimate != null ? pointEstimate : avgCase).histograms.keySet()) {
+			ResultEnvelope env = new ResultEnvelope();
+			
+			for (Which which : Which.values()) {
+				ResultSet orig = this.get(which);
+				
+				if (orig != null) {
+					ResultSet rs = new ResultSet();
+					rs.id = orig.id;
+					rs.histograms.put(attr, orig.histograms.get(attr));
+					env.put(which, rs);
+					env.id = this.id;
+				}
+			}
+			
+			exploded.put(attr, env);
+		}
+		
+		return exploded;
 	}
 	
 	/**
