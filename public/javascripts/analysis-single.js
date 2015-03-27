@@ -161,9 +161,7 @@ var Analyst = Analyst || {};
 
 					_this.$('#minTimeValue').html(evt.value[0] + "");
 					_this.$('#timeLimitValue').html(evt.value[1] + " mins");
-
-				_this.updateResults(true)
-				_this.updateMap();
+  				_this.updateMap();
 			}).data('slider');
 
 			this.$('#minTimeValue').html("0");
