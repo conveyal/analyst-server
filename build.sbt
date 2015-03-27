@@ -21,5 +21,7 @@ watchSources := (watchSources.value
   --- baseDirectory.value / "app/assets" ** "*"
   --- baseDirectory.value / "conf" ** "*"
   --- baseDirectory.value / "public" ** "*").get
-  
-resolvers += "Conveyal Maven Repository" at "http://maven.conveyal.com/"
+ 
+resolvers += "Local Maven Repository" at "file://"+Path.userHome.absolutePath+"/.m2/repository"
+ 
+resolvers += "Conveyal Maven Repository" at "http://maven.conveyal.com"
