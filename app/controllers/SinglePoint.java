@@ -127,6 +127,7 @@ public class SinglePoint extends Controller {
     	try {
     		ResultSet worst = rs.get(Which.WORST_CASE);
     		ResultSet point = rs.get(Which.POINT_ESTIMATE);
+    		ResultSet avg   = rs.get(Which.AVERAGE);
     		ResultSet best  = rs.get(Which.BEST_CASE);
     		ResultSet spread= rs.get(Which.SPREAD); 
     	
@@ -155,9 +156,10 @@ public class SinglePoint extends Controller {
 				    			jgen.writeEndObject();
 				    		}
 				    		
-				    		if (point != null) {
+				    		// both pointEstimate and average are point estimates, pick whichever one is not null
+				    		if (point != null || avg != null) {
 				    			jgen.writeObjectFieldStart("pointEstimate");
-				    			point.histograms.get(propertyId).writeJson(jgen);
+				    			(point != null ? point : avg).histograms.get(propertyId).writeJson(jgen);
 				    			jgen.writeEndObject();
 				    		}
 				    		
