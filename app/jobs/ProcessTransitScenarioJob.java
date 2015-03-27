@@ -89,6 +89,10 @@ public class ProcessTransitScenarioJob implements Runnable {
 			while(entries.hasMoreElements()) {
 
 				ZipEntry entry = entries.nextElement();
+				
+				// don't try to use the weird Apple files
+				if (entry.getName().startsWith("__MACOSX"))
+					continue;
 
 				if(entry.getName().toLowerCase().endsWith(".shp"))
 					shpFile = entry.getName();

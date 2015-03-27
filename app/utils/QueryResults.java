@@ -96,7 +96,7 @@ public class QueryResults {
 
        double value;
 
-       for(ResultEnvelope env : q.getResults().getAll()) {
+       for(ResultEnvelope env : q.getResults().getAll(sd.categoryId + "." + attributeId)) {
     	   
     	   ResultSet feature;
     	   
@@ -112,6 +112,9 @@ public class QueryResults {
     		   break;
     	   case SPREAD:
     		   feature = env.spread;
+    		   break;
+    	   case AVERAGE:
+    		   feature = env.avgCase;
     		   break;
     	   default:
     	    	throw new RuntimeException("Unhandled envelope type"); 

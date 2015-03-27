@@ -26,6 +26,7 @@ import scala.concurrent.duration.Duration;
 import utils.Cluster;
 import utils.DataStore;
 import utils.HashUtils;
+import utils.QueryResultStore;
 import utils.ResultEnvelope;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -85,7 +86,7 @@ public class Query implements Serializable {
 	public LocalDate date;
 	
 	@JsonIgnore 
-	transient private DataStore<ResultEnvelope> results; 
+	transient private QueryResultStore results; 
 	
 	public Query() {
 		
@@ -156,18 +157,28 @@ public class Query implements Serializable {
 		Logger.info("delete query q" +id);
 	}
 
+	private synchronized void makeResultDb() {
+		if (results == null) {
+			results = new QueryResultStore(this);
+		}
+	}
+	
 	@JsonIgnore
-	public synchronized DataStore<ResultEnvelope> getResults() {
+	public QueryResultStore getResults() {
 		
-		if(results == null) {
-			// use a non-transactional store to save disk space and increase performance.
-			// if the query dies we need to throw away the query anyhow.
-			// we use mapdb serialization because we're more concerned about speed than data durability.
-			// (this data can be easily reconstructed; this is basically a persistent cache)
-			results = new DataStore<ResultEnvelope>(new File(Application.dataPath, "results"), "r_" + id, false, true, false);
+		if (results == null) {
+			makeResultDb();
 		}
 		
 		return results;
+	}
+	
+	/** close the results database, ensuring it is written to disk */
+	public synchronized void closeResults () {
+		if (results != null) {
+			results.close();
+			results = null;
+		}
 	}
 	
 	public Integer getPercent() {
@@ -208,7 +219,7 @@ public class Query implements Serializable {
 		if(q == null)
 			return;
 		
-		q.getResults().saveWithoutCommit(resultEnvelope.id, resultEnvelope);
+		q.getResults().store(resultEnvelope);
 	}
 	
 	public static class QueryActor extends UntypedActor {
@@ -310,15 +321,15 @@ public class Query implements Serializable {
 			
 			// only update client every 200 points or when the query is done
 			if (complete % 200 == 0 || complete == totalPoints) {
-				Query query = Query.getQuery(id);
+				Query query = Query.getQuery(id);				
+				query.completePoints = complete;
+				query.save();
 				
 				// flush to disk before saying the query is done
 				// transactional support is off, so this is important
-				if (complete == totalPoints)
-					query.getResults().commit();
-				
-				query.completePoints = complete;
-				query.save();
+				if (complete == totalPoints) {
+					query.closeResults();					
+				}
 			}
 		}
 	}

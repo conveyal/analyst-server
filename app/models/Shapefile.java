@@ -407,6 +407,9 @@ public class Shapefile implements Serializable {
 	    while(entries.hasMoreElements()) {
 
 	        ZipEntry entry = entries.nextElement();
+	        
+	        if (entry.getName().startsWith("__MACOSX"))
+	        	continue;
 
 	        if(entry.getName().toLowerCase().endsWith("shp")){
 	   	        hasShp = true;
@@ -578,6 +581,11 @@ public class Shapefile implements Serializable {
         while (entries.hasMoreElements()) {
 
             ZipEntry entry = entries.nextElement();
+            
+            // ignore the funny Apple files
+            if (entry.getName().toString().startsWith("__MACOSX"))
+            	continue;
+            
             File entryDestination = new File(outputDirectory,  entry.getName());
 
             entryDestination.getParentFile().mkdirs();
