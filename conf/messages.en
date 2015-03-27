@@ -99,6 +99,7 @@ analysis.latest-departure-time=Latest departure time
 analysis.scenario=Scenario
 analysis.scenario-1=Scenario 1
 analysis.scenario-2=Scenario 2
+analysis.minutes=Minutes
 
 analysis.show-isochrones=Show Isochrones
 analysis.show-points=Show Points

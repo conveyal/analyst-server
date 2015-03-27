@@ -373,13 +373,10 @@ var Analyst = Analyst || {};
 			var categoryId = this.shapefiles.get(this.$("#shapefile").val()).get('categoryId');
 			var attributeId = this.$('#shapefileColumn').val()
 
-			// reset the maximum value in case it has changed.
-			this.maxChartValue = 0;
-
-			this.drawChart(this.scenario1Data, categoryId + '.' + attributeId, 1, '#barChart1', 175);
-
 			if (this.scenario2Data) {
-				this.drawChart(this.scenario2Data, categoryId + '.' + attributeId, 2, '#barChart2', 175);
+				this.drawChart(categoryId + '.' + attributeId, this.scenario1Data, this.scenario2Data);
+			} else {
+				this.drawChart(categoryId + '.' + attributeId, this.scenario1Data);
 			}
 		},
 
@@ -487,40 +484,65 @@ var Analyst = Analyst || {};
 			this.$('#querySettings').show();
 		},
 
-		drawChart : function(result, attribute, color) {
-			// pivot the data into an object array for MetricsGraphics
-			var histograms = result.data[attribute];
-			var plotData = [];
+		drawChart : function(attribute, result1, result2) {
+			// ensure we don't make a mess.
+			this.$('#chart').empty();
+			this.$('#chartLegend').empty();
 
-			// make cumulative distributions
-			var cWorst = 0, cEst = 0, cBest = 0;
+			// pivot the data into an object array for MetricsGraphics and make a cumulative distribution
+			var plotData = this.getPlotData(result1, attribute);
 
-			for (var i = 0; i < 120; i++) {
-				plotData[i] = {};
-
-				if (histograms.worstCase !== undefined)
-					cWorst = plotData[i].worstCase = cWorst + (histograms.worstCase.sums[i] !== undefined ? histograms.worstCase.sums[i] : 0);
-
-				if (histograms.pointEstimate !== undefined)
-					cEst = plotData[i].pointEstimate = cEst + (histograms.pointEstimate.sums[i] !== undefined ? histograms.pointEstimate.sums[i] : 0)
-
-				if (histograms.bestCase !== undefined)
-					cBest = plotData[i].bestCase = cBest + (histograms.bestCase.sums[i] !== undefined ? histograms.bestCase.sums[i] : 0)
-
-				plotData[i].minute = i;
-			}
+			// this is how you make a multi-line plot with metricsgraphics
+			if (result2)
+				plotData = [plotData, this.getPlotData(result2, attribute)];
 
 			MG.data_graphic({
-				title: window.Messages('analysis.accessibility-to', result.properties.schema[attribute].label),
+				title: window.Messages('analysis.accessibility-to', result1.properties.schema[attribute].label),
 				width: 400,
-				height: 175,
+				height: 225,
 				data: plotData,
 				target: '#chart',
 				area: false,
 				y_accessor: 'pointEstimate',
 				x_accessor: 'minute',
-				show_confidence_band: ['worstCase', 'bestCase']
+				x_label: window.Messages('analysis.minutes'),
+				max_x: 120,
+				bottom: 40,
+				show_confidence_band: ['worstCase', 'bestCase'],
+				legend: [window.Messages('analysis.scenario-1'), window.Messages('analysis.scenario-2')],
+				legend_target: '#chartLegend'
 			});
+		},
+
+		/** get data for metricsgraphics from a result query */
+		getPlotData: function(result, attribute) {
+		  var plotData = [];
+		  var histograms = result.data[attribute];
+
+		  // make cumulative distributions
+		  var cWorst = 0,
+		    cEst = 0,
+		    cBest = 0;
+
+		  for (var i = 0; i < 120; i++) {
+		    plotData[i] = {};
+
+		    if (histograms.worstCase !== undefined)
+		      cWorst = plotData[i].worstCase = cWorst + (histograms.worstCase.sums[i] !== undefined ? histograms.worstCase.sums[
+		        i] : 0);
+
+		    if (histograms.pointEstimate !== undefined)
+		      cEst = plotData[i].pointEstimate = cEst + (histograms.pointEstimate.sums[i] !== undefined ? histograms.pointEstimate
+		        .sums[i] : 0)
+
+		    if (histograms.bestCase !== undefined)
+		      cBest = plotData[i].bestCase = cBest + (histograms.bestCase.sums[i] !== undefined ? histograms.bestCase.sums[i] :
+		        0)
+
+		    plotData[i].minute = i;
+		  }
+
+			return plotData;
 		},
 
 		/*updateSummary : function() {
