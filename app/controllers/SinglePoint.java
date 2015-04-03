@@ -55,9 +55,8 @@ public class SinglePoint extends Controller {
      * Get a ResultSet.
      */
     public static F.Promise<Result> result(String shapefile, String graphId, Double lat, Double lon, String mode,
-                                           Double bikeSpeed, Double walkSpeed, String date, int fromTime, int toTime) {
+                                           Double bikeSpeed, Double walkSpeed, String date, int fromTime, int toTime, boolean profile) {
 
-        ResultEnvelope.Which whichEnum_tmp;
         LocalDate jodaDate;
 
         try {
@@ -67,9 +66,9 @@ public class SinglePoint extends Controller {
             return resolveNow((Result) badRequest("Invalid value for date parameter"));
         }
 
-        final String key = String.format(Locale.US, "%s_%.6f_%.6f_%s_%.2f_%.2f_%d_%d_%d_%d_%d_%s", graphId, lat, lon, mode,
+        final String key = String.format(Locale.US, "%s_%.6f_%.6f_%s_%.2f_%.2f_%d_%d_%d_%d_%d_%s%s", graphId, lat, lon, mode,
                 bikeSpeed, walkSpeed, jodaDate.getYear(), jodaDate.getMonthOfYear(), jodaDate.getDayOfMonth(),
-                fromTime, toTime, shapefile);
+                fromTime, toTime, shapefile, (profile ? "_profile" : ""));
         
         final Shapefile shp = Shapefile.getShapefile(shapefile);
 
@@ -85,7 +84,7 @@ public class SinglePoint extends Controller {
         else {
             // build it, add it to the cache, and return it when we're ready
             SinglePointJobSpec spec;
-            if (new TraverseModeSet(mode).isTransit()) {
+            if (new TraverseModeSet(mode).isTransit() && profile) {
                 ProfileRequest req = Api.analyst.buildProfileRequest(mode, jodaDate, fromTime, toTime, lat, lon);
                 spec = new SinglePointJobSpec(graphId, shapefile + ".json", req);
             }

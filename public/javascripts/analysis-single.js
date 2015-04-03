@@ -19,7 +19,8 @@ var Analyst = Analyst || {};
 		  'click #showIso': 'updateMap',
 		  'click #showPoints': 'updateMap',
 		  'click #showTransit': 'updateMap',
-		  'click .mode-selector' : 'updateMap',
+		  'click .mode-selector' : 'updateResults',
+			'change .profile': 'updateResults',
 			'click #showSettings' : 'showSettings',
 			'click #downloadGis' : 'downloadGis'
 		},
@@ -67,8 +68,8 @@ var Analyst = Analyst || {};
 		  var mode = this.mode;
 		  var inps = this.$('.which');
 
-		  if (A.util.isTransit(mode)) {
-		    // transit request, we're doing profile routing
+		  if (A.util.isTransit(mode) && this.$('input.profile:checked').val() === "true") {
+		    // transit request and we're doing profile routing
 		    inps.find('[value="WORST_CASE"]').prop('disabled', false).parent().removeClass('hidden');
 		    inps.find('[value="BEST_CASE"]').prop('disabled', false).parent().removeClass('hidden');
 		    inps.find('[value="SPREAD"]').prop('disabled', true).parent().addClass('hidden');
@@ -82,7 +83,7 @@ var Analyst = Analyst || {};
 
 				this.$('#toTimeControls').removeClass('hidden');
 		  } else {
-		    // non-transit request, we're doing vanilla routing with point estimates only
+		    // non-transit request or earliest-arrival transit request, we're doing vanilla routing with point estimates only
 		    inps.find('[value="WORST_CASE"]').prop('disabled', true).parent().addClass('hidden');
 		    inps.find('[value="BEST_CASE"]').prop('disabled', true).parent().addClass('hidden');
 		    inps.find('[value="SPREAD"]').prop('disabled', true).parent().addClass('hidden');
@@ -279,6 +280,8 @@ var Analyst = Analyst || {};
 		 },
 
 		updateResults : function() {
+			// TODO: this could be confusing, if someone changes the mode and the envelope updates automatically
+			this.updateAvailableEnvelopeParameters();
 
 			if(!A.map.marker)
 				return;
@@ -327,7 +330,8 @@ var Analyst = Analyst || {};
 
 			this.params1 = 'graphId=' + this.graphId1 + '&lat=' + A.map.marker.getLatLng().lat + '&lon=' +
 				A.map.marker.getLatLng().lng + '&mode=' + this.mode + '&bikeSpeed=' + bikeSpeed + '&walkSpeed=' + walkSpeed +
-				'&which=' + which + dateTime + '&shapefile=' + this.$('#shapefile').val();
+				'&which=' + which + dateTime + '&shapefile=' + this.$('#shapefile').val() +
+				'&profile=' + this.$('input.profile:checked').val();
 
 		    $.getJSON('/api/result?' + this.params1, function(data) {
 
@@ -348,7 +352,8 @@ var Analyst = Analyst || {};
 
 		    	this.params2 = 'graphId=' + this.graphId2 + '&lat=' + A.map.marker.getLatLng().lat + '&lon=' +
 						A.map.marker.getLatLng().lng + '&mode=' + this.mode + '&bikeSpeed=' + bikeSpeed +
-						'&walkSpeed=' + walkSpeed + '&which=' + which + dateTime + '&shapefile=' + this.$('#shapefile').val();
+						'&walkSpeed=' + walkSpeed + '&which=' + which + dateTime + '&shapefile=' + this.$('#shapefile').val() +
+						'&profile=' + this.$('input.profile:checked').val();
 		    	$.getJSON('/api/result?' + this.params2, function(data) {
 
 			  	  _this.scenario2Data = data;

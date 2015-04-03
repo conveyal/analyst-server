@@ -29,27 +29,29 @@ public class SurfaceTile extends AnalystTileRequest {
         final Boolean showPoints;
         final Integer timeLimit;
         final Integer minTime;
+        final boolean profile;
 
         public SurfaceTile(String graphId, Double lat, Double lon, String mode, String shapefile,
 						   Double bikeSpeed, Double walkSpeed, String which, String date, int fromTime, int toTime, Integer x, Integer y, Integer z,
-						   Boolean showIso, Boolean showPoints, Integer timeLimit, Integer minTime) {
+						   Boolean showIso, Boolean showPoints, Integer timeLimit, Integer minTime, boolean profile) {
             super(x, y, z, "surface");
             
             LocalDate jodaDate = LocalDate.parse(date);
             
-			resultKey = String.format(Locale.US, "%s_%.6f_%.6f_%s_%.2f_%.2f_%d_%d_%d_%d_%d_%s", graphId, lat, lon, mode,
+			resultKey = String.format(Locale.US, "%s_%.6f_%.6f_%s_%.2f_%.2f_%d_%d_%d_%d_%d_%s%s", graphId, lat, lon, mode,
 					bikeSpeed, walkSpeed, jodaDate.getYear(), jodaDate.getMonthOfYear(), jodaDate.getDayOfMonth(),
-					fromTime, toTime, shapefile);
+					fromTime, toTime, shapefile, (profile ? "_profile" : ""));
 			shapefileId = shapefile;
 			this.which = ResultEnvelope.Which.valueOf(which);
             this.showIso = showIso;
             this.showPoints = showPoints;
             this.timeLimit = timeLimit;
             this.minTime = minTime;
+            this.profile = profile;
         }
 
         public String getId() {
-            return super.getId() + "_" + resultKey + "_" + showIso + "_" + showPoints + "_" + timeLimit + "_" + minTime;
+            return super.getId() + "_" + resultKey + "_" + showIso + "_" + showPoints + "_" + timeLimit + "_" + minTime + (profile ? "_profile" : "");
         }
 
         public byte[] render(){
