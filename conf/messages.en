@@ -168,3 +168,5 @@ analysis.compare-to=Compare to
 
 analysis.group=Group
 analysis.dont-group=Don't Group
+
+analysis.change-in-time=Change in travel time {0} minutes

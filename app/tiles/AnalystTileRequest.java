@@ -47,17 +47,26 @@ public abstract class AnalystTileRequest {
 		
 		public static  Map<String, NaturalBreaksClassifier> naturalBreaksClassifierCache = new ConcurrentHashMap<String, NaturalBreaksClassifier>();
 	
-	
+	final public String format;
 	final public String type;
 	final public Integer x, y, z;
 	
 	public AnalystTileRequest(Integer x, Integer y, Integer z, String type) {
+		this(x, y, z, type, "png");
+	}
+	
+	public AnalystTileRequest(Integer x, Integer y, Integer z, String type, String format) {
 		this.x = x;
 		this.y = y;
 		this.z = z;
 		
 		this.type = type;
+		
+		// default format is png
+		this.format = format;
 	}
+	
+	
 
 	public String getId() {
 		return type + "_" + x + "_" + y + "_" + z;

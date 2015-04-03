@@ -19,6 +19,7 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Point;
+import com.vividsolutions.jts.index.strtree.STRtree;
 
 import utils.HaltonPoints;
 import utils.ResultEnvelope;
@@ -198,16 +199,28 @@ public class SurfaceComparisonTile extends AnalystTileRequest implements UTFIntG
         	return null;
         }
 		
-		int[][] grid = new int[128][128];
+		int[][] grid = new int[64][64];
 		
-		ROW: for (int row = 0; row < 128; row++) {
-			COL: for (int col = 0; col < 128; col++) {
+		List<Shapefile.ShapeFeature> fsub = shp.query(new Envelope(tile2lon(x, z), tile2lon(x + 1, z), tile2lat(y, z), tile2lat(y + 1, z)));
+		
+		if (fsub.isEmpty())
+			return null;
+		
+		// build a spatial index for just this tile, to speed up querying
+		STRtree subIdx = new STRtree(Math.max(fsub.size(), 2));
+		
+		for (Shapefile.ShapeFeature ft : fsub) {
+			subIdx.insert(ft.geom.getEnvelopeInternal(), ft);
+		}
+		
+		ROW: for (int row = 0; row < 64; row++) {
+			COL: for (int col = 0; col < 64; col++) {
 				// find the point
-				Coordinate c = new Coordinate(tile2lon(x + ((double) col / 128.0), z), tile2lat(y + ((double) row / 128.0), z));
+				Coordinate c = new Coordinate(tile2lon(x + ((double) col / 64.0), z), tile2lat(y + ((double) row / 64.0), z));
 				Point pt = geometryFactory.createPoint(c);
 				
 				// find relevant features
-				List<Shapefile.ShapeFeature> features = shp.query(pt.getEnvelopeInternal());
+				List<Shapefile.ShapeFeature> features = subIdx.query(pt.getEnvelopeInternal());
 				
 				grid[row][col] = Integer.MIN_VALUE;
 				

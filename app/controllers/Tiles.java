@@ -94,9 +94,9 @@ public class Tiles extends Controller {
 							
 							// TODO: count ints and use low values for high numbers
 							// codepoint represents the UTF-8 codepoint we are using to encode this value.
-							for (int row = 0, id = 1; row < 128; row++) {
-								for (int col = 0; col < 128; col++) {
-									if (!values.containsKey(grid[row][col]))
+							for (int row = 0, id = 1; row < 64; row++) {
+								for (int col = 0; col < 64; col++) {
+									if (!values.containsKey(grid[row][col]) && grid[row][col] != Integer.MIN_VALUE)
 										values.put(grid[row][col], id++);
 								}
 							}
@@ -111,11 +111,12 @@ public class Tiles extends Controller {
 							// write the grid itself
 							jgen.writeArrayFieldStart("grid");
 							
-							for (int row = 0; row < 128; row++) {
+							for (int row = 0; row < 64; row++) {
 								StringBuilder sb = new StringBuilder(128);
 								
-								for (int col = 0; col < 128; col++) {
-									sb.append(charForId(values.get(grid[row][col])));
+								for (int col = 0; col < 64; col++) {
+									int id = grid[row][col] == Integer.MIN_VALUE ? 0 : values.get(grid[row][col]);
+									sb.append(charForId(id));
 								}
 								
 								jgen.writeString(sb.toString());

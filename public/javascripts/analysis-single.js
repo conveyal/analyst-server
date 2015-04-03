@@ -450,10 +450,51 @@ var Analyst = Analyst || {};
 				if(A.map.tileOverlay && A.map.hasLayer(A.map.tileOverlay))
 		  			A.map.removeLayer(A.map.tileOverlay);
 
-				A.map.tileOverlay = L.tileLayer('/tile/surfaceComparison?z={z}&x={x}&y={y}' +
-				'&showIso=' + showIso +
-				'&showPoints=' +  showPoints + '&minTime=' + minTime + '&timeLimit=' + timeLimit + '&' + this.params1 + '&graphId2=' + this.graphId2)
+				var url = '/tile/surfaceComparison?z={z}&x={x}&y={y}' +
+					'&showIso=' + showIso +
+					'&showPoints=' +  showPoints + '&minTime=' + minTime + '&timeLimit=' + timeLimit + '&' + this.params1 + '&graphId2=' + this.graphId2;
+				A.map.tileOverlay = L.tileLayer(url + '&format=png')
 					.addTo(A.map);
+
+				if(A.map.utfOverlay && A.map.hasLayer(A.map.utfOverlay))
+						A.map.removeLayer(A.map.utfOverlay);
+
+				if (A.map.valueReadout)
+					A.map.removeControl(A.map.valueReadout);
+
+				// readout control: see http://leafletjs.com/examples/choropleth.html
+				A.map.valueReadout = L.control({
+					position: 'bottomleft'
+				});
+				A.map.valueReadout.onAdd = function (map) {
+					this._div = L.DomUtil.create('div', 'valueReadout');
+					this.update();
+					return this._div;
+				}
+				A.map.valueReadout.update = function(val) {
+					if (!val) {
+						this._div.innerHTML = '-';
+						return;
+					}
+
+					val = Math.round(val / 60);
+
+					this._div.innerHTML = window.Messages('analysis.change-in-time', val);
+				}
+				A.map.valueReadout.addTo(A.map);
+
+				A.map.utfOverlay = new L.UtfGrid(url + '&format=json', {
+					resolution: 4,
+					useJsonP: false
+				})
+				.on('mouseover', function (e) {
+					A.map.valueReadout.update(e.data);
+				})
+				.on('mouseout', function (e) {
+					A.map.valueReadout.update();
+				});
+
+				A.map.addLayer(A.map.utfOverlay);
 
 			}
 			else {
