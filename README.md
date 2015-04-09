@@ -29,12 +29,14 @@ Cluster uses S3 buckets to pass data. Create a bucket for graphs and another for
 and configure `cluster.s3credentials`. Finally, uncomment the cluster.akka section in application.conf to allow remoting,
 and configure the port and bind address to allow the worker servers to connect.
 
-Clone [otpa-cluster](https://github.com/conveyal/otpa-cluster) and build it with `gradle shadowjar`. Start up the jar
+Clone [otpa-cluster](https://github.com/conveyal/otpa-cluster) and build it with `gradle shadowJar`. Start up the jar
 like so, on the worker machines:
 
     java -Xmx4G -Dotpac.bucket.pointsets=<POINTSETS BUCKET> -Dotpac.bucket.graphs=<GRAPHS BUCKET> -Ds3.credentials.filename=<S3 CREDENTIALS FILENAME> build/lib/otpa-cluster-all.jar -w akka.tcp://analyst-server@<server>:<port>/user/executive
 
 Repeat as desired.
+
+If you want to do single-point scenario comparisons, it is recommended that you start at least two cluster workers. If you have sufficient memory, it is possible to run these on the same machine; simply specify `-Dakka.remote.netty.tcp.port=<free port>` for each one.
 
 #### Securing cluster
 
