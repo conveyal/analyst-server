@@ -66,8 +66,8 @@ GET           /tile/transitComparison             controllers.Tiles.transitCompa
 GET     /tile/surfaceComparison                  	controllers.Tiles.surfaceComparison(shapefile: String, graphId:String, graphId2: String, lat:Double, lon:Double, mode:String, bikeSpeed:Double, walkSpeed:Double, which:String, date:String, fromTime:Integer, toTime:Integer ?= -1, x:Integer, y:Integer, z:Integer, showIso:Boolean ?= false, showPoints:Boolean ?= true, timeLimit:Integer ?= 3600, minTime:Integer ?= null, profile:Boolean, format:String ?="png")
 
 GET     /gis/query	                    controllers.Gis.query(queryId:String, timeLimit:Integer ?= 3600, weightByShapefile:String ?= null, weightByAttribute:String ?= null, groupBy:String ?= null, which: String, attributeName: String, compareTo:String ?= null)
-GET     /gis/result                     controllers.Gis.result(shapefile: String, graphId:String, lat:Double, lon:Double, mode:String, bikeSpeed:Double, walkSpeed:Double, which:String, date:String, fromTime:Integer, toTime:Integer ?= -1)
-GET     /gis/resultComparison           controllers.Gis.resultComparison(shapefile: String, graphId:String, graphId2:String, lat:Double, lon:Double, mode:String, bikeSpeed:Double, walkSpeed:Double, which:String, date:String, fromTime:Integer, toTime:Integer ?= -1)
+GET     /gis/result                     controllers.Gis.result(shapefile: String, graphId:String, lat:Double, lon:Double, mode:String, bikeSpeed:Double, walkSpeed:Double, which:String, date:String, fromTime:Integer, toTime:Integer ?= -1, profile:Boolean)
+GET     /gis/resultComparison           controllers.Gis.resultComparison(shapefile: String, graphId:String, graphId2:String, lat:Double, lon:Double, mode:String, bikeSpeed:Double, walkSpeed:Double, which:String, date:String, fromTime:Integer, toTime:Integer ?= -1, profile:Boolean)
 
 
 GET     /api/queryBins	                controllers.Api.queryBins(queryId:String, timeLimit:Integer ?= 3600, weightByShapefile:String ?= null, weightByAttribute:String ?= null, groupBy:String ?= null, which: String, attributeName: String, compareTo: String ?= null)

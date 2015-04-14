@@ -47,6 +47,9 @@ public class Analyst {
 		req.dominanceFunction = new DominanceFunction.EarliestArrival();
 		req.worstTime = req.dateTime + cutoffMinutes * 60;
 		
+		// initial wait clamping is algorithmically invalid.
+		req.clampInitialWait = 0;
+		
 		if (req.modes.isTransit()) {
 			Logger.warn("Building a non-profile transit routing request, this probably shouldn't be happening.");
 			req.walkReluctance = 1.0;

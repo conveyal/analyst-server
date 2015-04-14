@@ -221,7 +221,8 @@ public class Gis extends Controller {
      * Get a ResultSet.
      */
     public static Result result(String shapefile, String graphId, Double lat, Double lon, String mode,
-                                           Double bikeSpeed, Double walkSpeed, String which, String date, int fromTime, int toTime) {
+                                           Double bikeSpeed, Double walkSpeed, String which, String date, int fromTime, int toTime,
+                                           boolean profile) {
 
         ResultEnvelope.Which whichEnum;
         LocalDate jodaDate;
@@ -235,9 +236,9 @@ public class Gis extends Controller {
         }
 
         // note that this does not include which, as it is a key to ResultEnvelopes, not ResultSets
-        final String key = String.format(Locale.US, "%s_%.6f_%.6f_%s_%.2f_%.2f_%d_%d_%d_%d_%d_%s", graphId, lat, lon, mode,
+        final String key = String.format(Locale.US, "%s_%.6f_%.6f_%s_%.2f_%.2f_%d_%d_%d_%d_%d_%s%s", graphId, lat, lon, mode,
                 bikeSpeed, walkSpeed, jodaDate.getYear(), jodaDate.getMonthOfYear(), jodaDate.getDayOfMonth(),
-                fromTime, toTime, shapefile);
+                fromTime, toTime, shapefile, (profile ? "_profile" : ""));
         
         try {
         	ResultSetWithTimes result = (ResultSetWithTimes) SinglePoint.getResultSet(key).get(whichEnum);
@@ -292,7 +293,8 @@ public class Gis extends Controller {
      * Get a comparison.
      */
     public static Result resultComparison(String shapefile, String graphId, String graphId2, Double lat, Double lon, String mode,
-                                           Double bikeSpeed, Double walkSpeed, String which, String date, int fromTime, int toTime) {
+                                           Double bikeSpeed, Double walkSpeed, String which, String date, int fromTime, int toTime,
+                                           boolean profile) {
 
         ResultEnvelope.Which whichEnum;
         LocalDate jodaDate;
@@ -306,13 +308,13 @@ public class Gis extends Controller {
         }
 
         // note that this does not include which, as it is a key to ResultEnvelopes, not ResultSets
-        String key = String.format(Locale.US, "%s_%.6f_%.6f_%s_%.2f_%.2f_%d_%d_%d_%d_%d_%s", graphId, lat, lon, mode,
+        String key = String.format(Locale.US, "%s_%.6f_%.6f_%s_%.2f_%.2f_%d_%d_%d_%d_%d_%s%s", graphId, lat, lon, mode,
                 bikeSpeed, walkSpeed, jodaDate.getYear(), jodaDate.getMonthOfYear(), jodaDate.getDayOfMonth(),
-                fromTime, toTime, shapefile);
+                fromTime, toTime, shapefile, (profile ? "_profile" : ""));
         
-        String key2 = String.format(Locale.US, "%s_%.6f_%.6f_%s_%.2f_%.2f_%d_%d_%d_%d_%d_%s", graphId2, lat, lon, mode,
+        String key2 = String.format(Locale.US, "%s_%.6f_%.6f_%s_%.2f_%.2f_%d_%d_%d_%d_%d_%s%s", graphId2, lat, lon, mode,
                 bikeSpeed, walkSpeed, jodaDate.getYear(), jodaDate.getMonthOfYear(), jodaDate.getDayOfMonth(),
-                fromTime, toTime, shapefile);
+                fromTime, toTime, shapefile, (profile ? "_profile" : ""));
         
         try {
         	ResultSetWithTimes result = (ResultSetWithTimes) SinglePoint.getResultSet(key).get(whichEnum);
