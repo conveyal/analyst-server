@@ -116,6 +116,9 @@ analysis.run-query=Run Query
 analysis.shapefile=Shapefile
 analysis.shapefile-field=Field
 
+analysis.exact-time=Exact departure time
+analysis.profile=Range of departure times
+
 # {0} is the name and {1} is the field name from the shapefile
 analysis.attribute-name={0} ({1})
 
