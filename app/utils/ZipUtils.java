@@ -41,4 +41,14 @@ public class ZipUtils {
 			}
 		}
 	}
+	
+	public static void unzip(ZipFile zip, ZipEntry ze, File output) throws IOException {
+		output.getParentFile().mkdirs();
+		
+		InputStream in = zip.getInputStream(ze);
+		OutputStream out = new FileOutputStream(output);
+		IOUtils.copy(in, out);
+		IOUtils.closeQuietly(in);
+		IOUtils.closeQuietly(out);
+	}
 }

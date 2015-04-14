@@ -258,6 +258,8 @@ public class Scenario implements Serializable {
 			if(f.getName().toLowerCase().endsWith(".zip")) {
 				final GTFSFeed feed;
 				
+				Logger.info("Processing file " + f.getName());
+				
 				try {
 					feed = GTFSFeed.fromFile(f.getAbsolutePath());
 				} catch (RuntimeException e) {

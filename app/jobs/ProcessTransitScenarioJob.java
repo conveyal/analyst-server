@@ -51,6 +51,7 @@ import utils.ZipUtils;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
 
 import controllers.Application;
@@ -85,7 +86,10 @@ public class ProcessTransitScenarioJob implements Runnable {
 
 			String shpFile = null;
 			String confFile = null;
-
+			
+			// this allows one to upload a ZIP file full of GTFS files and have them all added.
+			List<ZipEntry> zips = Lists.newArrayList(); 
+			
 			while(entries.hasMoreElements()) {
 
 				ZipEntry entry = entries.nextElement();
@@ -94,13 +98,16 @@ public class ProcessTransitScenarioJob implements Runnable {
 				if (entry.getName().startsWith("__MACOSX"))
 					continue;
 
-				if(entry.getName().toLowerCase().endsWith(".shp"))
+				if (entry.getName().toLowerCase().endsWith(".shp") && !entry.isDirectory())
 					shpFile = entry.getName();
-				if(entry.getName().toLowerCase().endsWith(".json"))
+				
+				if (entry.getName().toLowerCase().endsWith(".json") && !entry.isDirectory())
 					confFile = entry.getName();
+				
+				if (entry.getName().toLowerCase().endsWith(".zip") && !entry.isDirectory())
+					zips.add(entry);
 			}
 
-			zipFile.close();
 			File newFile;
 
 			File outputDirectory = scenario.getTempShapeDirPath();
@@ -122,13 +129,23 @@ public class ProcessTransitScenarioJob implements Runnable {
 				FileUtils.deleteDirectory(outputDirectory);
 				zipFile.close();
 				uploadFile.delete();
+				graphFiles.add(newFile);
+			}
+			else if (!zips.isEmpty()) {
+				int i = 0;
+				for (ZipEntry ze : zips) {
+					File file = new File(scenario.getScenarioDataPath(), scenario.id + "_gtfs_" + (i++) + ".zip");
+					ZipUtils.unzip(zipFile, ze, file);
+					graphFiles.add(file);
+				}
 			}
 			else  {
 				newFile = new File(scenario.getScenarioDataPath(), scenario.id + "_gtfs.zip");
 				FileUtils.copyFile(uploadFile, newFile);
+				graphFiles.add(newFile);
 			}
-
-			graphFiles.add(newFile);
+			
+			zipFile.close();
 			
 			if((scenarioType != null && augmentScenarioId != null && scenarioType.equals("augment"))) 
 			{	
