@@ -120,15 +120,19 @@ public class SurfaceComparisonTile extends AnalystTileRequest implements UTFIntG
 
             if(showIso) {
 
+            	// no change
                  if((Math.abs(time1 - time2) < 60 || time2 > time1) && time1 > minTime && time1 < timeLimit){
                      float opacity = 1.0f - (float)((float)time1 / (float)timeLimit);
                      color = new Color(0.9f,0.7f,0.2f,opacity);
                  }
 
+                // new service
                 else if((time1 == Integer.MAX_VALUE || time1 > timeLimit) && time2 < timeLimit && time2 > minTime) {
                     float opacity = 1.0f - (float)((float)time2 / (float)timeLimit);
                     color = new Color(0.8f,0.0f,0.8f,opacity);
                 }
+                 
+                // faster service 
                 else if(time1 > time2 && time2 < timeLimit && time2 > minTime) {
                     float opacity = 1.0f - (float)((float)time2 / (float)time1);
                     color = new Color(0.0f,0.0f,0.8f,opacity);
