@@ -139,6 +139,8 @@ analysis.bin-range={0} - {1}
 # 0 is lower percentage bound, 1 is upper percentage bound, 2 is point set name
 analysis.bin-percent-range={0}% - {1}% of total {2}
 
+analysis.graph-mouseover=Minute {0}: Reliable: {1}, average: {2}, maximum possible: {3}
+
 # the same for a single-value class
 # 0 is the value
 analysis.bin-single={0}

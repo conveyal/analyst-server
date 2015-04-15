@@ -540,6 +540,9 @@ var Analyst = Analyst || {};
 			if (result2)
 				plotData = [plotData, this.getPlotData(result2, attribute)];
 
+			// TODO in much of the world this should be . not ,
+			var fmt = d3.format(',');
+
 			MG.data_graphic({
 				title: window.Messages('analysis.accessibility-to', result1.properties.schema[attribute].label),
 				width: 400,
@@ -553,6 +556,11 @@ var Analyst = Analyst || {};
 				max_x: 120,
 				bottom: 40,
 				show_confidence_band: ['worstCase', 'bestCase'],
+				mouseover: function (d, i) {
+					$('#chart svg .mg-active-datapoint')
+						.text(window.Messages('analysis.graph-mouseover', d.minute, fmt(d.worstCase), fmt(d.pointEstimate), fmt(d.bestCase)));
+				},
+				show_rollover_text: false,
 				legend: [window.Messages('analysis.scenario-1'), window.Messages('analysis.scenario-2')],
 				legend_target: '#chartLegend'
 			});
