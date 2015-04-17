@@ -138,7 +138,7 @@ public class SurfaceComparisonTile extends AnalystTileRequest implements UTFIntG
                     color = new Color(0.0f,0.0f,0.8f,opacity);
                 }
                 else {
-                    color = new Color(0.0f,0.0f,0.0f,0.1f);
+                    color = new Color(0.0f,0.0f,0.0f,0.2f);
                 }
 
                  if(color != null)

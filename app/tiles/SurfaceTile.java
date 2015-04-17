@@ -93,7 +93,7 @@ public class SurfaceTile extends AnalystTileRequest {
                          color = new Color(0.9f,0.7f,0.2f,opacity);
                      }
                     else {
-                        color = new Color(0.0f,0.0f,0.0f,0.1f);
+                        color = new Color(0.0f,0.0f,0.0f,0.2f);
                     }
 
                      if(color != null)
