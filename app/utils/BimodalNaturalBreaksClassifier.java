@@ -85,14 +85,7 @@ public class BimodalNaturalBreaksClassifier extends Classifier {
 		numCategories++;
 		
 		// figure out how many classes to assign to each
-		int lowerClasses = (int) Math.round(((double) centralIndex / (double) values.length) * numCategories);
-		
-		if (lowerClasses == numCategories)
-			lowerClasses--;
-		
-		else if (lowerClasses == 0)
-			lowerClasses++;
-		
+		int lowerClasses = numCategories / 2;		
 		int upperClasses = numCategories - lowerClasses;
 		
 		// split the lists and do jenks twice
