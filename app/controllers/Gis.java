@@ -107,7 +107,7 @@ public class Gis extends Controller {
     	
     	try {
 	    
-    		String queryKey = queryId + "_" + timeLimit + "_" + which;
+    		String queryKey = queryId + "_" + timeLimit + "_" + which + "_" + attributeName;
     		
 			QueryResults qr, qr2;
 
