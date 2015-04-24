@@ -302,7 +302,7 @@ public class QueryResults {
 			// we preserve the maxPossible from the original. It does not change under aggregation.
 			out.maxPossible = this.maxPossible;
 			
-			if (this.classifier instanceof BimodalNaturalBreaksClassifier)
+			if (this.classifier instanceof BimodalNaturalBreaksClassifier && this.minValue < 0 && this.maxValue > 0)
 				out.classifier = new BimodalNaturalBreaksClassifier(out, nClasses, 0d,
 						new Color(.9f, .9f, .1f, .5f), new Color(.5f, .5f, .5f, .5f), new Color(0f, 0f, 1f, .5f));
 			else
@@ -361,8 +361,11 @@ public class QueryResults {
 			// a percentage of total possible still, not a percent change.
 			ret.maxPossible = this.maxPossible;
 			
-			ret.classifier = new BimodalNaturalBreaksClassifier(ret, nClasses, 0d,
-					new Color(.9f, .9f, .1f, .5f), new Color(.5f, .5f, .5f, .5f), new Color(0f, 0f, 1f, .5f));
+			if (this.minValue < 0 && this.maxValue > 0)
+				ret.classifier = new BimodalNaturalBreaksClassifier(ret, nClasses, 0d,
+						new Color(.9f, .9f, .1f, .5f), new Color(.5f, .5f, .5f, .5f), new Color(0f, 0f, 1f, .5f));
+			else 
+				ret.classifier = new NaturalBreaksClassifier(ret, nClasses, new Color(1.0f, 1.0f, 1.0f, 0.5f), new Color(0.0f, 0.0f, 1.0f, 0.5f));
 			
 			subtracted.put(otherQr.id, ret);
 			
