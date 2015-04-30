@@ -535,10 +535,13 @@ var Analyst = Analyst || {};
 
 			// pivot the data into an object array for MetricsGraphics and make a cumulative distribution
 			var plotData = this.getPlotData(result1, attribute);
+			var max = plotData[119].bestCase !== undefined ? plotData[119].bestCase : plotData[119].pointEstimate;
 
 			// this is how you make a multi-line plot with metricsgraphics
-			if (result2)
+			if (result2) {
 				plotData = [plotData, this.getPlotData(result2, attribute)];
+				max = Math.max(max, plotData[1][119].bestCase !== undefined ? plotData[1][119].bestCase : plotData[1][119].pointEstimate);
+			}
 
 			// TODO in much of the world this should be . not ,
 			var fmt = d3.format(',');
@@ -548,6 +551,7 @@ var Analyst = Analyst || {};
 				width: 400,
 				height: 225,
 				data: plotData,
+				max_y: max,
 				target: '#chart',
 				area: false,
 				y_accessor: 'pointEstimate',
