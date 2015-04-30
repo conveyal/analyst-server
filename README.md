@@ -32,7 +32,7 @@ and configure the port and bind address to allow the worker servers to connect.
 Clone [otpa-cluster](https://github.com/conveyal/otpa-cluster) and build it with `gradle shadowJar`. Start up the jar
 like so, on the worker machines:
 
-    java -Xmx4G -Dotpac.bucket.pointsets=<POINTSETS BUCKET> -Dotpac.bucket.graphs=<GRAPHS BUCKET> -Ds3.credentials.filename=<S3 CREDENTIALS FILENAME> build/lib/otpa-cluster-all.jar -w akka.tcp://analyst-server@<server>:<port>/user/executive
+    java -Xmx4G -Dotpac.bucket.pointsets=<POINTSETS BUCKET> -Dotpac.bucket.graphs=<GRAPHS BUCKET> -Ds3.credentials.filename=<S3 CREDENTIALS FILENAME> -jar build/libs/otpa-cluster-all.jar -w akka.tcp://analyst-server@<server>:<port>/user/executive
 
 Repeat as desired.
 
