@@ -19,11 +19,6 @@ import models.SpatialLayer;
 
 import org.opengis.geometry.MismatchedDimensionException;
 import org.opengis.referencing.operation.TransformException;
-import org.opentripplanner.analyst.PointSet;
-import org.opentripplanner.analyst.ResultSetDelta;
-import org.opentripplanner.analyst.ResultSetWithTimes;
-import org.opentripplanner.analyst.SampleSet;
-import org.opentripplanner.analyst.TimeSurface;
 
 import otp.ProfileResult;
 import utils.HaltonPoints;

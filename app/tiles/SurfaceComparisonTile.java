@@ -9,8 +9,7 @@ import org.joda.time.LocalDate;
 import org.opengis.geometry.MismatchedDimensionException;
 import org.opengis.referencing.operation.TransformException;
 import org.opentripplanner.analyst.PointSet;
-import org.opentripplanner.analyst.ResultSetDelta;
-import org.opentripplanner.analyst.ResultSetWithTimes;
+import org.opentripplanner.analyst.ResultSet;
 import org.opentripplanner.analyst.SampleSet;
 import org.opentripplanner.analyst.TimeSurface;
 import org.opentripplanner.analyst.core.SlippyTile;
@@ -86,7 +85,7 @@ public class SurfaceComparisonTile extends AnalystTileRequest implements UTFIntG
 
         // note that this may occasionally return null if someone's had the site open for a very long
         // time because the result will have fallen out of the cache.
-        ResultSetWithTimes result1 = (ResultSetWithTimes) SinglePoint.getResultSet(resultKey1).get(which);
+        ResultSet result1 = SinglePoint.getResultSet(resultKey1).get(which);
         
         if (result1 == null) {
         	return null;
@@ -95,7 +94,7 @@ public class SurfaceComparisonTile extends AnalystTileRequest implements UTFIntG
         
         // note that this may occasionally return null if someone's had the site open for a very long
         // time because the result will have fallen out of the cache.
-        ResultSetWithTimes result2 = (ResultSetWithTimes) SinglePoint.getResultSet(resultKey2).get(which);
+        ResultSet result2 = SinglePoint.getResultSet(resultKey2).get(which);
         
         if (result2 == null) {
         	return null;
@@ -188,7 +187,7 @@ public class SurfaceComparisonTile extends AnalystTileRequest implements UTFIntG
 
         // note that this may occasionally return null if someone's had the site open for a very long
         // time because the result will have fallen out of the cache.
-        ResultSetWithTimes result1 = (ResultSetWithTimes) SinglePoint.getResultSet(resultKey1).get(which);
+        ResultSet result1 = SinglePoint.getResultSet(resultKey1).get(which);
         
         if (result1 == null) {
         	return null;
@@ -197,7 +196,7 @@ public class SurfaceComparisonTile extends AnalystTileRequest implements UTFIntG
         
         // note that this may occasionally return null if someone's had the site open for a very long
         // time because the result will have fallen out of the cache.
-        ResultSetWithTimes result2 = (ResultSetWithTimes) SinglePoint.getResultSet(resultKey2).get(which);
+        ResultSet result2 = SinglePoint.getResultSet(resultKey2).get(which);
         
         if (result2 == null) {
         	return null;

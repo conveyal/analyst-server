@@ -93,6 +93,9 @@ public class Analyst {
         req.streetTime = 15;
         req.date       = date;
 		
+        // Set the max walk and bike times to large numbers so that small changes in the network will
+        // not cause transit stops or destinations that were otherwise reachable by a walk to become
+        // reachable only by a convoluted out-and-back transit trip.
         req.maxWalkTime = 20;
 		req.maxBikeTime = 20;
 		req.maxCarTime  = 20;

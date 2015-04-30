@@ -51,8 +51,6 @@ import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.referencing.operation.MathTransform;
 import org.opentripplanner.analyst.PointSet;
 import org.opentripplanner.analyst.ResultSet;
-import org.opentripplanner.analyst.ResultSetDelta;
-import org.opentripplanner.analyst.ResultSetWithTimes;
 import org.opentripplanner.analyst.TimeSurface;
 import org.opentripplanner.analyst.core.SlippyTile;
 import org.opentripplanner.analyst.request.TileRequest;
@@ -241,7 +239,7 @@ public class Gis extends Controller {
                 fromTime, toTime, shapefile, (profile ? "_profile" : ""));
         
         try {
-        	ResultSetWithTimes result = (ResultSetWithTimes) SinglePoint.getResultSet(key).get(whichEnum);
+        	ResultSet result = SinglePoint.getResultSet(key).get(whichEnum);
         	
         	final Shapefile shp = Shapefile.getShapefile(shapefile);
 			       
@@ -317,8 +315,8 @@ public class Gis extends Controller {
                 fromTime, toTime, shapefile, (profile ? "_profile" : ""));
         
         try {
-        	ResultSetWithTimes result = (ResultSetWithTimes) SinglePoint.getResultSet(key).get(whichEnum);
-        	ResultSetWithTimes result2 = (ResultSetWithTimes) SinglePoint.getResultSet(key2).get(whichEnum);
+        	ResultSet result = SinglePoint.getResultSet(key).get(whichEnum);
+        	ResultSet result2 = SinglePoint.getResultSet(key2).get(whichEnum);
         	
         	final Shapefile shp = Shapefile.getShapefile(shapefile);
 			       

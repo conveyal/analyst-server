@@ -7,7 +7,7 @@ import org.joda.time.LocalDate;
 import org.opengis.geometry.MismatchedDimensionException;
 import org.opengis.referencing.operation.TransformException;
 import org.opentripplanner.analyst.PointSet;
-import org.opentripplanner.analyst.ResultSetWithTimes;
+import org.opentripplanner.analyst.ResultSet;
 
 import controllers.SinglePoint;
 import utils.HaltonPoints;
@@ -65,7 +65,7 @@ public class SurfaceTile extends AnalystTileRequest {
 
             // note that this may occasionally return null if someone's had the site open for a very long
             // time because the result will have fallen out of the cache.
-            ResultSetWithTimes result = (ResultSetWithTimes) SinglePoint.getResultSet(resultKey).get(which);
+            ResultSet result = SinglePoint.getResultSet(resultKey).get(which);
             
             if (result == null) {
             	return null;

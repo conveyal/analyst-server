@@ -4,7 +4,6 @@ import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
 
-import com.conveyal.otpac.PrototypeAnalystProfileRequest;
 import com.conveyal.otpac.actors.JobItemActor;
 import com.conveyal.otpac.message.SinglePointJobSpec;
 import com.conveyal.otpac.message.WorkResult;
@@ -73,7 +72,7 @@ public class SinglePoint extends Controller {
         final Shapefile shp = Shapefile.getShapefile(shapefile);
 
         // is it cached?
-        if (envelopeCache.containsKey(key)) {
+        if (envelopeCache.containsKey(key) && false) {
         	String json = resultSetToJson(envelopeCache.get(key), shp);
         	
         	if (json != null)
