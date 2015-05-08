@@ -5,11 +5,16 @@ import akka.actor.ActorSystem;
 import akka.actor.Props;
 
 import com.conveyal.otpac.actors.JobItemActor;
+import com.conveyal.otpac.message.OneToManyProfileRequest;
+import com.conveyal.otpac.message.OneToManyRequest;
 import com.conveyal.otpac.message.SinglePointJobSpec;
 import com.conveyal.otpac.message.WorkResult;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
 
 import models.Scenario;
 import models.Shapefile;
@@ -24,6 +29,7 @@ import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.TraverseModeSet;
 
 import play.libs.F;
+import play.libs.F.Function;
 import play.libs.Json;
 import play.mvc.Controller;
 import play.mvc.Result;
@@ -33,6 +39,7 @@ import utils.ResultEnvelope.Which;
 
 import java.io.ByteArrayOutputStream;
 import java.util.Locale;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
 
 import static utils.PromiseUtils.resolveNow;
@@ -50,78 +57,82 @@ public class SinglePoint extends Controller {
     /** re-use object mapper */
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
-    /**
-     * Get a ResultSet.
-     */
-    public static F.Promise<Result> result(String shapefile, String graphId, Double lat, Double lon, String mode,
-                                           Double bikeSpeed, Double walkSpeed, String date, int fromTime, int toTime, boolean profile) {
-
-        LocalDate jodaDate;
-
-        try {
-            jodaDate = LocalDate.parse(date);
-        } catch (Exception e) {
-            // no need to pollute the console with a stack trace
-            return resolveNow((Result) badRequest("Invalid value for date parameter"));
-        }
-
-        final String key = String.format(Locale.US, "%s_%.6f_%.6f_%s_%.2f_%.2f_%d_%d_%d_%d_%d_%s%s", graphId, lat, lon, mode,
-                bikeSpeed, walkSpeed, jodaDate.getYear(), jodaDate.getMonthOfYear(), jodaDate.getDayOfMonth(),
-                fromTime, toTime, shapefile, (profile ? "_profile" : ""));
-        
-        final Shapefile shp = Shapefile.getShapefile(shapefile);
-
-        // is it cached?
-        if (envelopeCache.containsKey(key) && false) {
-        	String json = resultSetToJson(envelopeCache.get(key), shp);
-        	
-        	if (json != null)
-        		return resolveNow((Result) ok().as("application/json"));
-        	else
-        		return resolveNow((Result) badRequest());
-        }
-        else {
-            // build it, add it to the cache, and return it when we're ready
-            SinglePointJobSpec spec;
-            if (new TraverseModeSet(mode).isTransit() && profile) {
-                ProfileRequest req = Api.analyst.buildProfileRequest(mode, jodaDate, fromTime, toTime, lat, lon);
-                spec = new SinglePointJobSpec(graphId, shapefile + ".json", req);
-            }
-            else {
-            	Scenario s = Scenario.getScenario(graphId);
-                RoutingRequest req = Api.analyst.buildRequest(graphId,jodaDate, fromTime, new GenericLocation(lat, lon), mode, 120, DateTimeZone.forID(s.timeZone));
-                spec = new SinglePointJobSpec(graphId, shapefile + ".json", req);
-            }
-
-            spec.includeTimes = true;
-            
-            ActorSystem sys = Cluster.getActorSystem();
-
-            F.RedeemablePromise<WorkResult> result = F.RedeemablePromise.empty();
-            ActorRef callback = sys.actorOf(Props.create(SinglePointListener.class, result));
-            spec.callback = callback;
-
-            ActorRef exec = Cluster.getExecutive();
-
-            exec.tell(spec, ActorRef.noSender());
-
-            return result.map(new F.Function<WorkResult, Result> () {
-                @Override
-                public Result apply(WorkResult workResult) throws Throwable {
-                    ResultEnvelope res = new ResultEnvelope(workResult);
-                    envelopeCache.put(key, res);
-                    String json = resultSetToJson(res, shp);
-                    
-                    if (json != null)
-                    	return ok(json).as("application/json");
-                    else
-                    	return badRequest();
-                }
-            });
-        }
+    static {
+    	objectMapper.registerModule(new JodaModule());
     }
     
-    private static String resultSetToJson (ResultEnvelope rs, Shapefile shp) {
+    /** Create a result from a JSON-ified OneToMany[Profile]Request. */
+    public static F.Promise<Result> result () throws JsonProcessingException {
+    	// deserialize a result
+    	// figure out if it's profile or not
+    	
+    	JsonNode params = request().body().asJson();
+    	
+    	boolean profile = params.get("profile").asBoolean();
+    	
+    	SinglePointJobSpec spec;
+    	
+    	Shapefile shpTemp;
+    	
+    	if (profile) {
+    		OneToManyProfileRequest req = objectMapper.treeToValue(params, OneToManyProfileRequest.class);
+    		shpTemp = Shapefile.getShapefile(req.destinationPointsetId);
+    		// for now not requesting a vector isochrone
+    		spec = new SinglePointJobSpec(req.graphId, req.destinationPointsetId, req.options, false);
+    	}
+    	else {
+    		OneToManyRequest req = objectMapper.treeToValue(params, OneToManyRequest.class);
+    		shpTemp = Shapefile.getShapefile(req.destinationPointsetId);
+    		spec = new SinglePointJobSpec(req.graphId, req.destinationPointsetId, req.options, false);
+    	}
+    	
+        final Shapefile shp = shpTemp;
+    	
+    	// needed to render tiles
+    	spec.includeTimes = true;
+    	
+    	// make up a "surface ID" - this isn't actually an OTP surface ID, because . . .
+    	// 1) Profile requests no longer use surfaces at all
+    	// 2) These may be computed by different machines
+    	// Above we use keys in the cache; there's no need to do that here as the client
+    	// is tracking the surface ID. There is no chance for a collision between these keys
+    	// and the key format used above, so this is completely.
+    	final String key = UUID.randomUUID().toString();
+    	
+    	// caching is a pain and the cache miss rate is enormous. Don't check if this request is cached,
+    	// just run it again. The cache is used for rendering tiles only.
+    	
+    	// TODO duplicated code here is ugly
+        ActorSystem sys = Cluster.getActorSystem();
+
+        F.RedeemablePromise<WorkResult> result = F.RedeemablePromise.empty();
+        ActorRef callback = sys.actorOf(Props.create(SinglePointListener.class, result));
+        spec.callback = callback;
+
+        ActorRef exec = Cluster.getExecutive();
+
+        exec.tell(spec, ActorRef.noSender());
+        
+        return result.map(new Function<WorkResult, Result>() {
+
+			@Override
+			public Result apply(WorkResult result) throws Throwable {
+                ResultEnvelope res = new ResultEnvelope(result);
+                res.shapefile = shp.id;
+                envelopeCache.put(key, res);
+                String json = resultSetToJson(res, shp, key);
+                
+                if (json != null)
+                	return ok(json).as("application/json");
+                else
+                	return badRequest();
+			}
+        	
+		});
+    	
+    }
+    
+    private static String resultSetToJson (ResultEnvelope rs, Shapefile shp, String key) {
     	try {
     		ResultSet worst = rs.get(Which.WORST_CASE);
     		ResultSet point = rs.get(Which.POINT_ESTIMATE);
@@ -142,6 +153,8 @@ public class SinglePoint extends Controller {
 	    	jgen.writeStartObject();
 	    	{
 		    	shp.getPointSet().writeJsonProperties(jgen);
+		    	
+		    	jgen.writeStringField("key", key);
 		    	
 		    	jgen.writeObjectFieldStart("data");
 		    	{

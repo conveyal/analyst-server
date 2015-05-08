@@ -12,6 +12,7 @@ import org.opentripplanner.analyst.ResultSet;
 import controllers.SinglePoint;
 import utils.HaltonPoints;
 import utils.ResultEnvelope;
+import utils.ResultEnvelope.Which;
 
 import java.awt.*;
 import java.io.IOException;
@@ -23,57 +24,46 @@ import java.util.Locale;
 */
 public class SurfaceTile extends AnalystTileRequest {
 		final String resultKey;
-		final String shapefileId;
 		final ResultEnvelope.Which which;
         final Boolean showIso;
         final Boolean showPoints;
         final Integer timeLimit;
-        final Integer minTime;
-        final boolean profile;
 
-        public SurfaceTile(String graphId, Double lat, Double lon, String mode, String shapefile,
-						   Double bikeSpeed, Double walkSpeed, String which, String date, int fromTime, int toTime, Integer x, Integer y, Integer z,
-						   Boolean showIso, Boolean showPoints, Integer timeLimit, Integer minTime, boolean profile) {
+        public SurfaceTile(String key, Which which, Integer x, Integer y, Integer z,
+						   Boolean showIso, Boolean showPoints, Integer timeLimit) {
             super(x, y, z, "surface");
             
-            LocalDate jodaDate = LocalDate.parse(date);
-            
-			resultKey = String.format(Locale.US, "%s_%.6f_%.6f_%s_%.2f_%.2f_%d_%d_%d_%d_%d_%s%s", graphId, lat, lon, mode,
-					bikeSpeed, walkSpeed, jodaDate.getYear(), jodaDate.getMonthOfYear(), jodaDate.getDayOfMonth(),
-					fromTime, toTime, shapefile, (profile ? "_profile" : ""));
-			shapefileId = shapefile;
-			this.which = ResultEnvelope.Which.valueOf(which);
+			resultKey = key;
+			this.which = which;
             this.showIso = showIso;
             this.showPoints = showPoints;
             this.timeLimit = timeLimit;
-            this.minTime = minTime;
-            this.profile = profile;
         }
 
         public String getId() {
-            return super.getId() + "_" + resultKey + "_" + showIso + "_" + showPoints + "_" + timeLimit + "_" + minTime + (profile ? "_profile" : "");
+            return super.getId() + "_" + resultKey + "_" + which + "_" + showIso + "_" + showPoints + "_" + timeLimit;
         }
 
         public byte[] render(){
-
-            Tile tile = new Tile(this);
-
-            Shapefile shp = Shapefile.getShapefile(shapefileId);
-
-            if(shp == null)
-                return null;
-
             // note that this may occasionally return null if someone's had the site open for a very long
             // time because the result will have fallen out of the cache.
-            ResultSet result = SinglePoint.getResultSet(resultKey).get(which);
+            ResultEnvelope env = SinglePoint.getResultSet(resultKey);
+            ResultSet result = env.get(which);
             
             if (result == null) {
             	return null;
             }
+        	
+            Tile tile = new Tile(this);
+
+            Shapefile shp = Shapefile.getShapefile(env.shapefile);
+
+            if(shp == null)
+                return null;
 
             List<Shapefile.ShapeFeature> features = shp.query(tile.envelope);
 
-            PointSet ps = Shapefile.getShapefile(shapefileId).getPointSet();
+            PointSet ps = shp.getPointSet();
 
             for(Shapefile.ShapeFeature feature : features) {
 
@@ -88,7 +78,7 @@ public class SurfaceTile extends AnalystTileRequest {
 
                     Color color = null;
 
-                     if(sampleTime < timeLimit && (minTime != null && sampleTime > minTime)){
+                     if(sampleTime < timeLimit){
                          float opacity = 1.0f - (float)((float)sampleTime / (float)timeLimit);
                          color = new Color(0.9f,0.7f,0.2f,opacity);
                      }
@@ -110,7 +100,7 @@ public class SurfaceTile extends AnalystTileRequest {
 
                 // draw halton points for indicator
 
-                if(showPoints && sampleTime < timeLimit && (minTime != null && sampleTime > minTime)) {
+                if(showPoints && sampleTime < timeLimit) {
 
                     for(Attribute a : shp.attributes.values()) {
 

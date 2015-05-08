@@ -74,6 +74,7 @@ import utils.HashUtils;
 import utils.QueryResults;
 import utils.ResultEnvelope;
 import utils.QueryResults.QueryResultItem;
+import utils.ResultEnvelope.Which;
 @Security.Authenticated(Secured.class)
 public class Gis extends Controller {
 	
@@ -218,30 +219,14 @@ public class Gis extends Controller {
 	/**
      * Get a ResultSet.
      */
-    public static Result result(String shapefile, String graphId, Double lat, Double lon, String mode,
-                                           Double bikeSpeed, Double walkSpeed, String which, String date, int fromTime, int toTime,
-                                           boolean profile) {
-
-        ResultEnvelope.Which whichEnum;
-        LocalDate jodaDate;
-
+    public static Result result(String key, String which) {     
+    	Which whichEnum = Which.valueOf(which);
+    	
         try {
-            whichEnum = ResultEnvelope.Which.valueOf(which);
-            jodaDate = LocalDate.parse(date);
-        } catch (Exception e) {
-            // no need to pollute the console with a stack trace
-            return badRequest("Invalid value for which or date parameter");
-        }
-
-        // note that this does not include which, as it is a key to ResultEnvelopes, not ResultSets
-        final String key = String.format(Locale.US, "%s_%.6f_%.6f_%s_%.2f_%.2f_%d_%d_%d_%d_%d_%s%s", graphId, lat, lon, mode,
-                bikeSpeed, walkSpeed, jodaDate.getYear(), jodaDate.getMonthOfYear(), jodaDate.getDayOfMonth(),
-                fromTime, toTime, shapefile, (profile ? "_profile" : ""));
-        
-        try {
-        	ResultSet result = SinglePoint.getResultSet(key).get(whichEnum);
+        	ResultEnvelope env = SinglePoint.getResultSet(key);
+        	ResultSet result = env.get(whichEnum);
         	
-        	final Shapefile shp = Shapefile.getShapefile(shapefile);
+        	final Shapefile shp = Shapefile.getShapefile(env.shapefile);
 			       
 	        Collection<ShapeFeature> features = shp.getShapeFeatureStore().getAll();
 	     
@@ -290,35 +275,23 @@ public class Gis extends Controller {
 	/**
      * Get a comparison.
      */
-    public static Result resultComparison(String shapefile, String graphId, String graphId2, Double lat, Double lon, String mode,
-                                           Double bikeSpeed, Double walkSpeed, String which, String date, int fromTime, int toTime,
-                                           boolean profile) {
+    public static Result resultComparison(String key1, String key2, String which) {
 
-        ResultEnvelope.Which whichEnum;
-        LocalDate jodaDate;
-
-        try {
-            whichEnum = ResultEnvelope.Which.valueOf(which);
-            jodaDate = LocalDate.parse(date);
-        } catch (Exception e) {
-            // no need to pollute the console with a stack trace
-            return badRequest("Invalid value for which or date parameter");
-        }
-
-        // note that this does not include which, as it is a key to ResultEnvelopes, not ResultSets
-        String key = String.format(Locale.US, "%s_%.6f_%.6f_%s_%.2f_%.2f_%d_%d_%d_%d_%d_%s%s", graphId, lat, lon, mode,
-                bikeSpeed, walkSpeed, jodaDate.getYear(), jodaDate.getMonthOfYear(), jodaDate.getDayOfMonth(),
-                fromTime, toTime, shapefile, (profile ? "_profile" : ""));
-        
-        String key2 = String.format(Locale.US, "%s_%.6f_%.6f_%s_%.2f_%.2f_%d_%d_%d_%d_%d_%s%s", graphId2, lat, lon, mode,
-                bikeSpeed, walkSpeed, jodaDate.getYear(), jodaDate.getMonthOfYear(), jodaDate.getDayOfMonth(),
-                fromTime, toTime, shapefile, (profile ? "_profile" : ""));
+    	Which whichEnum = Which.valueOf(which);
         
         try {
-        	ResultSet result = SinglePoint.getResultSet(key).get(whichEnum);
-        	ResultSet result2 = SinglePoint.getResultSet(key2).get(whichEnum);
+        	ResultEnvelope env1 = SinglePoint.getResultSet(key1);
+        	ResultSet result = env1.get(whichEnum);
+        	ResultEnvelope env2 = SinglePoint.getResultSet(key2);
+        	ResultSet result2 = env2.get(whichEnum);
         	
-        	final Shapefile shp = Shapefile.getShapefile(shapefile);
+        	if (env1 == null || env2 == null)
+        		notFound();
+        	
+        	if (!env1.shapefile.equals(env2))
+        		badRequest();
+        	
+        	final Shapefile shp = Shapefile.getShapefile(env1.shapefile);
 			       
 	        Collection<ShapeFeature> features = shp.getShapeFeatureStore().getAll();
 	     

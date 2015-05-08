@@ -149,6 +149,7 @@ public class Tiles extends Controller {
 							return ok(bais.toString());
 						}
 					}
+					
 				);
 
 		}
@@ -183,24 +184,23 @@ public class Tiles extends Controller {
 		return tileBuilder(tileRequest);
     }
 
-	public static Promise<Result> surface(String shapefile, String graphId, Double lat, Double lon, String mode,
-			   Double bikeSpeed, Double walkSpeed, String which, String date, int fromTime, int toTime, Integer x, Integer y, Integer z,
-			   Boolean showIso, Boolean showPoints, Integer timeLimit, Integer minTime, boolean profile) {
+	public static Promise<Result> surface(String key, String which, Integer x, Integer y, Integer z,
+			   Boolean showIso, Boolean showPoints, Integer timeLimit) {
 
-		AnalystTileRequest tileRequest = new SurfaceTile(graphId, lat, lon, mode, shapefile,
-				   bikeSpeed, walkSpeed, which, date, fromTime, toTime, x, y, z,
-				   showIso, showPoints, timeLimit, minTime, profile);
+		ResultEnvelope.Which whichEnv = ResultEnvelope.Which.valueOf(which);
+		
+		AnalystTileRequest tileRequest =
+				new SurfaceTile(key, whichEnv, x, y, z, showIso, showPoints, timeLimit);
 		return tileBuilder(tileRequest);
+	}
 
-    }
+	public static Promise<Result> surfaceComparison(String key1, String key2, String which, Integer x, Integer y, Integer z,
+			   Boolean showIso, Boolean showPoints, Integer timeLimit, String format) {
 
-	public static Promise<Result> surfaceComparison(String shapefile, String graphId, String graphId2, Double lat, Double lon, String mode,
-			   Double bikeSpeed, Double walkSpeed, String which, String date, int fromTime, int toTime, Integer x, Integer y, Integer z,
-			   Boolean showIso, Boolean showPoints, Integer timeLimit, Integer minTime, boolean profile, String format) {
-
-		AnalystTileRequest tileRequest = new SurfaceComparisonTile(graphId, graphId2, lat, lon, mode, shapefile,
-				   			bikeSpeed, walkSpeed, which, date, fromTime, toTime, x, y, z,
-				   			showIso, showPoints, timeLimit, minTime, profile, format);
+		ResultEnvelope.Which whichEnv = ResultEnvelope.Which.valueOf(which);
+		
+		AnalystTileRequest tileRequest = new SurfaceComparisonTile(key1, key2, whichEnv, x, y, z,
+				   			showIso, showPoints, timeLimit, format);
 		return tileBuilder(tileRequest);
     }
 

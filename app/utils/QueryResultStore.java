@@ -1,18 +1,26 @@
 package utils;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.zip.GZIPOutputStream;
 
 import org.mapdb.BTreeKeySerializer;
 import org.mapdb.BTreeMap;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 import org.mapdb.Serializer;
+import org.opentripplanner.analyst.Histogram;
+
+import utils.ResultEnvelope.Which;
 
 import com.google.common.collect.Maps;
+import com.google.protobuf.CodedOutputStream;
 
 import controllers.Application;
 import models.Query;
@@ -96,4 +104,72 @@ public class QueryResultStore {
 		
 		return mapCache.get(attr);
 	}
+	
+	/* Dump a db file specified on the command line to a CSV on stdout */
+	/*public static void main (String... args) {
+		QueryResultStore qrs = new QueryResultStore(new File(args[0]), true);
+		
+		Map<String, ResultEnvelope> results = qrs.getMap(args[1]);
+		
+		boolean first = true;
+		
+		for (Entry<String, ResultEnvelope> e : results.entrySet()) {
+			if (first) {
+				StringBuilder sb = new StringBuilder();
+				
+				sb.append("id");
+				
+				for (Which which : Which.values()) {
+					if (e.getValue().get(which) != null) {
+						sb.append(",");
+						sb.append(which.name());
+					}						
+				}
+				
+				System.out.println(sb.toString());
+			}
+			
+			StringBuilder line = new StringBuilder();
+			line.append(e.getKey());
+			
+			for (Which which : Which.values()) {
+				if (e.getValue().get(which) != null) {
+					line.append(",");
+					line.append(e.getValue().get(which).sum(60, args[1]));
+				}						
+			}
+			
+			System.out.println(line.toString());
+		}
+	}*/
+	
+	/**
+	 * Dump a DB file specified on the command line to a simple flat-file format that can
+	 * be easily consumed as a stream.
+	 */
+	/*public static void main (String... args) {
+		QueryResultStore qrs = new QueryResultStore(new File(args[0]), true);
+		Map<String, ResultEnvelope> results = qrs.getMap(args[1]);
+		
+		try {
+			OutputStream os = new GZIPOutputStream(new FileOutputStream(args[2]));
+			CodedOutputStream cos = CodedOutputStream.newInstance(os);
+			
+			
+			cos.writeStringNoTag("RESULTENV\n");
+			cos.writeStringNoTag(args[1] + "\n");
+			
+			for (ResultEnvelope env : results.values()) {
+				cos.writeStringNoTag(env.id);
+				Histogram h = env.avgCase.histograms.get(key)  
+				cos.writeInt32NoTag(env.);
+			}
+			
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}*/
 }
