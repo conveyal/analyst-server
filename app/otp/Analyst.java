@@ -5,7 +5,6 @@ import com.conveyal.otpac.PrototypeAnalystRequest;
 
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
-import org.opentripplanner.analyst.core.Sample;
 import org.opentripplanner.common.model.GenericLocation;
 import org.opentripplanner.profile.Option;
 import org.opentripplanner.profile.ProfileRequest;
@@ -14,16 +13,9 @@ import org.opentripplanner.routing.core.TraverseMode;
 import org.opentripplanner.api.parameter.QualifiedMode;
 import org.opentripplanner.api.parameter.QualifiedModeSet;
 import org.opentripplanner.routing.core.TraverseModeSet;
-import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.spt.DominanceFunction;
-import org.python.google.common.collect.Collections2;
 
 import play.Logger;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.TimeZone;
-
 
 public class Analyst { 	
 	public Analyst() {
