@@ -337,7 +337,7 @@ var Analyst = Analyst || {};
 			var params = {
 				destinationPointsetId: this.$('#shapefile').val(),
 				graphId: this.graphId1,
-				profile:  this.$('input.profile:checked').val(),
+				profile:  this.$('input.profile:checked').val() == "true",
 			};
 
 			if (params.profile) {
@@ -349,7 +349,7 @@ var Analyst = Analyst || {};
 					date: date,
 					fromTime:  A.util.makeTime(this.$('#fromTime').data('DateTimePicker').getDate()),
 					toTime: A.util.makeTime(this.$('#toTime').data('DateTimePicker').getDate()),
-					accessModes: 'WALK',
+					accessModes: this.mode,
 					egressModes: 'WALK',
 					walkSpeed: 4 / 3,
 					bikeSpeed: 4.1,
@@ -367,12 +367,24 @@ var Analyst = Analyst || {};
 					bikeTime: 1
 				}
 			} else {
+				var date = this.$('#date').data('DateTimePicker').getDate();
+				date = date.add(Number(fromTime), 'seconds');
+
 				params.options = {
 					// TODO flesh this out, or better yet set server-side defaults
 					// however defaults in routingrequest will be applied
-					from: A.map.marker.getLatLng().lat + ',' + A.map.marker.getLatLng().lng,
-					to: A.map.marker.getLatLng().lat + ',' + A.map.marker.getLatLng().lng,
-					dateTime: 0 // TODO
+					from: {
+						lat: A.map.marker.getLatLng().lat,
+						lng: A.map.marker.getLatLng().lng
+					},
+					to: {
+						lat: A.map.marker.getLatLng().lat,
+						lng: A.map.marker.getLatLng().lng
+					},
+					// milliseconds since 1 January 1970
+					// TODO this is using the client time zone not graph time zone!
+					dateTime: date.unix() * 1000,
+					modes: this.mode
 				}
 			}
 
