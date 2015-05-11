@@ -9,11 +9,22 @@ import com.conveyal.otpac.message.OneToManyProfileRequest;
 import com.conveyal.otpac.message.OneToManyRequest;
 import com.conveyal.otpac.message.SinglePointJobSpec;
 import com.conveyal.otpac.message.WorkResult;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.Version;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.KeyDeserializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.deser.KeyDeserializers;
+import com.fasterxml.jackson.databind.module.SimpleKeyDeserializers;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 
 import models.Scenario;
@@ -22,11 +33,13 @@ import models.Shapefile;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.mapdb.DBMaker;
+import org.onebusaway.gtfs.model.AgencyAndId;
 import org.opentripplanner.analyst.ResultSet;
 import org.opentripplanner.common.model.GenericLocation;
 import org.opentripplanner.profile.ProfileRequest;
 import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.TraverseModeSet;
+import org.opentripplanner.routing.request.BannedStopSet;
 
 import play.libs.F;
 import play.libs.F.Function;
@@ -38,7 +51,11 @@ import utils.ResultEnvelope;
 import utils.ResultEnvelope.Which;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
 
@@ -59,6 +76,7 @@ public class SinglePoint extends Controller {
 
     static {
     	objectMapper.registerModule(new JodaModule());
+    	objectMapper.registerModule(new RoutingRequestModule());
     }
     
     /** Create a result from a JSON-ified OneToMany[Profile]Request. */
@@ -218,5 +236,30 @@ public class SinglePoint extends Controller {
         public void onWorkResult(WorkResult workResult) {
             promise.success(workResult);
         }
+    }
+    
+    /** Deserializer for AgencyAndId, for agencyid_id format in bannedTrips */
+    public static class AgencyAndIdDeserializer extends KeyDeserializer {
+
+		@Override
+		public AgencyAndId deserializeKey(String arg0, DeserializationContext arg1)
+				throws IOException, JsonProcessingException {
+			String[] sp = arg0.split("_");
+			return new AgencyAndId(sp[0], sp[1]);
+		}
+    }
+    
+    /** module with jackson config to deserialize routing requests */
+    public static class RoutingRequestModule extends SimpleModule {
+    	public RoutingRequestModule () {
+    		super("RoutingRequestModule", new Version(0, 0, 1, null, null, null));
+    	}
+    	
+    	@Override
+    	public void setupModule (SetupContext ctx) {
+    		SimpleKeyDeserializers kd = new SimpleKeyDeserializers();
+    		kd.addDeserializer(AgencyAndId.class, new AgencyAndIdDeserializer());
+    		ctx.addKeyDeserializers(kd);
+    	}
     }
 }
