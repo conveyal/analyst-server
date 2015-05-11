@@ -48,7 +48,7 @@ object to `/api/single`. The JSON you post looks like so:
 ```
 
 `destinationPointsetId` is the ID of the shapefile for which to calculate connectivity (frequently called
-`accessibility` in the literature). The IDs of shapefiles can be found by accessing `/api/shapefile`, which will give a
+"accessibility" in the literature). The IDs of shapefiles can be found by accessing `/api/shapefile`, which will give a
 JSON document detailing all of the scenarios. The `graphId` is the ID of the scenario to use, which is the `id`
 attribute in `/api/scenario`. `profile` indicates that the request should use profile routing, which calculates not the
 travel time and connectivity at a particular time but rather the guaranteed, expected and possible connectivity over a
@@ -60,7 +60,7 @@ The `options` field is a JSONified OTP [profile request](https://github.com/open
 thing to do is to just set them the same as `fromLat` and `fromLon`. `date` is the date of the search, YYYY-MM-DD.
 
 `fromTime` and `toTime` specify the time window of the search, in seconds since local midnight. (Techinically, seconds
-since   local noon minus 12 hours, but this is midnight except on days when daylight savings time is activated or
+since local noon minus 12 hours, but this is midnight except on days when daylight savings time is activated or
 deactivated. I'd recommend   not doing analysis on those days anyhow.) So 25200 is 7 AM (7 hours * 60 minutes/hour * 60
 seconds/minute = 25200) and   32400 is 9 AM.
 
@@ -269,4 +269,4 @@ Note that the the `key` attribute has been replaced by `key1` and `key2`; the qu
 the query specified by `key1` and the difference is displayed. Yellow represents no change, with the opacity indicating
 the travel time relative to the time limit; blue represents are that could be reached in less than the time limit before
 but now can be reached faster, with the opacity indicating the ratio; and purple indicates new service, with the opacity
-representing the travel time relative to the time limir.
+representing the travel time relative to the time limit.
