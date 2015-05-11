@@ -71,7 +71,7 @@ GET     /gis/singleComparison           controllers.Gis.resultComparison(key1:St
 
 GET     /api/queryBins	                controllers.Api.queryBins(queryId:String, timeLimit:Integer ?= 3600, weightByShapefile:String ?= null, weightByAttribute:String ?= null, groupBy:String ?= null, which: String, attributeName: String, compareTo: String ?= null)
 
-POST     /api/result                    controllers.SinglePoint.result()
+POST     /api/single                    controllers.SinglePoint.result()
 
 # Map static resources from the /public folder to the /assets URL path
 GET           /assets/*file                       controllers.Assets.at(path="/public", file)
