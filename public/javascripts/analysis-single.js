@@ -510,12 +510,17 @@ var Analyst = Analyst || {};
 				if(A.map.tileOverlay && A.map.hasLayer(A.map.tileOverlay))
 		  			A.map.removeLayer(A.map.tileOverlay);
 
-				var url = '/tile/singleComparison?z={z}&x={x}&y={y}' +
-					'&showIso=' + showIso +
-					'&showPoints=' +  showPoints + '&timeLimit=' + timeLimit + '&key1=' + this.scenario1Data.key +
-					'&key2=' + this.scenario2Data.key +
+				var tileUrl = '/tile/single/' + this.scenario1Data.key + '/' + this.scenario2Data.key + '/{z}/{x}/{y}.png' +
+					'?showIso=' + showIso +
+					'&showPoints=' +  showPoints + '&timeLimit=' + timeLimit +
 					'&which=' + which;
-				A.map.tileOverlay = L.tileLayer(url + '&format=png')
+
+			  var utfUrl = '/tile/single/' + this.scenario1Data.key + '/' + this.scenario2Data.key + '/{z}/{x}/{y}.json' +
+					'?showIso=' + showIso +
+					'&showPoints=' +  showPoints + '&timeLimit=' + timeLimit +
+					'&which=' + which;
+
+				A.map.tileOverlay = L.tileLayer(tileUrl)
 					.addTo(A.map);
 
 				if(A.map.utfOverlay && A.map.hasLayer(A.map.utfOverlay))
@@ -545,7 +550,7 @@ var Analyst = Analyst || {};
 				}
 				A.map.valueReadout.addTo(A.map);
 
-				A.map.utfOverlay = new L.UtfGrid(url + '&format=json', {
+				A.map.utfOverlay = new L.UtfGrid(utfUrl, {
 					resolution: 4,
 					useJsonP: false
 				})
@@ -564,9 +569,8 @@ var Analyst = Analyst || {};
 				if(A.map.tileOverlay && A.map.hasLayer(A.map.tileOverlay))
 		  			A.map.removeLayer(A.map.tileOverlay);
 
-				A.map.tileOverlay = L.tileLayer('/tile/single?z={z}&x={x}&y={y}&' + '&showIso=' + showIso +
-					'&showPoints=' +  showPoints + '&timeLimit=' + timeLimit  + '&key=' + this.scenario1Data.key +
-					'&which=' + which, {})
+				A.map.tileOverlay = L.tileLayer('/tile/single/' + this.scenario1Data.key + '/{z}/{x}/{y}.png?showIso=' + showIso +
+					'&showPoints=' +  showPoints + '&timeLimit=' + timeLimit + '&which=' + which, {})
 					.addTo(A.map);
 
 			}
