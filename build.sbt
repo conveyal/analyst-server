@@ -13,7 +13,7 @@ libraryDependencies ++= Seq(
   "commons-io" % "commons-io" % "2.4",
   "com.amazonaws" % "aws-java-sdk" % "1.9.25",
   "com.typesafe.akka" % "akka-remote_2.10" % "2.3.5",
-  "org.opentripplanner" % "otp" % "0.16.0-SNAPSHOT",
+  "org.opentripplanner" % "otp" % "0.17.0-SNAPSHOT",
   "com.conveyal" % "gtfs-lib" % "0.1-SNAPSHOT",
   "com.fasterxml.jackson.datatype" % "jackson-datatype-joda" % "2.4.0"
 )
@@ -22,7 +22,7 @@ watchSources := (watchSources.value
   --- baseDirectory.value / "app/assets" ** "*"
   --- baseDirectory.value / "conf" ** "*"
   --- baseDirectory.value / "public" ** "*").get
- 
+
 resolvers += "Local Maven Repository" at "file://"+Path.userHome.absolutePath+"/.m2/repository"
- 
+
 resolvers += "Conveyal Maven Repository" at "http://maven.conveyal.com"
