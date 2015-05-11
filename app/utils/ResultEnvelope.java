@@ -51,6 +51,9 @@ public class ResultEnvelope implements Serializable {
 	/** The ID of the feature from whence this result envelope came */
 	public String id;
 	
+	/** The ID of the shapefile/pointset from whence this result envelope came */
+	public String shapefile;
+	
 	/**
 	 * Build a result envelope from a WorkResult from OTPA Cluster.
 	 */

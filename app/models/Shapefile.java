@@ -270,7 +270,6 @@ public class Shapefile implements Serializable {
 	public String writeToClusterCache() throws IOException {
 
 		PointSet ps = this.getPointSet();
-		String cachePointSetId = id + ".json";
 
 		File f = File.createTempFile(id, ".json");
 
@@ -284,11 +283,11 @@ public class Shapefile implements Serializable {
 		
 		PointSetDatastore datastore = new PointSetDatastore(10, s3credentials, workOffline, bucket);
 
-		datastore.addPointSet(f, cachePointSetId);
+		datastore.addPointSet(f, id);
 
 		f.delete();
 
-		return cachePointSetId;
+		return id;
 
 	}
 

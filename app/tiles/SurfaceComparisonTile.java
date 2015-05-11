@@ -22,6 +22,7 @@ import com.vividsolutions.jts.index.strtree.STRtree;
 
 import utils.HaltonPoints;
 import utils.ResultEnvelope;
+import utils.ResultEnvelope.Which;
 
 import java.awt.Color;
 import java.io.IOException;
@@ -35,70 +36,50 @@ public class SurfaceComparisonTile extends AnalystTileRequest implements UTFIntG
 
 	final String resultKey1;
 	final String resultKey2;
-	final String shapefileId;
 	final ResultEnvelope.Which which;
     final Boolean showIso;
     final Boolean showPoints;
-    final boolean profile;
     final Integer timeLimit;
-    final Integer minTime;
     private static final GeometryFactory geometryFactory = new GeometryFactory();
 
-    public SurfaceComparisonTile(String graphId, String graphId2, Double lat, Double lon, String mode, String shapefile,
-			   Double bikeSpeed, Double walkSpeed, String which, String date, int fromTime, int toTime, Integer x, Integer y, Integer z,
-			   Boolean showIso, Boolean showPoints, Integer timeLimit, Integer minTime, boolean profile, String format) {
+    public SurfaceComparisonTile(String key1, String key2, Which which, Integer x, Integer y, Integer z,
+			   Boolean showIso, Boolean showPoints, Integer timeLimit, String format) {
         super(x, y, z, "surface_comparison", format);
-
-        LocalDate jodaDate = LocalDate.parse(date);
         
-		resultKey1 = String.format(Locale.US, "%s_%.6f_%.6f_%s_%.2f_%.2f_%d_%d_%d_%d_%d_%s%s", graphId, lat, lon, mode,
-				bikeSpeed, walkSpeed, jodaDate.getYear(), jodaDate.getMonthOfYear(), jodaDate.getDayOfMonth(),
-				fromTime, toTime, shapefile, (profile ? "_profile" : ""));
+		resultKey1 = key1;
 		
-		resultKey2 = String.format(Locale.US, "%s_%.6f_%.6f_%s_%.2f_%.2f_%d_%d_%d_%d_%d_%s%s", graphId2, lat, lon, mode,
-				bikeSpeed, walkSpeed, jodaDate.getYear(), jodaDate.getMonthOfYear(), jodaDate.getDayOfMonth(),
-				fromTime, toTime, shapefile, (profile ? "_profile" : ""));
+		resultKey2 = key2;
 		
-		this.shapefileId = shapefile;
         this.showIso = showIso;
         this.showPoints = showPoints;
         this.timeLimit = timeLimit;
-        this.minTime = minTime;
-        this.which = ResultEnvelope.Which.valueOf(which);
-        this.profile = profile;
+        this.which = which;
     }
 
     public String getId() {
     	// includes result keys, which contain graph ID and profile information
-        return super.getId() + "_" + shapefileId + "_" + resultKey1 + "_" + resultKey2 + "_" + showIso + "_" + showPoints + "_" + timeLimit + "_" + minTime;
+        return super.getId() + "_" +  resultKey1 + "_" + resultKey2 + "_" + which + "_" + showIso + "_" + showPoints + "_" + timeLimit;
     }
 
     public byte[] render(){
-
+        // note that this may occasionally return null if someone's had the site open for a very long
+        // time because the result will have fallen out of the cache.
+    	ResultEnvelope env1 = SinglePoint.getResultSet(resultKey1); 
+        ResultSet result1 = env1.get(which);
+        
+        // note that this may occasionally return null if someone's had the site open for a very long
+        // time because the result will have fallen out of the cache.
+        ResultEnvelope env2 = SinglePoint.getResultSet(resultKey2);
+        ResultSet result2 = env2.get(which);
+        
+        if (result1 == null || result2 == null || !env1.shapefile.equals(env2.shapefile)) {
+        	return null;
+        }
+    	
         Tile tile = new Tile(this);
 
-        Shapefile shp = Shapefile.getShapefile(shapefileId);
+        Shapefile shp = Shapefile.getShapefile(env1.shapefile);
         PointSet ps = shp.getPointSet();
-
-        if(shp == null)
-            return null;
-
-        // note that this may occasionally return null if someone's had the site open for a very long
-        // time because the result will have fallen out of the cache.
-        ResultSet result1 = SinglePoint.getResultSet(resultKey1).get(which);
-        
-        if (result1 == null) {
-        	return null;
-        }
-        
-        
-        // note that this may occasionally return null if someone's had the site open for a very long
-        // time because the result will have fallen out of the cache.
-        ResultSet result2 = SinglePoint.getResultSet(resultKey2).get(which);
-        
-        if (result2 == null) {
-        	return null;
-        }
         
         List<Shapefile.ShapeFeature> features = shp.query(tile.envelope);
 
@@ -120,19 +101,19 @@ public class SurfaceComparisonTile extends AnalystTileRequest implements UTFIntG
             if(showIso) {
 
             	// no change
-                 if((Math.abs(time1 - time2) < 60 || time2 > time1) && time1 > minTime && time1 < timeLimit){
+                 if((Math.abs(time1 - time2) < 60 || time2 > time1) && time1 < timeLimit){
                      float opacity = 1.0f - (float)((float)time1 / (float)timeLimit);
                      color = new Color(0.9f,0.7f,0.2f,opacity);
                  }
 
                 // new service
-                else if((time1 == Integer.MAX_VALUE || time1 > timeLimit) && time2 < timeLimit && time2 > minTime) {
+                else if((time1 == Integer.MAX_VALUE || time1 > timeLimit) && time2 < timeLimit) {
                     float opacity = 1.0f - (float)((float)time2 / (float)timeLimit);
                     color = new Color(0.8f,0.0f,0.8f,opacity);
                 }
                  
                 // faster service 
-                else if(time1 > time2 && time2 < timeLimit && time2 > minTime) {
+                else if(time1 > time2 && time2 < timeLimit) {
                     float opacity = 1.0f - (float)((float)time2 / (float)time1);
                     color = new Color(0.0f,0.0f,0.8f,opacity);
                 }
@@ -179,28 +160,22 @@ public class SurfaceComparisonTile extends AnalystTileRequest implements UTFIntG
 
 	@Override
 	public int[][] getGrid() {
-        Shapefile shp = Shapefile.getShapefile(shapefileId);
+        // note that this may occasionally return null if someone's had the site open for a very long
+        // time because the result will have fallen out of the cache.
+    	ResultEnvelope env1 = SinglePoint.getResultSet(resultKey1); 
+        ResultSet result1 = env1.get(which);
+        
+        // note that this may occasionally return null if someone's had the site open for a very long
+        // time because the result will have fallen out of the cache.
+        ResultEnvelope env2 = SinglePoint.getResultSet(resultKey2);
+        ResultSet result2 = env2.get(which);
+        
+        if (result1 == null || result2 == null || !env1.shapefile.equals(env2.shapefile)) {
+        	return null;
+        }
+
+        Shapefile shp = Shapefile.getShapefile(env1.shapefile);
         PointSet ps = shp.getPointSet();
-
-        if(shp == null)
-            return null;
-
-        // note that this may occasionally return null if someone's had the site open for a very long
-        // time because the result will have fallen out of the cache.
-        ResultSet result1 = SinglePoint.getResultSet(resultKey1).get(which);
-        
-        if (result1 == null) {
-        	return null;
-        }
-        
-        
-        // note that this may occasionally return null if someone's had the site open for a very long
-        // time because the result will have fallen out of the cache.
-        ResultSet result2 = SinglePoint.getResultSet(resultKey2).get(which);
-        
-        if (result2 == null) {
-        	return null;
-        }
 		
 		int[][] grid = new int[64][64];
 		

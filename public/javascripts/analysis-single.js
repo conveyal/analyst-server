@@ -311,7 +311,7 @@ var Analyst = Analyst || {};
 		  	var walkSpeed = (this.walkSpeedSlider.getValue() * 1000 / 60 / 60 );
 
  			this.graphId1 = this.$('#scenario1').val();
-			var which = this.$('input[name="which"]:checked').val();
+			this.graphId2 = this.$('#scenario2').val();
 
 			var _this = this;
 
@@ -328,13 +328,72 @@ var Analyst = Analyst || {};
 			if (A.util.isTransit(this.mode))
 				dateTime += '&toTime=' + A.util.makeTime(this.$('#toTime').data('DateTimePicker').getDate());
 
-			this.params1 = 'graphId=' + this.graphId1 + '&lat=' + A.map.marker.getLatLng().lat + '&lon=' +
+			var params1 = 'graphId=' + this.graphId1 + '&lat=' + A.map.marker.getLatLng().lat + '&lon=' +
 				A.map.marker.getLatLng().lng + '&mode=' + this.mode + '&bikeSpeed=' + bikeSpeed + '&walkSpeed=' + walkSpeed +
-				'&which=' + which + dateTime + '&shapefile=' + this.$('#shapefile').val() +
+	 			dateTime + '&shapefile=' + this.$('#shapefile').val() +
 				'&profile=' + this.$('input.profile:checked').val();
 
-		    $.getJSON('/api/result?' + this.params1, function(data) {
+			// TODO probably not the best place for a bunch of defaults
+			var params = {
+				destinationPointsetId: this.$('#shapefile').val(),
+				graphId: this.graphId1,
+				profile:  this.$('input.profile:checked').val() == "true",
+			};
 
+			if (params.profile) {
+				params.options = {
+					fromLat:  A.map.marker.getLatLng().lat,
+					fromLon: A.map.marker.getLatLng().lng,
+					toLat:  A.map.marker.getLatLng().lat,
+					toLon: A.map.marker.getLatLng().lng,
+					date: date,
+					fromTime:  A.util.makeTime(this.$('#fromTime').data('DateTimePicker').getDate()),
+					toTime: A.util.makeTime(this.$('#toTime').data('DateTimePicker').getDate()),
+					accessModes: this.mode,
+					egressModes: 'WALK',
+					walkSpeed: 4 / 3,
+					bikeSpeed: 4.1,
+					carSpeed: 20,
+					streetTime: 90,
+					maxWalkTime: 20,
+					maxBikeTime: 45,
+					maxCarTime: 45,
+					minBikeTime: 10,
+					minCarTime: 10,
+					suboptimalMinutes: 5,
+					analyst: true,
+					bikeSafe: 1,
+					bikeSlope: 1,
+					bikeTime: 1
+				}
+			} else {
+				var date = this.$('#date').data('DateTimePicker').getDate();
+				date = date.add(Number(fromTime), 'seconds');
+
+				params.options = {
+					// TODO flesh this out, or better yet set server-side defaults
+					// however defaults in routingrequest will be applied
+					from: {
+						lat: A.map.marker.getLatLng().lat,
+						lng: A.map.marker.getLatLng().lng
+					},
+					to: {
+						lat: A.map.marker.getLatLng().lat,
+						lng: A.map.marker.getLatLng().lng
+					},
+					// milliseconds since 1 January 1970
+					// TODO this is using the client time zone not graph time zone!
+					dateTime: date.unix() * 1000,
+					modes: this.mode
+				}
+			}
+
+		    $.ajax({
+					url: '/api/single',
+					data: JSON.stringify(params),
+					contentType: 'application/json',
+					method: 'post',
+					success: function (data) {
 					_this.scenario1Data = data;
 
 		  	  if(_this.comparisonType == 'no-comparison' || !_this.comparisonType || _this.scenario2Data) {
@@ -343,28 +402,29 @@ var Analyst = Analyst || {};
 						_this.$('#queryResults').show();
 						_this.$('#queryProcessing').hide();
 		  	  }
-		    });
+		    	}
+				});
 
 		    if (this.comparisonType == 'compare') {
+					// ok to be destructive - we've already stringified the request
+					params.graphId = this.graphId2;
 
-		      this.graphId2 = this.$('#scenario2').val();
-					var which = this.$('input[name="which"]:checked').val();
+					$.ajax({
+						url: '/api/single',
+						data: JSON.stringify(params),
+						contentType: 'application/json',
+						method: 'post',
+						success: function (data) {
+							_this.scenario2Data = data;
 
-		    	this.params2 = 'graphId=' + this.graphId2 + '&lat=' + A.map.marker.getLatLng().lat + '&lon=' +
-						A.map.marker.getLatLng().lng + '&mode=' + this.mode + '&bikeSpeed=' + bikeSpeed +
-						'&walkSpeed=' + walkSpeed + '&which=' + which + dateTime + '&shapefile=' + this.$('#shapefile').val() +
-						'&profile=' + this.$('input.profile:checked').val();
-		    	$.getJSON('/api/result?' + this.params2, function(data) {
-
-			  	  _this.scenario2Data = data;
-
-			  	  if(_this.scenario1Data) {
-			  	  	_this.updateMap();
-							_this.updateCharts();
-							_this.$('#queryResults').show();
-							_this.$('#queryProcessing').hide();
-			  	  }
-			    });
+							if(_this.scenario1Data) {
+								_this.updateMap();
+								_this.updateCharts();
+								_this.$('#queryResults').show();
+								_this.$('#queryProcessing').hide();
+							}
+						}
+					});
 
 		    }
 		},
@@ -436,11 +496,11 @@ var Analyst = Analyst || {};
 			$('#results1').hide();
 			$('#results2').hide();
 
-			var minTime = this.timeSlider.getValue()[0] * 60;
-			var timeLimit = this.timeSlider.getValue()[1] * 60;
+			var timeLimit = this.getTimeLimit();
 
 			var showIso =  this.$('#showIso').prop('checked');
 			var showPoints = false;//this.$('#showPoints').prop('checked');
+			var which = this.$('input[name="which"]:checked').val();
 
 			if(this.comparisonType == 'compare') {
 
@@ -450,9 +510,11 @@ var Analyst = Analyst || {};
 				if(A.map.tileOverlay && A.map.hasLayer(A.map.tileOverlay))
 		  			A.map.removeLayer(A.map.tileOverlay);
 
-				var url = '/tile/surfaceComparison?z={z}&x={x}&y={y}' +
+				var url = '/tile/singleComparison?z={z}&x={x}&y={y}' +
 					'&showIso=' + showIso +
-					'&showPoints=' +  showPoints + '&minTime=' + minTime + '&timeLimit=' + timeLimit + '&' + this.params1 + '&graphId2=' + this.graphId2;
+					'&showPoints=' +  showPoints + '&timeLimit=' + timeLimit + '&key1=' + this.scenario1Data.key +
+					'&key2=' + this.scenario2Data.key +
+					'&which=' + which;
 				A.map.tileOverlay = L.tileLayer(url + '&format=png')
 					.addTo(A.map);
 
@@ -502,23 +564,29 @@ var Analyst = Analyst || {};
 				if(A.map.tileOverlay && A.map.hasLayer(A.map.tileOverlay))
 		  			A.map.removeLayer(A.map.tileOverlay);
 
-				A.map.tileOverlay = L.tileLayer('/tile/surface?z={z}&x={x}&y={y}&' + '&showIso=' + showIso +
-					'&showPoints=' +  showPoints + '&minTime=' + minTime + '&timeLimit=' + timeLimit  + '&' + this.params1, {})
+				A.map.tileOverlay = L.tileLayer('/tile/single?z={z}&x={x}&y={y}&' + '&showIso=' + showIso +
+					'&showPoints=' +  showPoints + '&timeLimit=' + timeLimit  + '&key=' + this.scenario1Data.key +
+					'&which=' + which, {})
 					.addTo(A.map);
 
 			}
 		},
 
+		/** get the current position of the time limit slider */
+		getTimeLimit: function () {
+			return this.timeSlider.getValue()[1] * 60;
+		},
+
 		downloadGis : function(evt) {
 			var shapefileId = this.$('#shapefile').val();
 			var attributeName = this.$('#shapefileColumn').val();
-			var surfaceId = this.surfaceId1;
-			var timeLimit = this.timeSlider.getValue()[1] * 60;
+			var which = this.$('input[name="which"]:checked').val();
+
 
 			if (this.scenario2Data)
-				window.location.href = '/gis/resultComparison?' + this.params1 + '&graphId2=' + this.graphId2;
+				window.location.href = '/gis/singleComparison?key1=' + this.scenario1Data.key + '&key2' + this.scenario2Data.key + '&which=' + which;
 			else
-				window.location.href = '/gis/result?' + this.params1;
+				window.location.href = '/gis/single?key=' + this.scenario1Data.key + '&which=' + which + '&timeLimit=';
 
 		},
 
