@@ -42,7 +42,8 @@ object to `/api/single`. The JSON you post looks like so:
     "analyst": true,
     "bikeSafe": 1,
     "bikeSlope": 1,
-    "bikeTime": 1
+    "bikeTime": 1,
+    "bannedRoutes": "2_Red"
   }
 }
 ```
@@ -62,7 +63,11 @@ thing to do is to just set them the same as `fromLat` and `fromLon`. `date` is t
 `fromTime` and `toTime` specify the time window of the search, in seconds since local midnight. (Techinically, seconds
 since local noon minus 12 hours, but this is midnight except on days when daylight savings time is activated or
 deactivated. I'd recommend   not doing analysis on those days anyhow.) So 25200 is 7 AM (7 hours * 60 minutes/hour * 60
-seconds/minute = 25200) and   32400 is 9 AM.
+seconds/minute = 25200) and 32400 is 9 AM.
+
+`bannedRoutes` specifies routes that should not be used by this request. It is formatted as `agencyid_routeid` using the
+entities from the GTFS feeds. Be aware that this is currently affected by [OTP issue 1755](https://github.com/opentripplanner/OpenTripPlanner/issues/1755),
+which means that all routes take on the ID of the first agency in their feed.
 
 The remainder of the parameters are documented in the [OTP API
 documentation](http://dev.opentripplanner.org/javadoc/master/org/opentripplanner/profile/ProfileRequest.html). They
