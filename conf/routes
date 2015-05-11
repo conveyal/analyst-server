@@ -58,16 +58,16 @@ DELETE        /api/query/:id                      controllers.Api.deleteQuery(id
 GET           /tile/shapefile                     controllers.Tiles.shape(shapefileId:String, x:Integer, y:Integer, z:Integer, attributeName:String ?= null)
 
 GET     /tile/spatial                  	controllers.Tiles.spatial(shapefileId:String, x:Integer, y:Integer, z:Integer, selectedAttributes:String	)
-GET     /tile/surface                  	controllers.Tiles.surface(key:String, which:String, x:Integer, y:Integer, z:Integer, showIso:Boolean ?= false, showPoints:Boolean ?= true, timeLimit:Integer ?= 3600)
+GET     /tile/single                  	controllers.Tiles.surface(key:String, which:String, x:Integer, y:Integer, z:Integer, showIso:Boolean ?= false, showPoints:Boolean ?= true, timeLimit:Integer ?= 3600)
 GET     /tile/query	                    controllers.Tiles.query(queryId:String, x:Integer, y:Integer, z:Integer, timeLimit:Integer ?= 3600, weightByShapefile:String ?= null, weightByAttribute:String ?= null, groupBy:String ?= null, which: String, attributeName:String, compareTo:String ?= null)
 
 GET           /tile/transit                       controllers.Tiles.transit(scenarioId:String, x:Integer, y:Integer, z:Integer)
 GET           /tile/transitComparison             controllers.Tiles.transitComparison(scenarioId1:String, scenarioId2:String, x:Integer, y:Integer, z:Integer)
-GET     /tile/surfaceComparison                  	controllers.Tiles.surfaceComparison(key1:String, key2:String, which:String, x:Integer, y:Integer, z:Integer, showIso:Boolean ?= false, showPoints:Boolean ?= true, timeLimit:Integer ?= 3600, format:String ?= "png")
+GET     /tile/singleComparison                  	controllers.Tiles.surfaceComparison(key1:String, key2:String, which:String, x:Integer, y:Integer, z:Integer, showIso:Boolean ?= false, showPoints:Boolean ?= true, timeLimit:Integer ?= 3600, format:String ?= "png")
 
 GET     /gis/query	                    controllers.Gis.query(queryId:String, timeLimit:Integer ?= 3600, weightByShapefile:String ?= null, weightByAttribute:String ?= null, groupBy:String ?= null, which: String, attributeName: String, compareTo:String ?= null)
-GET     /gis/result                     controllers.Gis.result(key:String, which:String)
-GET     /gis/resultComparison           controllers.Gis.resultComparison(key1:String, key2:String, which:String)
+GET     /gis/single                     controllers.Gis.result(key:String, which:String)
+GET     /gis/singleComparison           controllers.Gis.resultComparison(key1:String, key2:String, which:String)
 
 GET     /api/queryBins	                controllers.Api.queryBins(queryId:String, timeLimit:Integer ?= 3600, weightByShapefile:String ?= null, weightByAttribute:String ?= null, groupBy:String ?= null, which: String, attributeName: String, compareTo: String ?= null)
 

@@ -377,7 +377,7 @@ var Analyst = Analyst || {};
 			}
 
 		    $.ajax({
-					url: '/api/result',
+					url: '/api/single',
 					data: JSON.stringify(params),
 					contentType: 'application/json',
 					method: 'post',
@@ -398,7 +398,7 @@ var Analyst = Analyst || {};
 					params.graphId = this.graphId2;
 
 					$.ajax({
-						url: '/api/result',
+						url: '/api/single',
 						data: JSON.stringify(params),
 						contentType: 'application/json',
 						method: 'post',
@@ -498,7 +498,7 @@ var Analyst = Analyst || {};
 				if(A.map.tileOverlay && A.map.hasLayer(A.map.tileOverlay))
 		  			A.map.removeLayer(A.map.tileOverlay);
 
-				var url = '/tile/surfaceComparison?z={z}&x={x}&y={y}' +
+				var url = '/tile/singleComparison?z={z}&x={x}&y={y}' +
 					'&showIso=' + showIso +
 					'&showPoints=' +  showPoints + '&timeLimit=' + timeLimit + '&key1=' + this.scenario1Data.key +
 					'&key2=' + this.scenario2Data.key +
@@ -552,7 +552,7 @@ var Analyst = Analyst || {};
 				if(A.map.tileOverlay && A.map.hasLayer(A.map.tileOverlay))
 		  			A.map.removeLayer(A.map.tileOverlay);
 
-				A.map.tileOverlay = L.tileLayer('/tile/surface?z={z}&x={x}&y={y}&' + '&showIso=' + showIso +
+				A.map.tileOverlay = L.tileLayer('/tile/single?z={z}&x={x}&y={y}&' + '&showIso=' + showIso +
 					'&showPoints=' +  showPoints + '&timeLimit=' + timeLimit  + '&key=' + this.scenario1Data.key +
 					'&which=' + which, {})
 					.addTo(A.map);
@@ -568,14 +568,13 @@ var Analyst = Analyst || {};
 		downloadGis : function(evt) {
 			var shapefileId = this.$('#shapefile').val();
 			var attributeName = this.$('#shapefileColumn').val();
-			var surfaceId = this.surfaceId1;
 			var which = this.$('input[name="which"]:checked').val();
 
 
 			if (this.scenario2Data)
-				window.location.href = '/gis/resultComparison?key1=' + this.scenario1Data.key + '&key2' + this.scenario2Data.key + '&which=' + which;
+				window.location.href = '/gis/singleComparison?key1=' + this.scenario1Data.key + '&key2' + this.scenario2Data.key + '&which=' + which;
 			else
-				window.location.href = '/gis/result?key=' + this.scenario1Data.key + '&which=' + which + '&timeLimit=';
+				window.location.href = '/gis/single?key=' + this.scenario1Data.key + '&which=' + which + '&timeLimit=';
 
 		},
 
