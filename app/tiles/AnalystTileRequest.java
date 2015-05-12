@@ -11,9 +11,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import models.Attribute;
 import models.Query;
-import models.Scenario;
+import models.Bundle;
 import models.Shapefile;
-import models.Scenario.TransitSegment;
+import models.Bundle.TransitSegment;
 import models.Shapefile.ShapeFeature;
 import models.SpatialLayer;
 
@@ -99,7 +99,7 @@ public abstract class AnalystTileRequest {
 			
 			Tile tile = new Tile(this);
 			
-            STRtree index = Scenario.getScenario(scenarioId).getSpatialIndex();
+            STRtree index = Bundle.getBundle(scenarioId).getSpatialIndex();
     		List<TransitSegment> segments = index.query(tile.envelope);
 
     		for(TransitSegment seg : segments) {

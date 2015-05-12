@@ -20,7 +20,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
-import models.Scenario;
+import models.Bundle;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -59,24 +59,24 @@ import controllers.Application;
 /**
  * Process an uploaded GTFS file or shapefile.
  */
-public class ProcessTransitScenarioJob implements Runnable {
-	private Scenario scenario;
+public class ProcessTransitBundleJob implements Runnable {
+	private Bundle bundle;
 	private File uploadFile;
-	private String scenarioType;
-	private String augmentScenarioId;
+	private String bundleType;
+	private String augmentBundleId;
 	
-	public ProcessTransitScenarioJob(Scenario scenario, File uploadFile,
-			String scenarioType, String augmentScenarioId) {
-		this.scenario = scenario;
+	public ProcessTransitBundleJob(Bundle bundle, File uploadFile,
+			String bundleType, String augmentBundleId) {
+		this.bundle = bundle;
 		this.uploadFile = uploadFile;
-		this.scenarioType = scenarioType;
-		this.augmentScenarioId = augmentScenarioId;
+		this.bundleType = bundleType;
+		this.augmentBundleId = augmentBundleId;
 	}
 	
 	public void run() {
 
-		scenario.processingGtfs = true;
-		scenario.save();
+		bundle.processingGtfs = true;
+		bundle.save();
 
 		try {
 
@@ -110,7 +110,7 @@ public class ProcessTransitScenarioJob implements Runnable {
 
 			File newFile;
 
-			File outputDirectory = scenario.getTempShapeDirPath();
+			File outputDirectory = bundle.getTempShapeDirPath();
 			
 			// the files that are needed for this graph build
 			List<File> graphFiles = new ArrayList<File>(2);
@@ -123,8 +123,8 @@ public class ProcessTransitScenarioJob implements Runnable {
 				File shapeFile = new File(outputDirectory, shpFile);
 				File configFile = new File(outputDirectory, confFile);
 				
-				newFile = new File(scenario.getScenarioDataPath(), HashUtils.hashFile(uploadFile) + ".zip");
-				new Geom2GtfsJob(scenario, configFile, shapeFile, newFile).run();
+				newFile = new File(bundle.getBundleDataPath(), HashUtils.hashFile(uploadFile) + ".zip");
+				new Geom2GtfsJob(bundle, configFile, shapeFile, newFile).run();
 
 				FileUtils.deleteDirectory(outputDirectory);
 				zipFile.close();
@@ -134,40 +134,40 @@ public class ProcessTransitScenarioJob implements Runnable {
 			else if (!zips.isEmpty()) {
 				int i = 0;
 				for (ZipEntry ze : zips) {
-					File file = new File(scenario.getScenarioDataPath(), scenario.id + "_gtfs_" + (i++) + ".zip");
+					File file = new File(bundle.getBundleDataPath(), bundle.id + "_gtfs_" + (i++) + ".zip");
 					ZipUtils.unzip(zipFile, ze, file);
 					graphFiles.add(file);
 				}
 			}
 			else  {
-				newFile = new File(scenario.getScenarioDataPath(), scenario.id + "_gtfs.zip");
+				newFile = new File(bundle.getBundleDataPath(), bundle.id + "_gtfs.zip");
 				FileUtils.copyFile(uploadFile, newFile);
 				graphFiles.add(newFile);
 			}
 			
 			zipFile.close();
 			
-			if((scenarioType != null && augmentScenarioId != null && scenarioType.equals("augment"))) 
+			if((bundleType != null && augmentBundleId != null && bundleType.equals("augment"))) 
 			{	
-				for(File f : Scenario.getScenario(augmentScenarioId).getScenarioDataPath().listFiles()) {
+				for(File f : Bundle.getBundle(augmentBundleId).getBundleDataPath().listFiles()) {
 					if(f.getName().toLowerCase().endsWith(".zip")) {
-						FileUtils.copyFileToDirectory(f, scenario.getScenarioDataPath());
-						graphFiles.add(new File(scenario.getScenarioDataPath(), f.getName()));
+						FileUtils.copyFileToDirectory(f, bundle.getBundleDataPath());
+						graphFiles.add(new File(bundle.getBundleDataPath(), f.getName()));
 					}
 				}
 			}
 
-			scenario.processGtfs();
-			scenario.processingGtfs = false;
-			scenario.processingOsm = true;
-			scenario.save();
+			bundle.processGtfs();
+			bundle.processingGtfs = false;
+			bundle.processingOsm = true;
+			bundle.save();
 
-			File osmPbfFile = new File(scenario.getScenarioDataPath(), scenario.id + ".osm.pbf");
+			File osmPbfFile = new File(bundle.getBundleDataPath(), bundle.id + ".osm.pbf");
 
-			Double south = scenario.bounds.north < scenario.bounds.south ? scenario.bounds.north : scenario.bounds.south;
-			Double west = scenario.bounds.east < scenario.bounds.west ? scenario.bounds.east : scenario.bounds.west;
-			Double north = scenario.bounds.north > scenario.bounds.south ? scenario.bounds.north : scenario.bounds.south;
-			Double east = scenario.bounds.east > scenario.bounds.west ? scenario.bounds.east : scenario.bounds.west;
+			Double south = bundle.bounds.north < bundle.bounds.south ? bundle.bounds.north : bundle.bounds.south;
+			Double west = bundle.bounds.east < bundle.bounds.west ? bundle.bounds.east : bundle.bounds.west;
+			Double north = bundle.bounds.north > bundle.bounds.south ? bundle.bounds.north : bundle.bounds.south;
+			Double east = bundle.bounds.east > bundle.bounds.west ? bundle.bounds.east : bundle.bounds.west;
 
 			String vexUrl = Play.application().configuration().getString("application.vex");
 
@@ -183,8 +183,8 @@ public class ProcessTransitScenarioJob implements Runnable {
 			if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
 				System.err.println("Received response code " +
 						conn.getResponseCode() + " from vex server");
-				scenario.failed = true;
-				scenario.save();
+				bundle.failed = true;
+				bundle.save();
 				return;
 			}
 
@@ -203,18 +203,18 @@ public class ProcessTransitScenarioJob implements Runnable {
 			e.printStackTrace();
 			System.out.println("Failed to process gtfs");
 
-			scenario.failed = true;
-			scenario.save();
+			bundle.failed = true;
+			bundle.save();
 
 			return;
 		}
 
-		scenario.processingGtfs = false;
-		scenario.processingOsm = false;
-		scenario.save();
+		bundle.processingGtfs = false;
+		bundle.processingOsm = false;
+		bundle.save();
 		
 		try {
-			scenario.writeToClusterCache();
+			bundle.writeToClusterCache();
 		} catch (IOException e) {
 			e.printStackTrace();
 			Logger.error("Failed to write graph to cluster cache");

@@ -255,7 +255,7 @@ public class Query implements Serializable {
 				}
 				else {
 					// this is not a transit request, no need for computationally-intensive profile routing 
-					Scenario s = Scenario.getScenario(q.scenarioId);
+					Bundle s = Bundle.getBundle(q.scenarioId);
 					RoutingRequest rr = Api.analyst.buildRequest(q.scenarioId, q.date, q.fromTime, null, q.mode, 120, DateTimeZone.forID(s.timeZone));
 					js = new JobSpec(q.scenarioId, pointSetId, pointSetId, rr);
 				}

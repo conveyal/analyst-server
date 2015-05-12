@@ -26,7 +26,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
-import jobs.ProcessTransitScenarioJob;
+import jobs.ProcessTransitBundleJob;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -42,6 +42,7 @@ import org.mapdb.Fun.Tuple2;
 
 import com.conveyal.gtfs.GTFSFeed;
 import com.conveyal.gtfs.model.Agency;
+import com.conveyal.gtfs.model.Route;
 import com.conveyal.gtfs.model.Shape;
 import com.conveyal.gtfs.model.Stop;
 import com.conveyal.gtfs.model.StopTime;
@@ -79,7 +80,13 @@ import controllers.Application;
 
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Scenario implements Serializable {
+/**
+ * This represents a bundle of transit data. It used to be known as a "scenario," but
+ * scenarios now include modifications on top of bundles. The bundle simply keeps transit data
+ * together; it is a quite heavy object and is expensive to create and store. Scenarios, on the
+ * other hand, are extremely cheap and should be used with reckless abandon.
+ */
+public class Bundle implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 	
@@ -93,10 +100,10 @@ public class Scenario implements Serializable {
 	}
 	
 
-	static DataStore<Scenario> scenarioData = new DataStore<Scenario>("scenario", true);
+	static DataStore<Bundle> bundleData = new DataStore<Bundle>("bundle", true);
 	
 	// a db to hold the shapes. uses tuple indexing, so we can't use datastore
-	static DB segmentsDb = DBMaker.newFileDB(new File(Application.dataPath, "scenario_shapes.db"))
+	static DB segmentsDb = DBMaker.newFileDB(new File(Application.dataPath, "bundle_shapes.db"))
 				.cacheSize(2000)
 				.make();
 	
@@ -117,8 +124,10 @@ public class Scenario implements Serializable {
 	
 	public Bounds bounds;
 	
+	public List<RouteSummary> routes;
+	
 	/** spatial index of transit layer. */
-	// TODO: this can be large, and large numbers of scenarios can be cached . . . perhaps use a SoftReference?
+	// TODO: this can be large, and large numbers of bundles can be cached . . . perhaps use a SoftReference?
 	private transient STRtree spIdx;
 	
 	@JsonIgnore
@@ -149,7 +158,7 @@ public class Scenario implements Serializable {
 		}
 	}
 	
-	public Scenario() {}
+	public Bundle() {}
 		
 	public String getStatus() {
 		
@@ -164,21 +173,21 @@ public class Scenario implements Serializable {
 		
 	}
 	
-	static public Scenario create(final File gtfsFile, final String scenarioType, final String augmentScenarioId) throws IOException {
+	static public Bundle create(final File gtfsFile, final String bundleType, final String augmentBundleId) throws IOException {
 		
-		final Scenario scenario = new Scenario();
-		scenario.save();
+		final Bundle bundle = new Bundle();
+		bundle.save();
 		
-		scenario.processGtfs(gtfsFile, scenarioType, augmentScenarioId);
+		bundle.processGtfs(gtfsFile, bundleType, augmentBundleId);
 		
-		return scenario;
+		return bundle;
 	}
 	
 	public List<String> getFiles() {
 		
 		ArrayList<String> files = new ArrayList<String>();
 		
-		for(File f : this.getScenarioDataPath().listFiles()) {
+		for(File f : this.getBundleDataPath().listFiles()) {
 			files.add(f.getName());
 		}
 		
@@ -191,57 +200,55 @@ public class Scenario implements Serializable {
 		if(id == null || id.isEmpty()) {
 			
 			Date d = new Date();
-			id = HashUtils.hashString("sc_" + d.toString());
+			id = HashUtils.hashString("b_" + d.toString());
 			
-			Logger.info("created scenario s " + id);
+			Logger.info("created bundle " + id);
 		}
 		
-		scenarioData.save(id, this);
+		bundleData.save(id, this);
 		
-		Logger.info("saved scenario s " +id);
+		Logger.info("saved bundle " +id);
 	}
 	
 	@JsonIgnore
-	private static File getScenarioDir() {
-		File scenarioPath = new File(Application.dataPath, "graphs");
+	private static File getBundleDir() {
+		File bundlePath = new File(Application.dataPath, "graphs");
 		
-		scenarioPath.mkdirs();
+		bundlePath.mkdirs();
 		
-		return scenarioPath;
+		return bundlePath;
 	}
 	
 	@JsonIgnore
-	public File getScenarioDataPath() {
+	public File getBundleDataPath() {
 		
-		File scenarioDataPath = new File(getScenarioDir(), id);
+		File bundleDataPath = new File(getBundleDir(), id);
 		
-		scenarioDataPath.mkdirs();
+		bundleDataPath.mkdirs();
 		
-		return scenarioDataPath;
+		return bundleDataPath;
 	}
 	
 	public void delete() throws IOException {
-		scenarioData.delete(id);
+		bundleData.delete(id);
 		
-		FileUtils.deleteDirectory(getScenarioDataPath());
+		FileUtils.deleteDirectory(getBundleDataPath());
 		
-		Logger.info("delete scenario s" +id);
+		Logger.info("delete bundle s" +id);
 	}
 	
-	public void processGtfs(final File gtfsFile, final String scenarioType, final String augmentScenarioId) {
+	public void processGtfs(final File gtfsFile, final String bundleType, final String augmentBundleId) {
 		ExecutionContext graphBuilderContext = Akka.system().dispatchers().lookup("contexts.graph-builder-analyst-context");
-		
-		final Scenario scenario = this;
 		
 		Akka.system().scheduler().scheduleOnce(
 			        Duration.create(10, TimeUnit.MILLISECONDS),
-			        new ProcessTransitScenarioJob(this, gtfsFile, scenarioType, augmentScenarioId),
+			        new ProcessTransitBundleJob(this, gtfsFile, bundleType, augmentBundleId),
 			        graphBuilderContext
 			);
 	}
 	
 	public void writeToClusterCache () throws IOException {
-		clusterGraphService.addGraphFile(getScenarioDataPath());
+		clusterGraphService.addGraphFile(getBundleDataPath());
 		
 		// if the shapes are null, compute them.
 		// They are built on upload, but older databases may not have them.
@@ -254,7 +261,7 @@ public class Scenario implements Serializable {
 	public void processGtfs () {		
 		Envelope2D envelope = new Envelope2D();
 
-		for(File f : getScenarioDataPath().listFiles()) {			
+		for(File f : getBundleDataPath().listFiles()) {			
 			if(f.getName().toLowerCase().endsWith(".zip")) {
 				final GTFSFeed feed;
 				
@@ -264,7 +271,7 @@ public class Scenario implements Serializable {
 					feed = GTFSFeed.fromFile(f.getAbsolutePath());
 				} catch (RuntimeException e) {
 					if (e.getCause() instanceof ZipException) {
-						Logger.error("Unable to process GTFS file for scenario %s, project %s", this.name, Project.getProject(this.projectId).name);
+						Logger.error("Unable to process GTFS file for bundle %s, project %s", this.name, Project.getProject(this.projectId).name);
 						continue;
 					}
 					throw e;
@@ -280,6 +287,11 @@ public class Scenario implements Serializable {
 				
 				Agency a = feed.agency.values().iterator().next();
 				this.timeZone = a.agency_timezone;
+				
+				// cache the routes
+				for (Route route : feed.routes.values()) {
+					this.routes.add(new RouteSummary(route, f.getName()));					
+				}
 				
 				// build the spatial index for the map view
 				Collection<Trip> exemplarTrips =
@@ -344,26 +356,26 @@ public class Scenario implements Serializable {
 	}
 	
 	static public void writeAllToClusterCache () throws IOException {
-		for (Scenario s : scenarioData.getAll()) {
+		for (Bundle s : bundleData.getAll()) {
 			s.writeToClusterCache();
 		}
 	}
 
-	static public Scenario getScenario(String id) {
+	static public Bundle getBundle(String id) {
 		
-		return scenarioData.getById(id);	
+		return bundleData.getById(id);	
 	}
 	
-	static public Collection<Scenario> getScenarios(String projectId) throws IOException {
+	static public Collection<Bundle> getBundles(String projectId) throws IOException {
 		
 		if(projectId == null)
-			return scenarioData.getAll();
+			return bundleData.getAll();
 		
 		else {
 			
-			Collection<Scenario> data = new ArrayList<Scenario>();
+			Collection<Bundle> data = new ArrayList<Bundle>();
 			
-			for(Scenario sd : scenarioData.getAll()) {
+			for(Bundle sd : bundleData.getAll()) {
 				if(sd.projectId == null )
 					sd.delete();
 				else if(sd.projectId.equals(projectId))
@@ -378,7 +390,7 @@ public class Scenario implements Serializable {
 	@JsonIgnore
 	public File getTempShapeDirPath() {
 		
-		File shapeDirPath = new File(getScenarioDataPath(), "tmp_" + id);
+		File shapeDirPath = new File(getBundleDataPath(), "tmp_" + id);
 		
 		shapeDirPath.mkdirs();
 		
@@ -393,6 +405,24 @@ public class Scenario implements Serializable {
 		public TransitSegment(LineString geom) {
 			this.geom = geom;
 		}
+	}
+	
+	/** Represents a single route (for use in banning) */
+	public static class RouteSummary {
+		/** Construct a route summary from a GTFS route and the name of the feed file from whence it came */
+		public RouteSummary(Route route, String feedName) {
+			this.shortName = route.route_short_name;
+			this.longName = route.route_long_name;
+			this.id = route.route_id;
+			this.agencyId = route.agency.agency_id;
+			this.feed = feedName;
+		}
+		
+		public final String shortName;
+		public final String longName;
+		public final String id;
+		public final String agencyId;
+		public final String feed;
 	}
 	
 }

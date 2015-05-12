@@ -1,6 +1,6 @@
 import java.io.IOException;
 
-import models.Scenario;
+import models.Bundle;
 import models.Shapefile;
 import models.User;
 import controllers.Api;
@@ -18,7 +18,7 @@ public class Global extends GlobalSettings {
 		
 		// upload to S3
 		try {
-			Scenario.writeAllToClusterCache();
+			Bundle.writeAllToClusterCache();
 			Shapefile.writeAllToClusterCache();
 		} catch (IOException e) {
 			e.printStackTrace();

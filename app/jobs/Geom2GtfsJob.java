@@ -9,7 +9,7 @@ import org.apache.commons.io.FileUtils;
 
 import utils.HashUtils;
 import controllers.Application;
-import models.Scenario;
+import models.Bundle;
 
 /**
  * Run geom2gtfs with the given shapefile and config file for the given scenario.
@@ -20,10 +20,10 @@ public class Geom2GtfsJob implements Runnable {
 	private File configFile;
 	private File shapeFile;
 	private File newFile;
-	private Scenario scenario;
+	private Bundle bundle;
 	
-	public Geom2GtfsJob(Scenario scenario, File configFile, File shapeFile, File newFile) {
-		this.scenario = scenario;
+	public Geom2GtfsJob(Bundle bundle, File configFile, File shapeFile, File newFile) {
+		this.bundle = bundle;
 		this.configFile = configFile;
 		this.shapeFile = shapeFile;
 		this.newFile = newFile;

@@ -60,7 +60,7 @@ import otp.ProfileResult;
 import models.Attribute;
 import models.Project;
 import models.Query;
-import models.Scenario;
+import models.Bundle;
 import models.Shapefile;
 import models.SpatialLayer;
 import models.User;
@@ -129,7 +129,7 @@ public class Api extends Controller {
      * is covered by all transit feeds in the project.
      */
     public static Result getExemplarDay(String projectId) throws Exception {
-    	Collection<Scenario> scenarios = Scenario.getScenarios(projectId);
+    	Collection<Bundle> scenarios = Bundle.getBundles(projectId);
     	
     	LocalDate originalDate = new LocalDate().dayOfWeek().setCopy("Tuesday");
     	LocalDate date = originalDate;
@@ -644,14 +644,14 @@ public class Api extends Controller {
     	try {
 
             if(id != null) {
-            	Scenario s = Scenario.getScenario(id);
+            	Bundle s = Bundle.getBundle(id);
                 if(s != null)
                     return ok(Api.toJson(s, false));
                 else
                     return notFound();
             }
             else {
-                return ok(Api.toJson(Scenario.getScenarios(projectId), false));
+                return ok(Api.toJson(Bundle.getBundles(projectId), false));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -675,7 +675,7 @@ public class Api extends Controller {
         	if(body.asFormUrlEncoded().get("augmentScenarioId") != null)
         		augmentScenarioId = body.asFormUrlEncoded().get("augmentScenarioId")[0];
 
-        	Scenario s = Scenario.create(file.getFile(), scenarioType, augmentScenarioId);
+        	Bundle s = Bundle.create(file.getFile(), scenarioType, augmentScenarioId);
 
         	s.name = body.asFormUrlEncoded().get("name")[0];
         	s.description = body.asFormUrlEncoded().get("description")[0];
@@ -692,13 +692,13 @@ public class Api extends Controller {
 
     public static Result updateScenario(String id) {
 
-    	Scenario s;
+    	Bundle s;
 
         try {
 
-        	s = mapper.readValue(request().body().asJson().traverse(), Scenario.class);
+        	s = mapper.readValue(request().body().asJson().traverse(), Bundle.class);
 
-        	if(s.id == null || Scenario.getScenario(s.id) == null)
+        	if(s.id == null || Bundle.getBundle(s.id) == null)
                 return badRequest();
 
         	s.save();
@@ -714,7 +714,7 @@ public class Api extends Controller {
         if(id == null)
             return badRequest();
 
-        Scenario s = Scenario.getScenario(id);
+        Bundle s = Bundle.getBundle(id);
 
         if(s == null)
         	return badRequest();

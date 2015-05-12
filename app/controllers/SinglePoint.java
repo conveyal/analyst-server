@@ -27,7 +27,7 @@ import com.fasterxml.jackson.databind.module.SimpleKeyDeserializers;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 
-import models.Scenario;
+import models.Bundle;
 import models.Shapefile;
 
 import org.joda.time.DateTimeZone;
