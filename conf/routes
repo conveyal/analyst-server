@@ -45,15 +45,15 @@ DELETE        /api/shapefile/:id                  controllers.Api.deleteShapefil
 
 GET           /api/bundle                       controllers.Api.getBundle(id:String ?= null, projectId:String ?= null)
 GET           /api/bundle/:id                   controllers.Api.getBundleById(id:String)
-POST          /api/bundle/                      controllers.Api.createBundle()
+POST          /api/bundle                       controllers.Api.createBundle()
 PUT           /api/bundle/:id                   controllers.Api.updateBundle(id:String)
 DELETE        /api/bundle/:id                   controllers.Api.deleteBundle(id:String)
 
-GET           /api/bundle                       controllers.ScenarioController.get(projectId:String ?= null)
-GET           /api/bundle/:id                   controllers.ScenarioController.getById(id:String)
-POST          /api/bundle/                      controllers.ScenarioController.create()
-PUT           /api/bundle/:id                   controllers.ScenarioController.update(id:String)
-DELETE        /api/bundle/:id                   controllers.ScenarioController.delete(id:String)
+GET           /api/scenario                       controllers.ScenarioController.get(projectId:String ?= null)
+GET           /api/scenario/:id                   controllers.ScenarioController.getById(id:String)
+POST          /api/scenario                       controllers.ScenarioController.create()
+PUT           /api/scenario/:id                   controllers.ScenarioController.update(id:String)
+DELETE        /api/scenario/:id                   controllers.ScenarioController.delete(id:String)
 
 GET           /api/query                          controllers.Api.getQuery(id:String ?= null, projectId:String ?= null, pointSetId: String ?= null)
 GET           /api/query/:id                      controllers.Api.getQueryById(id:String)

@@ -4,18 +4,18 @@
     <div class="btn-group btn-group-sm pull-right" aria-label="">
       <button type="button" class="btn btn-default"  id="zoomToExtent"><span class="glyphicon glyphicon-fullscreen"></span></button>
       <button type="button" class="btn btn-default" id="toggleLayer"><span id="toggleLayerIcon" class="glyphicon glyphicon-eye-close"></span></button>
-      {{#writeAllowed}}<button type="button" class="btn btn-default" id="deleteScenario"><span class="glyphicon glyphicon-trash"></span></button>{{/writeAllowed}}
+      {{#writeAllowed}}<button type="button" class="btn btn-default" id="deleteBundle"><span class="glyphicon glyphicon-trash"></span></button>{{/writeAllowed}}
     </div>
     {{else}}
     <div class="btn-group btn-group-sm pull-right" aria-label="">
-      <button type="button" class="btn btn-default" id="deleteScenario"><span class="glyphicon glyphicon-trash"></span></button>
+      <button type="button" class="btn btn-default" id="deleteBundle"><span class="glyphicon glyphicon-trash"></span></button>
     </div>
    {{/if}}
 
    <div>
-     <span id="scenarioName"><strong>{{name}}</strong></span>
+     <span id="bundleName"><strong>{{name}}</strong></span>
    </div>
-   <p><small><span id="scenarioDescription">{{#if description}}{{description}}{{else}}<em>[no description]</em>{{/if}}</span></small></p>
+   <p><small><span id="bundleDescription">{{#if description}}{{description}}{{else}}<em>[no description]</em>{{/if}}</span></small></p>
 
 
    {{#unless built}}

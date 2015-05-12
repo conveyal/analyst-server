@@ -31,7 +31,7 @@ project-settings.project-location=Project Location
 project-settings.set-project-location=Set Location
 
 data-manager.spaitial-data-sets=Spatial Data Sets
-data-manager.transport-scenarios=Transport Scenarios
+data-manager.transport-bundles=Transport Bundles
 
 data-manager.no-data=No data
 
@@ -41,9 +41,9 @@ data-manager.pointset-description=Spatial data sets allow measurement of access 
 data-manager.shapefile-description=Shapefile data sets are used to measure accessibility to spatially distributed characteristics like population or jobs.
 data-manager.shapefile-upload-description=Shapefiles must be zipped before uploading and in a common projection system.
 
-data-manager.no-scenarios=No transit scenarios for this project.
-data-manager.scenarios-description-a=Create a transport scenario by clicking "Add" above and uploading a GTFS feed, or create a GTFS feed using TransitMix or TransitWand.
-data-manager.scenarios-description=Transport scenarios are an essential requirement to performing accessibility analysis.  Adding more than one allows comparisons to be made.
+data-manager.no-bundles=No transit bundles for this project.
+data-manager.bundles-description-a=Create a transport bundle by clicking "Add" above and uploading a GTFS feed, or create a GTFS feed using TransitMix or TransitWand.
+data-manager.bundles-description=Transport bundles are an essential requirement to performing accessibility analysis.  Adding more than one allows comparisons to be made.
 
 data-manager.no-shapefiles=No Shapefiles
 data-manager.shapefiles-upload-description=To create a spatial data set first upload a Shapefile containing the geometries and attributes you wish to measure.
@@ -62,13 +62,13 @@ data-manager.create-new-attribute-name=Attribute Name
 data-manager.create-new-attribute-description=Attribute Description
 data-manager.create-new-attribute-color=Attribute Color
 
-data-manager.create-scenario=Create Scenario
-data-manager.new-scenario=New Scenario
-data-manager.augment-scenario=Augment Existing Scenario
+data-manager.create-bundle=Create Bundle
+data-manager.new-bundle=New Bundle
+data-manager.augment-bundle=Augment Existing Bundle
 
-data-manager.scenario-gtfs-file=Scenario GTFS File
-data-manager.scenario-name=Scenario Name
-data-manager.scenario-description=Scenario Description
+data-manager.bundle-gtfs-file=Bundle GTFS File
+data-manager.bundle-name=Bundle Name
+data-manager.bundle-description=Bundle Description
 
 data-manager.upload-shapefile-file=Shapefile (zipped)
 data-manager.upload-shapefile-name=Shapefile Name
@@ -87,18 +87,18 @@ analysis.multi-point=Multi-point Analysis
 
 analysis.primary-indicator=Primary Indicator
 
-analysis.scenario-comparison=Scenario Comparison
+analysis.bundle-comparison=Bundle Comparison
 
-analysis.scenario.no-comparison=No comparison
-analysis.scenario.compare=Compare
+analysis.bundle.no-comparison=No comparison
+analysis.bundle.compare=Compare
 
 analysis.date=Date
 analysis.earliest-departure-time=Earliest departure time
 analysis.latest-departure-time=Latest departure time
 
-analysis.scenario=Scenario
-analysis.scenario-1=Scenario 1
-analysis.scenario-2=Scenario 2
+analysis.bundle=Bundle
+analysis.bundle-1=Bundle 1
+analysis.bundle-2=Bundle 2
 analysis.minutes=Minutes
 
 analysis.show-isochrones=Show Isochrones

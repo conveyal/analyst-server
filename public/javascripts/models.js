@@ -70,8 +70,8 @@ var Analyst = Analyst || {};
 
 	});
 
-	A.models.Scenario = Backbone.Model.extend({
-		urlRoot: '/api/scenario/',
+	A.models.Bundle = Backbone.Model.extend({
+		urlRoot: '/api/bundle',
 
 		defaults: {
 			id: null,
@@ -82,10 +82,10 @@ var Analyst = Analyst || {};
 		}
 	});
 
-	A.models.Scenarios = Backbone.Collection.extend({
-	  type: 'Scenarios',
-	  model: A.models.Scenario,
-	  url: '/api/scenario'
+	A.models.Bundles = Backbone.Collection.extend({
+	  type: 'Bundles',
+	  model: A.models.Bundle,
+	  url: '/api/bundle'
 	});
 
 	A.models.Query = Backbone.Model.extend({
@@ -97,7 +97,7 @@ var Analyst = Analyst || {};
 			mode: null,
 			shapefileId: null,
 			attributeName: null,
-			scenarioId: null,
+			bundleId: null,
 			status: null,
 			totalPoints: null,
 			completePoints: null,

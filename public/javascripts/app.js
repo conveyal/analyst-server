@@ -640,8 +640,8 @@ var Analyst = Analyst || {};
 
 			steps: [ {
 					element: "#transportDataTab",
-					title: "Build Transport Scenarios",
-					content: "Create a transport scenario by clicking \"Add\" above and uploading a GTFS feed, or create a GTFS feed using TransitMix or TransitWand."
+					title: "Build Transport Bundles",
+					content: "Create a transport bundle by clicking \"Add\" above and uploading a GTFS feed, or create a GTFS feed using TransitMix or TransitWand."
 				}, {
 					element: "#spatialDataTab",
 					title: "Manage Spatial Data",

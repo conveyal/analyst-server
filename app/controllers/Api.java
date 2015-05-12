@@ -665,14 +665,14 @@ public class Api extends Controller {
 
         if (file != null && file.getFile() != null) {
 
-        	String scenarioType = body.asFormUrlEncoded().get("scenarioType")[0];
+        	String bundleType = body.asFormUrlEncoded().get("bundleType")[0];
 
-        	String augmentScenarioId = null;
+        	String augmentBundleId = null;
 
-        	if(body.asFormUrlEncoded().get("augmentScenarioId") != null)
-        		augmentScenarioId = body.asFormUrlEncoded().get("augmentScenarioId")[0];
+        	if(body.asFormUrlEncoded().get("augmentBundleId") != null)
+        		augmentBundleId = body.asFormUrlEncoded().get("augmentBundleId")[0];
 
-        	Bundle s = Bundle.create(file.getFile(), scenarioType, augmentScenarioId);
+        	Bundle s = Bundle.create(file.getFile(), bundleType, augmentBundleId);
 
         	s.name = body.asFormUrlEncoded().get("name")[0];
         	s.description = body.asFormUrlEncoded().get("description")[0];

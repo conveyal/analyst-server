@@ -26,6 +26,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
+import jersey.repackaged.com.google.common.collect.Lists;
 import jobs.ProcessTransitBundleJob;
 
 import org.apache.commons.io.FileUtils;
@@ -124,7 +125,7 @@ public class Bundle implements Serializable {
 	
 	public Bounds bounds;
 	
-	public List<RouteSummary> routes;
+	public List<RouteSummary> routes = Lists.newArrayList();
 	
 	/** spatial index of transit layer. */
 	// TODO: this can be large, and large numbers of bundles can be cached . . . perhaps use a SoftReference?
@@ -408,7 +409,9 @@ public class Bundle implements Serializable {
 	}
 	
 	/** Represents a single route (for use in banning) */
-	public static class RouteSummary {
+	public static class RouteSummary implements Serializable {
+		private static final long serialVersionUID = 1L;
+		
 		/** Construct a route summary from a GTFS route and the name of the feed file from whence it came */
 		public RouteSummary(Route route, String feedName) {
 			this.shortName = route.route_short_name;

@@ -1,0 +1,45 @@
+<div class="pannel-header">
+     <span class="glyphicon glyphicon-road"></span> {{I18n "data-manager.create-bundle"}}
+</div>
+
+<div id="main" style="padding: 10px;">
+<form enctype="multipart/form-data">
+
+    <div class="form-group">
+         <p>
+              {{I18n "data-manager.bundles-description"}}
+         </p>
+
+      <select id="bundleType" class="form-control">
+           <option value="replace">{{I18n "data-manager.new-bundle"}}</option>
+           <option value="augment">{{I18n "data-manager.augment-bundle"}}</option>
+      </select>
+
+      <select id="augmentBundleId" class="form-control">
+           <option value="replace">{{I18n "data-manager.new-bundle"}}</option>
+           <option value="augment">{{I18n "data-manager.augment-bundle"}}</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>
+        {{I18n "data-manager.bundle-gtfs-file"}}
+      </label>
+      <input name='file' type='file' class="form-control"/>
+    </div>
+    <div class="form-group">
+      <label>
+        {{I18n "data-manager.bundle-name"}}
+      </label>
+      <input name='name' type='text' class="form-control"/>
+    </div>
+    <div class="form-group">
+      <label>
+        {{I18n "data-manager.bundle-description"}}
+      </label>
+      <input name='description' type='text' class="form-control"/>
+    </div>
+
+<button id="bundleSave" type="button" class="save btn btn-primary">{{I18n "app.shared.create"}}</button> <button type="button" id="bundleCancel" class="cancel btn btn-default">{{I18n "app.shared.cancel"}}</button>
+</form>
+
+</div>

@@ -21,7 +21,7 @@ var Analyst = Analyst || {};
     },
 
     onRender: function() {
-      $('#scenario2-controls').hide();
+      $('#bundle2-controls').hide();
     },
 
     onShow: function() {
@@ -49,26 +49,26 @@ var Analyst = Analyst || {};
       this.$('#toTime')  .data('DateTimePicker').setDate(new Date(2014, 11, 15, 9, 0, 0));
 
 
-      this.scenarios = new A.models.Scenarios();
+      this.bundles = new A.models.Bundles();
       this.queries = new A.models.Queries();
       this.shapefiles = new A.models.Shapefiles();
 
-      this.scenarios.fetch({
+      this.bundles.fetch({
         reset: true,
         data: {
           projectId: A.app.selectedProject
         },
         success: function(collection, response, options) {
 
-          _this.$(".scenario-list").empty();
+          _this.$(".bundle-list").empty();
 
-          for (var i in _this.scenarios.models) {
-            if (_this.scenarios.models[i].get("id") == "default")
-              _this.$(".scenario-list").append('<option selected value="' + _this.scenarios.models[i].get(
-                "id") + '">' + _this.scenarios.models[i].get("name") + '</option>');
+          for (var i in _this.bundles.models) {
+            if (_this.bundles.models[i].get("id") == "default")
+              _this.$(".bundle-list").append('<option selected value="' + _this.bundles.models[i].get(
+                "id") + '">' + _this.bundles.models[i].get("name") + '</option>');
             else
-              _this.$(".scenario-list").append('<option value="' + _this.scenarios.models[i].get("id") +
-                '">' + _this.scenarios.models[i].get("name") + '</option>');
+              _this.$(".bundle-list").append('<option value="' + _this.bundles.models[i].get("id") +
+                '">' + _this.bundles.models[i].get("name") + '</option>');
 
           }
 
@@ -135,7 +135,7 @@ var Analyst = Analyst || {};
         name: this.$("#name").val(),
         mode: this.mode,
         shapefileId: this.$('#shapefile').val(),
-        scenarioId: this.$('#scenario1').val(),
+        bundleId: this.$('#bundle1').val(),
         projectId: A.app.selectedProject,
         fromTime: A.util.makeTime(this.$('#fromTime').data('DateTimePicker').getDate()),
         date: this.$('#date').data('DateTimePicker').getDate().format('YYYY-MM-DD')

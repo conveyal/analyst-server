@@ -9,57 +9,57 @@ A.transportData = {};
 		template: Handlebars.getTemplate('data', 'data-layout'),
 
 		regions: {
-		  scenarioData : "#main"
+		  bundleData : "#main"
 		},
 
 		initialize : function(options) {
 
 			var _this = this;
 
-			this.scenarios  = new A.models.Scenarios();
+			this.bundles  = new A.models.Bundles();
 
 		},
 
 		onShow : function() {
 
-			this.scenarioLayout = new A.transportData.ScenarioLayout({collection: this.scenarios});
+			this.bundleLayout = new A.transportData.BundleLayout({collection: this.bundles});
 
-			this.listenTo(this.scenarioLayout, "scenarioCreate", this.createScenario);
+			this.listenTo(this.bundleLayout, "bundleCreate", this.createBundle);
 
-			this.scenarioData.show(this.scenarioLayout);
+			this.bundleData.show(this.bundleLayout);
 
-			this.scenarios.fetch({reset: true, data : {projectId: A.app.selectedProject}});
+			this.bundles.fetch({reset: true, data : {projectId: A.app.selectedProject}});
 
 			var _this = this;
 
 			A.app.instance.vent.on("setSelectedProject", function() {
-				_this.scenarios.fetch({reset: true, data : {projectId: A.app.selectedProject}});
+				_this.bundles.fetch({reset: true, data : {projectId: A.app.selectedProject}});
 			});
 
 		},
 
-		cancelNewScenario : function() {
+		cancelNewBundle : function() {
 
-			this.scenarioData.close();
+			this.bundleData.close();
 
 			this.onShow();
 		},
 
 
-		createScenario : function(evt) {
+		createBundle : function(evt) {
 
 			var _this = this;
 
-			var scenarioCreateLayout = new A.transportData.ScenarioCreateView({projectId: A.app.selectedProject});
+			var bundleCreateLayout = new A.transportData.BundleCreateView({projectId: A.app.selectedProject});
 
-			this.listenTo(scenarioCreateLayout, "scenarioCreate:save", function() {
-					_this.scenarios.fetch({reset: true, data : {projectId: A.app.selectedProject}});
+			this.listenTo(bundleCreateLayout, "bundleCreate:save", function() {
+					_this.bundles.fetch({reset: true, data : {projectId: A.app.selectedProject}});
 					this.onShow();
 				});
 
-			this.listenTo(scenarioCreateLayout, "scenarioCreate:cancel", this.cancelNewScenario)	;
+			this.listenTo(bundleCreateLayout, "bundleCreate:cancel", this.cancelNewBundle)	;
 
-			this.scenarioData.show(scenarioCreateLayout);
+			this.bundleData.show(bundleCreateLayout);
 
 		},
 
@@ -67,9 +67,9 @@ A.transportData = {};
 	});
 
 
-	A.transportData.ScenarioCreateView = Backbone.Marionette.Layout.extend({
+	A.transportData.BundleCreateView = Backbone.Marionette.Layout.extend({
 
-		template: Handlebars.getTemplate('data', 'data-scenario-create-form'),
+		template: Handlebars.getTemplate('data', 'data-bundle-create-form'),
 
 		ui: {
 			name: 			'#name',
@@ -81,9 +81,9 @@ A.transportData = {};
 		},
 
 		events: {
-		  'click #scenarioSave': 'saveScenarioCreate',
-		  'click #scenarioCancel': 'cancelScenarioCreate',
-		  'change #scenarioType' : 'scenarioTypeChange'
+		  'click #bundleSave': 'saveBundleCreate',
+		  'click #bundleCancel': 'cancelBundleCreate',
+		  'change #bundleType' : 'bundleTypeChange'
 		},
 
 		initialize : function(options) {
@@ -96,36 +96,36 @@ A.transportData = {};
 
 			var _this = this;
 
-			this.scenarios = new A.models.Scenarios();
+			this.bundles = new A.models.Bundles();
 
-			this.scenarios.fetch({reset: true, data : {projectId: this.projectId}, success: function(collection, response, options){
+			this.bundles.fetch({reset: true, data : {projectId: this.projectId}, success: function(collection, response, options){
 
-				_this.$("#augmentScenarioId").empty();
+				_this.$("#augmentBundleId").empty();
 
-				for(var i in _this.scenarios.models) {
-					_this.$("#augmentScenarioId").append('<option value="' + _this.scenarios.models[i].get("id") + '">' + _this.scenarios.models[i].get("name") + '</option>');
+				for(var i in _this.bundles.models) {
+					_this.$("#augmentBundleId").append('<option value="' + _this.bundles.models[i].get("id") + '">' + _this.bundles.models[i].get("name") + '</option>');
 				}
 
 			}});
 
-			this.$("#augmentScenarioId").hide();
+			this.$("#augmentBundleId").hide();
 		},
 
-		scenarioTypeChange : function(evt) {
+		bundleTypeChange : function(evt) {
 
-			if(this.$('#scenarioType').val() === "augment")
-				this.$("#augmentScenarioId").show();
+			if(this.$('#bundleType').val() === "augment")
+				this.$("#augmentBundleId").show();
 			else
-				this.$("#augmentScenarioId").hide();
+				this.$("#augmentBundleId").hide();
 		},
 
-		cancelScenarioCreate : function(evt) {
+		cancelBundleCreate : function(evt) {
 
-			this.trigger("scenarioCreate:cancel");
+			this.trigger("bundleCreate:cancel");
 
 		},
 
-		saveScenarioCreate : function(evt) {
+		saveBundleCreate : function(evt) {
 
 			evt.preventDefault();
 			var _this = this;
@@ -138,30 +138,30 @@ A.transportData = {};
 		    })
 
 		    values.projectId = this.projectId;
-		    values.scenarioType = this.$('#scenarioType').val();
+		    values.bundleType = this.$('#bundleType').val();
 
-		    if(values.scenarioType === "augment")
-			values.augmentScenarioId = this.$('#augmentScenarioId').val();
+		    if(values.bundleType === "augment")
+			values.augmentBundleId = this.$('#augmentBundleId').val();
 
-		    var scenario = new A.models.Scenario();
+		    var bundle = new A.models.Bundle();
 
-		    scenario.save(values, { iframe: true,
+		    bundle.save(values, { iframe: true,
 		                              files: this.$('form :file'),
 		                              data: values,
 		                              success: function(){
-		                      				_this.trigger("scenarioCreate:save");
+		                      				_this.trigger("bundleCreate:save");
 		                              }});
 		}
 
 	});
 
 
-	A.transportData.ScenarioLayout = Marionette.Layout.extend({
+	A.transportData.BundleLayout = Marionette.Layout.extend({
 
-		template: Handlebars.getTemplate('data', 'data-scenario-layout'),
+		template: Handlebars.getTemplate('data', 'data-bundle-layout'),
 
 		events:  {
-			'click #createScenario' : 'createScenario'
+			'click #createBundle' : 'createBundle'
 		},
 
 		regions: {
@@ -170,25 +170,25 @@ A.transportData = {};
 
 		onShow : function() {
 
-			var scenarioListLayout = new A.transportData.ScenarioListView({collection: this.collection});
+			var bundleListLayout = new A.transportData.BundleListView({collection: this.collection});
 
-			this.main.show(scenarioListLayout);
+			this.main.show(bundleListLayout);
 
 		},
 
-		createScenario : function(evt) {
-			this.trigger("scenarioCreate");
+		createBundle : function(evt) {
+			this.trigger("bundleCreate");
 		}
 
 	});
 
-	A.transportData.ScenarioListItem = Backbone.Marionette.ItemView.extend({
+	A.transportData.BundleListItem = Backbone.Marionette.ItemView.extend({
 
-	  template: Handlebars.getTemplate('data', 'data-scenario-list-item'),
+	  template: Handlebars.getTemplate('data', 'data-bundle-list-item'),
 
 	  events: {
 
-	  	'click #deleteScenario' : 'deleteScenario',
+	  	'click #deleteBundle' : 'deleteBundle',
 	  	'click #toggleLayer' : 'toggleLayer',
 			'click #zoomToExtent' : 'zoomToExtent'
 
@@ -217,7 +217,7 @@ A.transportData = {};
 
 	 	  var target = $(evt.target);
 
-	  	var scenarioId = this.model.id;
+	  	var bundleId = this.model.id;
 
 			if(this.transitOverlay) {
 				if(A.map.hasLayer(this.transitOverlay))
@@ -231,7 +231,7 @@ A.transportData = {};
 					this.$("#toggleLayerIcon").addClass("glyphicon-eye-close");
 			}
 			else {
-				this.transitOverlay = L.tileLayer('/tile/transit?z={z}&x={x}&y={y}&scenarioId=' + scenarioId	).addTo(A.map);
+				this.transitOverlay = L.tileLayer('/tile/transit?z={z}&x={x}&y={y}&bundleId=' + bundleId	).addTo(A.map);
 
 				this.$("#zoomToExtent").removeClass("disabled");
 
@@ -256,7 +256,7 @@ A.transportData = {};
 			A.map.fitBounds(bounds);
 		},
 
-	  deleteScenario: function(evt) {
+	  deleteBundle: function(evt) {
 	  	this.model.destroy();
 	  },
 
@@ -273,7 +273,7 @@ A.transportData = {};
 
 				var _this = this;
 
-				this.$el.find("#scenarioName").editable({
+				this.$el.find("#bundleName").editable({
 					type        : 'text',
 					name        : "name",
 					mode				: "inline",
@@ -288,7 +288,7 @@ A.transportData = {};
 					_this.render();
 				});
 
-				this.$el.find("#scenarioDescription").editable({
+				this.$el.find("#bundleDescription").editable({
 					type        : 'textarea',
 					name        : "description",
 					mode				: "inline",
@@ -308,19 +308,19 @@ A.transportData = {};
 
 	});
 
-	A.transportData.ScenarioEmptyList = Backbone.Marionette.ItemView.extend({
+	A.transportData.BundleEmptyList = Backbone.Marionette.ItemView.extend({
 
-		template: Handlebars.getTemplate('data', 'data-scenario-empty-list')
+		template: Handlebars.getTemplate('data', 'data-bundle-empty-list')
 	});
 
-	A.transportData.ScenarioListView = Backbone.Marionette.CompositeView.extend({
+	A.transportData.BundleListView = Backbone.Marionette.CompositeView.extend({
 
-		template: Handlebars.getTemplate('data', 'data-scenario-list'),
-		itemView: A.transportData.ScenarioListItem,
-		emptyView: A.transportData.ScenarioEmptyList,
+		template: Handlebars.getTemplate('data', 'data-bundle-list'),
+		itemView: A.transportData.BundleListItem,
+		emptyView: A.transportData.BundleEmptyList,
 
 		appendHtml: function(collectionView, itemView){
-	    	collectionView.$("#scenarioList").append(itemView.el);
+	    	collectionView.$("#bundleList").append(itemView.el);
 
 	 	}
 

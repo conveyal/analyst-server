@@ -10,7 +10,8 @@ A.data = {};
 
 		regions: {
 		  spatialData 	: "#spatial",
-		  scenarioData 	: "#scenario"
+		  bundleData 	: "#bundle",
+			bundleData    : "#bundle"
 		},
 
 		initialize : function(options) {
@@ -19,7 +20,7 @@ A.data = {};
 
 			this.pointsets = new A.models.PointSets();
 
-			this.scenarios  = new A.models.Scenarios();
+			this.bundles  = new A.models.Bundles();
 
 		},
 
@@ -31,13 +32,13 @@ A.data = {};
 
 			this.spatialData.show(this.pointSetLayout);
 
-			this.scenarioLayout = new A.data.ScenarioLayout({collection: this.scenarios});
+			this.bundleLayout = new A.data.BundleLayout({collection: this.bundles});
 
-			this.listenTo(this.scenarioLayout, "scenarioCreate", this.createScenario);
+			this.listenTo(this.bundleLayout, "bundleCreate", this.createBundle);
 
-			this.scenarioData.show(this.scenarioLayout);
+			this.bundleData.show(this.bundleLayout);
 
-			this.scenarios.fetch({reset: true, data : {projectId: this.model.get("id")}});
+			this.bundles.fetch({reset: true, data : {projectId: this.model.get("id")}});
 
 		},
 
@@ -50,7 +51,7 @@ A.data = {};
 			this.listenTo(pointSetCreateLayout, "pointsetCreate:cancel", this.cancelNewPointset);
 
 			this.spatialData.show(pointSetCreateLayout);
-			this.scenarioData.close();
+			this.bundleData.close();
 
 		},
 
@@ -70,29 +71,29 @@ A.data = {};
 			this.onShow();
 		},
 
-		cancelNewScenario : function() {
+		cancelNewBundle : function() {
 
-			this.scenarioData.close();
+			this.bundleData.close();
 
 			this.onShow();
 		},
 
 
-		createScenario : function(evt) {
+		createBundle : function(evt) {
 
 			var _this = this;
 
-			var scenarioCreateLayout = new A.data.ScenarioCreateView({projectId: this.model.get("id")});
+			var bundleCreateLayout = new A.data.BundleCreateView({projectId: this.model.get("id")});
 
-			this.listenTo(scenarioCreateLayout, "scenarioCreate:save", function() {
-					_this.scenarios.fetch({reset: true, data : {projectId: _this.model.get("id")}});
+			this.listenTo(bundleCreateLayout, "bundleCreate:save", function() {
+					_this.bundles.fetch({reset: true, data : {projectId: _this.model.get("id")}});
 					this.onShow();
 				});
 
-			this.listenTo(scenarioCreateLayout, "scenarioCreate:cancel", this.cancelNewScenario)	;
+			this.listenTo(bundleCreateLayout, "bundleCreate:cancel", this.cancelNewBundle)	;
 
 			this.spatialData.close();
-			this.scenarioData.show(scenarioCreateLayout);
+			this.bundleData.show(bundleCreateLayout);
 
 		},
 
@@ -399,9 +400,9 @@ A.data = {};
 
 	});
 
-	A.data.ScenarioCreateView = Backbone.Marionette.Layout.extend({
+	A.data.BundleCreateView = Backbone.Marionette.Layout.extend({
 
-		template: Handlebars.getTemplate('data', 'data-scenario-create-form'),
+		template: Handlebars.getTemplate('data', 'data-bundle-create-form'),
 
 		ui: {
 			name: 			'#name',
@@ -413,9 +414,9 @@ A.data = {};
 		},
 
 		events: {
-		  'click #scenarioSave': 'saveScenarioCreate',
-		  'click #scenarioCancel': 'cancelScenarioCreate',
-		  'change #scenarioType' : 'scenarioTypeChange'
+		  'click #bundleSave': 'saveBundleCreate',
+		  'click #bundleCancel': 'cancelBundleCreate',
+		  'change #bundleType' : 'bundleTypeChange'
 		},
 
 		initialize : function(options) {
@@ -428,36 +429,36 @@ A.data = {};
 
 			var _this = this;
 
-			this.scenarios = new A.models.Scenarios();
+			this.bundles = new A.models.Bundles();
 
-			this.scenarios.fetch({reset: true, data : {projectId: this.projectId}, success: function(collection, response, options){
+			this.bundles.fetch({reset: true, data : {projectId: this.projectId}, success: function(collection, response, options){
 
-				_this.$("#augmentScenarioId").empty();
+				_this.$("#augmentBundleId").empty();
 
-				for(var i in _this.scenarios.models) {
-					_this.$("#augmentScenarioId").append('<option value="' + _this.scenarios.models[i].get("id") + '">' + _this.scenarios.models[i].get("name") + '</option>');
+				for(var i in _this.bundles.models) {
+					_this.$("#augmentBundleId").append('<option value="' + _this.bundles.models[i].get("id") + '">' + _this.bundles.models[i].get("name") + '</option>');
 				}
 
 			}});
 
-			this.$("#augmentScenarioId").hide();
+			this.$("#augmentBundleId").hide();
 		},
 
-		scenarioTypeChange : function(evt) {
+		bundleTypeChange : function(evt) {
 
-			if(this.$('#scenarioType').val() === "augment")
-				this.$("#augmentScenarioId").show();
+			if(this.$('#bundleType').val() === "augment")
+				this.$("#augmentBundleId").show();
 			else
-				this.$("#augmentScenarioId").hide();
+				this.$("#augmentBundleId").hide();
 		},
 
-		cancelScenarioCreate : function(evt) {
+		cancelBundleCreate : function(evt) {
 
-			this.trigger("scenarioCreate:cancel");
+			this.trigger("bundleCreate:cancel");
 
 		},
 
-		saveScenarioCreate : function(evt) {
+		saveBundleCreate : function(evt) {
 
 			evt.preventDefault();
 			var _this = this;
@@ -470,30 +471,30 @@ A.data = {};
 		    })
 
 		    values.projectId = this.projectId;
-		    values.scenarioType = this.$('#scenarioType').val();
+		    values.bundleType = this.$('#bundleType').val();
 
-		    if(values.scenarioType === "augment")
-			values.augmentScenarioId = this.$('#augmentScenarioId').val();
+		    if(values.bundleType === "augment")
+			values.augmentBundleId = this.$('#augmentBundleId').val();
 
-		    var scenario = new A.models.Scenario();
+		    var bundle = new A.models.Bundle();
 
-		    scenario.save(values, { iframe: true,
+		    bundle.save(values, { iframe: true,
 		                              files: this.$('form :file'),
 		                              data: values,
 		                              success: function(){
-		                      				_this.trigger("scenarioCreate:save");
+		                      				_this.trigger("bundleCreate:save");
 		                              }});
 		}
 
 	});
 
 
-	A.data.ScenarioLayout = Marionette.Layout.extend({
+	A.data.BundleLayout = Marionette.Layout.extend({
 
-		template: Handlebars.getTemplate('data', 'data-scenario-layout'),
+		template: Handlebars.getTemplate('data', 'data-bundle-layout'),
 
 		events:  {
-			'click #createScenario' : 'createScenario'
+			'click #createBundle' : 'createBundle'
 		},
 
 		regions: {
@@ -502,26 +503,26 @@ A.data = {};
 
 		onShow : function() {
 
-			var scenarioListLayout = new A.data.ScenarioListView({collection: this.collection});
+			var bundleListLayout = new A.data.BundleListView({collection: this.collection});
 
-			this.main.show(scenarioListLayout);
+			this.main.show(bundleListLayout);
 
 		},
 
-		createScenario : function(evt) {
-			this.trigger("scenarioCreate");
+		createBundle : function(evt) {
+			this.trigger("bundleCreate");
 		}
 
 	});
 
-	A.data.ScenarioListItem = Backbone.Marionette.ItemView.extend({
+	A.data.BundleListItem = Backbone.Marionette.ItemView.extend({
 
-	  template: Handlebars.getTemplate('data', 'data-scenario-list-item'),
+	  template: Handlebars.getTemplate('data', 'data-bundle-list-item'),
 
 	  events: {
 
 	  	'click #deleteItem' : 'deleteItem',
-	  	'click #scenarioCheckbox' : 'clickItem'
+	  	'click #bundleCheckbox' : 'clickItem'
 
 	  },
 
@@ -547,12 +548,12 @@ A.data = {};
 
 	 	var target = $(evt.target);
 
-	  	var scenarioId = target.data("id")
+	  	var bundleId = target.data("id")
 
 	  	if(target.prop("checked"))
-	  		this.trigger("transitShow", {scenarioId : scenarioId});
+	  		this.trigger("transitShow", {bundleId : bundleId});
 	  	else
-	  		this.trigger("transitHide", {scenarioId : scenarioId});
+	  		this.trigger("transitHide", {bundleId : bundleId});
 
 	  },
 
@@ -581,16 +582,16 @@ A.data = {};
 
 	});
 
-	A.data.ScenarioEmptyList = Backbone.Marionette.ItemView.extend({
+	A.data.BundleEmptyList = Backbone.Marionette.ItemView.extend({
 
-		template: Handlebars.getTemplate('data', 'data-scenario-empty-list')
+		template: Handlebars.getTemplate('data', 'data-bundle-empty-list')
 	});
 
-	A.data.ScenarioListView = Backbone.Marionette.CompositeView.extend({
+	A.data.BundleListView = Backbone.Marionette.CompositeView.extend({
 
-		template: Handlebars.getTemplate('data', 'data-scenario-list'),
-		itemView: A.data.ScenarioListItem,
-		emptyView: A.data.ScenarioEmptyList,
+		template: Handlebars.getTemplate('data', 'data-bundle-list'),
+		itemView: A.data.BundleListItem,
+		emptyView: A.data.BundleEmptyList,
 
 		initialize : function() {
 			this.transitOverlays = {};
@@ -607,23 +608,23 @@ A.data = {};
 		},
 
 		appendHtml: function(collectionView, itemView){
-	    	collectionView.$("#scenarioList").append(itemView.el);
+	    	collectionView.$("#bundleList").append(itemView.el);
 	    	this.listenTo(itemView, "transitShow", this.transitShow);
 	    	this.listenTo(itemView, "transitHide", this.transitHide);
 	 	},
 
 	 	transitShow : function(data) {
 
-	 		if(A.map.hasLayer(this.transitOverlays[data.scenarioId]))
-	 			A.map.removeLayer(this.transitOverlays[data.scenarioId ]);
+	 		if(A.map.hasLayer(this.transitOverlays[data.bundleId]))
+	 			A.map.removeLayer(this.transitOverlays[data.bundleId ]);
 
-			this.transitOverlays[data.scenarioId] = L.tileLayer('/tile/transit?z={z}&x={x}&y={y}&scenarioId=' + data.scenarioId).addTo(A.map);
+			this.transitOverlays[data.bundleId] = L.tileLayer('/tile/transit?z={z}&x={x}&y={y}&bundleId=' + data.bundleId).addTo(A.map);
 		},
 
 		transitHide : function(data) {
 
-			if(A.map.hasLayer(this.transitOverlays[data.scenarioId]))
-				A.map.removeLayer(this.transitOverlays[data.scenarioId ]);
+			if(A.map.hasLayer(this.transitOverlays[data.bundleId]))
+				A.map.removeLayer(this.transitOverlays[data.bundleId ]);
 
 		}
 
