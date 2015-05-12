@@ -97,7 +97,7 @@ public class Api extends Controller {
 
 	public static Analyst analyst = new Analyst();
 
-	private static ObjectMapper mapper = new ObjectMapper();
+	static ObjectMapper mapper = new ObjectMapper();
 	
 	static {
 		mapper.registerModule(new JodaModule());
@@ -106,7 +106,7 @@ public class Api extends Controller {
     private static JsonFactory jf = new JsonFactory();
 
 
-    private static String toJson(Object pojo, boolean prettyPrint)
+    static String toJson(Object pojo, boolean prettyPrint)
         throws JsonMappingException, JsonGenerationException, IOException {
 
     	StringWriter sw = new StringWriter();
@@ -371,9 +371,6 @@ public class Api extends Controller {
                 else
                     return notFound();
             }
-            else if(id == "ALL") {
-            	 return ok(Api.toJson(Project.getProjects(), false));
-            }
             else {
 
             	User u = User.getUserByUsername(session().get("username"));
@@ -635,11 +632,11 @@ public class Api extends Controller {
     // **** scenario controllers ****
 
 
-    public static Result getScenarioById(String id) {
-    	return getScenario(id, null);
+    public static Result getBundleById(String id) {
+    	return getBundle(id, null);
     }
 
-    public static Result getScenario(String id, String projectId) {
+    public static Result getBundle(String id, String projectId) {
 
     	try {
 
@@ -660,7 +657,7 @@ public class Api extends Controller {
 
     }
 
-    public static Result createScenario() throws ZipException, IOException {
+    public static Result createBundle() throws ZipException, IOException {
 
     	Http.MultipartFormData body = request().body().asMultipartFormData();
 
@@ -690,7 +687,7 @@ public class Api extends Controller {
         }
     }
 
-    public static Result updateScenario(String id) {
+    public static Result updateBundle(String id) {
 
     	Bundle s;
 
@@ -710,7 +707,7 @@ public class Api extends Controller {
         }
     }
 
-    public static Result deleteScenario(String id) throws IOException {
+    public static Result deleteBundle(String id) throws IOException {
         if(id == null)
             return badRequest();
 
