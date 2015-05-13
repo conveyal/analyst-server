@@ -70,6 +70,14 @@ data-manager.bundle-gtfs-file=Bundle GTFS File
 data-manager.bundle-name=Bundle Name
 data-manager.bundle-description=Bundle Description
 
+data-manager.transport-scenarios=Transport Scenarios
+data-manager.scenarios-description=Transport scenarios represent potential states of a transport network. They refer to a transport bundle, and may contain modifications to that bundle.
+data-manager.no-scenarios=No scenarios
+data-manager.scenario-name=Scenario name
+data-manager.scenario-description=Scenario description
+data-manager.banned-routes=Removed routes
+data-manager.create-scenario=Create scenario
+
 data-manager.upload-shapefile-file=Shapefile (zipped)
 data-manager.upload-shapefile-name=Shapefile Name
 data-manager.upload-shapefile-description=Shapefile Description
@@ -87,18 +95,18 @@ analysis.multi-point=Multi-point Analysis
 
 analysis.primary-indicator=Primary Indicator
 
-analysis.bundle-comparison=Bundle Comparison
+analysis.scenario-comparison=Scenario Comparison
 
-analysis.bundle.no-comparison=No comparison
-analysis.bundle.compare=Compare
+analysis.scenario.no-comparison=No comparison
+analysis.scenario.compare=Compare
 
 analysis.date=Date
 analysis.earliest-departure-time=Earliest departure time
 analysis.latest-departure-time=Latest departure time
 
-analysis.bundle=Bundle
-analysis.bundle-1=Bundle 1
-analysis.bundle-2=Bundle 2
+analysis.scenario=Scenario
+analysis.scenario-1=Scenario 1
+analysis.scenario-2=Scenario 2
 analysis.minutes=Minutes
 
 analysis.show-isochrones=Show Isochrones

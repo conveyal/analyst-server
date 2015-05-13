@@ -128,6 +128,10 @@ var Analyst = Analyst || {};
 				var transportDataPanel = new A.transportData.DataLayout();
 				A.app.main.showSidePanel(transportDataPanel);
 			}
+			else if (this.selectedTab == "transport-scenarios") {
+				var transportScenarioPanel = new A.scenarioData.DataLayout();
+				A.app.main.showSidePanel(transportScenarioPanel);
+			}
 			else if(this.selectedTab == "spatial-data-pointsets") {
 				var pointSetDataPanel = new A.spatialData.PointSetDataLayout();
 				A.app.main.showSidePanel(pointSetDataPanel);
@@ -260,6 +264,7 @@ var Analyst = Analyst || {};
 
 		events : {
 			'click #transportDataTab' : 'clickTransportData',
+			'click #transportScenarioTab' : 'clickTransportScenarios',
 			'click #spatialDataTabShapefilesListItem' : 'clickSpatialDataTabShapefilesListItem',
 			'click #spatialDataTabPointSetsListItem' : 'clickSpatialDataTabPointSetsListItem',
 			'click #analysisTabSinglePoint' : 'clickAnalysisTabSinglePoint',
@@ -304,6 +309,11 @@ var Analyst = Analyst || {};
 			A.app.controller.setTab("transport-data");
 		},
 
+		clickTransportScenarios : function(evt) {
+			evt.preventDefault();
+			A.app.controller.setTab("transport-scenarios");
+		},
+
 		clickSpatialDataTabShapefilesListItem : function(evt) {
 			evt.preventDefault();
 			A.app.controller.setTab("spatial-data-shapefiles");
@@ -346,6 +356,9 @@ var Analyst = Analyst || {};
 						return true;
 					else
 						return false;
+			},
+			transportScenariosActive: function () {
+				return this.activeTab == "transport-scenarios";
 			},
 			spatialDataActive : function () {
 					if(this.activeTab == "spatial-data-shapefiles" || this.activeTab == "spatial-data-pointsets")

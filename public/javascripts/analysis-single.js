@@ -7,9 +7,9 @@ var Analyst = Analyst || {};
 		template: Handlebars.getTemplate('analysis', 'analysis-single-point'),
 
 		events: {
-		  'change #bundleComparison': 'selectComparisonType',
-		  'change #bundle1': 'updateResults',
-		  'change #bundle2': 'updateResults',
+		  'change #scenarioComparison': 'selectComparisonType',
+		  'change #scenario1': 'updateResults',
+		  'change #scenario2': 'updateResults',
 		  'change #shapefile': 'updateResults',
 			'cahnge .timesel': 'updateResults',
 			'change #shapefileColumn': 'updateCharts',
@@ -140,7 +140,7 @@ var Analyst = Analyst || {};
 			this.$('#fromTime').data('DateTimePicker').setDate(new Date(2014, 11, 15, 7, 0, 0));
 			this.$('#toTime')  .data('DateTimePicker').setDate(new Date(2014, 11, 15, 9, 0, 0));
 
-			this.$('#bundle2-controls').hide();
+			this.$('#scenario2-controls').hide();
 
 			if(A.map.tileOverlay && A.map.hasLayer(A.map.tileOverlay))
 		  		A.map.removeLayer(A.map.tileOverlay);
@@ -152,7 +152,7 @@ var Analyst = Analyst || {};
 	  		A.map.on('click', this.onMapClick);
 
 			this.shapefiles = new A.models.Shapefiles();
-			this.bundles = new A.models.Bundles();
+			this.scenarios = new A.models.Scenarios();
 
 			this.timeSlider = this.$('#timeSlider1').slider({
 					formater: function(value) {
@@ -212,15 +212,15 @@ var Analyst = Analyst || {};
 				_this.updateAttributes();
 			});
 
-			this.bundles.fetch({reset: true, data : {projectId: A.app.selectedProject}, success: function(collection, response, options){
+			this.scenarios.fetch({reset: true, data : {projectId: A.app.selectedProject}, success: function(collection, response, options){
 
-				_this.$(".bundle-list").empty();
+				_this.$(".scenario-list").empty();
 
-				for(var i in _this.bundles.models) {
-					if(_this.bundles.models[i].get("id") == "default")
-						_this.$(".bundle-list").append('<option selected value="' + _this.bundles.models[i].get("id") + '">' + _this.bundles.models[i].get("name") + '</option>');
+				for(var i in _this.scenarios.models) {
+					if(_this.scenarios.models[i].get("id") == "default")
+						_this.$(".scenario-list").append('<option selected value="' + _this.scenarios.models[i].get("id") + '">' + _this.scenarios.models[i].get("name") + '</option>');
 					else
-						_this.$(".bundle-list").append('<option value="' + _this.bundles.models[i].get("id") + '">' + _this.bundles.models[i].get("name") + '</option>');
+						_this.$(".scenario-list").append('<option value="' + _this.scenarios.models[i].get("id") + '">' + _this.scenarios.models[i].get("name") + '</option>');
 
 				}
 
@@ -292,8 +292,8 @@ var Analyst = Analyst || {};
 		  	this.barChart1 = false;
 		  	this.barChart2 = false;
 
-		  	this.bundle1Data = false;
-		  	this.bundle2Data = false;
+		  	this.scenario1Data = false;
+		  	this.scenario2Data = false;
 
 		  	if(this.comparisonType == 'compare') {
 		  		this.$('#comparisonChart').show();
@@ -310,8 +310,8 @@ var Analyst = Analyst || {};
 		  	var bikeSpeed = (this.bikeSpeedSlider.getValue() * 1000 / 60 / 60 );
 		  	var walkSpeed = (this.walkSpeedSlider.getValue() * 1000 / 60 / 60 );
 
- 			this.graphId1 = this.$('#bundle1').val();
-			this.graphId2 = this.$('#bundle2').val();
+ 			this.graphId1 = this.$('#scenario1').val();
+			this.graphId2 = this.$('#scenario2').val();
 
 			var _this = this;
 
@@ -394,9 +394,9 @@ var Analyst = Analyst || {};
 					contentType: 'application/json',
 					method: 'post',
 					success: function (data) {
-					_this.bundle1Data = data;
+					_this.scenario1Data = data;
 
-		  	  if(_this.comparisonType == 'no-comparison' || !_this.comparisonType || _this.bundle2Data) {
+		  	  if(_this.comparisonType == 'no-comparison' || !_this.comparisonType || _this.scenario2Data) {
 						_this.updateMap();
 						_this.updateCharts();
 						_this.$('#queryResults').show();
@@ -415,9 +415,9 @@ var Analyst = Analyst || {};
 						contentType: 'application/json',
 						method: 'post',
 						success: function (data) {
-							_this.bundle2Data = data;
+							_this.scenario2Data = data;
 
-							if(_this.bundle1Data) {
+							if(_this.scenario1Data) {
 								_this.updateMap();
 								_this.updateCharts();
 								_this.$('#queryResults').show();
@@ -436,10 +436,10 @@ var Analyst = Analyst || {};
 			var categoryId = this.shapefiles.get(this.$("#shapefile").val()).get('categoryId');
 			var attributeId = this.$('#shapefileColumn').val()
 
-			if (this.bundle2Data) {
-				this.drawChart(categoryId + '.' + attributeId, this.bundle1Data, this.bundle2Data);
+			if (this.scenario2Data) {
+				this.drawChart(categoryId + '.' + attributeId, this.scenario1Data, this.scenario2Data);
 			} else {
-				this.drawChart(categoryId + '.' + attributeId, this.bundle1Data);
+				this.drawChart(categoryId + '.' + attributeId, this.scenario1Data);
 			}
 		},
 
@@ -448,36 +448,36 @@ var Analyst = Analyst || {};
 
 			var showTransit =  this.$('#showTransit').prop('checked');
 
-			this.comparisonType = this.$('.bundle-comparison').val();
+			this.comparisonType = this.$('.scenario-comparison').val();
 
 			if(showTransit) {
 				if(this.comparisonType == 'compare') {
 
-					var bundleId1 = this.$('#bundle1').val();
+					var scenarioId1 = this.$('#scenario1').val();
 
-					if(A.map.hasLayer(this.transitOverlays[bundleId1]))
-			 			A.map.removeLayer(this.transitOverlays[bundleId1]);
+					if(A.map.hasLayer(this.transitOverlays[scenarioId1]))
+			 			A.map.removeLayer(this.transitOverlays[scenarioId1]);
 
-					this.transitOverlays[bundleId1] = L.tileLayer('/tile/transit?z={z}&x={x}&y={y}&bundleId=' + bundleId1).addTo(A.map);
+					this.transitOverlays[scenarioId1] = L.tileLayer('/tile/transit?z={z}&x={x}&y={y}&scenarioId=' + scenarioId1).addTo(A.map);
 
-					var bundleId2 = this.$('#bundle2').val();
+					var scenarioId2 = this.$('#scenario2').val();
 
-					var compareKey = bundleId1 + "_ " + bundleId2;
+					var compareKey = scenarioId1 + "_ " + scenarioId2;
 
 					if(A.map.hasLayer(this.transitOverlays[compareKey]))
 			 			A.map.removeLayer(this.transitOverlays[compareKey]);
 
-					this.transitOverlays[compareKey] = L.tileLayer('/tile/transitComparison?z={z}&x={x}&y={y}&bundleId1=' + bundleId1 + '&bundleId2=' + bundleId2).addTo(A.map);
+					this.transitOverlays[compareKey] = L.tileLayer('/tile/transitComparison?z={z}&x={x}&y={y}&scenarioId1=' + scenarioId1 + '&scenarioId2=' + scenarioId2).addTo(A.map);
 
 				}
 				else {
 
-					var bundleId = this.$('#bundle1').val();
+					var scenarioId = this.$('#scenario1').val();
 
-					if(A.map.hasLayer(this.transitOverlays[bundleId]))
-			 			A.map.removeLayer(this.transitOverlays[bundleId]);
+					if(A.map.hasLayer(this.transitOverlays[scenarioId]))
+			 			A.map.removeLayer(this.transitOverlays[scenarioId]);
 
-					this.transitOverlays[bundleId] = L.tileLayer('/tile/transit?z={z}&x={x}&y={y}&bundleId=' + bundleId).addTo(A.map);
+					this.transitOverlays[scenarioId] = L.tileLayer('/tile/transit?z={z}&x={x}&y={y}&scenarioId=' + scenarioId).addTo(A.map);
 
 				}
 			}
@@ -490,7 +490,7 @@ var Analyst = Analyst || {};
 
 			}
 
-			if(!(this.bundle1Data && (this.bundle2Data || this.comparisonType != 'compare')))
+			if(!(this.scenario1Data && (this.scenario2Data || this.comparisonType != 'compare')))
 				return;
 
 			$('#results1').hide();
@@ -504,18 +504,18 @@ var Analyst = Analyst || {};
 
 			if(this.comparisonType == 'compare') {
 
-				if(!this.bundle1Data || !this.bundle2Data)
+				if(!this.scenario1Data || !this.scenario2Data)
 					return;
 
 				if(A.map.tileOverlay && A.map.hasLayer(A.map.tileOverlay))
 		  			A.map.removeLayer(A.map.tileOverlay);
 
-				var tileUrl = '/tile/single/' + this.bundle1Data.key + '/' + this.bundle2Data.key + '/{z}/{x}/{y}.png' +
+				var tileUrl = '/tile/single/' + this.scenario1Data.key + '/' + this.scenario2Data.key + '/{z}/{x}/{y}.png' +
 					'?showIso=' + showIso +
 					'&showPoints=' +  showPoints + '&timeLimit=' + timeLimit +
 					'&which=' + which;
 
-			  var utfUrl = '/tile/single/' + this.bundle1Data.key + '/' + this.bundle2Data.key + '/{z}/{x}/{y}.json' +
+			  var utfUrl = '/tile/single/' + this.scenario1Data.key + '/' + this.scenario2Data.key + '/{z}/{x}/{y}.json' +
 					'?showIso=' + showIso +
 					'&showPoints=' +  showPoints + '&timeLimit=' + timeLimit +
 					'&which=' + which;
@@ -569,7 +569,7 @@ var Analyst = Analyst || {};
 				if(A.map.tileOverlay && A.map.hasLayer(A.map.tileOverlay))
 		  			A.map.removeLayer(A.map.tileOverlay);
 
-				A.map.tileOverlay = L.tileLayer('/tile/single/' + this.bundle1Data.key + '/{z}/{x}/{y}.png?showIso=' + showIso +
+				A.map.tileOverlay = L.tileLayer('/tile/single/' + this.scenario1Data.key + '/{z}/{x}/{y}.png?showIso=' + showIso +
 					'&showPoints=' +  showPoints + '&timeLimit=' + timeLimit + '&which=' + which, {})
 					.addTo(A.map);
 
@@ -587,10 +587,10 @@ var Analyst = Analyst || {};
 			var which = this.$('input[name="which"]:checked').val();
 
 
-			if (this.bundle2Data)
-				window.location.href = '/gis/singleComparison?key1=' + this.bundle1Data.key + '&key2' + this.bundle2Data.key + '&which=' + which;
+			if (this.scenario2Data)
+				window.location.href = '/gis/singleComparison?key1=' + this.scenario1Data.key + '&key2' + this.scenario2Data.key + '&which=' + which;
 			else
-				window.location.href = '/gis/single?key=' + this.bundle1Data.key + '&which=' + which + '&timeLimit=';
+				window.location.href = '/gis/single?key=' + this.scenario1Data.key + '&which=' + which + '&timeLimit=';
 
 		},
 
@@ -637,7 +637,7 @@ var Analyst = Analyst || {};
 						.text(window.Messages('analysis.graph-mouseover', d.minute, fmt(d.worstCase), fmt(d.pointEstimate), fmt(d.bestCase)));
 				},
 				show_rollover_text: false,
-				legend: [window.Messages('analysis.bundle-1'), window.Messages('analysis.bundle-2')],
+				legend: [window.Messages('analysis.scenario-1'), window.Messages('analysis.scenario-2')],
 				legend_target: '#chartLegend'
 			});
 		},
@@ -720,13 +720,13 @@ var Analyst = Analyst || {};
 
       	selectComparisonType : function(evt) {
 
-			this.comparisonType = this.$('#bundleComparison').val();
+			this.comparisonType = this.$('#scenarioComparison').val();
 
 			if(this.comparisonType == 'compare') {
-				$('#bundle2-controls').show();
+				$('#scenario2-controls').show();
 			}
 			else {
-				$('#bundle2-controls').hide();
+				$('#scenario2-controls').hide();
 			}
 
 			this.updateResults();

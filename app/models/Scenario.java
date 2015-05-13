@@ -32,6 +32,12 @@ public class Scenario implements Serializable {
 	/** The ID of this scenario */
 	public String id;
 	
+	/** The name of this scenario */
+	public String name;
+	
+	/** The description of this scenario */
+	public String description;
+	
 	/** The project that this scenario is associated with */
 	
 	/** A list of banned routes */

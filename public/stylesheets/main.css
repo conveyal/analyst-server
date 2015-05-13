@@ -8,7 +8,8 @@ html, body,  #app, #app-map,#app-body {
 }
 
 #app-side-panel {
-	z-index: 2000;
+  /* z-index needs to be relatively small so it stays behind the select2 popup menu */
+	z-index: 100;
 	position: fixed;
 	bottom: 10px;
 	right: 10px;

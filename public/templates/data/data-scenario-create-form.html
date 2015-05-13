@@ -1,0 +1,40 @@
+<div class="pannel-header">
+     <span class="glyphicon glyphicon-road"></span> {{I18n "data-manager.create-scenario"}}
+</div>
+
+<div id="main" style="padding: 10px;">
+<form>
+
+    <div class="form-group">
+         <p>
+              {{I18n "data-manager.scenarios-description"}}
+         </p>
+
+      <select id="bundleId" class="form-control">
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>
+        {{I18n "data-manager.scenario-name"}}
+      </label>
+      <input id="name" name="name" type="text" class="form-control"/>
+    </div>
+    <div class="form-group">
+      <label>
+        {{I18n "data-manager.scenario-description"}}
+      </label>
+      <input id="description" name="description" type='text' class="form-control"/>
+    </div>
+
+    <!-- banned routes selector -->
+    <div class="form-group">
+      <label for="bannedRoutes">{{I18n "data-manager.banned-routes"}}</label>
+      <select id="bannedRoutes" multiple style="width: 400px">
+      </select>
+    </div>
+
+<button id="scenarioSave" type="button" class="save btn btn-primary">{{I18n "app.shared.create"}}</button> <button type="button" id="scenarioCancel" class="cancel btn btn-default">{{I18n "app.shared.cancel"}}</button>
+</form>
+
+</div>

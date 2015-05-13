@@ -421,11 +421,14 @@ public class Bundle implements Serializable {
 			this.feed = feedName;
 		}
 		
-		public final String shortName;
-		public final String longName;
-		public final String id;
-		public final String agencyId;
-		public final String feed;
+		/** Constructor for JSON deserialization, etc. */
+		public RouteSummary() { }
+		
+		public String shortName;
+		public String longName;
+		public String id;
+		public String agencyId;
+		public String feed;
 	}
 	
 }

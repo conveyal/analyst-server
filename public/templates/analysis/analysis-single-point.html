@@ -108,23 +108,23 @@
          </div>
 
       	<div class="form-group">
-           <label>{{I18n "analysis.bundle-comparison"}}</label>
-      		<select id="bundleComparison" class="bundle-comparison form-control">
-      		  <option value="compare" {{#if compare}}selected{{/if}}>{{I18n "analysis.bundle.compare"}}</option>
-      		  <option value="no-comparison" selected{{#if noComparison}}selected{{/if}}>{{I18n "analysis.bundle.no-comparison"}}</option>
+           <label>{{I18n "analysis.scenario-comparison"}}</label>
+      		<select id="scenarioComparison" class="scenario-comparison form-control">
+      		  <option value="compare" {{#if compare}}selected{{/if}}>{{I18n "analysis.scenario.compare"}}</option>
+      		  <option value="no-comparison" selected{{#if noComparison}}selected{{/if}}>{{I18n "analysis.scenario.no-comparison"}}</option>
       		</select>
       	</div>
 
       	<div class="form-group">
-           <label for="bundle1">{{I18n "analysis.bundle-1"}}</label>
-      		<select id="bundle1" class="bundle-list form-control">
+           <label for="scenario1">{{I18n "analysis.scenario-1"}}</label>
+      		<select id="scenario1" class="scenario-list form-control">
       		</select>
         </div>
 
-      	<div id="bundle2-controls">
+      	<div id="scenario2-controls">
       		<div class="form-group">
-           		<label for="bundle2">{{I18n "analysis.bundle-2"}}</label>
-      			<select id="bundle2" class="bundle-list form-control">
+           		<label for="scenario2">{{I18n "analysis.scenario-2"}}</label>
+      			<select id="scenario2" class="scenario-list form-control">
       			</select>
           </div>
       	</div>
@@ -156,7 +156,7 @@
 
         <div id="queryResults">
 
-          <h5>Bundle 1</h5>
+          <h5>Scenario 1</h5>
           <div id="chart"></div>
           <div id="chartLegend"></div>
 
@@ -182,17 +182,17 @@
 
               <div class="legend-item">
                 <div class="colorbox" style="background-color:#e5b234;"></div>
-                <div class="legend-item-text">Bundle 2 No Change</div>
+                <div class="legend-item-text">Scenario 2 No Change</div>
               </div>
               <br clear="all"/>
               <div class="legend-item">
                 <div class="colorbox" style="background-color:#cc00cc;"></div>
-                <div class="legend-item-text">Bundle 2 New Coverage</div>
+                <div class="legend-item-text">Scenario 2 New Coverage</div>
               </div>
               <br clear="all"/>
               <div class="legend-item">
                 <div class="colorbox" style="background-color:#0000cc;"></div>
-                <div class="legend-item-text">Bundle 2 Faster</div>
+                <div class="legend-item-text">Scenario 2 Faster</div>
               </div>
               <br clear="all"/>
               <div class="legend-item">
