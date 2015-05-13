@@ -7,6 +7,12 @@
 # If you deploy your application to several instances be sure to use the same key!
 application.secret="cAb`]/Ynfo55ehWX:6gv^>gtsNn`:Wg?xSBojvieIDf1dNLAT>kOSEBYIQsbO2K@"
 
+# If set to true, unauthenticated users will be able to run single-point jobs via the API
+# (they will need to know the IDs of bundles, however, which can only be accessed by logging in)
+# The UI and the rest of the API remains authenticated.
+# This is useful e.g. for building frontend apps with Analyst.js
+api.allow-unauthenticated-access=false
+
 # Path for data files
 application.data=data/
 

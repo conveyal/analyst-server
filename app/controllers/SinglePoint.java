@@ -41,13 +41,13 @@ import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.TraverseModeSet;
 import org.opentripplanner.routing.request.BannedStopSet;
 
+import play.Play;
 import play.libs.F;
 import play.libs.F.Function;
 import play.libs.Json;
 import play.mvc.Controller;
 import play.mvc.Result;
 import play.mvc.Security;
-
 import utils.Cluster;
 import utils.ResultEnvelope;
 import utils.ResultEnvelope.Which;
@@ -66,7 +66,6 @@ import static utils.PromiseUtils.resolveNow;
 /**
  * Controllers for getting result sets used in single point mode.
  */
-@Security.Authenticated(Secured.class)
 public class SinglePoint extends Controller {
     // cache the result envelopes. 250MB in-memory cache.
     // this doesn't need to be very large; it needs only to store as many result envelopes as there are expected to be
@@ -84,6 +83,11 @@ public class SinglePoint extends Controller {
     
     /** Create a result from a JSON-ified OneToMany[Profile]Request. */
     public static F.Promise<Result> result () throws JsonProcessingException {
+    	if (session().get("username") == null &&
+    			Play.application().configuration().getBoolean("api.allow-unauthenticated-access") != true)
+    		return F.Promise.pure((Result) unauthorized());
+    		
+    	
     	// deserialize a result
     	// figure out if it's profile or not
     	

@@ -61,15 +61,15 @@ POST          /api/query/                         controllers.Api.createQuery()
 PUT           /api/query/:id                      controllers.Api.updateQuery(id:String)
 DELETE        /api/query/:id                      controllers.Api.deleteQuery(id:String)
 
-GET           /tile/shapefile                     controllers.Tiles.shape(shapefileId:String, x:Integer, y:Integer, z:Integer, attributeName:String ?= null)
+GET           /tile/shapefile                     controllers.TilesImpl.shape(shapefileId:String, x:Integer, y:Integer, z:Integer, attributeName:String ?= null)
 
-GET     /tile/spatial                  	controllers.Tiles.spatial(shapefileId:String, x:Integer, y:Integer, z:Integer, selectedAttributes:String	)
-GET     /tile/single/:key1/:key2/:z/:x/:y.:format controllers.Tiles.surfaceComparison(key1:String, key2:String, which:String, x:Integer, y:Integer, z:Integer, showIso:Boolean ?= false, showPoints:Boolean ?= true, timeLimit:Integer ?= 3600, format:String)
-GET     /tile/single/:key/:z/:x/:y.png   controllers.Tiles.surface(key:String, which:String, x:Integer, y:Integer, z:Integer, showIso:Boolean ?= false, showPoints:Boolean ?= true, timeLimit:Integer ?= 3600)
-GET     /tile/query	                    controllers.Tiles.query(queryId:String, x:Integer, y:Integer, z:Integer, timeLimit:Integer ?= 3600, weightByShapefile:String ?= null, weightByAttribute:String ?= null, groupBy:String ?= null, which: String, attributeName:String, compareTo:String ?= null)
+GET     /tile/spatial                  	controllers.TilesImpl.spatial(shapefileId:String, x:Integer, y:Integer, z:Integer, selectedAttributes:String	)
+GET     /tile/single/:key1/:key2/:z/:x/:y.:format controllers.SinglePointTiles.surfaceComparison(key1:String, key2:String, which:String, x:Integer, y:Integer, z:Integer, showIso:Boolean ?= false, showPoints:Boolean ?= true, timeLimit:Integer ?= 3600, format:String)
+GET     /tile/single/:key/:z/:x/:y.png   controllers.SinglePointTiles.surface(key:String, which:String, x:Integer, y:Integer, z:Integer, showIso:Boolean ?= false, showPoints:Boolean ?= true, timeLimit:Integer ?= 3600)
+GET     /tile/query	                    controllers.TilesImpl.query(queryId:String, x:Integer, y:Integer, z:Integer, timeLimit:Integer ?= 3600, weightByShapefile:String ?= null, weightByAttribute:String ?= null, groupBy:String ?= null, which: String, attributeName:String, compareTo:String ?= null)
 
-GET           /tile/transit                       controllers.Tiles.transit(bundleId:String, x:Integer, y:Integer, z:Integer)
-GET           /tile/transitComparison             controllers.Tiles.transitComparison(bundleId1:String, bundleId2:String, x:Integer, y:Integer, z:Integer)
+GET           /tile/transit                       controllers.TilesImpl.transit(bundleId:String, x:Integer, y:Integer, z:Integer)
+GET           /tile/transitComparison             controllers.TilesImpl.transitComparison(bundleId1:String, bundleId2:String, x:Integer, y:Integer, z:Integer)
 
 GET     /gis/query	                    controllers.Gis.query(queryId:String, timeLimit:Integer ?= 3600, weightByShapefile:String ?= null, weightByAttribute:String ?= null, groupBy:String ?= null, which: String, attributeName: String, compareTo:String ?= null)
 GET     /gis/single                     controllers.Gis.result(key:String, which:String)
