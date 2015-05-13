@@ -114,7 +114,7 @@ var Analyst = Analyst || {};
 			mode: null,
 			shapefileId: null,
 			attributeName: null,
-			bundleId: null,
+			scenarioId: null,
 			status: null,
 			totalPoints: null,
 			completePoints: null,

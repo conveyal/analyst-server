@@ -245,9 +245,7 @@ public class Query implements Serializable {
 				ActorRef executive = Cluster.getExecutive();
 				
 				JobSpec js;
-				
-				String pointSetId = sl.id + ".json";
-				
+								
 				q.totalPoints = sl.getFeatureCount();
 				q.completePoints = 0;
 				
@@ -271,13 +269,13 @@ public class Query implements Serializable {
 					
 					// the pointset is already in the cluster cache, from when it was uploaded.
 					// every pointset has all shapefile attributes.
-					js = new JobSpec(graphId, pointSetId, pointSetId, pr);
+					js = new JobSpec(graphId, sl.id, sl.id, pr);
 				}
 				else {
 					// this is not a transit request, no need for computationally-intensive profile routing 
 					Bundle s = Bundle.getBundle(q.scenarioId);
 					RoutingRequest rr = Api.analyst.buildRequest(q.scenarioId, q.date, q.fromTime, null, q.mode, 120, DateTimeZone.forID(s.timeZone));
-					js = new JobSpec(graphId, pointSetId, pointSetId, rr);
+					js = new JobSpec(graphId, sl.id, sl.id, rr);
 				}
 
 				// plus a callback that registers how many work items have returned
