@@ -248,7 +248,8 @@ var Analyst = Analyst || {};
 
     events: {
       'click .deleteScenario': 'deleteScenario',
-      'click .editScenario': 'editScenario'
+      'click .editScenario': 'editScenario',
+      'click .duplicateScenario': 'duplicateScenario'
     },
 
     deleteScenario: function(evt) {
@@ -260,6 +261,17 @@ var Analyst = Analyst || {};
       // children to parents in compositeview . . .
       // also context is not preserved so pass the model along.
       this.model.trigger('scenarioEdit', this.model);
+    },
+
+    duplicateScenario: function (evt) {
+      var newScenario = new A.models.Scenario();
+      newScenario.set(_.omit(this.model.toJSON(), 'id'));
+      newScenario.set('name', newScenario.get('name') + " (copy)");
+
+      var _this = this;
+      newScenario.save().done(function () {
+        _this.model.collection.fetch();
+      });
     },
 
     onRender: function() {

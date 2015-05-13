@@ -8,6 +8,9 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+
+import models.Bundle.RouteSummary;
 
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
@@ -45,6 +48,8 @@ import com.conveyal.otpac.standalone.StandaloneExecutive;
 import com.conveyal.otpac.standalone.StandaloneWorker;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
 import com.vividsolutions.jts.geom.Geometry;
 
 import controllers.Api;
@@ -246,18 +251,33 @@ public class Query implements Serializable {
 				q.totalPoints = sl.getFeatureCount();
 				q.completePoints = 0;
 				
+				Scenario scenario = Scenario.getScenario(q.scenarioId);
+				String graphId = scenario.bundleId;
+				
 				if (q.isTransit()) {
 					// create a profile request
 					ProfileRequest pr = Api.analyst.buildProfileRequest(q.mode, q.date, q.fromTime, q.toTime, 0, 0);
+					
+					Collection<String> bannedRoutes =
+							Collections2.transform(scenario.bannedRoutes, new Function<RouteSummary, String> () {
+
+								@Override
+								public String apply(RouteSummary route) {
+									return String.format(Locale.US, "%s_%s", route.agencyId, route.id);
+								}
+							});
+					
+					pr.bannedRoutes = new ArrayList<String>(bannedRoutes);
+					
 					// the pointset is already in the cluster cache, from when it was uploaded.
 					// every pointset has all shapefile attributes.
-					js = new JobSpec(q.scenarioId, pointSetId, pointSetId, pr);
+					js = new JobSpec(graphId, pointSetId, pointSetId, pr);
 				}
 				else {
 					// this is not a transit request, no need for computationally-intensive profile routing 
 					Bundle s = Bundle.getBundle(q.scenarioId);
 					RoutingRequest rr = Api.analyst.buildRequest(q.scenarioId, q.date, q.fromTime, null, q.mode, 120, DateTimeZone.forID(s.timeZone));
-					js = new JobSpec(q.scenarioId, pointSetId, pointSetId, rr);
+					js = new JobSpec(graphId, pointSetId, pointSetId, rr);
 				}
 
 				// plus a callback that registers how many work items have returned

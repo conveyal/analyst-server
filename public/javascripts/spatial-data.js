@@ -87,7 +87,7 @@ A.spatialData = {};
 		onShow : function() {
 
 			var _this = this;
-			this.shapefileListView = new A.spatialData.ShapefileSelectListView({projectId: this.projectId});
+			this.shapefileListView = new A.spatialData.ShapefileListView({projectId: this.projectId});
 
 			this.shapefileSelect.show(this.shapefileListView);
 		},

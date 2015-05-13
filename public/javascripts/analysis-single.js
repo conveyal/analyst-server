@@ -310,8 +310,8 @@ var Analyst = Analyst || {};
 		  	var bikeSpeed = (this.bikeSpeedSlider.getValue() * 1000 / 60 / 60 );
 		  	var walkSpeed = (this.walkSpeedSlider.getValue() * 1000 / 60 / 60 );
 
- 			this.graphId1 = this.$('#scenario1').val();
-			this.graphId2 = this.$('#scenario2').val();
+ 			this.scenario1 = this.scenarios.get(this.$('#scenario1').val());
+			this.scenario2 = this.scenarios.get(this.$('#scenario2').val());
 
 			var _this = this;
 
@@ -336,9 +336,13 @@ var Analyst = Analyst || {};
 			// TODO probably not the best place for a bunch of defaults
 			var params = {
 				destinationPointsetId: this.$('#shapefile').val(),
-				graphId: this.graphId1,
+				graphId: this.scenario1.get('bundleId'),
 				profile:  this.$('input.profile:checked').val() == "true",
 			};
+
+			var bannedRoutes1 = _.map(this.scenario1.get('bannedRoutes'), function (route) {
+				return route.agencyId + "_" + route.id;
+			});
 
 			if (params.profile) {
 				params.options = {
@@ -364,7 +368,8 @@ var Analyst = Analyst || {};
 					analyst: true,
 					bikeSafe: 1,
 					bikeSlope: 1,
-					bikeTime: 1
+					bikeTime: 1,
+					bannedRoutes: bannedRoutes1
 				}
 			} else {
 				var date = this.$('#date').data('DateTimePicker').getDate();
@@ -407,7 +412,14 @@ var Analyst = Analyst || {};
 
 		    if (this.comparisonType == 'compare') {
 					// ok to be destructive - we've already stringified the request
-					params.graphId = this.graphId2;
+					params.graphId = this.scenario2.get('bundleId');
+
+					// TODO banned routes only supported in profile mode
+					if (params.profile) {
+						params.options.bannedRoutes = _.map(this.scenario2.get('bannedRoutes'), function (route) {
+							return route.agencyId + "_" + route.id;
+						});
+					}
 
 					$.ajax({
 						url: '/api/single',
