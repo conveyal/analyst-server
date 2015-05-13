@@ -46,7 +46,7 @@ public class ScenarioController extends Controller {
 	public static Result update (String id) throws JsonParseException, JsonMappingException, IOException {
 		Scenario s = Api.mapper.readValue(request().body().asJson().traverse(), Scenario.class);
 		
-		if (s.id == null || s.id.equals(id))
+		if (s.id == null || !s.id.equals(id))
 			return badRequest();
 		
 		if (!s.exists())

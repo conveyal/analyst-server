@@ -35,7 +35,11 @@ var Analyst = Analyst || {};
       this.scenarioData.show(this.scenarioLayout);
       this.scenarioLayout.on('scenarioCreate', function () {
         _this.createScenario();
-      })
+      });
+
+      this.scenarios.on('scenarioEdit', function (model) {
+        _this.editScenario(model);
+      });
 
     },
 
@@ -50,11 +54,12 @@ var Analyst = Analyst || {};
 
       var _this = this;
 
-      var scenarioCreateLayout = new A.scenarioData.ScenarioCreateView({
-        projectId: A.app.selectedProject
+      var scenarioEditLayout = new A.scenarioData.ScenarioEditLayout({
+        projectId: A.app.selectedProject,
+        model: new A.models.Scenario()
       });
 
-      this.listenTo(scenarioCreateLayout, "scenarioCreate:save", function() {
+      this.listenTo(scenarioEditLayout, "scenarioEdit:save", function() {
         _this.scenarios.fetch({
           reset: true,
           data: {
@@ -64,15 +69,37 @@ var Analyst = Analyst || {};
         this.onShow();
       });
 
-      this.listenTo(scenarioCreateLayout, "scenarioCreate:cancel", this.cancelNewScenario);
+      this.listenTo(scenarioEditLayout, "scenarioEdit:cancel", this.cancelNewScenario);
 
-      this.scenarioData.show(scenarioCreateLayout);
+      this.scenarioData.show(scenarioEditLayout);
 
     },
 
+    editScenario: function (model) {
+      var _this = this;
+
+      var scenarioEditLayout = new A.scenarioData.ScenarioEditLayout({
+        projectId: A.app.selectedProject,
+        model: model
+      });
+
+      this.listenTo(scenarioEditLayout, "scenarioEdit:save", function() {
+        _this.scenarios.fetch({
+          reset: true,
+          data: {
+            projectId: A.app.selectedProject
+          }
+        });
+        this.onShow();
+      });
+
+      this.listenTo(scenarioEditLayout, "scenarioEdit:cancel", this.cancelNewScenario);
+
+      this.scenarioData.show(scenarioEditLayout);
+    }
   });
 
-  A.scenarioData.ScenarioCreateView = Backbone.Marionette.Layout.extend({
+  A.scenarioData.ScenarioEditLayout = Backbone.Marionette.Layout.extend({
 
     template: Handlebars.getTemplate('data', 'data-scenario-create-form'),
 
@@ -86,8 +113,8 @@ var Analyst = Analyst || {};
     },
 
     events: {
-      'click #scenarioSave': 'saveScenarioCreate',
-      'click #scenarioCancel': 'cancelScenarioCreate',
+      'click #scenarioSave': 'saveScenarioEdit',
+      'click #scenarioCancel': 'cancelScenarioEdit',
       'change #bundleId': 'bundleChange'
     },
 
@@ -111,18 +138,19 @@ var Analyst = Analyst || {};
           _this.$("#bundleId").empty();
 
           _this.bundles.each(function(bundle) {
-            $('<option/>')
+            var opt = $('<option/>')
               .attr('value', bundle.id)
-              .text(bundle.get('name'))
-              .appendTo(_this.$('#bundleId'));
+              .text(bundle.get('name'));
+
+            if (bundle.id == _this.model.get('bundleId'))
+              opt.attr('selected', 'selected');
+
+            opt.appendTo(_this.$('#bundleId'));
           });
 
           _this.bundleChange();
-
         }
       });
-
-      $('#bannedRoutes').select2();
     },
 
     bundleChange: function () {
@@ -131,20 +159,30 @@ var Analyst = Analyst || {};
       var _this = this;
 
       _.each(this.bundles.get(this.$('#bundleId').val()).get('routes'), function (route, i) {
-        $('<option/>')
+        var opt = $('<option/>')
           .text(route.shortName + ' ' + route.longName)
           // use index in routes list as value because the value in the banned routes list is
           // the entire json block
-          .attr('value', i)
-          .appendTo(_this.$('#bannedRoutes'));
+          .attr('value', i);
+
+          // if some are already selected fill them in
+          if (_this.$('#bundleId').val() == _this.model.get('bundleId')) {
+            if (_.findWhere(_this.model.get('bannedRoutes'), {agencyId: route.agencyId, id: route.id})) {
+              opt.attr('selected', 'selected');
+            }
+          }
+
+          opt.appendTo(_this.$('#bannedRoutes'));
       });
+
+      _this.$('#bannedRoutes').select2();
     },
 
-    cancelScenarioCreate: function(evt) {
-      this.trigger("scenarioCreate:cancel");
+    cancelScenarioEdit: function(evt) {
+      this.trigger("scenarioEdit:cancel");
     },
 
-    saveScenarioCreate: function(evt) {
+    saveScenarioEdit: function(evt) {
 
       evt.preventDefault();
       var _this = this;
@@ -153,9 +191,7 @@ var Analyst = Analyst || {};
         event.preventDefault();
       }
 
-      var scenario = new A.models.Scenario();
-
-      scenario.set({
+      this.model.set({
         projectId: this.projectId,
         bundleId: this.$('#bundleId').val(),
         name: this.$('#name').val(),
@@ -165,15 +201,15 @@ var Analyst = Analyst || {};
       // figure out the banned routes
       // route indices are the form values
       var bannedRoutes = [];
-      var routes = this.bundles.get(scenario.get('bundleId')).get('routes');
+      var routes = this.bundles.get(this.model.get('bundleId')).get('routes');
       _.each(this.$('#bannedRoutes').val(), function (routeIdx) {
         bannedRoutes.push(routes[Number(routeIdx)]);
       });
 
-      scenario.set('bannedRoutes', bannedRoutes);
+      this.model.set('bannedRoutes', bannedRoutes);
 
-      scenario.save().done(function () {
-        _this.trigger("scenarioCreate:save");
+      this.model.save().done(function () {
+        _this.trigger("scenarioEdit:save");
       });
     }
   });
@@ -211,20 +247,19 @@ var Analyst = Analyst || {};
     template: Handlebars.getTemplate('data', 'data-scenario-list-item'),
 
     events: {
-      'click #deleteScenario': 'deleteScenario'
+      'click .deleteScenario': 'deleteScenario',
+      'click .editScenario': 'editScenario'
     },
 
     deleteScenario: function(evt) {
       this.model.destroy();
     },
 
-    templateHelpers: {
-      built: function() {
-        if (this.model.get('status') === "BUILT")
-          return true;
-        else
-          return false;
-      }
+    editScenario: function (evt) {
+      // kind of ugly to trigger this on the model but there is a wall against bubbling from
+      // children to parents in compositeview . . .
+      // also context is not preserved so pass the model along.
+      this.model.trigger('scenarioEdit', this.model);
     },
 
     onRender: function() {
