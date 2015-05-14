@@ -22,7 +22,8 @@ var Analyst = Analyst || {};
 		  'click .mode-selector' : 'updateResults',
 			'change .profile': 'updateResults',
 			'click #showSettings' : 'showSettings',
-			'click #downloadGis' : 'downloadGis'
+			'click #downloadGis' : 'downloadGis',
+			'click #downloadCsv' : 'downloadCsv'
 		},
 
 		regions: {
@@ -450,8 +451,10 @@ var Analyst = Analyst || {};
 
 			if (this.scenario2Data) {
 				this.drawChart(categoryId + '.' + attributeId, this.scenario1Data, this.scenario2Data);
+				this.$('#downloadCsv').hide();
 			} else {
 				this.drawChart(categoryId + '.' + attributeId, this.scenario1Data);
+				this.$('#downloadCsv').show();
 			}
 		},
 
@@ -594,7 +597,6 @@ var Analyst = Analyst || {};
 		},
 
 		downloadGis : function(evt) {
-			var shapefileId = this.$('#shapefile').val();
 			var attributeName = this.$('#shapefileColumn').val();
 			var which = this.$('input[name="which"]:checked').val();
 
@@ -602,7 +604,18 @@ var Analyst = Analyst || {};
 			if (this.scenario2Data)
 				window.location.href = '/gis/singleComparison?key1=' + this.scenario1Data.key + '&key2' + this.scenario2Data.key + '&which=' + which;
 			else
-				window.location.href = '/gis/single?key=' + this.scenario1Data.key + '&which=' + which + '&timeLimit=';
+				window.location.href = '/gis/single?key=' + this.scenario1Data.key + '&which=' + which;
+
+		},
+
+		downloadCsv : function(evt) {
+			var which = this.$('input[name="which"]:checked').val();
+
+			if (this.scenario2Data)
+				// comparisons not supported
+				evt.preventDefault();
+			else
+					window.location.href = '/csv/single?key=' + this.scenario1Data.key + '&which=' + which;
 
 		},
 

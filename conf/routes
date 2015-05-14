@@ -75,6 +75,8 @@ GET     /gis/query	                    controllers.Gis.query(queryId:String, tim
 GET     /gis/single                     controllers.Gis.result(key:String, which:String)
 GET     /gis/singleComparison           controllers.Gis.resultComparison(key1:String, key2:String, which:String)
 
+GET     /csv/single                     controllers.SinglePoint.csv(key:String, which:String)
+
 GET     /api/queryBins	                controllers.Api.queryBins(queryId:String, timeLimit:Integer ?= 3600, weightByShapefile:String ?= null, weightByAttribute:String ?= null, groupBy:String ?= null, which: String, attributeName: String, compareTo: String ?= null)
 
 POST     /api/single                    controllers.SinglePoint.result()

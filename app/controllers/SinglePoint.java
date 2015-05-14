@@ -9,6 +9,7 @@ import com.conveyal.otpac.message.OneToManyProfileRequest;
 import com.conveyal.otpac.message.OneToManyRequest;
 import com.conveyal.otpac.message.SinglePointJobSpec;
 import com.conveyal.otpac.message.WorkResult;
+import com.csvreader.CsvWriter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -34,6 +35,7 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.mapdb.DBMaker;
 import org.onebusaway.gtfs.model.AgencyAndId;
+import org.opentripplanner.analyst.Histogram;
 import org.opentripplanner.analyst.ResultSet;
 import org.opentripplanner.common.model.GenericLocation;
 import org.opentripplanner.profile.ProfileRequest;
@@ -55,9 +57,11 @@ import utils.ResultEnvelope.Which;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
 
@@ -103,12 +107,12 @@ public class SinglePoint extends Controller {
     		OneToManyProfileRequest req = objectMapper.treeToValue(params, OneToManyProfileRequest.class);
     		shpTemp = Shapefile.getShapefile(req.destinationPointsetId);
     		// for now not requesting a vector isochrone
-    		spec = new SinglePointJobSpec(req.graphId, req.destinationPointsetId, req.options, false);
+    		spec = new SinglePointJobSpec(req.graphId, req.destinationPointsetId, req.options, true);
     	}
     	else {
     		OneToManyRequest req = objectMapper.treeToValue(params, OneToManyRequest.class);
     		shpTemp = Shapefile.getShapefile(req.destinationPointsetId);
-    		spec = new SinglePointJobSpec(req.graphId, req.destinationPointsetId, req.options, false);
+    		spec = new SinglePointJobSpec(req.graphId, req.destinationPointsetId, req.options, true);
     	}
     	
         final Shapefile shp = shpTemp;
@@ -155,6 +159,74 @@ public class SinglePoint extends Controller {
         	
 		});
     	
+    }
+    
+    /** Create a CSV result 
+     * @throws IOException */
+    public static Result csv(String key, String which) throws IOException {
+    	if (session().get("username") == null &&
+    			Play.application().configuration().getBoolean("api.allow-unauthenticated-access") != true)
+    		return unauthorized();
+    	
+    	Which whichEnum = Which.valueOf(which);
+    	
+    	// get the resultset
+    	ResultEnvelope env = envelopeCache.get(key);
+    	
+    	if (env == null)
+    		return notFound();
+    	
+    	ResultSet rs = env.get(whichEnum);
+    	
+    	// create a CSV
+    	ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    	CsvWriter writer = new CsvWriter(baos, ',', Charset.forName("UTF-8"));
+    	
+    	// write the header column
+    	// size 121: 1 column for attribute names, 120 columns for minutes
+    	String[] columns = new String[121];
+    	columns[0] = "minute";
+    	
+    	for (int i = 1; i < 121; i++) {
+    		columns[i] = "" + i;
+    	}
+    	
+    	writer.writeRecord(columns);
+    	
+    	for (Entry<String, Histogram> e : rs.histograms.entrySet()) {
+    		// write sums only here
+    		writer.write(e.getKey());
+    		
+    		int[] sums = e.getValue().sums;
+    		
+    		for (int i = 0; i < Math.min(120, sums.length); i++) {
+    			writer.write("" + sums[i]);
+    		}
+    		
+    		writer.endRecord();
+    	}
+    	
+    	// write the sums, which are the same for the entire resultset
+    	for (Histogram h : rs.histograms.values()) {
+    		writer.write("feature count");
+    		
+    		for (int i = 0; i < Math.min(120, h.counts.length); i++) {
+    			writer.write("" + h.counts[i]);
+    		}
+    		
+    		writer.endRecord();
+    		break;
+    	}
+    	
+    	writer.close();
+    	
+    	// make a file name
+    	String filename = key.substring(0, 5) + "_" + whichEnum.toString().toLowerCase() + ".csv";
+    	
+    	response().setHeader("Content-Disposition", "attachment; filename=" + filename);
+    	
+    	return ok(baos.toString())
+    			.as("text/csv");
     }
     
     private static String resultSetToJson (ResultEnvelope rs, Shapefile shp, String key) {
