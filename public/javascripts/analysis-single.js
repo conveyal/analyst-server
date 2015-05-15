@@ -394,21 +394,11 @@ var Analyst = Analyst || {};
 				}
 			}
 
-		    $.ajax({
+		    var p1 = $.ajax({
 					url: '/api/single',
 					data: JSON.stringify(params),
 					contentType: 'application/json',
-					method: 'post',
-					success: function (data) {
-					_this.scenario1Data = data;
-
-		  	  if(_this.comparisonType == 'no-comparison' || !_this.comparisonType || _this.scenario2Data) {
-						_this.updateMap();
-						_this.updateCharts();
-						_this.$('#queryResults').show();
-						_this.$('#queryProcessing').hide();
-		  	  }
-		    	}
+					method: 'post'
 				});
 
 		    if (this.comparisonType == 'compare') {
@@ -422,24 +412,37 @@ var Analyst = Analyst || {};
 						});
 					}
 
-					$.ajax({
+					var p2 = $.ajax({
 						url: '/api/single',
 						data: JSON.stringify(params),
 						contentType: 'application/json',
-						method: 'post',
-						success: function (data) {
-							_this.scenario2Data = data;
+						method: 'post'
+					});
 
-							if(_this.scenario1Data) {
-								_this.updateMap();
-								_this.updateCharts();
-								_this.$('#queryResults').show();
-								_this.$('#queryProcessing').hide();
-							}
-						}
+					// make sure they both get set at once, UI should never get out of sync
+					$.when(p1, p2).done(function (d1, d2) {
+						_this.scenario1Data = d1[0];
+						_this.scenario2Data = d2[0];
+
+						_this.updateMap();
+						_this.updateCharts();
+						_this.$('#queryResults').show();
+						_this.$('#queryProcessing').hide();
 					});
 
 		    }
+				else {
+					// make sure they both get set at once, UI should never get out of sync
+					$.when(p1).then(function (d1) {
+						_this.scenario1Data = d1;
+						_this.scenario2Data = false;
+
+						_this.updateMap();
+						_this.updateCharts();
+						_this.$('#queryResults').show();
+						_this.$('#queryProcessing').hide();
+					});
+				}
 		},
 
 		/**
