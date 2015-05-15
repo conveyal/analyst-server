@@ -90,6 +90,10 @@ public class SinglePoint extends Controller {
     	if (session().get("username") == null &&
     			Play.application().configuration().getBoolean("api.allow-unauthenticated-access") != true)
     		return F.Promise.pure((Result) unauthorized());
+    	
+    	// allow cross-origin access if we don't need auth
+    	if (Play.application().configuration().getBoolean("api.allow-unauthenticated-access") == true)
+    		response().setHeader("Access-Control-Allow-Origin", "*");
     		
     	
     	// deserialize a result
@@ -167,6 +171,9 @@ public class SinglePoint extends Controller {
     	if (session().get("username") == null &&
     			Play.application().configuration().getBoolean("api.allow-unauthenticated-access") != true)
     		return unauthorized();
+    	
+    	if (Play.application().configuration().getBoolean("api.allow-unauthenticated-access") == true)
+    		response().setHeader("Access-Control-Allow-Origin", "*");
     	
     	Which whichEnum = Which.valueOf(which);
     	
