@@ -43,7 +43,7 @@ object to `/api/single`. The JSON you post looks like so:
     "bikeSafe": 1,
     "bikeSlope": 1,
     "bikeTime": 1,
-    "bannedRoutes": "2_Red"
+    "bannedRoutes": ["2_Red"]
   }
 }
 ```
@@ -76,9 +76,11 @@ The remainder of the parameters are documented in the [OTP API
 documentation](http://dev.opentripplanner.org/javadoc/master/org/opentripplanner/profile/ProfileRequest.html). They
 currently do not have defaults, but the values specified in the examples above are reasonable.
 
-Bicycle and bike-to-transit searches are not currently supported in profile mode, but this is planned in the future.
+Drive- and bike-to-transit searches are not currently supported in profile mode, but this is planned in the future.
 They will be specified by changing the `accessModes` (the modes used access transit stops at the start of the trip)
 and the `egressModes` (the modes used to leave transit at the end of the trip).
+
+You will need to send the `Content-Type: application/json` header along with your request.
 
 ### Response
 
@@ -247,12 +249,8 @@ default value of -2 / 60 is specified in Histogram.java and yields a rolloff of 
 computational efficiency, weights less than 0.001 or greater than 0.999 are assumed to be 0 and 1, respectively, to
 reduce the number of exponentiations required.
 
-If you did not specify a destination pointset, they instead look like this:
-
-```
-```
-
-For each of the types of connectivity, there is a GeoJSON document with isochrones spaced five minutes apart. Each GeoJSON
+If you did not specify a destination pointset, isochrones are instead returned.
+For each of the types of connectivity, there is a GeoJSON document (e.g. GeoJSON root is `isochrones.worstCase`) with isochrones spaced five minutes apart. Each GeoJSON
 feature has one property, `cutoffSec`, which is the time associated with that isochrone (for example, a 45 minute isochrone
   is 2700 seconds).
 
