@@ -249,7 +249,7 @@ public class Query implements Serializable {
 				q.totalPoints = sl.getFeatureCount();
 				q.completePoints = 0;
 				
-				Scenario scenario = Scenario.getScenario(q.scenarioId);
+				TransportScenario scenario = TransportScenario.getScenario(q.scenarioId);
 				String graphId = scenario.bundleId;
 				
 				if (q.isTransit()) {
