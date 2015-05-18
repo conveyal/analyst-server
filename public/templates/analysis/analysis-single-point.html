@@ -17,7 +17,16 @@
       </div>
       <div id="querySettings" class="panel-body" style="padding: 5px;">
 
-           <div class="form-group">
+        <div style="margin-top: 10px;" class="btn-group isochrone" data-toggle="buttons">
+          <label class="btn btn-default active">
+            <input type="radio" name="isochrone" value="false" checked>{{I18n "analysis.accessibility"}}</input>
+          </label>
+          <label class="btn btn-default">
+            <input type="radio" name="isochrone" value="true">{{I18n "analysis.isochrone"}}</input>
+          </label>
+        </div>
+
+        <div class="form-group" id="shapefile-group">
            <label for="shapefile">{{I18n "analysis.shapefile"}}</label>
            <select id="shapefile" class="primary-indicator form-control"></select>
 
@@ -202,7 +211,7 @@
 
             </div>
 
-            <div id="legend" class="indicator_box">
+            <div id="singleLegend" class="indicator_box">
 
               <div class="legend-item">
                 <div class="colorbox" style="background-color:#e5b234;"></div>
@@ -216,7 +225,29 @@
 
             </div>
 
+            <div id="isoComparisonLegend" class="indicator_box">
+
+              <div class="legend-item">
+                <div class="colorbox" style="background-color:#e5b234;"></div>
+                <div class="legend-item-text">Scenario 1</div>
+              </div>
+              <br clear="all"/>
+              <div class="legend-item">
+                <div class="colorbox" style="background-color:#00c;"></div>
+                <div class="legend-item-text">Scenario 2</div>
+              </div>
+
           </div>
+
+          <div id="isoSingleLegend" class="indicator_box">
+
+            <div class="legend-item">
+              <div class="colorbox" style="background-color:#e5b234;"></div>
+              <div class="legend-item-text">Scenario 1</div>
+            </div>
+
+          </div>
+
           <div class="checkbox">
             <label>
               <!--  <input type="checkbox" id="showPoints"> {{I18n "analysis.show-points"}} -->

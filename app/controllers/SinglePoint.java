@@ -27,6 +27,7 @@ import com.fasterxml.jackson.databind.deser.KeyDeserializers;
 import com.fasterxml.jackson.databind.module.SimpleKeyDeserializers;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
+import com.google.common.collect.Maps;
 
 import models.Bundle;
 import models.Shapefile;
@@ -75,7 +76,8 @@ public class SinglePoint extends Controller {
     // this doesn't need to be very large; it needs only to store as many result envelopes as there are expected to be
     // active users. Once the user has moved the pin, the probability they will put it back on exactly the same spot
     // is for all intents and purposes zero, so the cache miss rate is very big regardless of cache size.
-    private static ConcurrentMap<String, ResultEnvelope> envelopeCache = DBMaker.newCache(.25);
+    //private static ConcurrentMap<String, ResultEnvelope> envelopeCache = DBMaker.newCache(.25);
+	private static Map<String, ResultEnvelope> envelopeCache = Maps.newHashMap();
     
     /** re-use object mapper */
     private static final ObjectMapper objectMapper = new ObjectMapper();

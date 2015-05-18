@@ -50,11 +50,14 @@ object to `/api/single`. The JSON you post looks like so:
 
 `destinationPointsetId` is the ID of the shapefile for which to calculate connectivity (frequently called
 "accessibility" in the literature). The IDs of shapefiles can be found by accessing `/api/shapefile`, which will give a
-JSON document detailing all of the scenarios. The `graphId` is the ID of the scenario to use, which is the `id`
-attribute in `/api/scenario`. `profile` indicates that the request should use profile routing, which calculates not the
-travel time and connectivity at a particular time but rather the guaranteed, expected and possible connectivity over a
-time window (see [this post](http://conveyal.com/blog/2015/05/04/variation-in-accessibility-measures/) for more details
-on these types of connectivity).
+JSON document detailing all of the scenarios. If it is set to null, isochrones will be generated and returned as GeoJSON,
+but accessibility will not be calculated.
+
+The `graphId` is the ID of the scenario to use, which is the `id` attribute in `/api/scenario`. `profile` indicates that
+the request should use profile routing, which calculates not the travel time and connectivity at a particular time but
+rather the guaranteed, expected and possible connectivity over a time window (see [this
+post](http://conveyal.com/blog/2015/05/04/variation-in-accessibility-measures/) for more details on these types of
+connectivity).
 
 The `options` field is a JSONified OTP [profile request](https://github.com/opentripplanner/OpenTripPlanner/blob/master/src/main/java/org/opentripplanner/profile/ProfileRequest.java).
 `fromLat` and `fromLon` are the origins of the search. `toLat` and `toLon` are not used but must be specified; the simplest
@@ -243,6 +246,15 @@ minute to 120 minutes (expressed in seconds of course) and is defined by the arr
 default value of -2 / 60 is specified in Histogram.java and yields a rolloff of approximately 5 minutes. For
 computational efficiency, weights less than 0.001 or greater than 0.999 are assumed to be 0 and 1, respectively, to
 reduce the number of exponentiations required.
+
+If you did not specify a destination pointset, they instead look like this:
+
+```
+```
+
+For each of the types of connectivity, there is a GeoJSON document with isochrones spaced five minutes apart. Each GeoJSON
+feature has one property, `cutoffSec`, which is the time associated with that isochrone (for example, a 45 minute isochrone
+  is 2700 seconds).
 
 ### Tiles
 

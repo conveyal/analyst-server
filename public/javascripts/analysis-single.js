@@ -16,10 +16,11 @@ var Analyst = Analyst || {};
 		  'change #chartType' : 'updateResults',
 			'change .which input' : 'updateEnvelope',
 			'change #shapefile' : 'updateAttributes',
+			'change .isochrone' : 'updateIsochrone',
 		  'click #showIso': 'updateMap',
 		  'click #showPoints': 'updateMap',
 		  'click #showTransit': 'updateMap',
-		  'click .mode-selector' : 'updateResults',
+		  'change .mode-selector' : 'updateResults',
 			'change .profile': 'updateResults',
 			'click #showSettings' : 'showSettings',
 			'click #downloadGis' : 'downloadGis',
@@ -229,6 +230,7 @@ var Analyst = Analyst || {};
 
 			this.$('#comparisonChart').hide();
 			this.$('#compareLegend').hide();
+			this.$('#isoLegend').hide();
 
 			this.$('#queryProcessing').hide();
 			this.$('#showSettings').hide();
@@ -256,6 +258,16 @@ var Analyst = Analyst || {};
 					.appendTo(_this.$('#shapefileColumn'));
 				}
 			});
+		},
+
+		/** show/hide shapefile selector based on isochrone selection */
+		updateIsochrone: function () {
+			var isochrone = this.$('input[name="isochrone"]:checked').val() == 'true';
+
+			if (isochrone)
+				this.$('#shapefile-group').hide();
+			else
+				this.$('#shapefile-group').show();
 		},
 
 		onClose : function() {
@@ -296,17 +308,40 @@ var Analyst = Analyst || {};
 		  	this.scenario1Data = false;
 		  	this.scenario2Data = false;
 
-		  	if(this.comparisonType == 'compare') {
-		  		this.$('#comparisonChart').show();
-		  		this.$('#compareLegend').show();
-		  		this.$('#legend').hide();
-		  	}
-		  	else {
-		  		this.$('#comparisonChart').hide();
-		  		this.$('#compareLegend').hide();
-		  		this.$('#legend').show();
-		  	}
+				if (this.$('input[name="isochrone"]:checked').val() === 'true') {
+					this.$('#chart').hide();
 
+					if(this.comparisonType == 'compare') {
+						this.$('#comparisonChart').show();
+						this.$('#compareLegend').hide();
+						this.$('#singleLegend').hide();
+						this.$('#isoSingleLegend').hide();
+						this.$('#isoComparisonLegend').show();
+					}
+					else {
+						this.$('#comparisonChart').hide();
+						this.$('#compareLegend').hide();
+						this.$('#singleLegend').hide();
+						this.$('#isoSingleLegend').show();
+						this.$('#isoComparisonLegend').hide();
+					}
+				}
+				else {
+			  	if(this.comparisonType == 'compare') {
+			  		this.$('#comparisonChart').show();
+			  		this.$('#compareLegend').show();
+			  		this.$('#singleLegend').hide();
+						this.$('#isoSingleLegend').hide();
+						this.$('#isoComparisonLegend').hide();
+			  	}
+			  	else {
+			  		this.$('#comparisonChart').hide();
+			  		this.$('#compareLegend').hide();
+						this.$('#singleLegend').show();
+						this.$('#isoSingleLegend').hide();
+						this.$('#isoComparisonLegend').hide();
+					}
+				}
 
 		  	var bikeSpeed = (this.bikeSpeedSlider.getValue() * 1000 / 60 / 60 );
 		  	var walkSpeed = (this.walkSpeedSlider.getValue() * 1000 / 60 / 60 );
@@ -335,8 +370,10 @@ var Analyst = Analyst || {};
 				'&profile=' + this.$('input.profile:checked').val();
 
 			// TODO probably not the best place for a bunch of defaults
+			var isochrone = this.$('input[name="isochrone"]:checked').val() == 'true';
 			var params = {
-				destinationPointsetId: this.$('#shapefile').val(),
+				// if we're requesting only isochrones, don't pass in a pointset
+				destinationPointsetId: isochrone ? null : this.$('#shapefile').val(),
 				graphId: this.scenario1.get('bundleId'),
 				profile:  this.$('input.profile:checked').val() == "true",
 			};
@@ -426,8 +463,6 @@ var Analyst = Analyst || {};
 
 						_this.updateMap();
 						_this.updateCharts();
-						_this.$('#queryResults').show();
-						_this.$('#queryProcessing').hide();
 					});
 
 		    }
@@ -439,8 +474,6 @@ var Analyst = Analyst || {};
 
 						_this.updateMap();
 						_this.updateCharts();
-						_this.$('#queryResults').show();
-						_this.$('#queryProcessing').hide();
 					});
 				}
 		},
@@ -449,16 +482,25 @@ var Analyst = Analyst || {};
 		 * Draw the charts
 		 */
 		updateCharts: function () {
-			var categoryId = this.shapefiles.get(this.$("#shapefile").val()).get('categoryId');
-			var attributeId = this.$('#shapefileColumn').val()
+			if (this.scenario1Data.isochrones === undefined) {
+				// draw accessibility plots only if there is accessibility
+				var categoryId = this.shapefiles.get(this.$("#shapefile").val()).get('categoryId');
+				var attributeId = this.$('#shapefileColumn').val();
 
-			if (this.scenario2Data) {
-				this.drawChart(categoryId + '.' + attributeId, this.scenario1Data, this.scenario2Data);
-				this.$('#downloadCsv').hide();
-			} else {
-				this.drawChart(categoryId + '.' + attributeId, this.scenario1Data);
-				this.$('#downloadCsv').show();
+				if (this.scenario2Data) {
+					this.drawChart(categoryId + '.' + attributeId, this.scenario1Data, this.scenario2Data);
+					this.$('#downloadCsv').hide();
+				} else {
+					this.drawChart(categoryId + '.' + attributeId, this.scenario1Data);
+					this.$('#downloadCsv').show();
+				}
 			}
+
+			this.$('#chart').empty();
+
+			this.$('#queryProcessing').hide();
+			this.$('#queryResults').show();
+
 		},
 
 		updateMap : function() {
@@ -520,77 +562,137 @@ var Analyst = Analyst || {};
 			var showPoints = false;//this.$('#showPoints').prop('checked');
 			var which = this.$('input[name="which"]:checked').val();
 
-			if(this.comparisonType == 'compare') {
+			if(A.map.tileOverlay && A.map.hasLayer(A.map.tileOverlay))
+				A.map.removeLayer(A.map.tileOverlay);
 
-				if(!this.scenario1Data || !this.scenario2Data)
-					return;
+			var lcWhich;
 
-				if(A.map.tileOverlay && A.map.hasLayer(A.map.tileOverlay))
-		  			A.map.removeLayer(A.map.tileOverlay);
+			switch (which) {
+				case 'WORST_CASE':
+					lcWhich = 'worstCase';
+					break;
+				case 'AVERAGE':
+				case 'POINT_ESTIMATE':
+					lcWhich = 'pointEstimate';
+					break;
+				case 'BEST_CASE':
+					lcWhich = 'bestCase';
+					break;
+				case 'SPREAD':
+					lcWhich = 'spread';
+					break;
+			}
 
-				var tileUrl = '/tile/single/' + this.scenario1Data.key + '/' + this.scenario2Data.key + '/{z}/{x}/{y}.png' +
-					'?showIso=' + showIso +
-					'&showPoints=' +  showPoints + '&timeLimit=' + timeLimit +
-					'&which=' + which;
-
-			  var utfUrl = '/tile/single/' + this.scenario1Data.key + '/' + this.scenario2Data.key + '/{z}/{x}/{y}.json' +
-					'?showIso=' + showIso +
-					'&showPoints=' +  showPoints + '&timeLimit=' + timeLimit +
-					'&which=' + which;
-
-				A.map.tileOverlay = L.tileLayer(tileUrl)
-					.addTo(A.map);
-
-				if(A.map.utfOverlay && A.map.hasLayer(A.map.utfOverlay))
-						A.map.removeLayer(A.map.utfOverlay);
-
-				if (A.map.valueReadout)
-					A.map.removeControl(A.map.valueReadout);
-
-				// readout control: see http://leafletjs.com/examples/choropleth.html
-				A.map.valueReadout = L.control({
-					position: 'bottomleft'
-				});
-				A.map.valueReadout.onAdd = function (map) {
-					this._div = L.DomUtil.create('div', 'valueReadout');
-					this.update();
-					return this._div;
-				}
-				A.map.valueReadout.update = function(val) {
-					if (!val) {
-						this._div.innerHTML = '-';
-						return;
-					}
-
-					val = Math.round(val / 60);
-
-					this._div.innerHTML = window.Messages('analysis.change-in-time', val);
-				}
-				A.map.valueReadout.addTo(A.map);
-
-				A.map.utfOverlay = new L.UtfGrid(utfUrl, {
-					resolution: 4,
-					useJsonP: false
-				})
-				.on('mouseover', function (e) {
-					A.map.valueReadout.update(e.data);
-				})
-				.on('mouseout', function (e) {
-					A.map.valueReadout.update();
+			// show vector isochrones
+			if (this.scenario1Data.isochrones !== undefined) {
+				// find the appropriate isochrones
+				var iso1 = _.find(this.scenario1Data.isochrones[lcWhich].features, function (iso) {
+					return iso.properties.time == timeLimit;
 				});
 
-				A.map.addLayer(A.map.utfOverlay);
+				var geom1 = L.GeoJSON.geometryToLayer(iso1.geometry);
 
+				geom1.setStyle({
+					opacity: 0.75,
+					color:'#e5b234',
+					weight: 1,
+					fillColor: '#e5b234',
+					fillOpacity: 0.15
+				});
+
+				if (this.comparisonType == 'compare') {
+					var iso2 = _.find(this.scenario2Data.isochrones[lcWhich].features, function (iso) {
+						return iso.properties.time == timeLimit;
+					});
+
+					var geom2 = L.GeoJSON.geometryToLayer(iso2.geometry);
+
+					geom2.setStyle({
+						opacity: 0.75,
+						weight: 1,
+						color: '#00c',
+						fillColor: '#00c',
+						fillOpacity: 0.15
+					});
+
+					// make them into a feature collection
+					// put the second isochrone on the bottom, because it is usually larger (increased service)
+					A.map.tileOverlay = L.featureGroup([geom1, geom2]).addTo(A.map);
+				}
+				else {
+					A.map.tileOverlay = geom1.addTo(A.map);
+				}
 			}
 			else {
+				if(this.comparisonType == 'compare') {
 
-				if(A.map.tileOverlay && A.map.hasLayer(A.map.tileOverlay))
-		  			A.map.removeLayer(A.map.tileOverlay);
+					if(!this.scenario1Data || !this.scenario2Data)
+						return;
 
-				A.map.tileOverlay = L.tileLayer('/tile/single/' + this.scenario1Data.key + '/{z}/{x}/{y}.png?showIso=' + showIso +
-					'&showPoints=' +  showPoints + '&timeLimit=' + timeLimit + '&which=' + which, {})
-					.addTo(A.map);
+					var tileUrl = '/tile/single/' + this.scenario1Data.key + '/' + this.scenario2Data.key + '/{z}/{x}/{y}.png' +
+						'?showIso=' + showIso +
+						'&showPoints=' +  showPoints + '&timeLimit=' + timeLimit +
+						'&which=' + which;
 
+				  var utfUrl = '/tile/single/' + this.scenario1Data.key + '/' + this.scenario2Data.key + '/{z}/{x}/{y}.json' +
+						'?showIso=' + showIso +
+						'&showPoints=' +  showPoints + '&timeLimit=' + timeLimit +
+						'&which=' + which;
+
+					A.map.tileOverlay = L.tileLayer(tileUrl)
+						.addTo(A.map);
+
+					if(A.map.utfOverlay && A.map.hasLayer(A.map.utfOverlay))
+							A.map.removeLayer(A.map.utfOverlay);
+
+					if (A.map.valueReadout)
+						A.map.removeControl(A.map.valueReadout);
+
+					// readout control: see http://leafletjs.com/examples/choropleth.html
+					A.map.valueReadout = L.control({
+						position: 'bottomleft'
+					});
+					A.map.valueReadout.onAdd = function (map) {
+						this._div = L.DomUtil.create('div', 'valueReadout');
+						this.update();
+						return this._div;
+					}
+					A.map.valueReadout.update = function(val) {
+						if (!val) {
+							this._div.innerHTML = '-';
+							return;
+						}
+
+						val = Math.round(val / 60);
+
+						this._div.innerHTML = window.Messages('analysis.change-in-time', val);
+					}
+					A.map.valueReadout.addTo(A.map);
+
+					A.map.utfOverlay = new L.UtfGrid(utfUrl, {
+						resolution: 4,
+						useJsonP: false
+					})
+					.on('mouseover', function (e) {
+						A.map.valueReadout.update(e.data);
+					})
+					.on('mouseout', function (e) {
+						A.map.valueReadout.update();
+					});
+
+					A.map.addLayer(A.map.utfOverlay);
+
+				}
+				else {
+
+					if(A.map.tileOverlay && A.map.hasLayer(A.map.tileOverlay))
+			  			A.map.removeLayer(A.map.tileOverlay);
+
+					A.map.tileOverlay = L.tileLayer('/tile/single/' + this.scenario1Data.key + '/{z}/{x}/{y}.png?showIso=' + showIso +
+						'&showPoints=' +  showPoints + '&timeLimit=' + timeLimit + '&which=' + which, {})
+						.addTo(A.map);
+
+				}
 			}
 		},
 
