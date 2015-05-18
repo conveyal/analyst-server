@@ -109,13 +109,13 @@ public class SinglePoint extends Controller {
     	
     	if (profile) {
     		OneToManyProfileRequest req = objectMapper.treeToValue(params, OneToManyProfileRequest.class);
-    		shpTemp = Shapefile.getShapefile(req.destinationPointsetId);
+    		shpTemp = req.destinationPointsetId == null ? null : Shapefile.getShapefile(req.destinationPointsetId);
     		// for now not requesting a vector isochrone
     		spec = new SinglePointJobSpec(req.graphId, req.destinationPointsetId, req.options, true);
     	}
     	else {
     		OneToManyRequest req = objectMapper.treeToValue(params, OneToManyRequest.class);
-    		shpTemp = Shapefile.getShapefile(req.destinationPointsetId);
+    		shpTemp = req.destinationPointsetId == null ? null : Shapefile.getShapefile(req.destinationPointsetId);
     		spec = new SinglePointJobSpec(req.graphId, req.destinationPointsetId, req.options, true);
     	}
     	
@@ -151,7 +151,7 @@ public class SinglePoint extends Controller {
 			@Override
 			public Result apply(WorkResult result) throws Throwable {
                 ResultEnvelope res = new ResultEnvelope(result);
-                res.shapefile = shp.id;
+                res.shapefile = shp != null ? shp.id : null;
                 envelopeCache.put(key, res);
                 String json = resultSetToJson(res, shp, key);
                 
@@ -272,7 +272,8 @@ public class SinglePoint extends Controller {
 	    	
 	    	jgen.writeStartObject();
 	    	{
-		    	shp.getPointSet().writeJsonProperties(jgen);
+	    		if (shp != null)
+	    			shp.getPointSet().writeJsonProperties(jgen);
 		    	
 		    	jgen.writeStringField("key", key);
 		    	
