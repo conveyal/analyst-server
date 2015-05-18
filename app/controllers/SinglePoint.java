@@ -165,6 +165,22 @@ public class SinglePoint extends Controller {
     	
     }
     
+    /** Options request for unauthenticated CORS if enabled */
+    public static Result options () {
+    	if (session().get("username") == null &&
+    			Play.application().configuration().getBoolean("api.allow-unauthenticated-access") != true)
+    		return unauthorized();
+    	
+    	// allow cross-origin access if we don't need auth
+    	if (Play.application().configuration().getBoolean("api.allow-unauthenticated-access") == true) {
+    		response().setHeader("Access-Control-Allow-Origin", "*");
+    		response().setHeader("Access-Control-Request-Method", "POST");
+    		response().setHeader("Access-Control-Allow-Headers", "Content-Type");
+    	}
+    	
+    	return ok();
+    }
+    
     /** Create a CSV result 
      * @throws IOException */
     public static Result csv(String key, String which) throws IOException {
@@ -260,9 +276,11 @@ public class SinglePoint extends Controller {
 		    	
 		    	jgen.writeStringField("key", key);
 		    	
+		    	ResultSet exemplar = point != null ? point : worst;
+		    	
 		    	jgen.writeObjectFieldStart("data");
 		    	{
-			    	for (String propertyId : (point != null ? point : worst).histograms.keySet()) {
+			    	for (String propertyId : exemplar.histograms.keySet()) {
 			    		jgen.writeObjectFieldStart(propertyId);
 			    		{
 				    		if (worst != null) {
@@ -295,6 +313,34 @@ public class SinglePoint extends Controller {
 		    	
 		    	}
 		    	jgen.writeEndObject();
+		    	
+		    	if (exemplar.isochrones != null) {
+		    		jgen.writeObjectFieldStart("isochrones");
+		    		if (worst != null) {
+		    			jgen.writeObjectFieldStart("worstCase");
+		    			worst.writeIsochrones(jgen);
+		    			jgen.writeEndObject();
+		    		}
+		    		
+		    		// both pointEstimate and average are point estimates, pick whichever one is not null
+		    		if (point != null || avg != null) {
+		    			jgen.writeObjectFieldStart("pointEstimate");
+		    			(point != null ? point : avg).writeIsochrones(jgen);
+		    			jgen.writeEndObject();
+		    		}
+		    		
+		    		if (best != null) {
+		    			jgen.writeObjectFieldStart("bestCase");
+		    			best.writeIsochrones(jgen);
+		    			jgen.writeEndObject();
+		    		}
+		    		
+		    		if (spread != null) {
+		    			jgen.writeObjectFieldStart("spread");
+		    			spread.writeIsochrones(jgen);
+		    			jgen.writeEndObject();
+		    		}
+		    	}
 	    	}
 	    	jgen.writeEndObject();
 	    	jgen.close();
