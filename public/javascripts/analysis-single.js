@@ -20,7 +20,7 @@ var Analyst = Analyst || {};
 		  'click #showIso': 'updateMap',
 		  'click #showPoints': 'updateMap',
 		  'click #showTransit': 'updateMap',
-		  'change .mode-selector' : 'updateResults',
+		  'change .mode-selector' : 'updateMode',
 			'change .profile': 'updateResults',
 			'click #showSettings' : 'showSettings',
 			'click #downloadGis' : 'downloadGis',
@@ -84,6 +84,14 @@ var Analyst = Analyst || {};
 		    }
 
 				this.$('#toTimeControls').removeClass('hidden');
+
+				// select profile routing
+				this.$('input.profile[value="true"]').prop('checked', true)
+				.parent().addClass('active')
+				.parent().show();
+
+				this.$('input.profile[value="false"]').prop('checked', false)
+				.parent().removeClass('active');
 		  } else {
 		    // non-transit request or earliest-arrival transit request, we're doing vanilla routing with point estimates only
 		    inps.find('[value="WORST_CASE"]').prop('disabled', true).parent().addClass('hidden');
@@ -102,6 +110,34 @@ var Analyst = Analyst || {};
 		  }
 
 		  this.envelopeParametersChangingProgramatically = false;
+		},
+
+		// the user has changed the mode
+		updateMode: function (e) {
+			if (!e.target.checked) return;
+
+			this.mode = e.target.value;
+			this.updateAvailableEnvelopeParameters();
+
+			if (A.util.isTransit(this.mode)) {
+				// deselect profile routing
+				this.$('input.profile[value="true"]').prop('checked', true)
+				.parent().addClass('active')
+				.parent().hide();
+
+				this.$('input.profile[value="false"]').prop('checked', false)
+				.parent().removeClass('active');
+			} else {
+				// deselect profile routing
+				this.$('input.profile[value="false"]').prop('checked', true)
+				.parent().addClass('active')
+				.parent().hide();
+
+				this.$('input.profile[value="true"]').prop('checked', false)
+				.parent().removeClass('active');
+			}
+
+			this.updateResults();
 		},
 
 
@@ -194,12 +230,6 @@ var Analyst = Analyst || {};
 
 			this.updateAvailableEnvelopeParameters();
 
-		    this.$('input[name=mode]:radio').on('change', function(event) {
-				_this.mode = _this.$('input:radio[name=mode]:checked').val();
-				_this.updateAvailableEnvelopeParameters();
-				_this.updateResults();
-		    });
-
 			this.shapefiles.fetch({reset: true, data : {projectId: A.app.selectedProject}})
 				.done(function () {
 				_this.$("#primaryIndicator").empty();
@@ -268,6 +298,8 @@ var Analyst = Analyst || {};
 				this.$('#shapefile-group').hide();
 			else
 				this.$('#shapefile-group').show();
+
+			this.updateResults();
 		},
 
 		onClose : function() {
