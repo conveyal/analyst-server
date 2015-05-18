@@ -829,7 +829,9 @@ var Analyst = Analyst || {};
 		      cBest = plotData[i].bestCase = cBest + (histograms.bestCase.sums[i] !== undefined ? histograms.bestCase.sums[i] :
 		        0)
 
-		    plotData[i].minute = i;
+				// the 0th entry in the marginal array is marginal accessibility from 0-1 minutes, or cumulative
+				// accessibility within 1 minute
+		    plotData[i].minute = i + 1;
 		  }
 
 			return plotData;
