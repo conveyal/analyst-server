@@ -16,6 +16,8 @@ import utils.DataStore;
  * effects of a new bus line, which is represented as a scenario. Leila is analyzing the effects of a construction
  * project that will temporarily suspend streetcar service. Sarah is analyzing the effects of a new Transbay tube.
  * All use the same base graph but with different lightweight lists of modifications.
+ * 
+ * This is TransportScenario not plain Scenario to avoid clashes with old data directories.
  */
 public class TransportScenario implements Serializable {
 	public static final long serialVersionUID = 1L;

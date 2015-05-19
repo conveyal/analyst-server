@@ -430,5 +430,41 @@ public class Bundle implements Serializable {
 		public String agencyId;
 		public String feed;
 	}
+
+	/** If there are no bundles, try to import bundles from the legacy scenario data store */
+	@SuppressWarnings("deprecation")
+	public static void importBundlesAsNeeded() {
+		if (!bundleData.isEmpty())
+			return;
+		
+		DataStore<Scenario> scenarioStore = new DataStore<Scenario>("scenario", true);
+		
+		if (scenarioStore.isEmpty()) {
+			scenarioStore.close();
+			return;
+		}
+		
+		Logger.info("Importing legacy scenarios . . .");
+		
+		int count = 0;
+		
+		for (Scenario s : scenarioStore.getAll()) {
+			Bundle b = new Bundle();
+			b.id = s.id;
+			b.description = s.description;
+			b.name = s.name;
+			b.projectId = s.projectId;
+			b.processGtfs();
+			b.save();
+			
+			// create a same-named scenario so that things are transparent (more or less) from the user perspective
+			TransportScenario ts = TransportScenario.create(b);
+			ts.name = b.name;
+			ts.description = b.description;
+			ts.save();
+			count++;
+		}
 	
+		Logger.info("Imported {} scenarios", count);
+	}
 }

@@ -16,6 +16,8 @@ public class Global extends GlobalSettings {
 		// start up the Akka server
 		Cluster.getExecutive();
 		
+		Bundle.importBundlesAsNeeded();			
+		
 		// upload to S3
 		try {
 			Bundle.writeAllToClusterCache();

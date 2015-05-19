@@ -183,5 +183,13 @@ public class DataStore<T> {
 	public boolean contains (String id) {
 		return map.containsKey(id);
 	}
+
+	public boolean isEmpty() {
+		return map.isEmpty();
+	}
+
+	public void close() {
+		db.close();
+	}
 	
 }
