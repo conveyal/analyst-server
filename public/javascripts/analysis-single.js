@@ -514,7 +514,12 @@ var Analyst = Analyst || {};
 		 * Draw the charts
 		 */
 		updateCharts: function () {
+			this.$('#queryProcessing').hide();
+			this.$('#queryResults').show();
+
 			if (this.scenario1Data.isochrones === undefined) {
+				this.$('#chart').show();
+
 				// draw accessibility plots only if there is accessibility
 				var categoryId = this.shapefiles.get(this.$("#shapefile").val()).get('categoryId');
 				var attributeId = this.$('#shapefileColumn').val();
@@ -527,12 +532,6 @@ var Analyst = Analyst || {};
 					this.$('#downloadCsv').show();
 				}
 			}
-
-			this.$('#chart').empty();
-
-			this.$('#queryProcessing').hide();
-			this.$('#queryResults').show();
-
 		},
 
 		updateMap : function() {
@@ -764,7 +763,7 @@ var Analyst = Analyst || {};
 
 		drawChart : function(attribute, result1, result2) {
 			// ensure we don't make a mess.
-			this.$('#chart').empty();
+			this.$('#chart').empty().css('height', '225px');
 			this.$('#chartLegend').empty();
 
 			// pivot the data into an object array for MetricsGraphics and make a cumulative distribution
@@ -831,7 +830,7 @@ var Analyst = Analyst || {};
 
 				// the 0th entry in the marginal array is marginal accessibility from 0-1 minutes, or cumulative
 				// accessibility within 1 minute
-		    plotData[i].minute = i + 1;
+		    plotData[i].minute = i;// + 1;
 		  }
 
 			return plotData;
