@@ -11,6 +11,16 @@ _.extend(Analyst.util, {
   mode.indexOf('TRAM') !== -1 || mode.indexOf('BUS') !== -1;
 },
 
+/** Remove transit from a mode */
+removeTransit: function (mode) {
+  var modes = mode.split(',');
+  modes = _.filter(modes, function (mode) {
+    return !Analyst.util.isTransit(mode);
+  });
+
+  return modes.join(',');
+},
+
 /** Turn a date into seconds since noon - 12h */
 makeTime: function (d) {
   return d.hours() * 3600 + d.minutes() * 60 + d.seconds();
