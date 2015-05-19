@@ -333,10 +333,9 @@ var Analyst = Analyst || {};
 		  	this.scenario2Data = false;
 
 				if (this.$('input[name="isochrone"]:checked').val() === 'true') {
-					this.$('#chart').hide();
+					this.$('#chart, #chartLegend').hide();
 
 					if(this.comparisonType == 'compare') {
-						this.$('#comparisonChart').show();
 						this.$('#compareLegend').hide();
 						this.$('#singleLegend').hide();
 						this.$('#isoSingleLegend').hide();
@@ -350,7 +349,10 @@ var Analyst = Analyst || {};
 						this.$('#isoComparisonLegend').hide();
 					}
 				}
+
 				else {
+					this.$('#chart, #chartLegend').show();
+
 			  	if(this.comparisonType == 'compare') {
 			  		this.$('#comparisonChart').show();
 			  		this.$('#compareLegend').show();
@@ -510,8 +512,6 @@ var Analyst = Analyst || {};
 			this.$('#queryResults').show();
 
 			if (this.scenario1Data.isochrones === undefined) {
-				this.$('#chart').show();
-
 				// draw accessibility plots only if there is accessibility
 				var categoryId = this.shapefiles.get(this.$("#shapefile").val()).get('categoryId');
 				var attributeId = this.$('#shapefileColumn').val();
