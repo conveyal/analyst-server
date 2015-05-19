@@ -84,14 +84,6 @@ var Analyst = Analyst || {};
 		    }
 
 				this.$('#toTimeControls').removeClass('hidden');
-
-				// select profile routing
-				this.$('input.profile[value="true"]').prop('checked', true)
-				.parent().addClass('active')
-				.parent().show();
-
-				this.$('input.profile[value="false"]').prop('checked', false)
-				.parent().removeClass('active');
 		  } else {
 		    // non-transit request or earliest-arrival transit request, we're doing vanilla routing with point estimates only
 		    inps.find('[value="WORST_CASE"]').prop('disabled', true).parent().addClass('hidden');
@@ -763,7 +755,7 @@ var Analyst = Analyst || {};
 
 		drawChart : function(attribute, result1, result2) {
 			// ensure we don't make a mess.
-			this.$('#chart').empty().css('height', '225px');
+			this.$('#chart').empty();
 			this.$('#chartLegend').empty();
 
 			// pivot the data into an object array for MetricsGraphics and make a cumulative distribution
@@ -830,7 +822,7 @@ var Analyst = Analyst || {};
 
 				// the 0th entry in the marginal array is marginal accessibility from 0-1 minutes, or cumulative
 				// accessibility within 1 minute
-		    plotData[i].minute = i;// + 1;
+		    plotData[i].minute = i + 1;
 		  }
 
 			return plotData;
