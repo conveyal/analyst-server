@@ -72,6 +72,16 @@ public class Shapefile implements Serializable {
 	// this should remain constant unless we make a change where we explicitly want to break deserialization
 	// so that users have to start fresh.
 	private static final long serialVersionUID = 2L;
+	
+	private static PointSetDatastore datastore;
+	
+	static {
+		String s3credentials = Play.application().configuration().getString("cluster.s3credentials");
+		String bucket = Play.application().configuration().getString("cluster.pointsets-bucket");
+		boolean workOffline = Play.application().configuration().getBoolean("cluster.work-offline");
+		
+		datastore = new PointSetDatastore(10, s3credentials, workOffline, bucket);
+	}
 
 	@JsonIgnore
 	static private DataStore<Shapefile> shapefilesData = new DataStore<Shapefile>("shapes", true);
@@ -268,6 +278,8 @@ public class Shapefile implements Serializable {
 	 * Write the shapefile to the cluster cache and to S3.
 	 */
 	public String writeToClusterCache() throws IOException {
+		if (datastore.isCached(id))
+			return id;
 
 		PointSet ps = this.getPointSet();
 
@@ -276,12 +288,6 @@ public class Shapefile implements Serializable {
 		FileOutputStream fos = new FileOutputStream(f);
 		ps.writeJson(fos, true);
 		fos.close();
-
-		String s3credentials = Play.application().configuration().getString("cluster.s3credentials");
-		String bucket = Play.application().configuration().getString("cluster.pointsets-bucket");
-		boolean workOffline = Play.application().configuration().getBoolean("cluster.work-offline");
-		
-		PointSetDatastore datastore = new PointSetDatastore(10, s3credentials, workOffline, bucket);
 
 		datastore.addPointSet(f, id);
 
