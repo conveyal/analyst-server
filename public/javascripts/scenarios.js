@@ -270,7 +270,7 @@ var Analyst = Analyst || {};
 
       var _this = this;
       newScenario.save().done(function () {
-        _this.model.collection.fetch();
+        _this.model.collection.fetch({reset: true, data: {projectId: _this.model.get('projectId')}});
       });
     },
 
