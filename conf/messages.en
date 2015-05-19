@@ -109,6 +109,9 @@ analysis.scenario-1=Scenario 1
 analysis.scenario-2=Scenario 2
 analysis.minutes=Minutes
 
+analysis.accessibility=Accessibility
+analysis.isochrone=Isochrones
+
 analysis.show-isochrones=Show Isochrones
 analysis.show-points=Show Points
 analysis.show-transit=Show Transit
