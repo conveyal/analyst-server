@@ -29,8 +29,6 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.UUID;
-import java.util.function.Consumer;
 
 /**
  * Controllers for getting result sets used in single point mode.
@@ -82,7 +80,7 @@ public class SinglePoint extends Controller {
 
 		QueueManager.getManager().enqueue(req, env -> {
             envelopeCache.put(env.id, env);
-            result.success(ok(resultSetToJson(env)));
+            result.success(ok(resultSetToJson(env)).as("application/json"));
         });
 
 		return result;
@@ -195,8 +193,8 @@ public class SinglePoint extends Controller {
 	    	
 	    	jgen.writeStartObject();
 	    	{
-	    		if (rs.shapefile != null) {
-					Shapefile shp = Shapefile.getShapefile(rs.shapefile);
+	    		if (rs.destinationPointsetId != null) {
+					Shapefile shp = Shapefile.getShapefile(rs.destinationPointsetId);
 					shp.getPointSet().writeJsonProperties(jgen);
 				}
 		    	

@@ -63,13 +63,13 @@ public class SurfaceComparisonTile extends AnalystTileRequest implements UTFIntG
         ResultEnvelope env2 = SinglePoint.getResultSet(resultKey2);
         ResultSet result2 = env2.get(which);
         
-        if (result1 == null || result2 == null || !env1.shapefile.equals(env2.shapefile)) {
+        if (result1 == null || result2 == null || !env1.destinationPointsetId.equals(env2.destinationPointsetId)) {
         	return null;
         }
     	
         Tile tile = new Tile(this);
 
-        Shapefile shp = Shapefile.getShapefile(env1.shapefile);
+        Shapefile shp = Shapefile.getShapefile(env1.destinationPointsetId);
         PointSet ps = shp.getPointSet();
         
         List<Shapefile.ShapeFeature> features = shp.query(tile.envelope);
@@ -161,11 +161,11 @@ public class SurfaceComparisonTile extends AnalystTileRequest implements UTFIntG
         ResultEnvelope env2 = SinglePoint.getResultSet(resultKey2);
         ResultSet result2 = env2.get(which);
         
-        if (result1 == null || result2 == null || !env1.shapefile.equals(env2.shapefile)) {
+        if (result1 == null || result2 == null || !env1.destinationPointsetId.equals(env2.destinationPointsetId)) {
         	return null;
         }
 
-        Shapefile shp = Shapefile.getShapefile(env1.shapefile);
+        Shapefile shp = Shapefile.getShapefile(env1.destinationPointsetId);
         PointSet ps = shp.getPointSet();
 		
 		int[][] grid = new int[64][64];

@@ -50,7 +50,7 @@ public class ResultEnvelope implements Serializable {
 	public String id;
 	
 	/** The ID of the shapefile/pointset from whence this result envelope came */
-	public String shapefile;
+	public String destinationPointsetId;
 	
 	public ResultSet get (Which key) {
 		switch (key) {

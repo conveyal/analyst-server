@@ -52,7 +52,7 @@ public class SurfaceTile extends AnalystTileRequest {
         	
             Tile tile = new Tile(this);
 
-            Shapefile shp = Shapefile.getShapefile(env.shapefile);
+            Shapefile shp = Shapefile.getShapefile(env.destinationPointsetId);
 
             if(shp == null)
                 return null;

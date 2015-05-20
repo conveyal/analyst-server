@@ -186,7 +186,7 @@ public class Gis extends Controller {
         	ResultEnvelope env = SinglePoint.getResultSet(key);
         	ResultSet result = env.get(whichEnum);
         	
-        	final Shapefile shp = Shapefile.getShapefile(env.shapefile);
+        	final Shapefile shp = Shapefile.getShapefile(env.destinationPointsetId);
 			       
 	        Collection<ShapeFeature> features = shp.getShapeFeatureStore().getAll();
 	     
@@ -248,10 +248,10 @@ public class Gis extends Controller {
         	if (env1 == null || env2 == null)
         		notFound();
         	
-        	if (!env1.shapefile.equals(env2))
+        	if (!env1.destinationPointsetId.equals(env2))
         		badRequest();
         	
-        	final Shapefile shp = Shapefile.getShapefile(env1.shapefile);
+        	final Shapefile shp = Shapefile.getShapefile(env1.destinationPointsetId);
 			       
 	        Collection<ShapeFeature> features = shp.getShapeFeatureStore().getAll();
 	     

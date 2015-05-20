@@ -10,12 +10,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import play.Logger;
 import play.Play;
+import play.libs.Akka;
+import scala.concurrent.duration.FiniteDuration;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 /** Generic queuing support to enable us to throw stuff into SQS */
@@ -58,12 +61,12 @@ public class QueueManager {
 		}
 
 		// create the output queue
-		String outQueueName = "output-" + UUID.randomUUID().toString();
+		String outQueueName = prefix + "-output-" + UUID.randomUUID().toString();
 		outputQueue = createQueue(outQueueName);
 		Logger.info("Receiving single point results from queue " + outQueueName);
 
 		// listen to the output queue
-
+		Akka.system().scheduler().scheduleOnce(new FiniteDuration(1, TimeUnit.SECONDS), new QueueListener(), Akka.system().dispatcher());
 	}
 	
 	/** Enqueue a single point request */
