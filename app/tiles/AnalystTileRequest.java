@@ -1,42 +1,30 @@
 package tiles;
 
-import java.awt.Color;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
-import models.Attribute;
-import models.Query;
-import models.Bundle;
-import models.Shapefile;
-import models.Bundle.TransitSegment;
-import models.Shapefile.ShapeFeature;
-import models.SpatialLayer;
-
-import org.opengis.geometry.MismatchedDimensionException;
-import org.opengis.referencing.operation.TransformException;
-
-import otp.ProfileResult;
-import utils.HaltonPoints;
-import utils.NaturalBreaksClassifier;
-import utils.QueryResults;
-import utils.QueryResults.QueryResultItem;
-import utils.ResultEnvelope;
-import utils.ResultEnvelope.Which;
-import controllers.Api;
-
 import com.google.common.base.Charsets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.vividsolutions.jts.index.strtree.STRtree;
-import com.vividsolutions.jts.geom.LineString;
+import models.Attribute;
+import models.Bundle;
+import models.Bundle.TransitSegment;
+import models.Query;
+import models.Shapefile;
+import models.Shapefile.ShapeFeature;
+import org.opengis.geometry.MismatchedDimensionException;
+import org.opengis.referencing.operation.TransformException;
+import utils.HaltonPoints;
+import utils.NaturalBreaksClassifier;
+import utils.QueryResults;
+import utils.QueryResults.QueryResultItem;
+import utils.ResultEnvelope;
 
-import controllers.Api;
+import java.awt.*;
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class AnalystTileRequest {
 		

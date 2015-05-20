@@ -1,15 +1,14 @@
 package models;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-
+import com.vividsolutions.jts.geom.Geometry;
 import play.Logger;
 import utils.DataStore;
 import utils.HashUtils;
 
-import com.vividsolutions.jts.geom.Geometry;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
 
 
 public class Project implements Serializable {

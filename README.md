@@ -16,6 +16,7 @@ URL in conf/application.conf. First copy conf/application.conf.template to conf/
 
 Start the program by typing `activator run -mem <large number>`. The number is in megabytes, and should be as much as
 you can spare; I typically use 8GB (8192), although you should be able to get by with less. Create the first user by going to http://localhost:9000/createUser?username=...&password=...&email=...
+The application requires Java 8; make sure you have it installed, and set JAVA_HOME appropriately.
 
 Finally, browse to [http://localhost:9000](http://localhost:9000) to log in and start the tutorial.
 

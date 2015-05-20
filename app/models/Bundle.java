@@ -1,83 +1,36 @@
 package models;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.Serializable;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.SortedSet;
-import java.util.Map.Entry;
-import java.util.TimeZone;
-import java.util.concurrent.TimeUnit;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipException;
-import java.util.zip.ZipFile;
-
-import jersey.repackaged.com.google.common.collect.Lists;
-import jobs.ProcessTransitBundleJob;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-import org.geotools.geometry.Envelope2D;
-import org.joda.time.DateTimeZone;
-import org.mapdb.Atomic;
-import org.mapdb.BTreeMap;
-import org.mapdb.Bind;
-import org.mapdb.DB;
-import org.mapdb.DBMaker;
-import org.mapdb.Fun;
-import org.mapdb.Fun.Tuple2;
-
 import com.conveyal.gtfs.GTFSFeed;
-import com.conveyal.gtfs.model.Agency;
-import com.conveyal.gtfs.model.Route;
-import com.conveyal.gtfs.model.Shape;
-import com.conveyal.gtfs.model.Stop;
-import com.conveyal.gtfs.model.StopTime;
-import com.conveyal.gtfs.model.Trip;
-import com.conveyal.otpac.ClusterGraphService;
-import com.conveyal.otpac.PointSetDatastore;
-import com.vividsolutions.jts.index.strtree.STRtree;
-
-import org.opentripplanner.routing.graph.Graph;
-
-import play.Logger;
-import play.Play;
-import play.libs.Akka;
-import play.libs.F.Function0;
-import play.libs.F.Promise;
-import scala.concurrent.ExecutionContext;
-import scala.concurrent.duration.Duration;
-import utils.Bounds;
-import utils.ClassLoaderSerializer;
-import utils.DataStore;
-import utils.HashUtils;
-
+import com.conveyal.gtfs.model.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
-import com.google.common.io.ByteStreams;
 import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LineString;
-
-import controllers.Api;
+import com.vividsolutions.jts.index.strtree.STRtree;
 import controllers.Application;
+import jersey.repackaged.com.google.common.collect.Lists;
+import jobs.ProcessTransitBundleJob;
+import org.apache.commons.io.FileUtils;
+import org.geotools.geometry.Envelope2D;
+import org.mapdb.*;
+import org.mapdb.Fun.Tuple2;
+import play.Logger;
+import play.Play;
+import play.libs.Akka;
+import scala.concurrent.ExecutionContext;
+import scala.concurrent.duration.Duration;
+import utils.*;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.TimeUnit;
+import java.util.zip.ZipException;
 
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -94,7 +47,7 @@ public class Bundle implements Serializable {
 	private static ClusterGraphService clusterGraphService;
 	
 	static {
-		String s3credentials = Play.application().configuration().getString("cluster.s3credentials");
+		String s3credentials = Play.application().configuration().getString("cluster.aws-credentials");
 		String bucket = Play.application().configuration().getString("cluster.graphs-bucket");
 		boolean workOffline = Play.application().configuration().getBoolean("cluster.work-offline");
 		clusterGraphService = new ClusterGraphService(s3credentials, workOffline, bucket);

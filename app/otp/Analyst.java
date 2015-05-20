@@ -1,21 +1,19 @@
 package otp;
 
-import com.conveyal.otpac.PrototypeAnalystProfileRequest;
-import com.conveyal.otpac.PrototypeAnalystRequest;
-
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.opentripplanner.api.parameter.QualifiedMode;
+import org.opentripplanner.api.parameter.QualifiedModeSet;
 import org.opentripplanner.common.model.GenericLocation;
 import org.opentripplanner.profile.Option;
 import org.opentripplanner.profile.ProfileRequest;
 import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.TraverseMode;
-import org.opentripplanner.api.parameter.QualifiedMode;
-import org.opentripplanner.api.parameter.QualifiedModeSet;
 import org.opentripplanner.routing.core.TraverseModeSet;
 import org.opentripplanner.routing.spt.DominanceFunction;
-
 import play.Logger;
+import utils.PrototypeAnalystProfileRequest;
+import utils.PrototypeAnalystRequest;
 
 public class Analyst { 	
 	public Analyst() {

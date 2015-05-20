@@ -1,34 +1,24 @@
 package controllers;
 
-import gnu.trove.map.TIntIntMap;
-import gnu.trove.map.hash.TIntIntHashMap;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
-
+import gnu.trove.map.TIntIntMap;
+import gnu.trove.map.hash.TIntIntHashMap;
 import play.libs.Akka;
 import play.libs.F.Function;
 import play.libs.F.Function0;
 import play.libs.F.Promise;
-import play.mvc.*;
+import play.mvc.Controller;
+import play.mvc.Result;
 import scala.concurrent.ExecutionContext;
 import tiles.AnalystTileRequest;
-import tiles.AnalystTileRequest.TransitTile;
-import tiles.AnalystTileRequest.TransitComparisonTile;
-import tiles.AnalystTileRequest.SpatialTile;
-import tiles.SurfaceTile;
-import tiles.SurfaceComparisonTile;
-import tiles.AnalystTileRequest.QueryTile;
-import tiles.AnalystTileRequest.QueryComparisonTile;
-import tiles.AnalystTileRequest.ShapefileTile;
 import tiles.TileCache;
 import tiles.UTFIntGridRequest;
 import utils.PromiseUtils;
 import utils.QueryResults;
-import utils.ResultEnvelope;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 
 public abstract class Tiles extends Controller {
 

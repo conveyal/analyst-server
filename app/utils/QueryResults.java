@@ -1,35 +1,19 @@
 package utils;
 
-import java.awt.Color;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
-import org.mapdb.Fun.Tuple2;
+import com.vividsolutions.jts.geom.Envelope;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.index.SpatialIndex;
+import com.vividsolutions.jts.index.strtree.STRtree;
+import models.Query;
+import models.Shapefile;
+import models.Shapefile.ShapeFeature;
 import org.mapdb.Fun.Tuple3;
 import org.opentripplanner.analyst.ResultSet;
 
-import utils.Bin;
-import utils.ResultEnvelope.Which;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
-import com.vividsolutions.jts.geom.Envelope;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.Point;
-import com.vividsolutions.jts.geom.prep.PreparedPolygon;
-import com.vividsolutions.jts.index.SpatialIndex;
-import com.vividsolutions.jts.index.strtree.STRtree;
-
-import models.Attribute;
-import models.Query;
-import models.Shapefile;
-import models.SpatialLayer;
-import models.Shapefile.ShapeFeature;
+import java.awt.*;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class QueryResults {
 

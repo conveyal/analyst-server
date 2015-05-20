@@ -1,15 +1,12 @@
 package tiles;
 
+import controllers.SinglePoint;
 import models.Attribute;
 import models.Shapefile;
-
-import org.joda.time.LocalDate;
 import org.opengis.geometry.MismatchedDimensionException;
 import org.opengis.referencing.operation.TransformException;
 import org.opentripplanner.analyst.PointSet;
 import org.opentripplanner.analyst.ResultSet;
-
-import controllers.SinglePoint;
 import utils.HaltonPoints;
 import utils.ResultEnvelope;
 import utils.ResultEnvelope.Which;
@@ -17,7 +14,6 @@ import utils.ResultEnvelope.Which;
 import java.awt.*;
 import java.io.IOException;
 import java.util.List;
-import java.util.Locale;
 
 /**
 * Created by matthewc on 3/4/15.

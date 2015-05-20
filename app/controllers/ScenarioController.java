@@ -1,16 +1,15 @@
 package controllers;
 
-import java.io.IOException;
-import java.util.Collection;
-
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-
 import models.TransportScenario;
 import play.mvc.Controller;
 import play.mvc.Result;
 import play.mvc.Security;
+
+import java.io.IOException;
+import java.util.Collection;
 
 @Security.Authenticated(Secured.class)
 public class ScenarioController extends Controller {

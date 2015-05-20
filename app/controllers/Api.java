@@ -1,94 +1,26 @@
 package controllers;
 
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.Polygon;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.Serializable;
-import java.io.StringWriter;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.zip.ZipException;
-
-import javax.imageio.ImageIO;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.StreamingOutput;
-
-import com.conveyal.otpac.PrototypeAnalystProfileRequest;
-import org.geotools.coverage.grid.GridEnvelope2D;
-import org.geotools.coverage.grid.GridGeometry2D;
-import org.geotools.data.simple.SimpleFeatureCollection;
-import org.geotools.feature.FeatureCollection;
-import org.geotools.geojson.feature.FeatureJSON;
-import org.geotools.geometry.Envelope2D;
-import org.geotools.geometry.jts.JTS;
-import org.geotools.referencing.crs.DefaultGeographicCRS;
-import org.joda.time.DateTimeZone;
-import org.joda.time.LocalDate;
-import org.opengis.referencing.operation.MathTransform;
-import org.opentripplanner.analyst.PointSet;
-import org.opentripplanner.analyst.ResultSet;
-import org.opentripplanner.analyst.TimeSurface;
-import org.opentripplanner.analyst.core.IsochroneData;
-import org.opentripplanner.analyst.core.SlippyTile;
-import org.opentripplanner.analyst.request.TileRequest;
-import org.opentripplanner.analyst.request.SampleGridRenderer.WTWD;
-import org.opentripplanner.api.model.TimeSurfaceShort;
-import org.opentripplanner.api.param.LatLon;
-import org.opentripplanner.api.resource.LIsochrone;
-import org.opentripplanner.common.geometry.DelaunayIsolineBuilder;
-import org.opentripplanner.common.model.GenericLocation;
-import org.opentripplanner.profile.ProfileRequest;
-import org.opentripplanner.routing.core.RoutingRequest;
-import org.opentripplanner.routing.core.TraverseModeSet;
-import org.opentripplanner.routing.graph.Graph;
-
-import otp.Analyst;
-import otp.ProfileResult;
-import models.Attribute;
-import models.Project;
-import models.Query;
-import models.Bundle;
-import models.Shapefile;
-import models.SpatialLayer;
-import models.User;
-import models.Shapefile.ShapeFeature;
-
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Envelope;
-import com.vividsolutions.jts.geom.Geometry;
-
-import play.libs.Akka;
+import models.*;
+import org.joda.time.LocalDate;
+import otp.Analyst;
 import play.libs.Json;
-import play.libs.F.Function;
-import play.libs.F.Function0;
-import play.libs.F.Promise;
-import play.mvc.*;
-import play.mvc.Http.MultipartFormData.FilePart;
-import scala.concurrent.ExecutionContext;
-import tiles.Tile;
-import utils.HaltonPoints;
+import play.mvc.Controller;
+import play.mvc.Http;
+import play.mvc.Result;
+import play.mvc.Security;
 import utils.QueryResults;
 import utils.ResultEnvelope;
-import utils.QueryResults.QueryResultItem;
+
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.Collection;
+import java.util.zip.ZipException;
 
 @Security.Authenticated(Secured.class)
 public class Api extends Controller {

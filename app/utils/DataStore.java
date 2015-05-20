@@ -1,29 +1,15 @@
 package utils;
 
+import controllers.Application;
+import org.mapdb.*;
+import org.mapdb.DB.BTreeMapMaker;
+import org.mapdb.Fun.Tuple2;
+import play.Logger;
+
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-
-import models.Shapefile.ShapeFeature;
-
-import org.mapdb.BTreeKeySerializer;
-import org.mapdb.BTreeMap;
-import org.mapdb.DB;
-import org.mapdb.DB.BTreeMapMaker;
-import org.mapdb.DBMaker;
-import org.mapdb.Fun;
-import org.mapdb.Pump;
-import org.mapdb.Fun.Tuple2;
-
-import controllers.Application;
-import play.Logger;
-import play.Play;
 
 public class DataStore<T> {
 

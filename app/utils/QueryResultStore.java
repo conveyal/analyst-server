@@ -1,29 +1,15 @@
 package utils;
 
+import com.google.common.collect.Maps;
+import controllers.Application;
+import models.Query;
+import org.mapdb.*;
+
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.zip.GZIPOutputStream;
-
-import org.mapdb.BTreeKeySerializer;
-import org.mapdb.BTreeMap;
-import org.mapdb.DB;
-import org.mapdb.DBMaker;
-import org.mapdb.Serializer;
-import org.opentripplanner.analyst.Histogram;
-
-import utils.ResultEnvelope.Which;
-
-import com.google.common.collect.Maps;
-import com.google.protobuf.CodedOutputStream;
-
-import controllers.Application;
-import models.Query;
 
 /**
  * A datastore optimized for storing query results: high performance reading of a single variable, and high performance writing overall.

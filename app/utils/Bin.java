@@ -1,8 +1,8 @@
 package utils;
 
-import java.awt.Color;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import java.awt.*;
 
 /**
  * Represents a bin for classification.

@@ -1,15 +1,11 @@
 package utils;
 
+import org.apache.commons.io.IOUtils;
+
+import java.io.*;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-
-import org.apache.commons.io.IOUtils;
 
 /**
  * Utilities for working with zip files.

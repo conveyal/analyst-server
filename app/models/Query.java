@@ -1,60 +1,27 @@
 package models;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-
-import models.Bundle.RouteSummary;
-
-import org.joda.time.DateTimeZone;
-import org.joda.time.LocalDate;
-import org.opentripplanner.analyst.ResultSet;
-import org.opentripplanner.profile.ProfileRequest;
-import org.opentripplanner.routing.core.RoutingRequest;
-import org.opentripplanner.routing.core.TraverseModeSet;
-
-import otp.Analyst;
-import play.Logger;
-import play.Play;
-import play.libs.Akka;
-import scala.concurrent.Await;
-import scala.concurrent.Future;
-import scala.concurrent.duration.Duration;
-import utils.Cluster;
-import utils.DataStore;
-import utils.HashUtils;
-import utils.QueryResultStore;
-import utils.ResultEnvelope;
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
 import akka.actor.UntypedActor;
-import akka.pattern.Patterns;
-import akka.util.Timeout;
-
-import com.conveyal.otpac.actors.JobItemActor;
-import com.conveyal.otpac.message.JobId;
-import com.conveyal.otpac.message.JobSpec;
-import com.conveyal.otpac.message.JobStatus;
-import com.conveyal.otpac.message.WorkResult;
-import com.conveyal.otpac.standalone.StandaloneCluster;
-import com.conveyal.otpac.standalone.StandaloneExecutive;
-import com.conveyal.otpac.standalone.StandaloneWorker;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
-import com.vividsolutions.jts.geom.Geometry;
-
 import controllers.Api;
-import controllers.Application;
-import controllers.Tiles;
+import models.Bundle.RouteSummary;
+import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
+import org.opentripplanner.profile.ProfileRequest;
+import org.opentripplanner.routing.core.RoutingRequest;
+import org.opentripplanner.routing.core.TraverseModeSet;
+import play.Logger;
+import play.Play;
+import utils.DataStore;
+import utils.HashUtils;
+import utils.QueryResultStore;
+import utils.ResultEnvelope;
+
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.*;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Query implements Serializable {
@@ -144,15 +111,8 @@ public class Query implements Serializable {
 	}
 	
 	public void run() {
-		
-		ActorRef queryActor = Cluster.getActorSystem().actorOf(Props.create(QueryActor.class));
-		System.out.println(queryActor.path());
-		
-		queryActor.tell(this, null);
-		
-		akkaId = queryActor.path().name();
-		
-		save();
+
+		// FIXME do something.
 		
 	}
 	
@@ -241,11 +201,6 @@ public class Query implements Serializable {
 				if (workOffline == null)
 					workOffline = true;
 				
-				ActorSystem system = Cluster.getActorSystem();
-				ActorRef executive = Cluster.getExecutive();
-				
-				JobSpec js;
-								
 				q.totalPoints = sl.getFeatureCount();
 				q.completePoints = 0;
 				
@@ -269,21 +224,12 @@ public class Query implements Serializable {
 					
 					// the pointset is already in the cluster cache, from when it was uploaded.
 					// every pointset has all shapefile attributes.
-					js = new JobSpec(graphId, sl.id, sl.id, pr);
 				}
 				else {
 					// this is not a transit request, no need for computationally-intensive profile routing 
 					Bundle s = Bundle.getBundle(q.scenarioId);
 					RoutingRequest rr = Api.analyst.buildRequest(q.scenarioId, q.date, q.fromTime, null, q.mode, 120, DateTimeZone.forID(s.timeZone));
-					js = new JobSpec(graphId, sl.id, sl.id, rr);
 				}
-
-				// plus a callback that registers how many work items have returned
-				ActorRef callback = system.actorOf(Props.create(SaveQueryCallback.class, q.id, q.totalPoints));
-				js.setCallback(callback);
-
-				// start the job
-				executive.tell(js, ActorRef.noSender());							
 			}
 		} 
 	}
@@ -294,61 +240,13 @@ public class Query implements Serializable {
 	 */
 	public static Collection<Query> getQueriesByPointSet(String shapefileId) {
 		Collection<Query> ret = new ArrayList<Query>();
-		
+
 		for (Query q : queryData.getAll()) {
 			if (q.shapefileId != null && q.shapefileId.equals(shapefileId)) {
 				ret.add(q);
 			}
 		}
-		
+
 		return ret;
-	}
-	
-	/**
-	 * Save the queries as they come back.
-	 */
-	public static class SaveQueryCallback extends JobItemActor {
-		
-		/** the query ID */
-		public final String id;
-		
-		/** the number of points completed so far */
-		public int complete; 
-		
-		/** the number of points we expect to complete */
-		public final int totalPoints;
-		
-		/**
-		 * Create a new save query callback.
-		 * @param id the query ID.
-		 */
-		public SaveQueryCallback(String id, int totalPoints) {
-			this.id = id;
-			this.totalPoints = totalPoints;
-			complete = 0;
-		}
-		
-		@Override
-		public synchronized void onWorkResult(WorkResult res) {			
-			if (res.success) {
-				Query.saveQueryResult(id, new ResultEnvelope(res));
-			}
-			
-			// update complete after query has been saved
-			complete++;
-			
-			// only update client every 200 points or when the query is done
-			if (complete % 200 == 0 || complete == totalPoints) {
-				Query query = Query.getQuery(id);				
-				query.completePoints = complete;
-				query.save();
-				
-				// flush to disk before saying the query is done
-				// transactional support is off, so this is important
-				if (complete == totalPoints) {
-					query.closeResults();					
-				}
-			}
-		}
 	}
 }

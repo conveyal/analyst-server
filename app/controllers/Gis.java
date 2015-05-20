@@ -1,80 +1,40 @@
 package controllers;
 
-import static utils.PromiseUtils.resolveNow;
-
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.Polygon;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
-import javax.imageio.ImageIO;
-
-import models.Query;
-import models.Shapefile.ShapeFeature;
-import models.Shapefile;
-import models.SpatialLayer;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.MultiPolygon;
+import com.vividsolutions.jts.geom.Point;
 import models.Attribute;
-
+import models.Query;
+import models.Shapefile;
+import models.Shapefile.ShapeFeature;
 import org.apache.commons.io.FileUtils;
-import org.geotools.coverage.grid.GridEnvelope2D;
-import org.geotools.coverage.grid.GridGeometry2D;
 import org.geotools.data.DataUtilities;
 import org.geotools.data.DefaultTransaction;
 import org.geotools.data.Transaction;
 import org.geotools.data.collection.ListFeatureCollection;
 import org.geotools.data.shapefile.ShapefileDataStore;
 import org.geotools.data.shapefile.ShapefileDataStoreFactory;
-import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureSource;
 import org.geotools.data.simple.SimpleFeatureStore;
-import org.geotools.feature.FeatureCollections;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
-import org.geotools.geometry.Envelope2D;
-import org.geotools.geometry.jts.JTS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
-import org.joda.time.LocalDate;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
-import org.opengis.referencing.operation.MathTransform;
 import org.opentripplanner.analyst.PointSet;
 import org.opentripplanner.analyst.ResultSet;
-import org.opentripplanner.analyst.TimeSurface;
-import org.opentripplanner.analyst.core.SlippyTile;
-import org.opentripplanner.analyst.request.TileRequest;
-
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Envelope;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.LineString;
-import com.vividsolutions.jts.geom.Point;
-import com.vividsolutions.jts.geom.MultiPolygon;
-import com.vividsolutions.jts.index.strtree.STRtree;
-
 import play.Logger;
-import play.Play;
-import play.libs.F;
-import play.mvc.*;
-import tiles.Tile;
+import play.mvc.Controller;
+import play.mvc.Result;
+import play.mvc.Security;
 import utils.DirectoryZip;
-import utils.HaltonPoints;
 import utils.HashUtils;
 import utils.QueryResults;
 import utils.ResultEnvelope;
-import utils.QueryResults.QueryResultItem;
 import utils.ResultEnvelope.Which;
+
+import java.io.File;
+import java.io.Serializable;
+import java.util.*;
 @Security.Authenticated(Secured.class)
 public class Gis extends Controller {
 	

@@ -1,10 +1,9 @@
 package utils;
 
-import java.io.Serializable;
-
+import com.vividsolutions.jts.geom.Envelope;
 import org.geotools.geometry.Envelope2D;
 
-import com.vividsolutions.jts.geom.Envelope;
+import java.io.Serializable;
 
 public class Bounds implements Serializable {
 	private static final long serialVersionUID = 1L;

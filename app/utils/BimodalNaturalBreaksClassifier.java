@@ -1,11 +1,11 @@
 package utils;
 
-import java.awt.Color;
+import utils.QueryResults.QueryResultItem;
+
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import utils.QueryResults.QueryResultItem;
 
 /**
  * A modified natural breaks classifier for bimodal data. Creates some number of classes about and below zero, with

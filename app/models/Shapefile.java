@@ -1,24 +1,14 @@
 package models;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipException;
-import java.util.zip.ZipFile;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.vividsolutions.jts.geom.Envelope;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.MultiPolygon;
+import com.vividsolutions.jts.geom.Polygon;
+import com.vividsolutions.jts.geom.prep.PreparedPolygon;
+import com.vividsolutions.jts.index.strtree.STRtree;
+import controllers.Application;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.geotools.data.DataStoreFinder;
@@ -29,8 +19,8 @@ import org.geotools.geometry.jts.JTS;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.mapdb.Fun;
-import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.Property;
+import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.PropertyType;
 import org.opengis.referencing.FactoryException;
@@ -40,28 +30,18 @@ import org.opentripplanner.analyst.EmptyPolygonException;
 import org.opentripplanner.analyst.PointFeature;
 import org.opentripplanner.analyst.PointSet;
 import org.opentripplanner.analyst.UnsupportedGeometryException;
-
 import play.Logger;
 import play.Play;
 import play.libs.Akka;
-
-import com.conveyal.otpac.PointSetDatastore;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.vividsolutions.jts.geom.Envelope;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.MultiPolygon;
-import com.vividsolutions.jts.geom.Polygon;
-import com.vividsolutions.jts.geom.prep.PreparedPolygon;
-import com.vividsolutions.jts.index.strtree.STRtree;
-
-import controllers.Application;
 import scala.concurrent.ExecutionContext;
-import scala.concurrent.duration.Duration;
-import utils.Bounds;
-import utils.DataStore;
-import utils.HaltonPoints;
-import utils.HashUtils;
+import utils.*;
+
+import java.io.*;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
+import java.util.zip.ZipFile;
 
 /**
  * A Shapefile corresponds to an OTP PointSet. All numeric Shapefile columns are converted to pointset columns and accessibility values are calculated for each.
@@ -76,7 +56,7 @@ public class Shapefile implements Serializable {
 	private static PointSetDatastore datastore;
 	
 	static {
-		String s3credentials = Play.application().configuration().getString("cluster.s3credentials");
+		String s3credentials = Play.application().configuration().getString("cluster.aws-credentials");
 		String bucket = Play.application().configuration().getString("cluster.pointsets-bucket");
 		boolean workOffline = Play.application().configuration().getBoolean("cluster.work-offline");
 		

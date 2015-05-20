@@ -1,12 +1,10 @@
 package utils;
 
+import org.opentripplanner.analyst.ResultSet;
+
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.opentripplanner.analyst.ResultSet;
-
-import com.conveyal.otpac.message.WorkResult;
 
 /**
  * This is a class that stores several result sets: an upper bound, a lower bound, and a central tendency.
@@ -53,31 +51,6 @@ public class ResultEnvelope implements Serializable {
 	
 	/** The ID of the shapefile/pointset from whence this result envelope came */
 	public String shapefile;
-	
-	/**
-	 * Build a result envelope from a WorkResult from OTPA Cluster.
-	 */
-	public ResultEnvelope (WorkResult res) {
-		if (res.profile) {
-			this.profile = true;
-			this.bestCase = res.getBestCase();
-			this.worstCase = res.getWorstCase();
-			this.avgCase = res.getPointEstimate();
-			this.pointEstimate = null;
-			this.spread = null;
-			// the surface will never be null, because it is only created if the workresult was successful
-			this.id = this.bestCase.id;
-		}
-		else {
-			this.profile = false;
-			this.pointEstimate = res.getPointEstimate();
-			this.avgCase = null;
-			this.bestCase = null;
-			this.worstCase = null;
-			this.spread = null;
-			this.id = this.pointEstimate.id;
-		}
-	}
 	
 	public ResultSet get (Which key) {
 		switch (key) {

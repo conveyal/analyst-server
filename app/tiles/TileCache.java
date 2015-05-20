@@ -1,15 +1,10 @@
 package tiles;
 
-import java.util.concurrent.ExecutionException;
-
-import play.libs.Akka;
-import play.libs.F.Function0;
-import play.libs.F.Promise;
-import scala.concurrent.ExecutionContext;
-
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+
+import java.util.concurrent.ExecutionException;
 
 public class TileCache extends CacheLoader<AnalystTileRequest, byte[]> {
 	

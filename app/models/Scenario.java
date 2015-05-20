@@ -1,8 +1,8 @@
 package models;
 
-import java.io.Serializable;
-
 import utils.Bounds;
+
+import java.io.Serializable;
 
 
 /**

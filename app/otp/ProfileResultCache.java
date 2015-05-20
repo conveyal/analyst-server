@@ -2,15 +2,6 @@ package otp;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Queues;
-
-import org.opentripplanner.routing.spt.ShortestPathTree;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
 
 /**
  * Caches travel time surfaces, which are derived from shortest path trees.

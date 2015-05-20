@@ -1,16 +1,10 @@
 package utils;
 
-import java.awt.Color;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
-
 import utils.QueryResults.QueryResultItem;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.awt.*;
+import java.util.*;
+import java.util.List;
 
 public class NaturalBreaksClassifier extends Classifier {
 	

@@ -1,14 +1,13 @@
 package models;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
+import utils.DataStore;
+
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
-
-import utils.DataStore;
 
 /**
  * Scenarios are lightweight modifications on top of bundles. For example, you might have a single San Francisco

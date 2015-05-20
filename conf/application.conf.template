@@ -22,8 +22,11 @@ application.tmp=tmp/
 # Path to bin files (geom2gtfs)
 application.bin=bin/
 
-# Where to find S3 credentials
-cluster.s3credentials=s3credentials
+# Where to find AWS credentials
+cluster.aws-credentials=s3credentials
+
+# The prefix for SQS queues.
+cluster.queue-prefix=<PREFIX>
 
 # The S3 bucket in which to store graphs
 cluster.graphs-bucket=<BUCKET NAME>

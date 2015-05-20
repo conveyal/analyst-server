@@ -5,12 +5,7 @@ import play.libs.F.Promise;
 import play.mvc.Result;
 import play.mvc.Security;
 import tiles.AnalystTileRequest;
-import tiles.AnalystTileRequest.QueryComparisonTile;
-import tiles.AnalystTileRequest.QueryTile;
-import tiles.AnalystTileRequest.ShapefileTile;
-import tiles.AnalystTileRequest.SpatialTile;
-import tiles.AnalystTileRequest.TransitComparisonTile;
-import tiles.AnalystTileRequest.TransitTile;
+import tiles.AnalystTileRequest.*;
 import utils.ResultEnvelope;
 
 /** These are tiles which require authentication in all cases */
