@@ -23,7 +23,8 @@ public class TransportScenario implements Serializable {
 	public static final long serialVersionUID = 1L;
 	
 	// called transport_scenario not scenario because scenario is what bundles used to be called.
-	private static final DataStore<TransportScenario> scenarioStore = new DataStore<TransportScenario>("transport_scenario", true);
+	// _data is to avoid clashes with transport_scenario.db from 0.5.x which is this class but with a different class name
+	private static final DataStore<TransportScenario> scenarioStore = new DataStore<TransportScenario>("transport_scenario_data", true);
 	
 	/** The bundle that this scenario is based on */
 	public String bundleId;
