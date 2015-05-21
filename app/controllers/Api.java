@@ -9,17 +9,20 @@ import com.fasterxml.jackson.datatype.joda.JodaModule;
 import models.*;
 import org.joda.time.LocalDate;
 import otp.Analyst;
+import play.libs.Akka;
 import play.libs.Json;
 import play.mvc.Controller;
 import play.mvc.Http;
 import play.mvc.Result;
 import play.mvc.Security;
+import scala.concurrent.duration.Duration;
 import utils.QueryResults;
 import utils.ResultEnvelope;
 
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Collection;
+import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipException;
 
 @Security.Authenticated(Secured.class)
@@ -685,14 +688,20 @@ public class Api extends Controller {
     }
 
     public static Result createQuery() throws IOException {
-
-    	Query  q = Query.create();
-
-    	q = mapper.readValue(request().body().asJson().traverse(), Query.class);
+    	final Query q = mapper.readValue(request().body().asJson().traverse(), Query.class);
 
     	q.save();
 
-    	q.run();
+        Akka.system().scheduler().scheduleOnce(
+                Duration.create(10, TimeUnit.MILLISECONDS),
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        q.run();
+                    }
+                },
+                Akka.system().dispatcher()
+        );
 
         return ok(Api.toJson(q, false));
 

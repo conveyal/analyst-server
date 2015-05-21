@@ -6,8 +6,16 @@ import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.*;
 import com.beust.jcommander.internal.Lists;
 import com.beust.jcommander.internal.Maps;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.Version;
+import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.databind.module.SimpleSerializers;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
+import org.opentripplanner.routing.core.TraverseModeSet;
 import play.Logger;
 import play.Play;
 import play.libs.Akka;
@@ -38,6 +46,7 @@ public class QueueManager {
 
 	static {
 		objectMapper.registerModule(new JodaModule());
+		objectMapper.registerModule(new TraverseModeSetModule());
 	}
 
 	/** URL of queue that brings single point results back from the cluster */
@@ -61,7 +70,7 @@ public class QueueManager {
 		}
 
 		// create the output queue
-		String outQueueName = prefix + "_output_" + UUID.randomUUID().toString();
+		String outQueueName = prefix + "_output_" + IdUtils.getId();
 		outputQueue = createQueue(outQueueName);
 		Logger.info("Receiving single point results from queue " + outQueueName);
 
@@ -76,16 +85,20 @@ public class QueueManager {
 	}
 
 	public boolean enqueue (AnalystClusterRequest req, Consumer<ResultEnvelope> callback) {
-		String queueUrl = getOrCreateSinglePointQueue(req.graphId);
+		String queueUrl;
 
-		// state tracking
-		req.jobId = null;
-		req.id = "single-" + UUID.randomUUID().toString();
-		req.disposition = AnalystClusterRequest.RequestDisposition.ENQUEUE;
-		req.outputLocation = outputQueue;
+		// single point job, not associated with a parent job
+		if (req.jobId == null)
+			queueUrl = getOrCreateSinglePointQueue(req.graphId);
+		else
+			queueUrl = getOrCreateJobQueue(req.graphId, req.jobId);
 
 		// store the callback
-		callbacks.put(req.id, callback);
+		if (callback != null)
+			callbacks.put(req.id, callback);
+
+		if (req.disposition == AnalystClusterRequest.RequestDisposition.ENQUEUE)
+			req.outputLocation = outputQueue;
 
 		// enqueue it
 		try {
@@ -97,6 +110,11 @@ public class QueueManager {
 		}
 
 		return true;
+	}
+
+	private String getOrCreateJobQueue(String graphId, String jobId) {
+		String queueName = prefix + "_" + graphId + "_" + jobId;
+		return getOrCreateQueue(queueName);
 	}
 
 	/** Get the URL for a single-point queue, creating the queue if necessary */
@@ -189,6 +207,26 @@ public class QueueManager {
 					messagesToDelete.add(message.getReceiptHandle());
 				}
 			}
+		}
+	}
+
+	public static class TraverseModeSetSerializer extends JsonSerializer<TraverseModeSet> {
+		@Override
+		public void serialize(TraverseModeSet traverseModeSet, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException, JsonProcessingException {
+			jsonGenerator.writeString(traverseModeSet.toString());
+		}
+	}
+
+	public static class TraverseModeSetModule extends SimpleModule {
+		public TraverseModeSetModule () {
+			super("TraverseModeSetModule", new Version(0, 0, 1, null, null, null));
+		}
+
+		@Override
+		public void setupModule(SetupContext ctx) {
+			SimpleSerializers s = new SimpleSerializers();
+			s.addSerializer(TraverseModeSet.class, new TraverseModeSetSerializer());
+			ctx.addSerializers(s);
 		}
 	}
 }

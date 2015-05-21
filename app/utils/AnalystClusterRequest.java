@@ -16,9 +16,6 @@ public abstract class AnalystClusterRequest implements Serializable {
 	/** The ID of the graph against which to calculate this request */
 	public String graphId;
 	
-	/** The origin */
-	public PointFeature from;
-	
 	/** The job ID this is associated with */
 	public String jobId;
 
@@ -41,8 +38,7 @@ public abstract class AnalystClusterRequest implements Serializable {
 	/** Is this a profile request? */
 	public boolean profile;
 	
-	public AnalystClusterRequest(PointFeature from, String destinationPointsetId, String graphId, boolean profile) {
-		this.from = from;
+	public AnalystClusterRequest(String destinationPointsetId, String graphId, boolean profile) {
 		this.destinationPointsetId = destinationPointsetId;
 		this.graphId = graphId;
 		this.profile = profile;

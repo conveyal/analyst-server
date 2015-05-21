@@ -13,26 +13,9 @@ import java.io.Serializable;
 public class OneToManyProfileRequest extends AnalystClusterRequest implements Serializable {
 	public ProfileRequest options;
 
-	public OneToManyProfileRequest(PointFeature from, String to, ProfileRequest options, String graphId) {
-		super(from, to, graphId, true);
-		
-		try {
-			this.options = options.clone();
-		} catch (CloneNotSupportedException e) {
-			e.printStackTrace();
-			throw new RuntimeException(e);
-		}
-		this.options.analyst = true;
-		
-		// Even though we're making an analyst request, OTP requires a to location
-		// which will be ignored
-		this.options.fromLat = this.options.toLat = from.getLat();
-		this.options.fromLon = this.options.toLon = from.getLon();
-	}
-
 	/** used in single point mode with origin specified by options */
 	public OneToManyProfileRequest(String to, ProfileRequest options, String graphId) {
-		super(null, to, graphId, true);
+		super(to, graphId, true);
 		try {
 			this.options = options.clone();
 		} catch (CloneNotSupportedException e) {

@@ -26,8 +26,8 @@ public class Analyst {
 	 * it over the wire.
 	 */
 	
-	public RoutingRequest buildRequest(String graphId, LocalDate date, int time, GenericLocation latLon, String mode, int cutoffMinutes, DateTimeZone tz) {		
-		PrototypeAnalystRequest req = new PrototypeAnalystRequest();
+	public static RoutingRequest buildRequest(String graphId, LocalDate date, int time, GenericLocation latLon, String mode, int cutoffMinutes, DateTimeZone tz) {
+		RoutingRequest req = new PrototypeAnalystRequest();
 		
 		req.dateTime = date.toDateTimeAtStartOfDay(tz).toDate().getTime() / 1000;
 		req.dateTime += time;
@@ -48,11 +48,11 @@ public class Analyst {
 		return req;
 	}
 	
-	public ProfileRequest buildProfileRequest(String mode, LocalDate date, int fromTime, int toTime, double lat, double lon) {
-		ProfileRequest req = new PrototypeAnalystProfileRequest();
+	public static ProfileRequest buildProfileRequest(String mode, LocalDate date, int fromTime, int toTime, double lat, double lon) {
+		ProfileRequest req = new ProfileRequest();
 		
 		// split the modeset into two modes, using the logic in TraverseModeSet
-                TraverseModeSet modes = new TraverseModeSet(mode);
+		TraverseModeSet modes = new TraverseModeSet(mode);
 		modes.setTransit(false);
 
 		TraverseModeSet transitModes = new TraverseModeSet(mode);

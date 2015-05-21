@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.UUID;
 
 /**
  * Controllers for getting result sets used in single point mode.
@@ -75,6 +76,11 @@ public class SinglePoint extends Controller {
 		else {
 			req = objectMapper.treeToValue(params, OneToManyRequest.class);
 		}
+
+		// state tracking
+		req.jobId = null;
+		req.id = "single-" + UUID.randomUUID().toString();
+		req.disposition = AnalystClusterRequest.RequestDisposition.ENQUEUE;
 
 		F.RedeemablePromise<Result> result = F.RedeemablePromise.empty();
 
