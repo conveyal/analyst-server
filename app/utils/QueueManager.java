@@ -61,7 +61,7 @@ public class QueueManager {
 		}
 
 		// create the output queue
-		String outQueueName = prefix + "-output-" + UUID.randomUUID().toString();
+		String outQueueName = prefix + "_output_" + UUID.randomUUID().toString();
 		outputQueue = createQueue(outQueueName);
 		Logger.info("Receiving single point results from queue " + outQueueName);
 
@@ -101,7 +101,7 @@ public class QueueManager {
 
 	/** Get the URL for a single-point queue, creating the queue if necessary */
 	private String getOrCreateSinglePointQueue(String graphId) {
-		String queueName = prefix + "-single-" + graphId;
+		String queueName = prefix + "_" + graphId + "_single";
 		return getOrCreateQueue(queueName);
 	}
 
