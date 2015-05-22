@@ -27,8 +27,8 @@ which can be serialized using standard Jackson object serialization. Times shoul
 If `destinationPointsetId` is null, accessibility histograms and times obviously cannot be calculated, but isochrones spaced five
 minutes apart up to 120 minutes should be generated and serialized as GeoJSON.
 
-These requests are serialized to JSON and gzipped and placed into SQS queues following the naming schemes described in the cluster spec.
-Once  a worker receives a job, it is expected to process it, save the results to S3, and place a small gzipped JSON message in
+These requests are serialized to JSON placed into SQS queues following the naming schemes described in the cluster spec.
+Once  a worker receives a job, it is expected to process it, save the results to S3, and place a small JSON message in
 the outputQueue that looks like this:
 
 ```{
