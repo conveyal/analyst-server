@@ -12,12 +12,21 @@ need to render the result without including any extra data. This way we loop ove
 Header:
 
 UTF: literal text `QUERYRESULT`, identifying the file type.
+
 UTF: query ID
+
 UTF: variable name (as returned by the cluster, format `categoryId.variable`)
+
 UTF: envelope parameter (e.g. `AVERAGE`, `POINT_ESTIMATE`, etc.)
 
+
+
 Each entry:
+
 UTF: feature ID
+
 int: number of minutes in histogram
+
 repeated int: counts (one int for each minute, length determined by above)
+
 repeated int: sums (one int for each minute, length again determined by above)
