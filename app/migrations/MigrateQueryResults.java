@@ -30,7 +30,7 @@ public class MigrateQueryResults {
 			
 			File newDb = new File(newResultsDir, newDbName);
 			
-			QueryResultStore store = new QueryResultStore(newDb, false);
+			/*QueryResultStore store = new QueryResultStore(newDb, false);
 			
 			DataStore<ResultEnvelope> oldResults = new DataStore<ResultEnvelope>(file.getParentFile(), file.getName().replaceFirst(".db$", ""), false, true, false);
 			
@@ -38,7 +38,7 @@ public class MigrateQueryResults {
 				store.store(env);
 			}
 			
-			store.close();
+			store.close();*/
 		}
 	}
 }

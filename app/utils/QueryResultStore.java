@@ -1,161 +1,274 @@
 package utils;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import controllers.Application;
 import models.Query;
+import models.Shapefile;
 import org.mapdb.*;
+import org.opentripplanner.analyst.Histogram;
+import org.opentripplanner.analyst.ResultSet;
+import play.Play;
 
-import java.io.File;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.*;
+import java.util.*;
 import java.util.Map.Entry;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 /**
- * A datastore optimized for storing query results: high performance reading of a single variable, and high performance writing overall.
+ * A datastore optimized for storing query results.
+ * This is not a MapDB: it uses one flat file per variable (since you're only ever looking at one variable at a time),
+ * which is then encoded like this:
+ *
+ * Header: QUERYRESULT encoded as UTF
+ * Query ID encoded as UTF
+ * Variable name encoded as UTF
+ * Envelope parameter encoded as a UTF.
+ * Repeated:
+ *   Feature ID encoded as string
+ *   	int number of counts (also number of sums)
+ *     counts encoded as ints
+ *     sums encoded as ints
  */
 public class QueryResultStore {
 	public final boolean readOnly;
-	private DB db;
-	
-	/** cache mapdb maps so we don't continually create them */
-	private HashMap<String, BTreeMap<String, ResultEnvelope>> mapCache = Maps.newHashMap();
+	private List<String> attributes;
+
+	private File outDir;
+
+	private String queryId;
+
+	/** cache filewriters */
+	private Map<Fun.Tuple2<String, ResultEnvelope.Which>, FileWriter> writerCache = Maps.newHashMap();
+
+	/** we need to keep references to these because we need to close them */
+	private Collection<FileReader> readerCache = Lists.newArrayList();
 	
 	public QueryResultStore (Query q) {
-		this.readOnly = q.completePoints == q.totalPoints;
-		File resultDir = new File(Application.dataPath, "query_results");
-		resultDir.mkdirs();
-		
-		initialize(new File(resultDir, q.id + ".db"));
-	}
-	
-	public QueryResultStore (File dbFile, boolean readOnly) {
-		this.readOnly = readOnly;
-		initialize(dbFile);
-	}
-	
-	private void initialize (File dbFile) {		
-		DBMaker dbm = DBMaker.newFileDB(dbFile)
-				// promise me you'll never run this on a 32bit machine
-				.mmapFileEnable()
-				.transactionDisable()
-				// don't cache too much stuff
-				.cacheSize(2000);
-		
-		if (readOnly)
-			dbm.readOnly();
-		
-		db = dbm.make();
+		this.readOnly = q.complete;
+		this.queryId = q.id;
+
+		if (!readOnly) {
+			// figure out which envelope params we'll use
+			ResultEnvelope.Which[] whiches;
+			if (q.isTransit())
+				whiches = new ResultEnvelope.Which[]{ResultEnvelope.Which.BEST_CASE, ResultEnvelope.Which.WORST_CASE, ResultEnvelope.Which.AVERAGE};
+			else
+				whiches = new ResultEnvelope.Which[]{ResultEnvelope.Which.POINT_ESTIMATE};
+
+			outDir = new File(Play.application().configuration().getString("application.data"), "flat_results");
+			outDir.mkdirs();
+		}
+
 	}
 	
 	/** Save a result envelope in this store */
 	public void store(ResultEnvelope res) {
-		// We store each variable individually, to increase read performance.
-		// The client only ever needs to see one variable at a time; we don't want to loop over the entire mapdb to render one tileset
-		Map<String, ResultEnvelope> exploded = res.explode();
-		
-		for (Entry<String, ResultEnvelope> attr : exploded.entrySet()) {
-			getMap(attr.getKey()).put(attr.getValue().id, attr.getValue());
-		}
+		// parallelize across variables, which are stored in different files, so this is threadsafe
+		Arrays.asList(ResultEnvelope.Which.values()).parallelStream().forEach(which -> {
+			ResultSet rs = res.get(which);
+
+			if (rs != null) {
+				for (Entry<String, Histogram> e : rs.histograms.entrySet()) {
+					getWriter(e.getKey(), which).write(res.id, e.getValue());
+				}
+			}
+		});
 	}
-	
-	/** close the underlying mapdb, writing all changes to disk */
+
+	private FileWriter getWriter(String variable, ResultEnvelope.Which which) {
+		Fun.Tuple2<String, ResultEnvelope.Which> wkey = new Fun.Tuple2<>(variable, which);
+
+		if (!writerCache.containsKey(wkey)) {
+				if (!writerCache.containsKey(wkey)) {
+					String filename = String.format(Locale.US, "%s_%s_%s.results.gz", queryId, variable, which);
+					writerCache.put(wkey, new FileWriter(new File(outDir, filename), queryId, variable, which));
+				}
+		}
+
+		return writerCache.get(wkey);
+	}
+
+	/** close the underlying datastore, writing all changes to disk */
 	public void close () {
-		db.close();
+		for (FileWriter w : writerCache.values()) {
+			w.close();
+		}
+
+		for (FileReader reader : readerCache) {
+			reader.close();
+		}
 	}
 	
-	/** get all the result envelopes for a particular variable */
-	public Collection<ResultEnvelope> getAll(String attr) {
-		if (!db.exists(attr))
-			return null;
-		
-		return getMap(attr).values();
+	/** get all the resultsets for a particular variable and envelope parameter */
+	public Iterator<ResultSet> getAll(String attr, ResultEnvelope.Which which) {
+		String filename = String.format(Locale.US, "%s_%s_%s.results.gz", queryId, attr, which);
+		// cannot return a cached reader as each one has a pointer into the file
+		FileReader r = new FileReader(new File(outDir, filename));
+		readerCache.add(r);
+		return r;
 	}
-	
-	/** Get a map for a particular variable */
-	private BTreeMap<String, ResultEnvelope> getMap (String attr) {
-		if (!mapCache.containsKey(attr)) {
-			synchronized (mapCache) {
-				if (!mapCache.containsKey(attr)) {
-					BTreeMap<String, ResultEnvelope> map = db.createTreeMap(attr)
-							.keySerializer(BTreeKeySerializer.STRING)
-							// we've seen issues with disk performance, and we're disk bound, so spend a little CPU to save a lot of disk
-							.valueSerializer(new Serializer.CompressionWrapper(db.getDefaultSerializer()))
-							.makeOrGet();
-					mapCache.put(attr, map);
-					return map;
+
+	/** Write resultsets to a flat file */
+	private static class FileWriter {
+		private final DataOutputStream out;
+
+		public FileWriter(File file, String queryId, String variable, ResultEnvelope.Which which) {
+
+			try {
+				OutputStream os = new FileOutputStream(file);
+				GZIPOutputStream gos = new GZIPOutputStream(os);
+				// buffer for performance
+				BufferedOutputStream bos = new BufferedOutputStream(gos);
+				out = new DataOutputStream(bos);
+				out.writeUTF("QUERYRESULT");
+				out.writeUTF(queryId);
+				out.writeUTF(variable);
+				out.writeUTF(which.toString());
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
+
+		public synchronized void write (String id, Histogram histogram) {
+			if (id == null)
+				throw new NullPointerException("Feature ID is null!");
+
+			if (histogram.counts.length != histogram.sums.length)
+				throw new IllegalArgumentException("Invalid histogram, sum and count lengths differ");
+
+			try {
+				out.writeUTF(id);
+				out.writeInt(histogram.counts.length);
+
+				for (int i = 0; i < histogram.counts.length; i++) {
+					// TODO: zigzag encoding
+					// These are marginals so they are already effectively delta-coded
+					out.writeInt(histogram.counts[i]);
 				}
-			}
-		}
-		
-		return mapCache.get(attr);
-	}
-	
-	/* Dump a db file specified on the command line to a CSV on stdout */
-	/*public static void main (String... args) {
-		QueryResultStore qrs = new QueryResultStore(new File(args[0]), true);
-		
-		Map<String, ResultEnvelope> results = qrs.getMap(args[1]);
-		
-		boolean first = true;
-		
-		for (Entry<String, ResultEnvelope> e : results.entrySet()) {
-			if (first) {
-				StringBuilder sb = new StringBuilder();
-				
-				sb.append("id");
-				
-				for (Which which : Which.values()) {
-					if (e.getValue().get(which) != null) {
-						sb.append(",");
-						sb.append(which.name());
-					}						
+
+				for (int i = 0; i < histogram.sums.length; i++) {
+					out.writeInt(histogram.sums[i]);
 				}
-				
-				System.out.println(sb.toString());
+			} catch (IOException e) {
+				throw new RuntimeException(e);
 			}
-			
-			StringBuilder line = new StringBuilder();
-			line.append(e.getKey());
-			
-			for (Which which : Which.values()) {
-				if (e.getValue().get(which) != null) {
-					line.append(",");
-					line.append(e.getValue().get(which).sum(60, args[1]));
-				}						
-			}
-			
-			System.out.println(line.toString());
 		}
-	}*/
-	
-	/**
-	 * Dump a DB file specified on the command line to a simple flat-file format that can
-	 * be easily consumed as a stream.
-	 */
-	/*public static void main (String... args) {
-		QueryResultStore qrs = new QueryResultStore(new File(args[0]), true);
-		Map<String, ResultEnvelope> results = qrs.getMap(args[1]);
-		
-		try {
-			OutputStream os = new GZIPOutputStream(new FileOutputStream(args[2]));
-			CodedOutputStream cos = CodedOutputStream.newInstance(os);
-			
-			
-			cos.writeStringNoTag("RESULTENV\n");
-			cos.writeStringNoTag(args[1] + "\n");
-			
-			for (ResultEnvelope env : results.values()) {
-				cos.writeStringNoTag(env.id);
-				Histogram h = env.avgCase.histograms.get(key)  
-				cos.writeInt32NoTag(env.);
+
+		public void close () {
+			try {
+				out.close();
+			} catch (IOException e) {
+				throw new RuntimeException(e);
 			}
-			
-			
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
-		
-	}*/
+	}
+
+	private static class FileReader implements Iterator<ResultSet> {
+		private DataInputStream in;
+
+		private String var;
+
+		public final String queryId;
+
+		public final ResultEnvelope.Which which;
+
+		public FileReader(File file) {
+			try {
+				InputStream is = new FileInputStream(file);
+				GZIPInputStream gis = new GZIPInputStream(is);
+				BufferedInputStream bis = new BufferedInputStream(gis);
+				in = new DataInputStream(bis);
+
+				// make sure we have a query result file, and record variable name
+				String header = in.readUTF();
+
+				if (!"QUERYRESULT".equals(header))
+					throw new IllegalArgumentException("Attempt to read non-query-result file");
+
+				queryId = in.readUTF();
+				var = in.readUTF();
+				which = ResultEnvelope.Which.valueOf(in.readUTF());
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
+
+		@Override
+		public boolean hasNext() {
+			// this cannot be the easiest way to tell if we're at the end of the file
+			in.mark(8192);
+
+			try {
+				in.readUTF();
+			} catch (EOFException e) {
+				this.close();
+				return false;
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+
+			try {
+				in.reset();
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+
+			return true;
+		}
+
+		@Override
+		public ResultSet next() {
+			if (!hasNext())
+				throw new NoSuchElementException();
+
+			try {
+				ResultSet rs = new ResultSet();
+				// read the ID
+				rs.id = in.readUTF();
+
+				// number of bins in the histogram
+				int size = in.readInt();
+
+				int[] counts = new int[size];
+
+				for (int i = 0; i < size; i++) {
+					counts[i] = in.readInt();
+				}
+
+				int[] sums = new int[size];
+
+				for (int i = 0; i < size; i++) {
+					sums[i] = in.readInt();
+				}
+
+				Histogram h = new Histogram();
+				h.sums = sums;
+				h.counts = counts;
+
+				rs.histograms.put(var, h);
+
+				return rs;
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
+
+		@Override
+		public void forEachRemaining(Consumer<? super ResultSet> consumer) {
+			while (hasNext())
+				consumer.accept(next());
+		}
+
+		public void close () {
+			try {
+				in.close();
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
+	}
 }

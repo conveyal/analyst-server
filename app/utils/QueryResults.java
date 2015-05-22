@@ -11,6 +11,7 @@ import org.mapdb.Fun.Tuple3;
 import org.opentripplanner.analyst.ResultSet;
 
 import java.awt.*;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -80,30 +81,9 @@ public class QueryResults {
 
        double value;
 
-       for(ResultEnvelope env : q.getResults().getAll(sd.categoryId + "." + attributeId)) {
-    	   
-    	   ResultSet feature;
-    	   
-    	   switch(which) {
-    	   case WORST_CASE:
-    		   feature = env.worstCase;
-    		   break;
-    	   case BEST_CASE:
-    		   feature = env.bestCase;
-    		   break;
-    	   case POINT_ESTIMATE:
-    		   feature = env.pointEstimate;
-    		   break;
-    	   case SPREAD:
-    		   feature = env.spread;
-    		   break;
-    	   case AVERAGE:
-    		   feature = env.avgCase;
-    		   break;
-    	   default:
-    	    	throw new RuntimeException("Unhandled envelope type"); 
-    	   }
-    	   
+       for (Iterator<ResultSet> it = q.getResults().getAll(sd.categoryId + "." + attributeId, which); it.hasNext();) {
+    	   ResultSet feature = it.next();
+
            value = (double) feature.sum(timeLimit, sd.categoryId + "." + attributeId);
         	
         	if(maxValue == null || value > maxValue)

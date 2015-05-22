@@ -177,5 +177,21 @@ public class DataStore<T> {
 	public void close() {
 		db.close();
 	}
+
+	// methods to get and manipulate atomic ints
+	/** Create a new atomic int */
+	public int createInt (String name, int value) {
+		return db.createAtomicInteger(name, value).get();
+	}
+
+	/** Increment an atomic int and return its value */
+	public int incrementInt(String name) {
+		return db.getAtomicInteger(name).incrementAndGet();
+	}
+
+	/** Get the value of an atomic int */
+	public int getInt(String name) {
+		return db.getAtomicInteger(name).get();
+	}
 	
 }

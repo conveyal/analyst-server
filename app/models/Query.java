@@ -1,7 +1,6 @@
 package models;
 
 import akka.actor.Cancellable;
-import akka.actor.UntypedActor;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.services.s3.AmazonS3Client;
@@ -11,29 +10,13 @@ import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.*;
-import com.fasterxml.jackson.databind.deser.Deserializers;
-import com.fasterxml.jackson.databind.module.SimpleDeserializers;
-import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.fasterxml.jackson.databind.module.SimpleSerializers;
-import com.fasterxml.jackson.databind.ser.Serializers;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
-import com.vividsolutions.jts.geom.Geometry;
-import controllers.Api;
-import models.Bundle.RouteSummary;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.opentripplanner.analyst.PointFeature;
 import org.opentripplanner.analyst.PointSet;
 import org.opentripplanner.common.model.GenericLocation;
-import org.opentripplanner.profile.ProfileRequest;
-import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.TraverseModeSet;
 import otp.Analyst;
 import play.Logger;
@@ -42,7 +25,6 @@ import play.libs.Akka;
 import scala.concurrent.duration.Duration;
 import utils.*;
 
-import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
@@ -69,9 +51,6 @@ public class Query implements Serializable {
 	public String id;
 	public String projectId;
 	public String name;
-	
-	public Integer jobId;
-	public String akkaId;
 
 	public String mode;
 	
@@ -104,15 +83,6 @@ public class Query implements Serializable {
 	public Query() {
 		
 	}
-
-	// pick up queries that are already running
-	static {
-		for (Query q : queryData.getAll()) {
-			if (!q.complete) {
-				q.watch();
-			}
-		}
-	}
 	
 	static public Query create() {
 		
@@ -120,25 +90,6 @@ public class Query implements Serializable {
 		query.save();
 		
 		return query;
-	}
-
-	private static void initializeS3 () {
-		if (s3 == null) {
-			synchronized (QueryWatcher.class) {
-				if (s3 == null) {
-					String s3CredentialsFilename = Play.application().configuration().getString("cluster.aws-credentials");
-
-					if (s3CredentialsFilename != null) {
-						AWSCredentials creds = new ProfileCredentialsProvider(s3CredentialsFilename, "default").getCredentials();
-						s3 = new AmazonS3Client(creds);
-					}
-					else {
-						// S3 credentials propagated to EC2 instances via IAM roles
-						s3 = new AmazonS3Client();
-					}
-				}
-			}
-		}
 	}
 	
 	/**
@@ -190,8 +141,7 @@ public class Query implements Serializable {
 		completePoints = 0;
 		this.save();
 
-		// start watching for results now.
-		this.watch();
+		results = new QueryResultStore(this);
 
 		// TODO batch?
 		for (int i = 0; i < ps.capacity; i++) {
@@ -214,30 +164,32 @@ public class Query implements Serializable {
 			req.destinationPointsetId = this.shapefileId;
 			req.graphId = scenario.bundleId;
 			req.disposition = AnalystClusterRequest.RequestDisposition.STORE;
-			req.outputLocation = Play.application().configuration().getString("cluster.results-bucket");
+			req.outputQueue = Play.application().configuration().getString("cluster.results-bucket");
 			req.jobId = this.id;
 			req.id = pf.getId() != null ? pf.getId() : "" + i;
 			req.includeTimes = false;
 
-			// TODO parallelize?
-			qm.enqueue(req);
+			// TODO parallelize enqueing?
+			qm.enqueue(req, resultEnvelope -> {
+				// results are not threadsafe. additionally incrementing completePoints is not threadsafe.
+				// Note that this retains a reference to exactly one queryresults
+				synchronized (results) {
+					this.completePoints++;;
+					results.store(resultEnvelope);
+
+					// TODO is this safe (modifying object after it's been saved?)
+					// I think it's only a problem if the server crashes (in which case we have other problems)
+					// because we eventually save it after we are done changing it.
+					if (this.completePoints % 200 == 0)
+						this.save();
+
+					if (this.completePoints == this.totalPoints) {
+						this.save();
+						results.close();
+					}
+				}
+			});
 		}
-	}
-
-	/** watch this query's progress and update completePoints */
-	private void watch() {
-		QueryWatcher qw = new QueryWatcher(this);
-
-		// watch for results
-		Cancellable c = Akka.system().scheduler().schedule(
-				Duration.create(10, TimeUnit.SECONDS),
-				// check for updates every ten seconds
-				Duration.create(10, TimeUnit.SECONDS),
-				qw,
-				Akka.system().dispatcher()
-		);
-
-		qw.setCancellable(c);
 	}
 
 	public void delete() throws IOException {
@@ -269,14 +221,14 @@ public class Query implements Serializable {
 			results = null;
 		}
 	}
-	
+
 	public Integer getPercent() {
 		if(this.totalPoints != null && this.completePoints != null && this.totalPoints > 0)
-			return Math.round((float)((float)this.completePoints / (float)this.totalPoints) * 100); 
-		else 
+			return Math.round((float)((float)this.completePoints / (float)this.totalPoints) * 100);
+		else
 			return 0;
 	}
-	
+
 	static public Query getQuery(String id) {
 		
 		return queryData.getById(id);	
@@ -301,76 +253,6 @@ public class Query implements Serializable {
 		}	
 	}
 	
-	static void saveQueryResult(String id, ResultEnvelope resultEnvelope) {
-		
-		Query q = getQuery(id);
-
-		if(q == null)
-			return;
-		
-		q.getResults().store(resultEnvelope);
-	}
-
-	/** Process the results once a query is complete and copy them from S3 to MapDB */
-	protected void processResults () {
-		if (completePoints != totalPoints)
-			throw new UnsupportedOperationException("Tried to process incomplete query results!");
-
-		// S3 should already be initialized, but why not?
-		initializeS3();
-
-		Logger.info("Processing {} results", this.totalPoints);
-
-		QueryResultStore qrs = new QueryResultStore(this);
-
-		// get the results
-		ListObjectsRequest req = new ListObjectsRequest();
-		req.setBucketName(resultsBucket);
-		req.setPrefix(this.jobId + "/");
-		// TODO: this may be too slow with large queries
-		int count = 0;
-
-		ObjectListing ls;
-		do {
-			ls = s3.listObjects(req);
-
-			List<S3ObjectSummary> oss = ls.getObjectSummaries();
-
-			count += oss.size();
-
-			// process in parallel; we've had this be the bottleneck in the past
-			// TODO could this cause too many simultaneous S3 requests? What will happen then?
-			oss.parallelStream().forEach(os -> {
-				S3Object obj = s3.getObject(resultsBucket, os.getKey());
-				InputStream is = obj.getObjectContent();
-				ResultEnvelope re;
-				try {
-					re = objectMapper.readValue(is, ResultEnvelope.class);
-				} catch (IOException e) {
-					e.printStackTrace();
-					throw new RuntimeException(e);
-				} finally {
-					try {
-						is.close();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
-
-				qrs.store(re);
-			});
-
-			req = req.withMarker(ls.getNextMarker());
-			ls = s3.listObjects(req);
-			count += ls.getObjectSummaries().size();
-		} while (ls.isTruncated());
-
-		qrs.close();
-
-		complete = true;
-		save();
-	}
-	
 	/**
 	 * Get all the queries for a point set.
 	 */
@@ -384,60 +266,5 @@ public class Query implements Serializable {
 		}
 
 		return ret;
-	}
-
-	/** Watch this query for completion and update its status */
-	public static class QueryWatcher implements Runnable {
-		/**
-		 * This is the cancellable that refers to this Runnable, so we can cancel polling when we're done
-		 */
-		private Cancellable cancellable = null;
-
-		private final Query q;
-
-		public QueryWatcher(Query q) {
-			this.q = q;
-
-			// ensure the s3 client is available
-			initializeS3();
-		}
-
-		public void setCancellable(Cancellable c) {
-			if (cancellable != null)
-				throw new UnsupportedOperationException("Tried to set cancellable on querywatcher with already-set cancellable");
-
-			this.cancellable = c;
-		}
-
-
-		@Override
-		public void run() {
-			ListObjectsRequest req = new ListObjectsRequest();
-			req.setBucketName(resultsBucket);
-			req.setPrefix(q.id + "/");
-			// TODO: this may be too slow with large queries
-			ObjectListing ls = s3.listObjects(req);
-
-			int count = ls.getObjectSummaries().size();
-
-			while (ls.isTruncated()) {
-				req = req.withMarker(ls.getNextMarker());
-				ls = s3.listObjects(req);
-				count += ls.getObjectSummaries().size();
-			}
-
-			if (q.completePoints == null || q.completePoints != count) {
-				q.completePoints = count;
-				q.save();
-			}
-			;
-
-			// query is done!
-			if (q.completePoints == q.totalPoints && cancellable != null) {
-				Logger.info("Completed query {}", q.id);
-				cancellable.cancel();
-				q.processResults();
-			}
-		}
 	}
 }

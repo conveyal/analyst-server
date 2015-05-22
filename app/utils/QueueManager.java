@@ -2,10 +2,11 @@ package utils;
 
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.*;
 import com.beust.jcommander.internal.Lists;
-import com.beust.jcommander.internal.Maps;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.Version;
@@ -15,19 +16,23 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.module.SimpleSerializers;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
+import models.Query;
 import org.opentripplanner.routing.core.TraverseModeSet;
 import play.Logger;
 import play.Play;
 import play.libs.Akka;
+import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import java.util.zip.GZIPInputStream;
 
 /** Generic queuing support to enable us to throw stuff into SQS */
 public class QueueManager {
@@ -39,6 +44,9 @@ public class QueueManager {
 	
 	/** The SQS client */
 	private final AmazonSQSClient sqs;
+
+	/** The S3 client */
+	private final AmazonS3Client s3;
 
 	private static final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -52,6 +60,9 @@ public class QueueManager {
 	/** URL of queue that brings single point results back from the cluster */
 	private final String outputQueue;
 
+	/** S3 bucket in which results are placed */
+	private final String outputLoc = Play.application().configuration().getString("cluster.results-bucket");
+
 	private final ConcurrentMap<String, Consumer<ResultEnvelope>> callbacks = new ConcurrentHashMap<>();
 
 	/** Create a queue manager with credentials and prefixes taken from the environment */
@@ -64,9 +75,11 @@ public class QueueManager {
 		if (credentialsFilename != null) {
 			AWSCredentials creds = new ProfileCredentialsProvider(credentialsFilename, "default").getCredentials();
 			sqs = new AmazonSQSClient(creds);
+			s3 = new AmazonS3Client(creds);
 		} else {
 			// default credentials providers, e.g. IAM role
 			sqs = new AmazonSQSClient();
+			s3 = new AmazonS3Client();
 		}
 
 		// create the output queue
@@ -78,7 +91,7 @@ public class QueueManager {
 		Akka.system().scheduler().scheduleOnce(new FiniteDuration(1, TimeUnit.SECONDS), new QueueListener(), Akka.system().dispatcher());
 	}
 	
-	/** Enqueue a single point request */
+	/** Enqueue a request with no callback */
 	public boolean enqueue (AnalystClusterRequest req) {
 		return enqueue(req, null);
 
@@ -95,10 +108,10 @@ public class QueueManager {
 
 		// store the callback
 		if (callback != null)
-			callbacks.put(req.id, callback);
+			callbacks.put(req.jobId + "_" + req.id, callback);
 
-		if (req.disposition == AnalystClusterRequest.RequestDisposition.ENQUEUE)
-			req.outputLocation = outputQueue;
+		req.outputQueue = outputQueue;
+		req.outputLocation = outputLoc;
 
 		// enqueue it
 		try {
@@ -180,32 +193,68 @@ public class QueueManager {
 
 				ReceiveMessageResult res = sqs.receiveMessage(rmr);
 
-				List<String> messagesToDelete = Lists.newArrayList();
+				final List<Message> messagesToDelete = Lists.newArrayList();
 
-				for (Message message : res.getMessages()) {
+				MESSAGES: for (Message message : res.getMessages()) {
 					String json = message.getBody();
-					// deserialize to result envelope
-					ResultEnvelope env;
+
+					// figure out what we have
+					RequestComplete rc;
 					try {
-						env = objectMapper.readValue(json, ResultEnvelope.class);
+						rc = objectMapper.readValue(json, RequestComplete.class);
 					} catch (IOException e) {
-						Logger.error("Unable to parse JSON from message {}", message.getMessageId());
 						e.printStackTrace();
-
-						// it's not likely that this message will be received correctly the next time
-						messagesToDelete.add(message.getReceiptHandle());
-						continue;
+						continue MESSAGES;
+						// TODO dead letter queues? deletion?
 					}
 
-					Consumer<ResultEnvelope> callback = callbacks.get(env.id);
+					Consumer<ResultEnvelope> callback = callbacks.get(rc.jobId + "_" + rc.id);
 					if (callback != null) {
-						// callback could be null if the frontend was restarted
-						callback.accept(env);
-						callbacks.remove(env.id);
+						try {
+							// callback could be null if the frontend was restarted
+							S3Object obj = s3.getObject(outputLoc, rc.getKey());
+							InputStream is = obj.getObjectContent();
+							GZIPInputStream gzis = new GZIPInputStream(is);
+							ResultEnvelope env = objectMapper.readValue(gzis, ResultEnvelope.class);
+							gzis.close();
+
+							// don't let a bad callback crash the whole enterprise
+							try {
+								callback.accept(env);
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
+
+							callbacks.remove(rc.jobId + "_" + rc.id);
+						} catch (IOException e) {
+							e.printStackTrace();
+							continue MESSAGES;
+						}
 					}
 
-					messagesToDelete.add(message.getReceiptHandle());
+					messagesToDelete.add(message);
 				}
+
+				// batch delete. we got all these messages at once, so we know we can delete them all at once
+				// but doing the delete slows down the polling, so do it in another thread
+				Akka.system().scheduler().scheduleOnce(Duration.create(10, TimeUnit.MILLISECONDS),
+						new Runnable() {
+							@Override
+							public void run() {
+								DeleteMessageBatchRequest dm = new DeleteMessageBatchRequest();
+								dm.setQueueUrl(outputQueue);
+								dm.setEntries(messagesToDelete.stream().map(rh -> {
+									DeleteMessageBatchRequestEntry e = new DeleteMessageBatchRequestEntry();
+									e.setReceiptHandle(rh.getReceiptHandle());
+									e.setId(rh.getMessageId());
+									return e;
+								}).collect(Collectors.toList()));
+								sqs.deleteMessageBatch(dm);
+							}
+						},
+						Akka.system().dispatcher()
+				);
+
 			}
 		}
 	}
@@ -227,6 +276,18 @@ public class QueueManager {
 			SimpleSerializers s = new SimpleSerializers();
 			s.addSerializer(TraverseModeSet.class, new TraverseModeSetSerializer());
 			ctx.addSerializers(s);
+		}
+	}
+
+	public static class RequestComplete {
+		public String jobId;
+		public String id;
+
+		public String getKey() {
+			if (jobId != null)
+				return jobId + "/" + id + ".json.gz";
+			else
+				return id + ".json.gz";
 		}
 	}
 }

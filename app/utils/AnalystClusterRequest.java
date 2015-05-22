@@ -26,9 +26,12 @@ public abstract class AnalystClusterRequest implements Serializable {
 	public RequestDisposition disposition;
 
 	/**
-	 * Where should the result be delivered?
-	 * For disposition = STORE, this is an S3 bucket, where files will be placed in the folder {jobId}/{id}.json
-	 * For disposition = ENQUEUE, this is an SQS queue.
+	 * To what queue should the notification of the result be delivered?
+	 */
+	public String outputQueue;
+
+	/**
+	 * Where should the job be saved?
 	 */
 	public String outputLocation;
 	
