@@ -82,7 +82,6 @@ public class SinglePoint extends Controller {
 		// put the ID first for better performance with S3 writes
 		// S3 uses some sort of tree/sequential index, by varying prefixes you write to different parts of that index.
 		req.id = IdUtils.getId() + "_single";
-		req.disposition = AnalystClusterRequest.RequestDisposition.ENQUEUE;
 
 		F.RedeemablePromise<Result> result = F.RedeemablePromise.empty();
 

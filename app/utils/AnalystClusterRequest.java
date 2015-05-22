@@ -22,9 +22,6 @@ public abstract class AnalystClusterRequest implements Serializable {
 	/** The id of this particular origin */
 	public String id;
 
-	/** How should this request be fulfilled? Should it be placed in S3 or enqueued in SQS? */
-	public RequestDisposition disposition;
-
 	/**
 	 * To what queue should the notification of the result be delivered?
 	 */
@@ -49,12 +46,4 @@ public abstract class AnalystClusterRequest implements Serializable {
 	
 	/** used for deserialization from JSON */
 	public AnalystClusterRequest () { /* do nothing */ }
-
-	/** How should a request be delivered to the client */
-	public static enum RequestDisposition {
-		/** Enqueue the result for immediate consumption by the client */
-		ENQUEUE,
-		/** Store the result for later consumption */
-		STORE
-	}
 }
