@@ -46,6 +46,9 @@ public class ResultEnvelope implements Serializable {
 	 */
 	public boolean profile;
 
+	/** The ID of the job of which this resultenvelope is a part */
+	public String jobId;
+
 	/** The ID of the feature from whence this result envelope came */
 	public String id;
 	

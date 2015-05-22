@@ -1,13 +1,5 @@
 package models;
 
-import akka.actor.Cancellable;
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.profile.ProfileCredentialsProvider;
-import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.model.ListObjectsRequest;
-import com.amazonaws.services.s3.model.ObjectListing;
-import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.*;
@@ -21,16 +13,12 @@ import org.opentripplanner.routing.core.TraverseModeSet;
 import otp.Analyst;
 import play.Logger;
 import play.Play;
-import play.libs.Akka;
-import scala.concurrent.duration.Duration;
 import utils.*;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.Serializable;
 import java.util.*;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -75,10 +63,6 @@ public class Query implements Serializable {
 	
 	@JsonIgnore 
 	transient private QueryResultStore results;
-
-	private static AmazonS3Client s3 = null;
-
-	private static final String resultsBucket = Play.application().configuration().getString("cluster.results-bucket");
 
 	public Query() {
 		
@@ -163,7 +147,6 @@ public class Query implements Serializable {
 
 			req.destinationPointsetId = this.shapefileId;
 			req.graphId = scenario.bundleId;
-			req.disposition = AnalystClusterRequest.RequestDisposition.STORE;
 			req.outputQueue = Play.application().configuration().getString("cluster.results-bucket");
 			req.jobId = this.id;
 			req.id = pf.getId() != null ? pf.getId() : "" + i;

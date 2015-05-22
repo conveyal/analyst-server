@@ -83,6 +83,8 @@ public class SinglePoint extends Controller {
 		// S3 uses some sort of tree/sequential index, by varying prefixes you write to different parts of that index.
 		req.id = IdUtils.getId() + "_single";
 
+		req.includeTimes = true;
+
 		F.RedeemablePromise<Result> result = F.RedeemablePromise.empty();
 
 		QueueManager.getManager().enqueue(req, env -> {

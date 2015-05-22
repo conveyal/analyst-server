@@ -22,6 +22,9 @@ public abstract class AnalystClusterRequest implements Serializable {
 	/** The id of this particular origin */
 	public String id;
 
+	/** To where should the result be POSTed */
+	public String directOutputUrl;
+
 	/**
 	 * To what queue should the notification of the result be delivered?
 	 */

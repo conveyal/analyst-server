@@ -50,15 +50,13 @@ public class QueueManager {
 
 	private static final ObjectMapper objectMapper = new ObjectMapper();
 
-	private boolean polling;
+	/** The key is a rudimentary level of security. It is included as a GET param in all responses from the cluster. */
+	public final String key = IdUtils.getId();
 
 	static {
 		objectMapper.registerModule(new JodaModule());
 		objectMapper.registerModule(new TraverseModeSetModule());
 	}
-
-	/** URL of queue that brings single point results back from the cluster */
-	private final String outputQueue;
 
 	/** S3 bucket in which results are placed */
 	private final String outputLoc = Play.application().configuration().getString("cluster.results-bucket");
@@ -81,14 +79,6 @@ public class QueueManager {
 			sqs = new AmazonSQSClient();
 			s3 = new AmazonS3Client();
 		}
-
-		// create the output queue
-		String outQueueName = prefix + "_output_" + IdUtils.getId();
-		outputQueue = createQueue(outQueueName);
-		Logger.info("Receiving single point results from queue " + outQueueName);
-
-		// listen to the output queue
-		Akka.system().scheduler().scheduleOnce(new FiniteDuration(1, TimeUnit.SECONDS), new QueueListener(), Akka.system().dispatcher());
 	}
 	
 	/** Enqueue a request with no callback */
@@ -110,8 +100,9 @@ public class QueueManager {
 		if (callback != null)
 			callbacks.put(req.jobId + "_" + req.id, callback);
 
-		req.outputQueue = outputQueue;
-		req.outputLocation = outputLoc;
+		//req.outputQueue = outputQueue;
+		//req.outputLocation = outputLoc;
+		req.directOutputUrl = Play.application().configuration().getString("cluster.url-internal") + "/api/result?key=" + key;
 
 		// enqueue it
 		try {
@@ -166,97 +157,20 @@ public class QueueManager {
 		return manager;
 	}
 
-	/** Listen to the queue and call callbacks as needed */
-	public class QueueListener implements Runnable {
-		@Override
-		public void run() {
-			while (true) {
-				// don't poll unless we're expecting jobs back
-				if (callbacks.isEmpty()) {
-					try {
-						// only sleep for 1s so we don't miss new jobs being enqueued
-						Thread.sleep(1000l);
-					} catch (InterruptedException e) {
-						break;
-					}
-					continue;
-				}
+	/** Handle a result envelope that's come back from the cluster */
+	public void handle (ResultEnvelope env) {
+		Consumer<ResultEnvelope> callback = callbacks.get(env.jobId + "_" + env.id);
 
-				ReceiveMessageRequest rmr = new ReceiveMessageRequest();
-				// long poll so we have fewer requests and are sure to get responses
-				// TODO does this mean we wait 20 seconds to get any response even if messages are
-				// available before that? if so this is a non-starter.
-				rmr.setWaitTimeSeconds(20);
-				rmr.setMaxNumberOfMessages(10);
+		if (callback == null) return;
 
-				rmr.setQueueUrl(outputQueue);
-
-				ReceiveMessageResult res = sqs.receiveMessage(rmr);
-
-				final List<Message> messagesToDelete = Lists.newArrayList();
-
-				MESSAGES: for (Message message : res.getMessages()) {
-					String json = message.getBody();
-
-					// figure out what we have
-					RequestComplete rc;
-					try {
-						rc = objectMapper.readValue(json, RequestComplete.class);
-					} catch (IOException e) {
-						e.printStackTrace();
-						continue MESSAGES;
-						// TODO dead letter queues? deletion?
-					}
-
-					Consumer<ResultEnvelope> callback = callbacks.get(rc.jobId + "_" + rc.id);
-					if (callback != null) {
-						try {
-							// callback could be null if the frontend was restarted
-							S3Object obj = s3.getObject(outputLoc, rc.getKey());
-							InputStream is = obj.getObjectContent();
-							GZIPInputStream gzis = new GZIPInputStream(is);
-							ResultEnvelope env = objectMapper.readValue(gzis, ResultEnvelope.class);
-							gzis.close();
-
-							// don't let a bad callback crash the whole enterprise
-							try {
-								callback.accept(env);
-							} catch (Exception e) {
-								e.printStackTrace();
-							}
-
-							callbacks.remove(rc.jobId + "_" + rc.id);
-						} catch (IOException e) {
-							e.printStackTrace();
-							continue MESSAGES;
-						}
-					}
-
-					messagesToDelete.add(message);
-				}
-
-				// batch delete. we got all these messages at once, so we know we can delete them all at once
-				// but doing the delete slows down the polling, so do it in another thread
-				Akka.system().scheduler().scheduleOnce(Duration.create(10, TimeUnit.MILLISECONDS),
-						new Runnable() {
-							@Override
-							public void run() {
-								DeleteMessageBatchRequest dm = new DeleteMessageBatchRequest();
-								dm.setQueueUrl(outputQueue);
-								dm.setEntries(messagesToDelete.stream().map(rh -> {
-									DeleteMessageBatchRequestEntry e = new DeleteMessageBatchRequestEntry();
-									e.setReceiptHandle(rh.getReceiptHandle());
-									e.setId(rh.getMessageId());
-									return e;
-								}).collect(Collectors.toList()));
-								sqs.deleteMessageBatch(dm);
-							}
-						},
-						Akka.system().dispatcher()
-				);
-
-			}
+		// don't let a bad callback crash the whole enterprise
+		try {
+			callback.accept(env);
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
+
+		callbacks.remove(env.jobId + "_" + env.id);
 	}
 
 	public static class TraverseModeSetSerializer extends JsonSerializer<TraverseModeSet> {
@@ -276,18 +190,6 @@ public class QueueManager {
 			SimpleSerializers s = new SimpleSerializers();
 			s.addSerializer(TraverseModeSet.class, new TraverseModeSetSerializer());
 			ctx.addSerializers(s);
-		}
-	}
-
-	public static class RequestComplete {
-		public String jobId;
-		public String id;
-
-		public String getKey() {
-			if (jobId != null)
-				return jobId + "/" + id + ".json.gz";
-			else
-				return id + ".json.gz";
 		}
 	}
 }

@@ -82,5 +82,7 @@ GET     /api/queryBins	                controllers.Api.queryBins(queryId:String,
 POST     /api/single                    controllers.SinglePoint.result()
 OPTIONS  /api/single                    controllers.SinglePoint.options()
 
+POST     /api/result                    controllers.QueueReceiver.receive(key:String)
+
 # Map static resources from the /public folder to the /assets URL path
 GET           /assets/*file                       controllers.Assets.at(path="/public", file)
