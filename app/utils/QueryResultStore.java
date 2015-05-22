@@ -48,45 +48,40 @@ public class QueryResultStore {
 	private Collection<FileReader> readerCache = Lists.newArrayList();
 	
 	public QueryResultStore (Query q) {
-		this.readOnly = q.complete;
+		this.readOnly = q.completePoints == q.totalPoints;
 		this.queryId = q.id;
 
-		if (!readOnly) {
-			// figure out which envelope params we'll use
-			ResultEnvelope.Which[] whiches;
-			if (q.isTransit())
-				whiches = new ResultEnvelope.Which[]{ResultEnvelope.Which.BEST_CASE, ResultEnvelope.Which.WORST_CASE, ResultEnvelope.Which.AVERAGE};
-			else
-				whiches = new ResultEnvelope.Which[]{ResultEnvelope.Which.POINT_ESTIMATE};
-
-			outDir = new File(Play.application().configuration().getString("application.data"), "flat_results");
-			outDir.mkdirs();
-		}
-
+		outDir = new File(Play.application().configuration().getString("application.data"), "flat_results");
+		outDir.mkdirs();
 	}
 	
 	/** Save a result envelope in this store */
 	public void store(ResultEnvelope res) {
-		// parallelize across variables, which are stored in different files, so this is threadsafe
-		Arrays.asList(ResultEnvelope.Which.values()).parallelStream().forEach(which -> {
+		if (readOnly)
+			throw new UnsupportedOperationException("Attempt to write to read-only query result store!");
+
+		for (ResultEnvelope.Which which : ResultEnvelope.Which.values()) {
 			ResultSet rs = res.get(which);
 
 			if (rs != null) {
-				for (Entry<String, Histogram> e : rs.histograms.entrySet()) {
+				// parallelize across variables, which are stored in different files, so this is threadsafe
+				rs.histograms.entrySet().parallelStream().forEach(e -> {
 					getWriter(e.getKey(), which).write(res.id, e.getValue());
-				}
+				});
 			}
-		});
+		}
 	}
 
 	private FileWriter getWriter(String variable, ResultEnvelope.Which which) {
 		Fun.Tuple2<String, ResultEnvelope.Which> wkey = new Fun.Tuple2<>(variable, which);
 
 		if (!writerCache.containsKey(wkey)) {
+			synchronized (writerCache) {
 				if (!writerCache.containsKey(wkey)) {
 					String filename = String.format(Locale.US, "%s_%s_%s.results.gz", queryId, variable, which);
 					writerCache.put(wkey, new FileWriter(new File(outDir, filename), queryId, variable, which));
 				}
+			}
 		}
 
 		return writerCache.get(wkey);
@@ -167,6 +162,7 @@ public class QueryResultStore {
 		}
 	}
 
+	/** read resultsets from a flat file */
 	private static class FileReader implements Iterator<ResultSet> {
 		private DataInputStream in;
 
