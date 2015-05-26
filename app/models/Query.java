@@ -125,7 +125,7 @@ public class Query implements Serializable {
 		completePoints = 0;
 		this.save();
 
-		results = new QueryResultStore(this);
+		QueryResultStore.accumulate(this);
 
 		// TODO batch?
 		for (int i = 0; i < ps.capacity; i++) {
@@ -153,25 +153,7 @@ public class Query implements Serializable {
 			req.includeTimes = false;
 
 			// TODO parallelize enqueing?
-			qm.enqueue(req, resultEnvelope -> {
-				// results are not threadsafe. additionally incrementing completePoints is not threadsafe.
-				// Note that this retains a reference to exactly one queryresults
-				synchronized (results) {
-					this.completePoints++;;
-					results.store(resultEnvelope);
-
-					// TODO is this safe (modifying object after it's been saved?)
-					// I think it's only a problem if the server crashes (in which case we have other problems)
-					// because we eventually save it after we are done changing it.
-					if (this.completePoints % 200 == 0)
-						this.save();
-
-					if (this.completePoints == this.totalPoints) {
-						this.save();
-						results.close();
-					}
-				}
-			});
+			qm.enqueue(req);
 		}
 	}
 

@@ -1,8 +1,10 @@
 package utils;
 
+import akka.actor.Cancellable;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.*;
@@ -24,6 +26,8 @@ import play.libs.Akka;
 import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
 
+import java.awt.*;
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -31,6 +35,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
@@ -41,7 +46,7 @@ public class QueueManager {
 
 	/** The prefix to use for these queues */
 	private final String prefix;
-	
+
 	/** The SQS client */
 	private final AmazonSQSClient sqs;
 
@@ -63,6 +68,14 @@ public class QueueManager {
 
 	private final ConcurrentMap<String, Consumer<ResultEnvelope>> callbacks = new ConcurrentHashMap<>();
 
+	/** Per-job callbacks */
+	private final ConcurrentHashMap<String, Predicate<ResultEnvelope>> jobCallbacks = new ConcurrentHashMap<>();
+
+	private final String outputQueue;
+
+	/** Are we currently polling? */
+	private boolean polling = false;
+
 	/** Create a queue manager with credentials and prefixes taken from the environment */
 	public QueueManager () {
 		prefix = Play.application().configuration().getString("cluster.queue-prefix");
@@ -79,8 +92,10 @@ public class QueueManager {
 			sqs = new AmazonSQSClient();
 			s3 = new AmazonS3Client();
 		}
+
+		outputQueue = createQueue(prefix + "_output_" + IdUtils.getId());
 	}
-	
+
 	/** Enqueue a request with no callback */
 	public boolean enqueue (AnalystClusterRequest req) {
 		return enqueue(req, null);
@@ -100,9 +115,15 @@ public class QueueManager {
 		if (callback != null)
 			callbacks.put(req.jobId + "_" + req.id, callback);
 
-		//req.outputQueue = outputQueue;
-		//req.outputLocation = outputLoc;
-		req.directOutputUrl = Play.application().configuration().getString("cluster.url-internal") + "/api/result?key=" + key;
+		// wire up the routing to return the results
+		if (req.jobId == null)
+			// single point request
+			req.directOutputUrl = Play.application().configuration().getString("cluster.url-internal") + "/api/result?key=" + key;
+		else {
+			// multipoint, accumulate in S3
+			req.outputLocation = outputLoc;
+			req.outputQueue = outputQueue;
+		}
 
 		// enqueue it
 		try {
@@ -141,6 +162,7 @@ public class QueueManager {
 	private String createQueue(String queueName) {
 		// TODO: visibility timeout defaults to 30s, which is probably about right as we shouldn't be
 		// waiting for a graph build. IAM policy should perhaps be set here?
+		// TODO: Set up redrive policy for all queues.
 		CreateQueueRequest cqr = new CreateQueueRequest(queueName);
 		CreateQueueResult res = sqs.createQueue(cqr);
 		return res.getQueueUrl();
@@ -155,6 +177,24 @@ public class QueueManager {
 		}
 
 		return manager;
+	}
+
+	/**
+	 * Register a callback for a particular job. Will be called for each result until it returns false.
+	 */
+	public void registerJobCallback (Query q, Predicate<ResultEnvelope> callback) {
+		jobCallbacks.put(q.id, callback);
+		if (!polling) {
+			synchronized (this) {
+				if (!polling) {
+					Akka.system().scheduler().scheduleOnce(
+							Duration.create(1, TimeUnit.SECONDS),
+							new QueryListener(),
+							Akka.system().dispatcher()
+					);
+				}
+			}
+		}
 	}
 
 	/** Handle a result envelope that's come back from the cluster */
@@ -190,6 +230,112 @@ public class QueueManager {
 			SimpleSerializers s = new SimpleSerializers();
 			s.addSerializer(TraverseModeSet.class, new TraverseModeSetSerializer());
 			ctx.addSerializers(s);
+		}
+	}
+
+	/** Listen for multipoint query results */
+	// not static so that we can access instance variables of parent class
+	public class QueryListener implements Runnable {
+		@Override
+		public void run() {
+			polling = true;
+
+			// no point in waiting for results if there is nothing to do with them when they arrive.
+			// we use a loop here rather than an Akka interval because if there are messages in the queue we want to
+			// poll as fast as we possibly can. If there are no messages in the queue this loop will run every 20s
+			// because we're using blocking long polling.
+			while (true) {
+				if (jobCallbacks.size() == 0) {
+					polling = false;
+					return;
+				}
+
+				ReceiveMessageRequest req = new ReceiveMessageRequest();
+				req.setMaxNumberOfMessages(10);
+				req.setWaitTimeSeconds(20);
+				req.setQueueUrl(outputQueue);
+				ReceiveMessageResult res = sqs.receiveMessage(req);
+
+				List<Message> messagesToDelete = Lists.newArrayList();
+
+				// process messages in parallel due to S3 delays.
+				// However there is a sync block around the storage callback so that that doesn't get called in parallel
+				MESSAGES:
+				res.getMessages().parallelStream().forEach(msg -> {
+					PointDone body;
+					try {
+						body = objectMapper.readValue(msg.getBody(), PointDone.class);
+					} catch (IOException e) {
+						e.printStackTrace();
+						return;
+					}
+
+					Predicate<ResultEnvelope> cb = jobCallbacks.get(body.jobId);
+					if (cb != null) {
+						// get the result envelope from S3
+						ResultEnvelope re;
+						try {
+							S3Object obj = s3.getObject(outputLoc, body.toString());
+							InputStream is = obj.getObjectContent();
+							GZIPInputStream gis = new GZIPInputStream(new BufferedInputStream(is));
+							re = objectMapper.readValue(gis, ResultEnvelope.class);
+						} catch (IOException e) {
+							e.printStackTrace();
+							return;
+						}
+
+						// call the callback, catching exceptions if they occur, and remove the callback if it returns false.
+						boolean shouldJobContinue = true;
+						try {
+							// call the callback sequentially; the slow part is getting results from S3. Storing them needn't be done in parallel
+							synchronized (cb) {
+								shouldJobContinue = cb.test(re);
+							}
+						} catch (Exception e) {
+							return;
+						}
+
+						// FIXME: results with no callback defined will never be deleted!
+						// Two possible solutions: a) delete these messages (but what if someone adds a callback for them later?)
+						// b) add a redrive policy to the output queue so that these messages are sent to dead letters.
+						messagesToDelete.add(msg);
+
+						// if the job is done, remove the callback
+						// note that we are not deleting results here; they will be removed by a lifecycle config in
+						// S3.
+						if (!shouldJobContinue) {
+							jobCallbacks.remove(body.jobId);
+						}
+					}
+				});
+
+				// delete the messages that were successfully processed
+				if (!messagesToDelete.isEmpty()) {
+					DeleteMessageBatchRequest dmbr = new DeleteMessageBatchRequest();
+					dmbr.setEntries(messagesToDelete.stream().map(msg -> {
+						DeleteMessageBatchRequestEntry dmr = new DeleteMessageBatchRequestEntry();
+						dmr.setId(msg.getMessageId());
+						dmr.setReceiptHandle(msg.getReceiptHandle());
+						return dmr;
+					}).collect(Collectors.toList()));
+					dmbr.setQueueUrl(outputQueue);
+
+					sqs.deleteMessageBatch(dmbr);
+				}
+			}
+		}
+	}
+
+	/** One point of a multipoint job is done */
+	public static class PointDone {
+		public String jobId;
+		public String id;
+
+		public String toString () {
+			if (jobId != null)
+				return jobId + "/" + id + ".json.gz";
+			else
+				return id + ".json.gz";
 		}
 	}
 }

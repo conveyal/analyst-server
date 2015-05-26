@@ -9,6 +9,7 @@ import models.Shapefile;
 import org.mapdb.*;
 import org.opentripplanner.analyst.Histogram;
 import org.opentripplanner.analyst.ResultSet;
+import play.Logger;
 import play.Play;
 
 import java.io.*;
@@ -127,8 +128,10 @@ public class QueryResultStore {
 		// queue manager.
 		qm.registerJobCallback(query, re -> {
 			// don't save twice
-			if (receivedResults.contains(re.id))
+			if (receivedResults.contains(re.id)) {
+				Logger.warn("Received duplicate result for origin {}", re.id);
 				return true;
+			}
 
 			store.store(re);
 
