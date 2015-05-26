@@ -1,5 +1,6 @@
 package utils;
 
+import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import controllers.Application;
@@ -48,10 +49,14 @@ public class QueryResultStore {
 	private Collection<FileReader> readerCache = Lists.newArrayList();
 	
 	public QueryResultStore (Query q) {
-		this.readOnly = q.completePoints == q.totalPoints;
-		this.queryId = q.id;
+		this(q.id, q.completePoints == q.totalPoints, new File(Play.application().configuration().getString("application.data"), "flat_results"));
+	}
 
-		outDir = new File(Play.application().configuration().getString("application.data"), "flat_results");
+	public QueryResultStore(String queryId, boolean readOnly, File outDir) {
+		this.readOnly = readOnly;
+		this.queryId = queryId;
+
+		this.outDir = outDir;
 		outDir.mkdirs();
 	}
 	
@@ -105,6 +110,45 @@ public class QueryResultStore {
 		FileReader r = new FileReader(new File(outDir, filename));
 		readerCache.add(r);
 		return r;
+	}
+
+	/**
+	 * Await results for query q.
+	 *
+	 * Note that this does not have to be run on the same machine as the UI.
+	 */
+	public static void accumulate (final Query query) {
+		QueueManager qm = QueueManager.getManager();
+
+		final QueryResultStore store = new QueryResultStore(query);
+		final Set<String> receivedResults = Sets.newHashSet();
+
+		// note that callback will never be called in parallel as there is a synchronized block in the
+		// queue manager.
+		qm.registerJobCallback(query, re -> {
+			// don't save twice
+			if (receivedResults.contains(re.id))
+				return true;
+
+			store.store(re);
+
+			receivedResults.add(re.id);
+
+			query.completePoints = receivedResults.size();
+
+			if (query.completePoints % 200 == 0)
+				query.save();
+
+			if (query.completePoints == query.totalPoints) {
+				// TODO write to S3 here so that this can be separated from the UI.
+				query.save();
+				store.close();
+				// stop iteration, remove callback
+				return false;
+			}
+
+			return true;
+		});
 	}
 
 	/** Write resultsets to a flat file */
