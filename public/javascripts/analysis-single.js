@@ -408,6 +408,10 @@ var Analyst = Analyst || {};
 				return route.agencyId + "_" + route.id;
 			});
 
+			if (!isochrone && !params.destinationPointsetId)
+				// this can happen when the shapefiles have not yet loaded	
+				return;
+
 			if (params.profile) {
 				params.options = {
 					fromLat:  A.map.marker.getLatLng().lat,
