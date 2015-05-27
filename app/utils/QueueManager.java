@@ -9,6 +9,7 @@ import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.*;
 import com.beust.jcommander.internal.Lists;
+import com.beust.jcommander.internal.Sets;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.Version;
@@ -19,6 +20,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.module.SimpleSerializers;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import models.Query;
+import models.TransportScenario;
 import org.opentripplanner.routing.core.TraverseModeSet;
 import play.Logger;
 import play.Play;
@@ -31,6 +33,7 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
@@ -57,6 +60,9 @@ public class QueueManager {
 
 	/** The key is a rudimentary level of security. It is included as a GET param in all responses from the cluster. */
 	public final String key = IdUtils.getId();
+
+	/** When we delete a query, there may still be jobs being enqueued for it. Make sure we drop those on the floor. */
+	public Set<String> deletedQueries = Sets.newHashSet();
 
 	static {
 		objectMapper.registerModule(new JodaModule());
@@ -108,8 +114,13 @@ public class QueueManager {
 		// single point job, not associated with a parent job
 		if (req.jobId == null)
 			queueUrl = getOrCreateSinglePointQueue(req.graphId);
-		else
+		else {
+			// don't enqueue jobs for deleted queries
+			if (deletedQueries.contains(req.jobId))
+				return false;
+
 			queueUrl = getOrCreateJobQueue(req.graphId, req.jobId);
+		}
 
 		// store the callback
 		if (callback != null)
@@ -138,7 +149,7 @@ public class QueueManager {
 	}
 
 	private String getOrCreateJobQueue(String graphId, String jobId) {
-		String queueName = prefix + "_" + graphId + "_" + jobId;
+		String queueName = getMultipointQueueName(graphId, jobId);
 		return getOrCreateQueue(queueName);
 	}
 
@@ -156,6 +167,10 @@ public class QueueManager {
 		} catch (QueueDoesNotExistException e) {
 			return createQueue(queueName);
 		}
+	}
+	
+	private String getMultipointQueueName (String graphId, String jobId) {
+		return prefix + "_" + graphId + "_" + jobId;
 	}
 
 	/** Create the queue with the given name */
@@ -195,6 +210,33 @@ public class QueueManager {
 				}
 			}
 		}
+	}
+	
+	/** Cancel an in-progress job */
+	public void cancelJob (Query q) {
+		deletedQueries.add(q.id);
+
+		if (jobCallbacks.containsKey(q.id))
+			jobCallbacks.remove(q.id);
+
+		TransportScenario s = TransportScenario.getScenario(q.scenarioId);
+		
+		deleteQueue(getMultipointQueueName(s.bundleId, q.id));
+	}
+
+	/** Delete a queue if it exists */
+	private void deleteQueue(String queueName) {
+		String queueUrl;
+
+		try {
+			queueUrl = sqs.getQueueUrl(queueName).getQueueUrl();
+		} catch (QueueDoesNotExistException e) {
+			return;
+		}
+
+		DeleteQueueRequest dqr = new DeleteQueueRequest();
+		dqr.setQueueUrl(queueUrl);
+		sqs.deleteQueue(dqr);
 	}
 
 	/** Handle a result envelope that's come back from the cluster */

@@ -17,6 +17,7 @@ import play.mvc.Result;
 import play.mvc.Security;
 import scala.concurrent.duration.Duration;
 import utils.QueryResults;
+import utils.QueueManager;
 import utils.ResultEnvelope;
 
 import java.io.IOException;
@@ -735,6 +736,9 @@ public class Api extends Controller {
 
         if(q == null)
         	return badRequest();
+
+        // cancel the job if it is running
+        QueueManager.getManager().cancelJob(q);
 
         q.delete();
 
