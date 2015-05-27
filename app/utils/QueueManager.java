@@ -32,6 +32,8 @@ import java.awt.*;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -144,6 +146,79 @@ public class QueueManager {
 			e.printStackTrace();
 			return false;
 		}
+
+		return true;
+	}
+
+
+	/** Batch-enqueue many requests. Assumes all have the same jobId. */
+	public boolean enqueueBatch(Collection<AnalystClusterRequest> requests) {
+		if (requests.isEmpty()) return true;
+
+		AnalystClusterRequest exemplar = requests.iterator().next();
+
+
+		String queueUrl;
+
+		// single point job, not associated with a parent job
+		if (exemplar.jobId == null)
+			queueUrl = getOrCreateSinglePointQueue(exemplar.graphId);
+		else {
+			// don't enqueue jobs for deleted queries
+			if (deletedQueries.contains(exemplar.jobId))
+				return false;
+
+			queueUrl = getOrCreateJobQueue(exemplar.graphId, exemplar.jobId);
+		}
+
+		// make job collections
+		List<SendMessageBatchRequest> batches = Lists.newArrayList();
+
+		Iterator<AnalystClusterRequest> it = requests.iterator();
+
+		// batch the requests
+		while (it.hasNext()) {
+			SendMessageBatchRequest current = new SendMessageBatchRequest();
+			current.setQueueUrl(queueUrl);
+
+			int count = 0;
+			List<SendMessageBatchRequestEntry> entries = Lists.newArrayList();
+
+			while (it.hasNext() && count < 10) {
+				AnalystClusterRequest req = it.next();
+
+				// wire up the routing to return the results
+				if (req.jobId == null)
+					// single point request
+					req.directOutputUrl = Play.application().configuration().getString("cluster.url-internal") + "/api/result?key=" + key;
+				else {
+					// multipoint, accumulate in S3
+					req.outputLocation = outputLoc;
+					req.outputQueue = outputQueue;
+				}
+
+				String json;
+				try {
+					json = objectMapper.writeValueAsString(req);
+				} catch (JsonProcessingException e) {
+					e.printStackTrace();
+					return false;
+				}
+
+				SendMessageBatchRequestEntry entry = new SendMessageBatchRequestEntry();
+				entry.setMessageBody(json);
+				entry.setId("" + count);
+				entries.add(entry);
+
+				count++;
+			}
+
+			current.setEntries(entries);
+			batches.add(current);
+		}
+
+		// enqueue in parallel.
+		batches.parallelStream().forEach(batch -> sqs.sendMessageBatch(batch));
 
 		return true;
 	}

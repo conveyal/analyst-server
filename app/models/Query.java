@@ -1,5 +1,6 @@
 package models;
 
+import com.beust.jcommander.internal.Lists;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.*;
@@ -127,7 +128,10 @@ public class Query implements Serializable {
 
 		QueryResultStore.accumulate(this);
 
+		List<AnalystClusterRequest> requests = Lists.newArrayList();
+
 		// TODO batch?
+		long now = System.currentTimeMillis();
 		for (int i = 0; i < ps.capacity; i++) {
 			PointFeature pf = ps.getFeature(i);
 
@@ -152,9 +156,12 @@ public class Query implements Serializable {
 			req.id = pf.getId() != null ? pf.getId() : "" + i;
 			req.includeTimes = false;
 
-			// TODO parallelize enqueing?
-			qm.enqueue(req);
+			requests.add(req);
 		}
+
+		qm.enqueueBatch(requests);
+
+		Logger.info("Enqueued {} items in {}ms", ps.capacity, System.currentTimeMillis() - now);
 	}
 
 	public void delete() throws IOException {
