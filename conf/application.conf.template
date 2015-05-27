@@ -28,6 +28,10 @@ cluster.aws-credentials=s3credentials
 # The prefix for SQS queues.
 cluster.queue-prefix=<PREFIX>
 
+# The SQS queue in which multipoint results are communicated to the server
+# Must be unique for each application accessing your cluster infrastructure
+cluster.results-queue=<QUEUE NAME>
+
 # The S3 bucket in which to store graphs
 cluster.graphs-bucket=<BUCKET NAME>
 
