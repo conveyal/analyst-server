@@ -5,6 +5,7 @@ import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.DeleteObjectRequest;
+import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.*;
@@ -85,7 +86,7 @@ public class QueueManager {
 	private boolean polling = false;
 
 	/** Create a queue manager with credentials and prefixes taken from the environment */
-	public QueueManager () {
+	private QueueManager () {
 		prefix = Play.application().configuration().getString("cluster.queue-prefix");
 
 		// create the SQS client
@@ -101,7 +102,7 @@ public class QueueManager {
 			s3 = new AmazonS3Client();
 		}
 
-		outputQueue = createQueue(prefix + "_output_" + IdUtils.getId());
+		outputQueue = getOrCreateQueue(Play.application().configuration().getString("cluster.results-queue"));
 	}
 
 	/** Enqueue a request with no callback */
@@ -271,12 +272,19 @@ public class QueueManager {
 
 	/**
 	 * Register a callback for a particular job. Will be called for each result until it returns false.
+	 *
+	 * The callback is guaranteed to be called at least once for all results of a query, even if the query is already running.
+	 * It is possible that it would be called with the same result twice.
 	 */
 	public void registerJobCallback (Query q, Predicate<ResultEnvelope> callback) {
+		// This is a concurrent map, so even if we change a callback things will remain consistent (the new callback will be
+		// called for furture results
 		jobCallbacks.put(q.id, callback);
+
 		if (!polling) {
 			synchronized (this) {
 				if (!polling) {
+					polling = true;
 					Akka.system().scheduler().scheduleOnce(
 							Duration.create(1, TimeUnit.SECONDS),
 							new QueryListener(),
@@ -285,6 +293,38 @@ public class QueueManager {
 				}
 			}
 		}
+
+		// call it with results that have already been consumed (e.g. to recover from a server crash)
+		// Note that S3 may be changing as the result of workers completing work *while this is happening*, which will
+		// either cause us to see those new results and pass them to the callback now, or to have them passed to the
+		// callback through "normal" SQS messages. This is fine as our guarantee is at-least-once delivery.
+		ObjectListing lst = s3.listObjects(outputLoc, q.id + "/");
+
+		do {
+			lst.getObjectSummaries().parallelStream().forEach(os -> {
+				S3Object obj = s3.getObject(outputLoc, os.getKey());
+				ResultEnvelope env;
+
+				try {
+					GZIPInputStream is = new GZIPInputStream(new BufferedInputStream(obj.getObjectContent()));
+					env = objectMapper.readValue(is, ResultEnvelope.class);
+					is.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+					throw new RuntimeException(e);
+				}
+
+				synchronized (callback) {
+					boolean shouldJobContinue = callback.test(env);
+
+					if (!shouldJobContinue) {
+						cancelJob(q);
+					}
+				}
+			});
+
+			lst = s3.listNextBatchOfObjects(lst);
+		} while (lst.isTruncated());
 	}
 	
 	/** Cancel an in-progress job */

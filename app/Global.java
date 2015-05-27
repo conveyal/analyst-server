@@ -1,12 +1,14 @@
 import java.io.IOException;
 
 import models.Bundle;
+import models.Query;
 import models.Shapefile;
 import models.User;
 import controllers.Api;
 import play.Application;
 import play.GlobalSettings;
 import play.api.mvc.EssentialFilter;
+import utils.QueryResultStore;
 
 public class Global extends GlobalSettings {
   
@@ -21,6 +23,12 @@ public class Global extends GlobalSettings {
 		} catch (IOException e) {
 			e.printStackTrace();
 			throw new RuntimeException(e);
+		}
+
+		for (Query q : Query.getAll()) {
+			if (!q.completePoints.equals(q.totalPoints)) {
+				QueryResultStore.accumulate(q);
+			}
 		}
 	}
 }

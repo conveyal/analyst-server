@@ -76,7 +76,11 @@ public class Query implements Serializable {
 		
 		return query;
 	}
-	
+
+	public static Collection<Query> getAll() {
+		return queryData.getAll();
+	}
+
 	/**
 	 * Get the shapefile name. This is used in the UI so that we can display the name of the shapefile.
 	 */

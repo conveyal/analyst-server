@@ -48,9 +48,11 @@ public class QueryResultStore {
 
 	/** we need to keep references to these because we need to close them */
 	private Collection<FileReader> readerCache = Lists.newArrayList();
-	
+
+	private static File scenarioDir = new File(Play.application().configuration().getString("application.data"), "flat_results");
+
 	public QueryResultStore (Query q) {
-		this(q.id, q.completePoints == q.totalPoints, new File(Play.application().configuration().getString("application.data"), "flat_results"));
+		this(q.id, q.completePoints == q.totalPoints, new File(scenarioDir, q.id));
 	}
 
 	public QueryResultStore(String queryId, boolean readOnly, File outDir) {
@@ -58,6 +60,11 @@ public class QueryResultStore {
 		this.queryId = queryId;
 
 		this.outDir = outDir;
+
+		// don't try to append to an existing store, just recreate from cached things in S3.
+		if (!readOnly && outDir.exists())
+			outDir.delete();
+
 		outDir.mkdirs();
 	}
 	
@@ -141,7 +148,7 @@ public class QueryResultStore {
 
 			if (query.completePoints % 200 == 0)
 				query.save();
-			
+
 			if (query.completePoints.equals(query.totalPoints)) {
 				// TODO write to S3 here so that this can be separated from the UI.
 				query.save();
