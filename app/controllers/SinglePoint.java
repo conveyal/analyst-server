@@ -94,8 +94,6 @@ public class SinglePoint extends Controller {
     static {
     	objectMapper.registerModule(new JodaModule());
     	objectMapper.registerModule(new RoutingRequestModule());
-    	objectMapper.addMixInAnnotations(Modification.class, ModificationMixin.class);
-    	objectMapper.addMixInAnnotations(org.opentripplanner.analyst.scenario.Scenario.class, ScenarioMixin.class);
     }
     
     /** Create a result from a JSON-ified OneToMany[Profile]Request. */
@@ -407,19 +405,5 @@ public class SinglePoint extends Controller {
     		kd.addDeserializer(AgencyAndId.class, new AgencyAndIdDeserializer());
     		ctx.addKeyDeserializers(kd);
     	}
-    }
-    
-    /** Help Jackson figure out which modifications are which */
-    @JsonTypeInfo(use=JsonTypeInfo.Id.NAME, include=JsonTypeInfo.As.PROPERTY, property="type")
-    @JsonSubTypes({
-    	@Type(name = "remove-trip", value = RemoveTrips.class),
-    	@Type(name = "adjust-headway", value = AdjustHeadway.class),
-    	@Type(name = "adjust-dwell-time", value = AdjustDwellTime.class)
-    })
-    public static abstract class ModificationMixin { }
-    
-    /** Help Jackson deserialize an OTP Scenario */
-    public static abstract class ScenarioMixin {
-    	public ScenarioMixin (@JsonProperty("id") int id) { }
     }
 }
