@@ -443,8 +443,6 @@ var Analyst = Analyst || {};
 					bikeSlope: 1,
 					bikeTime: 1,
 					scenario: {
-						id: 0,
-						description: "No description",
 						modifications: mods1
 					}
 				}
@@ -488,7 +486,6 @@ var Analyst = Analyst || {};
 								type: 'remove-trip',
 								agencyId: route.agencyId,
 								routeId: [route.id],
-								tripId: null
 							};
 						});
 					}
