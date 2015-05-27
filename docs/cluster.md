@@ -16,8 +16,6 @@ name `<id>.json.gz`; it is, as the name would imply, a gzipped pointset. The `id
 and the `jobId` identifies the larger multipoint job this is a part of (which may be null). Together they uniquely
 identify this request. `includeTimes` determines whether times should be included.
 
-The `outputQueue` identifies the URL (NB not the name) of an SQS queue where a ResultComplete message (see below) should
-be delivered, and the `outputLocation`
 
 If `destinationPointsetId` is not null, accessibility histograms should be calculated and included in the resultset,
 which can be serialized using standard Jackson object serialization. Times should be included if `includeTimes` is true.
@@ -33,7 +31,7 @@ with its ID the same as the ID of the job, and should be saved as gzipped JSON, 
   jobId is not null) or 'id.json.gz' if jobId is null.
 
 If `outputQueue` is defined, place a small JSON message in
-the outputQueue that looks like this:
+the outputQueue (which is an SQS queue URL, not a queue name) that looks like this:
 
 ```{
   jobId: <jobId>,
