@@ -16,19 +16,19 @@ object to `/api/single`. The JSON you post looks like so:
 
 ```
 {
-  "destinationPointsetId": "60b294f2e9b12e4814f584cced50efa9_729af269afd764aa742bec4efe5486d3",
-  "graphId": "2a4b112aa5fb1b258f2c7fc6120e6497",
-  "profile": "true",
+  "destinationPointsetId": null,
+  "graphId": "78953923453b6da1a585cc58621eebc7",
+  "profile": true,
   "options": {
-    "fromLat": 42.3641249807027,
-    "fromLon": -71.06145858764648,
-    "toLat": 42.3641249807027,
-    "toLon": -71.06145858764648,
-    "date": "2015-05-12",
-    "accessModes": "WALK",
-    "egressModes": "WALK",
+    "fromLat": 42.35296235855687,
+    "fromLon": -71.06094360351562,
+    "toLat": 42.35296235855687,
+    "toLon": -71.06094360351562,
+    "date": "2015-05-26",
     "fromTime": 25200,
     "toTime": 32400,
+    "accessModes": "WALK",
+    "egressModes": "WALK",
     "walkSpeed": 1.3333333333333333,
     "bikeSpeed": 4.1,
     "carSpeed": 20,
@@ -43,9 +43,21 @@ object to `/api/single`. The JSON you post looks like so:
     "bikeSafe": 1,
     "bikeSlope": 1,
     "bikeTime": 1,
-    "bannedRoutes": ["2_Red"]
+    "scenario": {
+      "id": 0,
+      "description": "No description",
+      "modifications": [
+        {
+          "type": "remove-trip",
+          "agencyId": "1",
+          "routeId": ["Red"],
+          "tripId": null
+        }
+      ]
+    }
   }
 }
+
 ```
 
 `destinationPointsetId` is the ID of the shapefile for which to calculate connectivity (frequently called
@@ -68,9 +80,10 @@ since local noon minus 12 hours, but this is midnight except on days when daylig
 deactivated. I'd recommend   not doing analysis on those days anyhow.) So 25200 is 7 AM (7 hours * 60 minutes/hour * 60
 seconds/minute = 25200) and 32400 is 9 AM.
 
-`bannedRoutes` specifies routes that should not be used by this request. It is formatted as `agencyid_routeid` using the
-entities from the GTFS feeds. Be aware that this is currently affected by [OTP issue 1755](https://github.com/opentripplanner/OpenTripPlanner/issues/1755),
-which means that all routes take on the ID of the first agency in their feed.
+`scenario` specifies modifications on top of the graph that should be made prior to performing this request. A scenario
+has a numeric ID and textual description (which are immaterial for this discussion) and a list of modifications. A modification
+has a `type` parameter and then a number of additional parameters depending on the type specifying how it should be applied.
+The various types of modifications are described below.
 
 The remainder of the parameters are documented in the [OTP API
 documentation](http://dev.opentripplanner.org/javadoc/master/org/opentripplanner/profile/ProfileRequest.html). They
@@ -285,3 +298,59 @@ the query specified by `key1` and the difference is displayed. Yellow represents
 the travel time relative to the time limit; blue represents are that could be reached in less than the time limit before
 but now can be reached faster, with the opacity indicating the ratio; and purple indicates new service, with the opacity
 representing the travel time relative to the time limit.
+
+## Types of modifications
+
+There are a number of types of modifications that can be made on top of a graph to specify arbitrary scenarios that can
+be quickly tested without requiring a graph rebuild.
+
+### Removing trips
+
+This modification has the same effect as the former `bannedRoutes` parameter---it removes trips or routes.
+
+```
+{
+  "type": "remove-trip",
+  "agencyId": "AGENCY ID",
+  "routeId": ["Route ID 1", "Route ID 2"],
+  "tripId": ["Trip ID 1", "Trip ID 2"]
+}
+```
+
+The `agencyId` parameter specifies the agency ID of trips to remove. `routeId` and `tripId` are lists of IDs which are used
+to select routes and trips. They are combines with a logical `and`, meaning that a trip must be referenced both by trip ID
+and route ID to be removed. If either trip ID or route ID is left `null`, it is treated as a wildcard matching all trip
+or route IDs.
+
+### Adjusting frequencies
+
+This modification allows adjusting the headway of frequency-based trips (it will have no effect on scheduled trips).
+
+```
+{
+  "type": "adjust-headway",
+  "agencyId": "AGENCY ID",
+  "routeId": ["Route ID 1", "Route ID 2"],
+  "tripId": ["Trip ID 1", "Trip ID 2"],
+  "headway": 600
+}
+```
+
+Parameters are the same as for removing trips, with the addition of the `headway` parameter, which is the new headway
+in seconds.
+
+### Adjusting dwell times
+
+```
+{
+  "type": "adjust-dwell-time",
+  "agencyId": "AGENCY ID",
+  "routeId": ["Route ID 1", "Route ID 2"],
+  "tripId": ["Trip ID 1", "Trip ID 2"],
+  "stopId": ["stop ID 1", "stop ID 2"],
+  "dwellTime": 30
+}
+```
+
+Again parameters are the same with the addition of the `stopId` parameter which matches stops along a trip, with the same
+semantics as the other (if left null all stops on all matched trips are updated).
