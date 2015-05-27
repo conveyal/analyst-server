@@ -295,7 +295,7 @@ public class QueueManager {
 			jobCallbacks.remove(q.id);
 
 		TransportScenario s = TransportScenario.getScenario(q.scenarioId);
-		
+
 		deleteQueue(getMultipointQueueName(s.bundleId, q.id));
 	}
 
@@ -418,11 +418,12 @@ public class QueueManager {
 						// b) add a redrive policy to the output queue so that these messages are sent to dead letters.
 						messagesToDelete.add(msg);
 
-						// if the job is done, remove the callback
+						// if the job is done, remove the callback and delete the queue (by cancelling the job)
 						// note that we are not deleting results here; they will be removed by a lifecycle config in
 						// S3.
 						if (!shouldJobContinue) {
-							jobCallbacks.remove(body.jobId);
+							Query q = Query.getQuery(body.jobId);
+							cancelJob(q);
 						}
 					}
 				});
