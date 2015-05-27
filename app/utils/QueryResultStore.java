@@ -141,8 +141,8 @@ public class QueryResultStore {
 
 			if (query.completePoints % 200 == 0)
 				query.save();
-
-			if (query.completePoints == query.totalPoints) {
+			
+			if (query.completePoints.equals(query.totalPoints)) {
 				// TODO write to S3 here so that this can be separated from the UI.
 				query.save();
 				store.close();
