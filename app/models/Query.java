@@ -4,17 +4,22 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import models.Bundle.RouteSummary;
 
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.opentripplanner.analyst.ResultSet;
+import org.opentripplanner.analyst.scenario.RemoveTrips;
+import org.opentripplanner.analyst.scenario.Scenario;
 import org.opentripplanner.profile.ProfileRequest;
 import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.TraverseModeSet;
@@ -256,16 +261,13 @@ public class Query implements Serializable {
 					// create a profile request
 					ProfileRequest pr = Api.analyst.buildProfileRequest(q.mode, q.date, q.fromTime, q.toTime, 0, 0);
 					
-					Collection<String> bannedRoutes =
-							Collections2.transform(scenario.bannedRoutes, new Function<RouteSummary, String> () {
-
-								@Override
-								public String apply(RouteSummary route) {
-									return String.format(Locale.US, "%s_%s", route.agencyId, route.id);
-								}
-							});
-					
-					pr.bannedRoutes = new ArrayList<String>(bannedRoutes);
+					pr.scenario = new Scenario(0);
+					pr.scenario.modifications = scenario.bannedRoutes.stream().map(rs -> {
+						RemoveTrips ret = new RemoveTrips();
+						ret.agencyId = rs.agencyId;
+						ret.routeId = Arrays.asList(rs.id);
+						return ret;
+					}).collect(Collectors.toList());
 					
 					// the pointset is already in the cluster cache, from when it was uploaded.
 					// every pointset has all shapefile attributes.

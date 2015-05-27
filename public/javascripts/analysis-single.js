@@ -404,12 +404,17 @@ var Analyst = Analyst || {};
 				profile:  this.$('input.profile:checked').val() == "true",
 			};
 
-			var bannedRoutes1 = _.map(this.scenario1.get('bannedRoutes'), function (route) {
-				return route.agencyId + "_" + route.id;
+			var mods1 = _.map(this.scenario1.get('bannedRoutes'), function (route) {
+				return {
+					type: 'remove-trip',
+					agencyId: route.agencyId,
+					routeId: [route.id],
+					tripId: null
+				};
 			});
 
 			if (!isochrone && !params.destinationPointsetId)
-				// this can happen when the shapefiles have not yet loaded	
+				// this can happen when the shapefiles have not yet loaded
 				return;
 
 			if (params.profile) {
@@ -437,7 +442,11 @@ var Analyst = Analyst || {};
 					bikeSafe: 1,
 					bikeSlope: 1,
 					bikeTime: 1,
-					bannedRoutes: bannedRoutes1
+					scenario: {
+						id: 0,
+						description: "No description",
+						modifications: mods1
+					}
 				}
 			} else {
 				var date = this.$('#date').data('DateTimePicker').getDate();
@@ -474,8 +483,13 @@ var Analyst = Analyst || {};
 
 					// TODO banned routes only supported in profile mode
 					if (params.profile) {
-						params.options.bannedRoutes = _.map(this.scenario2.get('bannedRoutes'), function (route) {
-							return route.agencyId + "_" + route.id;
+						params.options.scenario.modifications = _.map(this.scenario2.get('bannedRoutes'), function (route) {
+							return {
+								type: 'remove-trip',
+								agencyId: route.agencyId,
+								routeId: [route.id],
+								tripId: null
+							};
 						});
 					}
 

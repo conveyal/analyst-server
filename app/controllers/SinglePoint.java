@@ -3,6 +3,7 @@ package controllers;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
+import akka.routing.RemoveRoutee;
 
 import com.conveyal.otpac.actors.JobItemActor;
 import com.conveyal.otpac.message.OneToManyProfileRequest;
@@ -11,6 +12,10 @@ import com.conveyal.otpac.message.SinglePointJobSpec;
 import com.conveyal.otpac.message.WorkResult;
 import com.csvreader.CsvWriter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -38,6 +43,10 @@ import org.mapdb.DBMaker;
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.opentripplanner.analyst.Histogram;
 import org.opentripplanner.analyst.ResultSet;
+import org.opentripplanner.analyst.scenario.AdjustDwellTime;
+import org.opentripplanner.analyst.scenario.AdjustHeadway;
+import org.opentripplanner.analyst.scenario.Modification;
+import org.opentripplanner.analyst.scenario.RemoveTrips;
 import org.opentripplanner.common.model.GenericLocation;
 import org.opentripplanner.profile.ProfileRequest;
 import org.opentripplanner.routing.core.RoutingRequest;
@@ -85,6 +94,8 @@ public class SinglePoint extends Controller {
     static {
     	objectMapper.registerModule(new JodaModule());
     	objectMapper.registerModule(new RoutingRequestModule());
+    	objectMapper.addMixInAnnotations(Modification.class, ModificationMixin.class);
+    	objectMapper.addMixInAnnotations(org.opentripplanner.analyst.scenario.Scenario.class, ScenarioMixin.class);
     }
     
     /** Create a result from a JSON-ified OneToMany[Profile]Request. */
@@ -396,5 +407,19 @@ public class SinglePoint extends Controller {
     		kd.addDeserializer(AgencyAndId.class, new AgencyAndIdDeserializer());
     		ctx.addKeyDeserializers(kd);
     	}
+    }
+    
+    /** Help Jackson figure out which modifications are which */
+    @JsonTypeInfo(use=JsonTypeInfo.Id.NAME, include=JsonTypeInfo.As.PROPERTY, property="type")
+    @JsonSubTypes({
+    	@Type(name = "remove-trip", value = RemoveTrips.class),
+    	@Type(name = "adjust-headway", value = AdjustHeadway.class),
+    	@Type(name = "adjust-dwell-time", value = AdjustDwellTime.class)
+    })
+    public static abstract class ModificationMixin { }
+    
+    /** Help Jackson deserialize an OTP Scenario */
+    public static abstract class ScenarioMixin {
+    	public ScenarioMixin (@JsonProperty("id") int id) { }
     }
 }
