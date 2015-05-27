@@ -279,6 +279,7 @@ public class QueueManager {
 							InputStream is = obj.getObjectContent();
 							GZIPInputStream gis = new GZIPInputStream(new BufferedInputStream(is));
 							re = objectMapper.readValue(gis, ResultEnvelope.class);
+							is.close();
 						} catch (IOException e) {
 							e.printStackTrace();
 							return;
