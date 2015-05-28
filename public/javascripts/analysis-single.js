@@ -413,6 +413,9 @@ var Analyst = Analyst || {};
 				};
 			});
 
+			if (window.modifications1)
+				mods1 = mods1.concat(window.modifications1);
+
 			if (!isochrone && !params.destinationPointsetId)
 				// this can happen when the shapefiles have not yet loaded
 				return;
@@ -481,13 +484,18 @@ var Analyst = Analyst || {};
 
 					// TODO banned routes only supported in profile mode
 					if (params.profile) {
-						params.options.scenario.modifications = _.map(this.scenario2.get('bannedRoutes'), function (route) {
+						var mods2 = _.map(this.scenario2.get('bannedRoutes'), function (route) {
 							return {
 								type: 'remove-trip',
 								agencyId: route.agencyId,
 								routeId: [route.id],
 							};
 						});
+
+						if (window.modifications2)
+							mods2 = mods2.concat(window.modifications2);
+
+						params.options.scenario.modifications = mods2;
 					}
 
 					var p2 = $.ajax({
