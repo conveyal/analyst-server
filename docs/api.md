@@ -354,3 +354,19 @@ in seconds.
 
 Again parameters are the same with the addition of the `stopId` parameter which matches stops along a trip, with the same
 semantics as the other (if left null all stops on all matched trips are updated).
+
+### Skipping stops
+
+```
+{
+  "type": "skip-stop",
+  "agencyId": "AGENCY ID",
+  "routeId": ["Route ID 1", "Route ID 2"],
+  "tripId": ["Trip ID 1", "Trip ID 2"],
+  "stopId": ["stop ID 1", "stop ID 2"]
+}
+```
+
+This causes stops to be skipped. Parameters are the same as adjusting dwell times, but of course without specifying a dwell
+time. Skipped stops are no longer served by the matched trips, and and dwell time at a skipped stop is removed from the schedule.
+If stops are skipped at the start of a trip, the start of the trip is simply removed; the remaining times are not shifted.
