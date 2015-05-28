@@ -3,91 +3,54 @@ package controllers;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
-import akka.routing.RemoveRoutee;
-
 import com.conveyal.otpac.actors.JobItemActor;
 import com.conveyal.otpac.message.OneToManyProfileRequest;
 import com.conveyal.otpac.message.OneToManyRequest;
 import com.conveyal.otpac.message.SinglePointJobSpec;
 import com.conveyal.otpac.message.WorkResult;
 import com.csvreader.CsvWriter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.KeyDeserializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.deser.KeyDeserializers;
 import com.fasterxml.jackson.databind.module.SimpleKeyDeserializers;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
-import com.google.common.collect.Maps;
-
-import models.Bundle;
 import models.Shapefile;
-
-import org.joda.time.DateTimeZone;
-import org.joda.time.LocalDate;
 import org.mapdb.DBMaker;
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.opentripplanner.analyst.Histogram;
 import org.opentripplanner.analyst.ResultSet;
-import org.opentripplanner.analyst.scenario.AdjustDwellTime;
-import org.opentripplanner.analyst.scenario.AdjustHeadway;
-import org.opentripplanner.analyst.scenario.Modification;
-import org.opentripplanner.analyst.scenario.RemoveTrips;
-import org.opentripplanner.common.model.GenericLocation;
-import org.opentripplanner.profile.ProfileRequest;
-import org.opentripplanner.routing.core.RoutingRequest;
-import org.opentripplanner.routing.core.TraverseModeSet;
-import org.opentripplanner.routing.request.BannedStopSet;
-
 import play.Play;
 import play.libs.F;
 import play.libs.F.Function;
-import play.libs.Json;
 import play.mvc.Controller;
 import play.mvc.Result;
-import play.mvc.Security;
 import utils.Cluster;
 import utils.ResultEnvelope;
 import utils.ResultEnvelope.Which;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.Serializable;
 import java.nio.charset.Charset;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
-
-import static utils.PromiseUtils.resolveNow;
 
 /**
  * Controllers for getting result sets used in single point mode.
  */
 public class SinglePoint extends Controller {
-    // cache the result envelopes. 250MB in-memory cache.
+    // cache the result envelopes. 1GB in-memory cache.
     // this doesn't need to be very large; it needs only to store as many result envelopes as there are expected to be
     // active users. Once the user has moved the pin, the probability they will put it back on exactly the same spot
     // is for all intents and purposes zero, so the cache miss rate is very big regardless of cache size.
-    //private static ConcurrentMap<String, ResultEnvelope> envelopeCache = DBMaker.newCache(.25);
-	private static Map<String, ResultEnvelope> envelopeCache = Maps.newHashMap();
-    
+    private static ConcurrentMap<String, ResultEnvelope> envelopeCache = DBMaker.newCache(1d);
+
     /** re-use object mapper */
     private static final ObjectMapper objectMapper = new ObjectMapper();
 

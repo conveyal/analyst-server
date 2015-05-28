@@ -18,7 +18,7 @@ import models.Bundle.RouteSummary;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.opentripplanner.analyst.ResultSet;
-import org.opentripplanner.analyst.scenario.RemoveTrips;
+import org.opentripplanner.analyst.scenario.RemoveTrip;
 import org.opentripplanner.analyst.scenario.Scenario;
 import org.opentripplanner.profile.ProfileRequest;
 import org.opentripplanner.routing.core.RoutingRequest;
@@ -263,7 +263,7 @@ public class Query implements Serializable {
 					
 					pr.scenario = new Scenario(0);
 					pr.scenario.modifications = scenario.bannedRoutes.stream().map(rs -> {
-						RemoveTrips ret = new RemoveTrips();
+						RemoveTrip ret = new RemoveTrip();
 						ret.agencyId = rs.agencyId;
 						ret.routeId = Arrays.asList(rs.id);
 						return ret;

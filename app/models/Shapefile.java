@@ -1,24 +1,15 @@
 package models;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipException;
-import java.util.zip.ZipFile;
-
+import com.conveyal.otpac.PointSetDatastore;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.vividsolutions.jts.geom.Envelope;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.MultiPolygon;
+import com.vividsolutions.jts.geom.Polygon;
+import com.vividsolutions.jts.geom.prep.PreparedPolygon;
+import com.vividsolutions.jts.index.strtree.STRtree;
+import controllers.Application;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.geotools.data.DataStoreFinder;
@@ -29,8 +20,8 @@ import org.geotools.geometry.jts.JTS;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.mapdb.Fun;
-import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.Property;
+import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.PropertyType;
 import org.opengis.referencing.FactoryException;
@@ -40,28 +31,22 @@ import org.opentripplanner.analyst.EmptyPolygonException;
 import org.opentripplanner.analyst.PointFeature;
 import org.opentripplanner.analyst.PointSet;
 import org.opentripplanner.analyst.UnsupportedGeometryException;
-
 import play.Logger;
 import play.Play;
 import play.libs.Akka;
-
-import com.conveyal.otpac.PointSetDatastore;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.vividsolutions.jts.geom.Envelope;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.MultiPolygon;
-import com.vividsolutions.jts.geom.Polygon;
-import com.vividsolutions.jts.geom.prep.PreparedPolygon;
-import com.vividsolutions.jts.index.strtree.STRtree;
-
-import controllers.Application;
 import scala.concurrent.ExecutionContext;
-import scala.concurrent.duration.Duration;
 import utils.Bounds;
 import utils.DataStore;
 import utils.HaltonPoints;
 import utils.HashUtils;
+
+import java.io.*;
+import java.lang.ref.SoftReference;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
+import java.util.zip.ZipFile;
 
 /**
  * A Shapefile corresponds to an OTP PointSet. All numeric Shapefile columns are converted to pointset columns and accessibility values are calculated for each.
@@ -108,7 +93,7 @@ public class Shapefile implements Serializable {
 	public HashMap<String,Attribute> attributes = new HashMap<String,Attribute>();
 
 	/** the pointset for this shapefile */
-	private transient PointSet pointSet;
+	private transient SoftReference<PointSet> pointSet;
 
 	@JsonIgnore
 	public File file;
@@ -117,7 +102,7 @@ public class Shapefile implements Serializable {
 	transient private DataStore<ShapeFeature> shapeFeatures;
 
 	@JsonIgnore
-	transient private STRtree spatialIndex;
+	transient private SoftReference<STRtree> spatialIndex;
 
 	public Shapefile() {
 		
@@ -224,8 +209,12 @@ public class Shapefile implements Serializable {
 	
 	@JsonIgnore
 	public synchronized STRtree getSpatialIndex() {
-		if(spatialIndex == null)
-			buildIndex();
+		STRtree spatialIndex = this.spatialIndex != null ? this.spatialIndex.get() : null;
+
+		if (spatialIndex == null) {
+			spatialIndex = buildIndex ();
+			this.spatialIndex = new SoftReference<STRtree>(spatialIndex);
+		}
 
 		return spatialIndex;
 	}
@@ -235,6 +224,8 @@ public class Shapefile implements Serializable {
 	 */
 	@JsonIgnore
 	public synchronized PointSet getPointSet() {
+		PointSet pointSet = this.pointSet != null ? this.pointSet.get() : null;
+
 		if (pointSet != null)
 			return pointSet;
 
@@ -270,6 +261,8 @@ public class Shapefile implements Serializable {
 		}
 
 		pointSet.setLabel(categoryId, this.name);
+
+		this.pointSet = new SoftReference<>(pointSet);
 
 		return pointSet;
 	}
@@ -310,7 +303,7 @@ public class Shapefile implements Serializable {
 	public DataStore<ShapeFeature> getShapeFeatureStore() {
 
 		if(shapeFeatures == null){
-			shapeFeatures = new DataStore<ShapeFeature>(getShapeDataPath(), id);
+			shapeFeatures = new DataStore<ShapeFeature>(getShapeDataPath(), id, true, true, false);
 		}
 
 		return shapeFeatures;
@@ -340,16 +333,18 @@ public class Shapefile implements Serializable {
 		return getShapeFeatureStore().size();
 	}
 
-	private void buildIndex() {
+	private STRtree buildIndex() {
 		Logger.info("building index for shapefile " + this.id);
 
 		// it's not possible to make an R-tree with only one node, so we make an r-tree with two
 		// nodes and leave one empty.
-		spatialIndex = new STRtree(Math.max(getShapeFeatureStore().size(), 2));
+		STRtree spatialIndex = new STRtree(Math.max(getShapeFeatureStore().size(), 2));
 
 		for(ShapeFeature feature : getShapeFeatureStore().getAll()) {
 			spatialIndex.insert(feature.geom.getEnvelopeInternal(), feature);
 		}
+
+		return spatialIndex;
 	}
 
 	public List<ShapeFeature> query(Envelope env) {
