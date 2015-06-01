@@ -3,12 +3,12 @@ package utils;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.Version;
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.databind.module.SimpleKeyDeserializers;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.module.SimpleSerializers;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
+import org.onebusaway.gtfs.model.AgencyAndId;
 import org.opentripplanner.routing.core.TraverseModeSet;
 
 import java.io.IOException;
@@ -21,7 +21,7 @@ public class JsonUtil {
 
     static {
         objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new TraverseModeSetModule());
+        objectMapper.registerModule(new CustomSerializerModule());
         objectMapper.registerModule(new JodaModule());
     }
 
@@ -37,13 +37,28 @@ public class JsonUtil {
         }
     }
 
-    public static class TraverseModeSetModule extends SimpleModule {
-        public TraverseModeSetModule () {
-            super("TraverseModeSetModule", new Version(0, 0, 1, null, null, null));
+    /** Deserializer for AgencyAndId, for agencyid_id format in bannedTrips */
+    public static class AgencyAndIdDeserializer extends KeyDeserializer {
+
+        @Override
+        public AgencyAndId deserializeKey(String arg0, DeserializationContext arg1)
+                throws IOException, JsonProcessingException {
+            String[] sp = arg0.split("_");
+            return new AgencyAndId(sp[0], sp[1]);
+        }
+    }
+
+    public static class CustomSerializerModule extends SimpleModule {
+        public CustomSerializerModule () {
+            super("CustomSerializerModule", new Version(0, 0, 1, null, null, null));
         }
 
         @Override
         public void setupModule(SetupContext ctx) {
+            SimpleKeyDeserializers kd = new SimpleKeyDeserializers();
+            kd.addDeserializer(AgencyAndId.class, new AgencyAndIdDeserializer());
+            ctx.addKeyDeserializers(kd);
+
             SimpleSerializers s = new SimpleSerializers();
             s.addSerializer(TraverseModeSet.class, new TraverseModeSetSerializer());
             ctx.addSerializers(s);
