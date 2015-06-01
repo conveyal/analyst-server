@@ -15,7 +15,8 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" % "akka-remote_2.10" % "2.3.5",
   "org.opentripplanner" % "otp" % "0.18.0-SNAPSHOT",
   "com.conveyal" % "gtfs-lib" % "0.1-SNAPSHOT",
-  "com.fasterxml.jackson.datatype" % "jackson-datatype-joda" % "2.4.0"
+  "com.fasterxml.jackson.datatype" % "jackson-datatype-joda" % "2.4.0",
+  "com.logentries" % "logentries-appender" % "1.1.30"
 )
 
 watchSources := (watchSources.value
