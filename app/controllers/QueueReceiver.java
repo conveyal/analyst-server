@@ -5,6 +5,7 @@ import play.mvc.BodyParser;
 import play.mvc.Controller;
 import play.mvc.Http;
 import play.mvc.Result;
+import utils.JsonUtil;
 import utils.QueueManager;
 import utils.ResultEnvelope;
 
@@ -18,7 +19,7 @@ import java.util.zip.GZIPInputStream;
  * Receives messages from the cluster workers and handles them
  */
 public class QueueReceiver extends Controller {
-    private static ObjectMapper objectMapper = new ObjectMapper();
+    private static ObjectMapper objectMapper = JsonUtil.getObjectMapper();
 
     // 10 MB ought to be enough for anybody
     @BodyParser.Of(value = BodyParser.Raw.class, maxLength = 1024 * 1024 * 10)

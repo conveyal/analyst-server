@@ -16,6 +16,7 @@ import play.mvc.Http;
 import play.mvc.Result;
 import play.mvc.Security;
 import scala.concurrent.duration.Duration;
+import utils.JsonUtil;
 import utils.QueryResults;
 import utils.QueueManager;
 import utils.ResultEnvelope;
@@ -33,7 +34,7 @@ public class Api extends Controller {
 
 	public static Analyst analyst = new Analyst();
 
-	static ObjectMapper mapper = new ObjectMapper();
+	static ObjectMapper mapper = JsonUtil.getObjectMapper();
 	
 	static {
 		mapper.registerModule(new JodaModule());

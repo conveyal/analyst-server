@@ -1,35 +1,22 @@
 package utils;
 
-import akka.actor.Cancellable;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.*;
 import com.beust.jcommander.internal.Lists;
 import com.beust.jcommander.internal.Sets;
-import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.Version;
-import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.fasterxml.jackson.databind.module.SimpleSerializers;
-import com.fasterxml.jackson.datatype.joda.JodaModule;
 import models.Query;
 import models.TransportScenario;
-import org.opentripplanner.routing.core.TraverseModeSet;
-import play.Logger;
 import play.Play;
 import play.libs.Akka;
 import scala.concurrent.duration.Duration;
-import scala.concurrent.duration.FiniteDuration;
 
-import java.awt.*;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -59,18 +46,13 @@ public class QueueManager {
 	/** The S3 client */
 	private final AmazonS3Client s3;
 
-	private static final ObjectMapper objectMapper = new ObjectMapper();
+	private static final ObjectMapper objectMapper = JsonUtil.getObjectMapper();
 
 	/** The key is a rudimentary level of security. It is included as a GET param in all responses from the cluster. */
 	public final String key = IdUtils.getId();
 
 	/** When we delete a query, there may still be jobs being enqueued for it. Make sure we drop those on the floor. */
 	public Set<String> deletedQueries = Sets.newHashSet();
-
-	static {
-		objectMapper.registerModule(new JodaModule());
-		objectMapper.registerModule(new TraverseModeSetModule());
-	}
 
 	/** S3 bucket in which results are placed */
 	private final String outputLoc = Play.application().configuration().getString("cluster.results-bucket");
@@ -368,26 +350,6 @@ public class QueueManager {
 		}
 
 		callbacks.remove(env.jobId + "_" + env.id);
-	}
-
-	public static class TraverseModeSetSerializer extends JsonSerializer<TraverseModeSet> {
-		@Override
-		public void serialize(TraverseModeSet traverseModeSet, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException, JsonProcessingException {
-			jsonGenerator.writeString(traverseModeSet.toString());
-		}
-	}
-
-	public static class TraverseModeSetModule extends SimpleModule {
-		public TraverseModeSetModule () {
-			super("TraverseModeSetModule", new Version(0, 0, 1, null, null, null));
-		}
-
-		@Override
-		public void setupModule(SetupContext ctx) {
-			SimpleSerializers s = new SimpleSerializers();
-			s.addSerializer(TraverseModeSet.class, new TraverseModeSetSerializer());
-			ctx.addSerializers(s);
-		}
 	}
 
 	/** Listen for multipoint query results */

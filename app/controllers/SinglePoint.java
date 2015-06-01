@@ -4,17 +4,10 @@ import com.csvreader.CsvWriter;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.Version;
-import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.KeyDeserializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleKeyDeserializers;
-import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.common.collect.Maps;
 import models.Shapefile;
-import org.onebusaway.gtfs.model.AgencyAndId;
 import org.opentripplanner.analyst.Histogram;
 import org.opentripplanner.analyst.ResultSet;
 import play.Play;
@@ -29,7 +22,6 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.UUID;
 
 /**
  * Controllers for getting result sets used in single point mode.
@@ -43,12 +35,7 @@ public class SinglePoint extends Controller {
 	private static Map<String, ResultEnvelope> envelopeCache = Maps.newHashMap();
     
     /** re-use object mapper */
-    private static final ObjectMapper objectMapper = new ObjectMapper();
-
-    static {
-    	objectMapper.registerModule(new JodaModule());
-    	objectMapper.registerModule(new RoutingRequestModule());
-    }
+    private static final ObjectMapper objectMapper = JsonUtil.getObjectMapper();
     
     /** Create a result from a JSON-ified OneToMany[Profile]Request. */
     public static F.Promise<Result> result () throws JsonProcessingException {
@@ -286,30 +273,5 @@ public class SinglePoint extends Controller {
     /** Get a result set with times from the cache, or null if the key doesn't exist/has fallen out of the cache */
     public static ResultEnvelope getResultSet (String key) {
     	return envelopeCache.get(key);
-    }
-
-    /** Deserializer for AgencyAndId, for agencyid_id format in bannedTrips */
-    public static class AgencyAndIdDeserializer extends KeyDeserializer {
-
-		@Override
-		public AgencyAndId deserializeKey(String arg0, DeserializationContext arg1)
-				throws IOException, JsonProcessingException {
-			String[] sp = arg0.split("_");
-			return new AgencyAndId(sp[0], sp[1]);
-		}
-    }
-    
-    /** module with jackson config to deserialize routing requests */
-    public static class RoutingRequestModule extends SimpleModule {
-    	public RoutingRequestModule () {
-    		super("RoutingRequestModule", new Version(0, 0, 1, null, null, null));
-    	}
-    	
-    	@Override
-    	public void setupModule (SetupContext ctx) {
-    		SimpleKeyDeserializers kd = new SimpleKeyDeserializers();
-    		kd.addDeserializer(AgencyAndId.class, new AgencyAndIdDeserializer());
-    		ctx.addKeyDeserializers(kd);
-    	}
     }
 }
