@@ -1,65 +1,30 @@
 package models;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
-
-import models.Bundle.RouteSummary;
-
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import com.conveyal.otpac.actors.JobItemActor;
+import com.conveyal.otpac.message.JobSpec;
+import com.conveyal.otpac.message.WorkResult;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import controllers.Api;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
-import org.opentripplanner.analyst.ResultSet;
 import org.opentripplanner.analyst.scenario.RemoveTrip;
 import org.opentripplanner.analyst.scenario.Scenario;
 import org.opentripplanner.profile.ProfileRequest;
 import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.TraverseModeSet;
-
-import otp.Analyst;
 import play.Logger;
 import play.Play;
-import play.libs.Akka;
-import scala.concurrent.Await;
-import scala.concurrent.Future;
-import scala.concurrent.duration.Duration;
-import utils.Cluster;
-import utils.DataStore;
-import utils.HashUtils;
-import utils.QueryResultStore;
-import utils.ResultEnvelope;
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.pattern.Patterns;
-import akka.util.Timeout;
+import utils.*;
 
-import com.conveyal.otpac.actors.JobItemActor;
-import com.conveyal.otpac.message.JobId;
-import com.conveyal.otpac.message.JobSpec;
-import com.conveyal.otpac.message.JobStatus;
-import com.conveyal.otpac.message.WorkResult;
-import com.conveyal.otpac.standalone.StandaloneCluster;
-import com.conveyal.otpac.standalone.StandaloneExecutive;
-import com.conveyal.otpac.standalone.StandaloneWorker;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
-import com.vividsolutions.jts.geom.Geometry;
-
-import controllers.Api;
-import controllers.Application;
-import controllers.Tiles;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Query implements Serializable {
@@ -260,14 +225,20 @@ public class Query implements Serializable {
 				if (q.isTransit()) {
 					// create a profile request
 					ProfileRequest pr = Api.analyst.buildProfileRequest(q.mode, q.date, q.fromTime, q.toTime, 0, 0);
-					
+
 					pr.scenario = new Scenario(0);
-					pr.scenario.modifications = scenario.bannedRoutes.stream().map(rs -> {
-						RemoveTrip ret = new RemoveTrip();
-						ret.agencyId = rs.agencyId;
-						ret.routeId = Arrays.asList(rs.id);
-						return ret;
-					}).collect(Collectors.toList());
+
+					if (scenario.bannedRoutes != null) {
+						pr.scenario.modifications = scenario.bannedRoutes.stream().map(rs -> {
+							RemoveTrip ret = new RemoveTrip();
+							ret.agencyId = rs.agencyId;
+							ret.routeId = Arrays.asList(rs.id);
+							return ret;
+						}).collect(Collectors.toList());
+					}
+					else {
+						pr.scenario.modifications = Collections.emptyList();
+					}
 					
 					// the pointset is already in the cluster cache, from when it was uploaded.
 					// every pointset has all shapefile attributes.
