@@ -39,3 +39,12 @@ the outputQueue (which is an SQS queue URL, not a queue name) that looks like th
 }```
 
 If `directOutputUrl` is defined, post the results that would have been saved to S3 to that URL as gzipped json.
+
+## Queue naming
+
+Queues are given well-defined names so that workers and the machine manager can discover them. There is a queue
+prefix for each cluster.
+
+- Single point queues: `<prefix>_<graphId>_single`
+- Job queues: `<prefix>_<graphId>_<jobId>` (jobId may not be `single`)
+- Output queues should not match either of the above patterns (i.e. prefix followed by two values separated by underscores)
