@@ -38,27 +38,44 @@ public class Query implements Serializable {
 	public String id;
 	public String projectId;
 	public String name;
-	
-	public Integer jobId;
-	public String akkaId;
 
+	/** The mode. Can be left null if both graphId and profileRequest or routingRequest are set */
 	public String mode;
 	
 	public String shapefileId;
-	
+
+	/** The scenario. Can be left null if both graphId and either profileRequest or routingRequest are set */
 	public String scenarioId;
 	public String status;
 	
 	public Integer totalPoints;
 	public Integer completePoints;
 	
-	// the from time of this query
+	/** the from time of this query. Can be left unset if both graphId and profileRequest or routingRequest are set */
 	public int fromTime;
-	
-	// the to time of this query
+
+	/** the to time of this query. Can be left unset if both graphId and profileRequest or routingRequest are set */
 	public int toTime;
-	
+
+	/** the date of this query. Can be left unset if both graphId and profileRequest or routingRequest are set */
 	public LocalDate date;
+
+	/** The graph to use. If profileRequest and routingRequest are both null this will be ignored */
+	public String graphId;
+
+	/**
+	 * Profile request to use for this query. If set, graphId must not be null. If set, mode, fromTime, toTime,
+	 * scenarioId, and date will be ignored.
+	 *
+	 * Takes precedence over routingRequest; if both are set, a profile request will be performed.
+	 */
+	public ProfileRequest profileRequest;
+
+	/**
+	 * Routing request to use for this query. If set, graphId must not be null. If set, mode, fromTime, toTime,
+	 * scenarioId, and date will be ignored.
+	 */
+	public RoutingRequest routingRequest;
 	
 	@JsonIgnore 
 	transient private QueryResultStore results; 
@@ -119,9 +136,7 @@ public class Query implements Serializable {
 		System.out.println(queryActor.path());
 		
 		queryActor.tell(this, null);
-		
-		akkaId = queryActor.path().name();
-		
+
 		save();
 		
 	}
@@ -213,43 +228,55 @@ public class Query implements Serializable {
 				
 				ActorSystem system = Cluster.getActorSystem();
 				ActorRef executive = Cluster.getExecutive();
-				
-				JobSpec js;
-								
+
 				q.totalPoints = sl.getFeatureCount();
 				q.completePoints = 0;
-				
-				TransportScenario scenario = TransportScenario.getScenario(q.scenarioId);
-				String graphId = scenario.bundleId;
-				
-				if (q.isTransit()) {
-					// create a profile request
-					ProfileRequest pr = Api.analyst.buildProfileRequest(q.mode, q.date, q.fromTime, q.toTime, 0, 0);
 
-					pr.scenario = new Scenario(0);
+				// build the request(s) if they are null
+				ProfileRequest pr = q.profileRequest;
+				RoutingRequest rr = q.routingRequest;
 
-					if (scenario.bannedRoutes != null) {
-						pr.scenario.modifications = scenario.bannedRoutes.stream().map(rs -> {
-							RemoveTrip ret = new RemoveTrip();
-							ret.agencyId = rs.agencyId;
-							ret.routeId = Arrays.asList(rs.id);
-							return ret;
-						}).collect(Collectors.toList());
+				String graphId = q.graphId;
+
+				// users can define params either through scenario IDs, etc., or by specifying a profile request
+				// directly.
+				if (pr == null && rr == null) {
+					// build the requests
+					TransportScenario scenario = TransportScenario.getScenario(q.scenarioId);
+					graphId = scenario.bundleId;
+
+					if (q.isTransit()) {
+						// create a profile request
+						pr = Api.analyst.buildProfileRequest(q.mode, q.date, q.fromTime, q.toTime, 0, 0);
+
+						pr.scenario = new Scenario(0);
+
+						if (scenario.bannedRoutes != null) {
+							pr.scenario.modifications = scenario.bannedRoutes.stream().map(rs -> {
+								RemoveTrip ret = new RemoveTrip();
+								ret.agencyId = rs.agencyId;
+								ret.routeId = Arrays.asList(rs.id);
+								return ret;
+							}).collect(Collectors.toList());
+						}
+						else {
+							pr.scenario.modifications = Collections.emptyList();
+						}
 					}
 					else {
-						pr.scenario.modifications = Collections.emptyList();
+						// this is not a transit request, no need for computationally-intensive profile routing
+						graphId = q.scenarioId;
+						Bundle s = Bundle.getBundle(graphId);
+						rr = Api.analyst.buildRequest(q.scenarioId, q.date, q.fromTime, null, q.mode, 120, DateTimeZone.forID(s.timeZone));
 					}
-					
-					// the pointset is already in the cluster cache, from when it was uploaded.
-					// every pointset has all shapefile attributes.
-					js = new JobSpec(graphId, sl.id, sl.id, pr);
 				}
-				else {
-					// this is not a transit request, no need for computationally-intensive profile routing 
-					Bundle s = Bundle.getBundle(q.scenarioId);
-					RoutingRequest rr = Api.analyst.buildRequest(q.scenarioId, q.date, q.fromTime, null, q.mode, 120, DateTimeZone.forID(s.timeZone));
-					js = new JobSpec(graphId, sl.id, sl.id, rr);
-				}
+
+				JobSpec js;
+
+				if (pr != null)
+					js =  new JobSpec(graphId, sl.id, sl.id, pr);
+				else
+					js =  new JobSpec(graphId, sl.id, sl.id, rr);
 
 				// plus a callback that registers how many work items have returned
 				ActorRef callback = system.actorOf(Props.create(SaveQueryCallback.class, q.id, q.totalPoints));

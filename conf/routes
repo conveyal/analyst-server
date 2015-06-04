@@ -55,11 +55,11 @@ POST          /api/scenario                       controllers.ScenarioController
 PUT           /api/scenario/:id                   controllers.ScenarioController.update(id:String)
 DELETE        /api/scenario/:id                   controllers.ScenarioController.delete(id:String)
 
-GET           /api/query                          controllers.Api.getQuery(id:String ?= null, projectId:String ?= null, pointSetId: String ?= null)
-GET           /api/query/:id                      controllers.Api.getQueryById(id:String)
-POST          /api/query/                         controllers.Api.createQuery()
-PUT           /api/query/:id                      controllers.Api.updateQuery(id:String)
-DELETE        /api/query/:id                      controllers.Api.deleteQuery(id:String)
+GET           /api/query                          controllers.QueryController.getQuery(id:String ?= null, projectId:String ?= null, pointSetId: String ?= null)
+GET           /api/query/:id                      controllers.QueryController.getQueryById(id:String)
+POST          /api/query/                         controllers.QueryController.createQuery()
+PUT           /api/query/:id                      controllers.QueryController.updateQuery(id:String)
+DELETE        /api/query/:id                      controllers.QueryController.deleteQuery(id:String)
 
 GET           /tile/shapefile                     controllers.TilesImpl.shape(shapefileId:String, x:Integer, y:Integer, z:Integer, attributeName:String ?= null)
 
