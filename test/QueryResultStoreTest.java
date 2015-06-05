@@ -5,7 +5,7 @@ import org.junit.Test;
 import org.opentripplanner.analyst.Histogram;
 import org.opentripplanner.analyst.ResultSet;
 import utils.QueryResultStore;
-import utils.ResultEnvelope;
+import org.opentripplanner.analyst.cluster.ResultEnvelope;
 
 import java.io.File;
 import java.util.Arrays;

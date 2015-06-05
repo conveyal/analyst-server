@@ -6,7 +6,7 @@ import play.mvc.Result;
 import play.mvc.Security;
 import tiles.AnalystTileRequest;
 import tiles.AnalystTileRequest.*;
-import utils.ResultEnvelope;
+import org.opentripplanner.analyst.cluster.ResultEnvelope;
 
 /** These are tiles which require authentication in all cases */
 @Security.Authenticated(Secured.class)

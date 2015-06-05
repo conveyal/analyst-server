@@ -17,7 +17,7 @@ import utils.HaltonPoints;
 import utils.NaturalBreaksClassifier;
 import utils.QueryResults;
 import utils.QueryResults.QueryResultItem;
-import utils.ResultEnvelope;
+import org.opentripplanner.analyst.cluster.ResultEnvelope;
 
 import java.awt.*;
 import java.io.IOException;

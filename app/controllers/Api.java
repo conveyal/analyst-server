@@ -19,7 +19,7 @@ import scala.concurrent.duration.Duration;
 import utils.JsonUtil;
 import utils.QueryResults;
 import utils.QueueManager;
-import utils.ResultEnvelope;
+import org.opentripplanner.analyst.cluster.ResultEnvelope;
 
 import java.io.IOException;
 import java.io.StringWriter;

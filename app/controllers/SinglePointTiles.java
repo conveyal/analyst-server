@@ -7,7 +7,7 @@ import play.mvc.Result;
 import tiles.AnalystTileRequest;
 import tiles.SurfaceComparisonTile;
 import tiles.SurfaceTile;
-import utils.ResultEnvelope;
+import org.opentripplanner.analyst.cluster.ResultEnvelope;
 
 /**
  * Tiles for single point. Intentionally not annotated with @Security.Authenticated;

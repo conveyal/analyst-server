@@ -29,7 +29,7 @@ import play.mvc.Security;
 import utils.DirectoryZip;
 import utils.HashUtils;
 import utils.QueryResults;
-import utils.ResultEnvelope;
+import org.opentripplanner.analyst.cluster.ResultEnvelope;
 import utils.ResultEnvelope.Which;
 
 import java.io.File;

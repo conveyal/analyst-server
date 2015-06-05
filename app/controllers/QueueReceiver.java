@@ -7,7 +7,7 @@ import play.mvc.Http;
 import play.mvc.Result;
 import utils.JsonUtil;
 import utils.QueueManager;
-import utils.ResultEnvelope;
+import org.opentripplanner.analyst.cluster.ResultEnvelope;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
