@@ -9,6 +9,7 @@ import models.Shapefile;
 import models.Shapefile.ShapeFeature;
 import org.mapdb.Fun.Tuple3;
 import org.opentripplanner.analyst.ResultSet;
+import org.opentripplanner.analyst.cluster.ResultEnvelope;
 
 import java.awt.*;
 import java.util.Iterator;

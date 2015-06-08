@@ -6,6 +6,7 @@ import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Polygon;
+import com.vividsolutions.jts.geom.Polygonal;
 import com.vividsolutions.jts.geom.prep.PreparedPolygon;
 import com.vividsolutions.jts.index.strtree.STRtree;
 import controllers.Application;
@@ -30,14 +31,30 @@ import org.opentripplanner.analyst.EmptyPolygonException;
 import org.opentripplanner.analyst.PointFeature;
 import org.opentripplanner.analyst.PointSet;
 import org.opentripplanner.analyst.UnsupportedGeometryException;
+import org.opentripplanner.analyst.cluster.PointSetDatastore;
 import play.Logger;
 import play.Play;
 import play.libs.Akka;
 import scala.concurrent.ExecutionContext;
-import utils.*;
+import utils.Bounds;
+import utils.DataStore;
+import utils.HaltonPoints;
+import utils.HashUtils;
 
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
@@ -122,7 +139,7 @@ public class Shapefile implements Serializable {
 
 				if(geom instanceof Polygon) {
 
-					PreparedPolygon pp = new PreparedPolygon((Polygon)geom);
+					PreparedPolygon pp = new PreparedPolygon((Polygonal)geom);
 					preparedPolygons.add(pp);
 
 				}

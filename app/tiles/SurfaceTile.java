@@ -9,7 +9,7 @@ import org.opentripplanner.analyst.PointSet;
 import org.opentripplanner.analyst.ResultSet;
 import utils.HaltonPoints;
 import org.opentripplanner.analyst.cluster.ResultEnvelope;
-import utils.ResultEnvelope.Which;
+import org.opentripplanner.analyst.cluster.ResultEnvelope.Which;
 
 import java.awt.*;
 import java.io.IOException;
