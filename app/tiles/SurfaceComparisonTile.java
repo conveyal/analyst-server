@@ -13,8 +13,8 @@ import org.opengis.referencing.operation.TransformException;
 import org.opentripplanner.analyst.PointSet;
 import org.opentripplanner.analyst.ResultSet;
 import utils.HaltonPoints;
-import utils.ResultEnvelope;
-import utils.ResultEnvelope.Which;
+import org.opentripplanner.analyst.cluster.ResultEnvelope;
+import org.opentripplanner.analyst.cluster.ResultEnvelope.Which;
 
 import java.awt.*;
 import java.io.IOException;

@@ -22,6 +22,8 @@ import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opentripplanner.analyst.PointSet;
 import org.opentripplanner.analyst.ResultSet;
+import org.opentripplanner.analyst.cluster.ResultEnvelope;
+import org.opentripplanner.analyst.cluster.ResultEnvelope.Which;
 import play.Logger;
 import play.mvc.Controller;
 import play.mvc.Result;
@@ -29,12 +31,15 @@ import play.mvc.Security;
 import utils.DirectoryZip;
 import utils.HashUtils;
 import utils.QueryResults;
-import utils.ResultEnvelope;
-import utils.ResultEnvelope.Which;
 
 import java.io.File;
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 @Security.Authenticated(Secured.class)
 public class Gis extends Controller {
 	

@@ -4,7 +4,7 @@ import java.io.File;
 
 import utils.DataStore;
 import utils.QueryResultStore;
-import utils.ResultEnvelope;
+import org.opentripplanner.analyst.cluster.ResultEnvelope;
 
 /** Migrate query results from the old, slow storage format to the new, slightly faster, storage format */
 public class MigrateQueryResults {
