@@ -60,8 +60,8 @@ GET           /api/query/:id                      controllers.QueryController.ge
 POST          /api/query/                         controllers.QueryController.createQuery()
 PUT           /api/query/:id                      controllers.QueryController.updateQuery(id:String)
 DELETE        /api/query/:id                      controllers.QueryController.deleteQuery(id:String)
-GET           /api/query/:id/bins	                controllers.Api.queryBins(id:String, timeLimit:Integer ?= 3600, weightByShapefile:String ?= null, weightByAttribute:String ?= null, groupBy:String ?= null, which: String, attributeName: String, compareTo: String = null)
-GET           /api/query/:id/:compareTo/bins      controllers.Api.queryBins(id:String, timeLimit:Integer ?= 3600, weightByShapefile:String ?= null, weightByAttribute:String ?= null, groupBy:String ?= null, which: String, attributeName: String, compareTo:String)
+GET           /api/query/:id/bins	                controllers.QueryController.queryBins(id:String, timeLimit:Integer ?= 3600, weightByShapefile:String ?= null, weightByAttribute:String ?= null, groupBy:String ?= null, which: String, attributeName: String, compareTo: String = null)
+GET           /api/query/:id/:compareTo/bins      controllers.QueryController.queryBins(id:String, timeLimit:Integer ?= 3600, weightByShapefile:String ?= null, weightByAttribute:String ?= null, groupBy:String ?= null, which: String, attributeName: String, compareTo:String)
 
 GET           /tile/shapefile                     controllers.TilesImpl.shape(shapefileId:String, x:Integer, y:Integer, z:Integer, attributeName:String ?= null)
 
