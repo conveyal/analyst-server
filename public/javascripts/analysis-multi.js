@@ -371,7 +371,7 @@ var Analyst = Analyst || {};
 
         var timeLimit = this.timeSlider.getValue() * 60;
 
-        var url = 'queryId=' + this.model.id + '&timeLimit=' + timeLimit + '&attributeName=' + this.$('#shapefileColumn').val();
+        var url = 'timeLimit=' + timeLimit + '&attributeName=' + this.$('#shapefileColumn').val();
 
         if (this.groupById)
           url = url + "&groupBy=" + this.groupById;
@@ -380,9 +380,6 @@ var Analyst = Analyst || {};
           url = url + "&weightByShapefile=" + this.weightByShapefile + '&weightByAttribute=' + this.weightByAttribute;
 
         url += '&which=' + this.which;
-
-        if (this.compareToId)
-          url = url + '&compareTo=' + this.compareToId;
 
         this.$(".legendTitle").text(legendTitle);
 
@@ -393,9 +390,22 @@ var Analyst = Analyst || {};
 
         var _map = A.map;
 
-        $.getJSON('/api/queryBins?' + url, function(data) {
+        var bins;;
 
-          _this.queryOverlay = L.tileLayer('/tile/query?z={z}&x={x}&y={y}&' + url).addTo(_map);
+        if (this.compareToId)
+          bins = '/api/query/' + this.model.id + '/' + this.compareToId + '/bins?' + url;
+        else
+          bins = '/api/query/' + this.model.id + '/bins?' + url;
+
+        $.getJSON(bins, function(data) {
+
+          var tileUrl;
+          if (_this.compareToId)
+            tileUrl = '/tile/query/' + _this.model.id + '/' + _this.compareToId + '/{z}/{x}/{y}.png?' + url;
+          else
+            tileUrl = '/tile/query/' + _this.model.id + '/{z}/{x}/{y}.png?' + url;
+
+          _this.queryOverlay = L.tileLayer(tileUrl).addTo(_map);
 
           _this.$("#updatingMap").hide();
 
@@ -478,8 +488,8 @@ var Analyst = Analyst || {};
       });
 
       if (this.isComplete()) {
-        if (this.model.get('transit')) {
-          // we have transit modes, so it's a profile request
+        if (this.model.get('profile')) {
+          // profile request
           this.$('.whichMulti input[value="POINT_ESTIMATE"]').parent().remove();
           this.$('.whichMulti input[value="SPREAD"]').parent().remove();
           this.$('.whichMulti input[value="AVERAGE"]').prop('checked', true).parent().addClass('active');

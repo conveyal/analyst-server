@@ -3,12 +3,14 @@ package controllers;
 import models.Query;
 import play.mvc.Controller;
 import play.mvc.Result;
+import play.mvc.Security;
 
 import java.io.IOException;
 
 /**
- * Created by matthewc on 6/4/15.
+ * Multipoint query controller
  */
+@Security.Authenticated(Secured.class)
 public class QueryController extends Controller {
 
     // **** query controllers ****

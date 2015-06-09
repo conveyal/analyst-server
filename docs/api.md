@@ -370,3 +370,239 @@ semantics as the other (if left null all stops on all matched trips are updated)
 This causes stops to be skipped. Parameters are the same as adjusting dwell times, but of course without specifying a dwell
 time. Skipped stops are no longer served by the matched trips, and and dwell time at a skipped stop is removed from the schedule.
 If stops are skipped at the start of a trip, the start of the trip is simply removed; the remaining times are not shifted.
+
+## Multipoint Analysis
+
+It is also possible to perform multipoint analysis, wherein single point analysis is run as a batch over many origins and
+the results are summarized. For example, one might run a query showing the job accessibility change for every Census
+block in a city. To start a multipoint job, you POST a JSON object to `/api/query`:
+
+```
+{
+  "name": "query name",
+  "shapefileId": <pointset ID>,
+  "projectId": <project ID>,
+  "bundleId": <bundle ID>,
+  "profileRequest": {
+    "date": "2015-05-26",
+    "fromTime": 25200,
+    "toTime": 32400,
+    "accessModes": "WALK",
+    "egressModes": "WALK",
+    "walkSpeed": 1.3333333333333333,
+    "bikeSpeed": 4.1,
+    "carSpeed": 20,
+    "streetTime": 90,
+    "maxWalkTime": 20,
+    "maxBikeTime": 45,
+    "maxCarTime": 45,
+    "minBikeTime": 10,
+    "minCarTime": 10,
+    "suboptimalMinutes": 5,
+    "analyst": true,
+    "bikeSafe": 1,
+    "bikeSlope": 1,
+    "bikeTime": 1,
+    "scenario": {
+      "id": 0,
+      "description": "No description",
+      "modifications": [
+      {
+        "type": "remove-trip",
+        "agencyId": "1",
+        "routeId": ["Red"],
+        "tripId": null
+      }
+      ]
+    }
+  }
+}
+```
+
+This contains a basic definition of the parameters for the query. The name is simply a human-readable string referring
+to what this query is. The `shapefileId` defines the pointset ID that should be used for this query; currently, the same
+pointset is used as both origins and destinations (this [will be changed
+soon](https://github.com/conveyal/analyst-server/issues/84)). Accessibility is calculated to all of the attributes of the
+pointset, as in single point mode; there is no need to specify an attribute. Project ID is an analyst server project ID
+(see `/api/project`); it is not strictly necessary, but allows the output of queries to be viewed in the Analyst UI,
+helpful for debugging.
+
+The response looks like this:
+
+```
+{
+  "id": "20dfd9b05cac968a6eb6a195fdaeb01e",
+  "projectId": "14e4274a080d86ef0993deea2c6af986",
+  "name": "query name",
+  "mode": null,
+  "shapefileId": "14e4274a080d86ef0993deea2c6af986_f41d86e7f826fb644e6b0a27d58897a5",
+  "scenarioId": null,
+  "status": null,
+  "totalPoints": 142,
+  "completePoints": 0,
+  "fromTime": 0,
+  "toTime": 0,
+  "date": null,
+  "graphId": "78953923453b6da1a585cc58621eebc7",
+  "profileRequest": {
+    "fromLat": 0,
+    "fromLon": 0,
+    "toLat": 0,
+    "toLon": 0,
+    "fromTime": 25200,
+    "toTime": 32400,
+    "walkSpeed": 1.3333334,
+    "bikeSpeed": 4.1,
+    "carSpeed": 20,
+    "streetTime": 90,
+    "maxWalkTime": 20,
+    "maxBikeTime": 45,
+    "maxCarTime": 45,
+    "minBikeTime": 10,
+    "minCarTime": 10,
+    "date": [
+      2015,
+      5,
+      26
+    ],
+    "orderBy": null,
+    "limit": 0,
+    "accessModes": {
+      "qModes": [
+        {
+          "mode": "WALK",
+          "qualifiers": []
+        }
+      ]
+    },
+    "egressModes": {
+      "qModes": [
+        {
+          "mode": "WALK",
+          "qualifiers": []
+        }
+      ]
+    },
+    "directModes": null,
+    "transitModes": null,
+    "analyst": true,
+    "bikeSafe": 1,
+    "bikeSlope": 1,
+    "bikeTime": 1,
+    "suboptimalMinutes": 5,
+    "scenario": {
+      "id": 0,
+      "description": "No description",
+      "modifications": [
+        {
+          "type": "remove-trip",
+          "warnings": [],
+          "agencyId": "1",
+          "routeId": [
+            "Red"
+          ],
+          "tripId": null
+        }
+      ]
+    }
+  },
+  "routingRequest": null,
+  "shapefileName": "tract",
+  "transit": null,
+  "percent": 0
+}
+```
+
+For the most part it just gives your parameters back to you. There are many null fields, which are used when using
+predefined scenarios (it is possible to define scenarios in Analyst Server and then leave the `profileRequest` field
+blank on the initial request, with values filled in from the scenario). It also has fields `completePoints` and
+`totalPoints`; initially both are zero. Once the pointset has been read by the server, `totalPoints` will be the number
+of origins in the pointset, and `completePoints` will be the number of points that have been completed. This data can be
+refreshed by requesting
+
+      /api/query/<id>
+
+with `id` being the `id` attribute of the original response.
+
+### Tiles
+
+Query result tiles are available at the following URL.
+
+    /tile/query/<id>/<z>/<x>/<y>.png?timeLimit=<timeLimit>&attributeName=<attribute name>&which=<accessibility type>
+
+`id` is the `id` attribute from the original response. `timeLimit` is the limit in seconds for which to retrieve
+accessibility. `attributeName` is the name of the attribute to use for accessibility in the shapefile. `which` is one of
+`WORST_CASE`, `AVERAGE`, or `BEST_CASE`, indicating what type of accessibility you wish to calculate.
+
+If you wish to compare multiple queries, you can do that like so:
+
+    /tile/query/<id>/<otherId>/<z>/<x>/<y>.png?timeLimit=<timeLimit>&attributeName=<attribute name>&which=<accessibility type>
+
+The query with ID `otherId` will be subtracted from the query with id `id` and then the results will be rendered.
+
+### Legends
+
+The tiles don't have a clearly defined color scheme, as the single point tiles do. Rather, they are classified using
+a [Natural Breaks classifier](http://en.wikipedia.org/wiki/Jenks_natural_breaks_optimization). Thus they need a legend
+so that they can be interpreted. This legend is available from
+
+    /api/query/<id>/bins?timeLimit=<time limit>&attributeName=<attr name>&which=<accessibility type>
+
+or, for a multipoint query,
+
+    /api/query/<id>/<id2>/bins?timeLimit=<time limit>&attributeName=<attr name>&which=<accessibility type>
+
+The response looks like this:
+
+```
+[
+  {
+    "lower": -1.0999999999999999e-07,
+    "upper": 116004102,
+    "lowerPercent": -6.230556574296034e-16,
+    "upperPercent": 0.7227701203614078,
+    "hexColor": "#ffffff"
+  },
+  {
+    "lower": 116004102,
+    "upper": 331289814,
+    "lowerPercent": 0.7227701203614078,
+    "upperPercent": 2.0641199286150105,
+    "hexColor": "#ccccff"
+  },
+  {
+    "lower": 331289814,
+    "upper": 650310327,
+    "lowerPercent": 2.0641199286150105,
+    "upperPercent": 4.051795283222454,
+    "hexColor": "#9999ff"
+  },
+  {
+    "lower": 650310327,
+    "upper": 1116192323,
+    "lowerPercent": 4.051795283222454,
+    "upperPercent": 6.954499416246413,
+    "hexColor": "#6666ff"
+  },
+  {
+    "lower": 1116192323,
+    "upper": 1781270588,
+    "lowerPercent": 6.954499416246413,
+    "upperPercent": 11.098307172663564,
+    "hexColor": "#3333ff"
+  },
+  {
+    "lower": 1781270588,
+    "upper": 2933247564,
+    "lowerPercent": 11.098307172663564,
+    "upperPercent": 18.27576489391803,
+    "hexColor": "#0000ff"
+  }
+]
+```
+
+It is an array of objects, each one representing one class on the map. It has the lower and upper bounds of each class
+represented as an absolute number (`lower` and `upper`) as well as as a percentage of the sum of that attribute over
+all features in the pointset (be aware that this number is sensitive to how large the pointset is geographically; for instance,
+  if a New York analysis run happened to also include Philadelphia, the percentage accessible would be artificially deflated.)
+Finally, they include the hex color of that bin on the map tiles.

@@ -18,7 +18,6 @@ import org.opentripplanner.profile.ProfileRequest;
 import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.TraverseModeSet;
 import play.Logger;
-import play.Play;
 import utils.*;
 
 import java.io.IOException;
@@ -107,11 +106,25 @@ public class Query implements Serializable {
 	/**
 	 * Does this query use transit?
 	 */
-	public Boolean isTransit () {
-		if (this.mode == null)
-			return null;
-		
-		return new TraverseModeSet(this.mode).isTransit();
+	public boolean isTransit () {
+		if (this.routingRequest == null && this.profileRequest == null)
+			return new TraverseModeSet(this.mode).isTransit();
+
+		else if (this.profileRequest != null)
+			return true;
+
+		else
+			return this.routingRequest.modes.isTransit();
+	}
+
+	/**
+	 * Is this a profile request?
+	 */
+	public boolean isProfile () {
+		if (this.routingRequest == null && this.profileRequest == null)
+			return isTransit();
+		else
+			return this.profileRequest != null;
 	}
 	
 	public void save() {
@@ -220,11 +233,6 @@ public class Query implements Serializable {
 				final Query q = (Query)message;
 	
 				Shapefile sl = Shapefile.getShapefile(q.shapefileId);
-				
-				Boolean workOffline = Play.application().configuration().getBoolean("cluster.work-offline");
-				
-				if (workOffline == null)
-					workOffline = true;
 				
 				ActorSystem system = Cluster.getActorSystem();
 				ActorRef executive = Cluster.getExecutive();
