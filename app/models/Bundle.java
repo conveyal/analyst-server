@@ -1,64 +1,26 @@
 package models;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.Serializable;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.SortedSet;
-import java.util.Map.Entry;
-import java.util.TimeZone;
-import java.util.concurrent.TimeUnit;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipException;
-import java.util.zip.ZipFile;
-
+import com.conveyal.gtfs.GTFSFeed;
+import com.conveyal.gtfs.model.*;
+import com.conveyal.otpac.ClusterGraphService;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.LineString;
+import com.vividsolutions.jts.index.strtree.STRtree;
+import controllers.Application;
 import jersey.repackaged.com.google.common.collect.Lists;
 import jobs.ProcessTransitBundleJob;
-
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.geotools.geometry.Envelope2D;
-import org.joda.time.DateTimeZone;
-import org.mapdb.Atomic;
-import org.mapdb.BTreeMap;
-import org.mapdb.Bind;
-import org.mapdb.DB;
-import org.mapdb.DBMaker;
-import org.mapdb.Fun;
+import org.mapdb.*;
 import org.mapdb.Fun.Tuple2;
-
-import com.conveyal.gtfs.GTFSFeed;
-import com.conveyal.gtfs.model.Agency;
-import com.conveyal.gtfs.model.Route;
-import com.conveyal.gtfs.model.Shape;
-import com.conveyal.gtfs.model.Stop;
-import com.conveyal.gtfs.model.StopTime;
-import com.conveyal.gtfs.model.Trip;
-import com.conveyal.otpac.ClusterGraphService;
-import com.conveyal.otpac.PointSetDatastore;
-import com.vividsolutions.jts.index.strtree.STRtree;
-
-import org.opentripplanner.routing.graph.Graph;
-
 import play.Logger;
 import play.Play;
 import play.libs.Akka;
-import play.libs.F.Function0;
-import play.libs.F.Promise;
 import scala.concurrent.ExecutionContext;
 import scala.concurrent.duration.Duration;
 import utils.Bounds;
@@ -66,18 +28,14 @@ import utils.ClassLoaderSerializer;
 import utils.DataStore;
 import utils.HashUtils;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
-import com.google.common.io.ByteStreams;
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.LineString;
-
-import controllers.Api;
-import controllers.Application;
+import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
+import java.time.LocalDate;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.TimeUnit;
+import java.util.zip.ZipException;
 
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -118,6 +76,12 @@ public class Bundle implements Serializable {
 	public String description;
 	
 	public String timeZone;
+	
+	/** What is the earliest date all feeds cover in this bundle? */
+	public LocalDate startDate;
+	
+	/** What is the latest date all feeds cover in this bundle? */
+	public LocalDate endDate;
 	
 	public Boolean processingGtfs = false;
 	public Boolean processingOsm = false;
@@ -254,7 +218,7 @@ public class Bundle implements Serializable {
 		// if the shapes are null, compute them.
 		// They are built on upload, but older databases may not have them.
 		// but don't rebuild failed uploads every time the server is started
-		if ((this.getSegments().isEmpty() || this.timeZone == null) && this.failed != null && !this.failed) {
+		if ((this.getSegments().isEmpty() || this.timeZone == null || this.startDate == null || this.endDate == null) && this.failed != null && !this.failed) {
 			processGtfs();
 		}
 	}
@@ -285,7 +249,47 @@ public class Bundle implements Serializable {
 				for(Stop s : feed.stops.values()) {
 					envelope.include(s.stop_lon, s.stop_lat);
 				}
-				
+
+
+				// figure out the service range
+				LocalDate start = null, end = null;
+
+				for (Service c : feed.services.values()) {
+					if (c.calendar != null) {
+						LocalDate cs = fromInt(c.calendar.start_date);
+						LocalDate ce = fromInt(c.calendar.end_date);
+
+						if (start == null || cs.isBefore(start))
+							start = cs;
+
+						if (end == null || ce.isAfter(end))
+							end = ce;
+					}
+					
+					for (CalendarDate cd : c.calendar_dates.values()) {
+						if (cd.exception_type == 2)
+							// removed service, does not count
+							continue;
+
+						LocalDate ld = LocalDate.of(cd.date.getYear(), cd.date.getMonthOfYear(), cd.date.getMonthOfYear());
+
+						if (start == null || ld.isBefore(start))
+							start = ld;
+
+						if (end == null || ld.isAfter(end))
+							end = ld;
+					}
+				}
+
+				if (start != null && end != null) {
+					// we want the dates when *all* feeds are active
+					if (this.startDate == null || start.isAfter(this.startDate))
+						this.startDate = start;
+
+					if (this.endDate == null || end.isBefore(this.endDate))
+						this.endDate = end;
+				}
+
 				Agency a = feed.agency.values().iterator().next();
 				this.timeZone = a.agency_timezone;
 				
@@ -346,7 +350,7 @@ public class Bundle implements Serializable {
 		}
 		
 		// if we've done all that and we still don't have a time zone, then this was a failure
-		if (this.timeZone == null)
+		if (this.timeZone == null || this.startDate == null || this.endDate == null)
 			this.failed = true;
 		else
 			this.bounds = new Bounds(envelope);
@@ -354,6 +358,13 @@ public class Bundle implements Serializable {
 		this.segmentsDb.commit();
 		
 		this.save();
+	}
+
+	static public LocalDate fromInt (int date) {
+		int year = date / 10000;
+		int month = (date % 10000) / 100;
+		int day = date % 100;
+		return LocalDate.of(year, month, day);
 	}
 	
 	static public void writeAllToClusterCache () throws IOException {

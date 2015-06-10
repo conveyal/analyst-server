@@ -10,7 +10,6 @@ import models.Bundle;
 import models.Project;
 import models.Shapefile;
 import models.User;
-import org.joda.time.LocalDate;
 import otp.Analyst;
 import play.mvc.Controller;
 import play.mvc.Http;
@@ -19,6 +18,9 @@ import play.mvc.Security;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.temporal.ChronoField;
 import java.util.Collection;
 import java.util.zip.ZipException;
 
@@ -51,70 +53,45 @@ public class Api extends Controller {
         return sw.toString();
     }
 
-
-    private static class AccesibilitySummary {
-    	public Long total = 0l;
-    	public Long accessible = 0l;
-    }
-    
     /**
      * Get a day that has ostensibly normal service, one would guess. Uses the next Tuesday that
      * is covered by all transit feeds in the project.
      */
     public static Result getExemplarDay(String projectId) throws Exception {
-    	Collection<Bundle> scenarios = Bundle.getBundles(projectId);
-    	
-    	LocalDate originalDate = new LocalDate().dayOfWeek().setCopy("Tuesday");
-    	LocalDate date = originalDate;
-    	
-    	// date is now a nearby Tuesday
-    	
-    	// don't loop an excessive amount 
-    	LocalDate dateBound = date.plusYears(2);
-    	
-    	// TODO: actually infer a date
-    	return ok(originalDate.toString());
-    	
-    	/*// search forward first
-    	DATES: while (date.isBefore(dateBound)) {
-    		for (Scenario s : scenarios) {
-    			Graph graph = analyst.getGraph(s.id);
-    			
-    			long dateInLocalTime = date.toDateTimeAtStartOfDay(DateTimeZone.forTimeZone(graph.getTimeZone()))
-    					.toDate().getTime();
-    			if (!graph.transitFeedCovers(dateInLocalTime)) {
-    				date = date.plusWeeks(1);
-    				continue DATES;
-    			}
-    		}
-    		
-    		// if we got here, this date is within the transit service range for all graphs in the project
-    		return ok(date.toString());
-    	}
-    	
-    	// if we got here, there is no future date where all the graphs have service
-    	date = originalDate;
-    	dateBound = date.minusYears(2);
-    	
-    	// search forward first
-    	BDATES: while (date.isAfter(dateBound)) {
-    		for (Scenario s : scenarios) {
-    			Graph graph = analyst.getGraph(s.id);
-    			
-    			long dateInLocalTime = date.toDateTimeAtStartOfDay(DateTimeZone.forTimeZone(graph.getTimeZone()))
-    					.toDate().getTime();
-    			if (!graph.transitFeedCovers(dateInLocalTime)) {
-    				date = date.minusWeeks(1);
-    				continue BDATES;
-    			}
-    		}
-    		
-    		// if we got here, this date is within the transit service range for all graphs in the project
-    		return ok(date.toString());
-    	}
-    	
-    	// we don't have a date to return that is valid in all feeds
-    	return ok(originalDate.toString());*/
+        Collection<Bundle> bundles = Bundle.getBundles(projectId);
+        if (bundles == null)
+            return notFound();
+
+        LocalDate defaultDate = LocalDate.now().with(ChronoField.DAY_OF_WEEK, DayOfWeek.TUESDAY.getValue());
+
+        if (defaultDate.isAfter(LocalDate.now()))
+            defaultDate = defaultDate.minusDays(7);
+
+        LocalDate startDate = null, endDate = null;
+
+        for (Bundle b : bundles) {
+            if (!b.failed && b.startDate != null && b.endDate != null && !b.startDate.isAfter(b.endDate)) {
+                if (startDate == null || startDate.isBefore(b.startDate))
+                    startDate = b.startDate;
+
+                if (endDate == null || endDate.isAfter(b.endDate))
+                    endDate = b.endDate;
+            }
+        }
+
+        if (startDate == null || endDate == null || startDate.isAfter(endDate))
+            return ok(defaultDate.toString());
+
+        // find a tuesday between the start and end date
+        LocalDate ret = endDate;
+
+        while (!ret.isBefore(startDate)) {
+            if (ret.getDayOfWeek().equals(DayOfWeek.TUESDAY))
+                return ok(ret.toString());
+            ret = ret.minusDays(1);
+        }
+
+        return ok(defaultDate.toString());
     }
 
 
