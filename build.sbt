@@ -5,8 +5,6 @@ version := "1.0-SNAPSHOT"
 lazy val root = (project in file(".")).enablePlugins(PlayJava)
 
 libraryDependencies ++= Seq(
-  javaJdbc,
-  javaEbean,
   cache,
   "org.mapdb" % "mapdb" % "1.0.6",
   "org.julienrf" %% "play-jsmessages" % "1.6.2",
