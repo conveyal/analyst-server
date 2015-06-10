@@ -119,6 +119,7 @@ public class DataStore<T> {
         	.pumpSource(iter)
         	.pumpPresort(100000) 
         	.keySerializer(keySerializer)
+			.valueSerializer(new ClassLoaderSerializer())
         	.make();
 		
 		// close/flush db 

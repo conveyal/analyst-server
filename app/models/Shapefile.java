@@ -303,7 +303,7 @@ public class Shapefile implements Serializable {
 	public DataStore<ShapeFeature> getShapeFeatureStore() {
 
 		if(shapeFeatures == null){
-			shapeFeatures = new DataStore<ShapeFeature>(getShapeDataPath(), id, true, true, false);
+			shapeFeatures = new DataStore<ShapeFeature>(getShapeDataPath(), id, true, true, true);
 		}
 
 		return shapeFeatures;
