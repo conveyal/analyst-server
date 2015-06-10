@@ -20,8 +20,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleKeyDeserializers;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import models.Shapefile;
-import org.mapdb.DBMaker;
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.opentripplanner.analyst.Histogram;
 import org.opentripplanner.analyst.ResultSet;
@@ -39,17 +40,15 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Map.Entry;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentMap;
 
 /**
  * Controllers for getting result sets used in single point mode.
  */
 public class SinglePoint extends Controller {
-    // cache the result envelopes. 1GB in-memory cache.
-    // this doesn't need to be very large; it needs only to store as many result envelopes as there are expected to be
-    // active users. Once the user has moved the pin, the probability they will put it back on exactly the same spot
-    // is for all intents and purposes zero, so the cache miss rate is very big regardless of cache size.
-    private static ConcurrentMap<String, ResultEnvelope> envelopeCache = DBMaker.newCache(1d);
+    // cache the result envelopes, but don't run out of memory
+	// if we use a direct cache from MapDB, the system comes apart at the seams because MapDB has a lot of trouble serializing
+	// the isochrones
+	private static Cache<String, ResultEnvelope> envelopeCache = CacheBuilder.newBuilder().maximumSize(500).build();
 
     /** re-use object mapper */
     private static final ObjectMapper objectMapper = new ObjectMapper();
@@ -168,7 +167,7 @@ public class SinglePoint extends Controller {
     	Which whichEnum = Which.valueOf(which);
     	
     	// get the resultset
-    	ResultEnvelope env = envelopeCache.get(key);
+    	ResultEnvelope env = envelopeCache.getIfPresent(key);
     	
     	if (env == null)
     		return notFound();
@@ -327,7 +326,7 @@ public class SinglePoint extends Controller {
 
     /** Get a result set with times from the cache, or null if the key doesn't exist/has fallen out of the cache */
     public static ResultEnvelope getResultSet (String key) {
-    	return envelopeCache.get(key);
+    	return envelopeCache.getIfPresent(key);
     }
     
 
