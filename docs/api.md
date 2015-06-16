@@ -16,19 +16,19 @@ object to `/api/single`. The JSON you post looks like so:
 
 ```
 {
-  "destinationPointsetId": "60b294f2e9b12e4814f584cced50efa9_729af269afd764aa742bec4efe5486d3",
-  "graphId": "2a4b112aa5fb1b258f2c7fc6120e6497",
-  "profile": "true",
+  "destinationPointsetId": null,
+  "graphId": "78953923453b6da1a585cc58621eebc7",
+  "profile": true,
   "options": {
-    "fromLat": 42.3641249807027,
-    "fromLon": -71.06145858764648,
-    "toLat": 42.3641249807027,
-    "toLon": -71.06145858764648,
-    "date": "2015-05-12",
-    "accessModes": "WALK",
-    "egressModes": "WALK",
+    "fromLat": 42.35296235855687,
+    "fromLon": -71.06094360351562,
+    "toLat": 42.35296235855687,
+    "toLon": -71.06094360351562,
+    "date": "2015-05-26",
     "fromTime": 25200,
     "toTime": 32400,
+    "accessModes": "WALK",
+    "egressModes": "WALK",
     "walkSpeed": 1.3333333333333333,
     "bikeSpeed": 4.1,
     "carSpeed": 20,
@@ -43,9 +43,21 @@ object to `/api/single`. The JSON you post looks like so:
     "bikeSafe": 1,
     "bikeSlope": 1,
     "bikeTime": 1,
-    "bannedRoutes": ["2_Red"]
+    "scenario": {
+      "id": 0,
+      "description": "No description",
+      "modifications": [
+        {
+          "type": "remove-trip",
+          "agencyId": "1",
+          "routeId": ["Red"],
+          "tripId": null
+        }
+      ]
+    }
   }
 }
+
 ```
 
 `destinationPointsetId` is the ID of the shapefile for which to calculate connectivity (frequently called
@@ -68,9 +80,10 @@ since local noon minus 12 hours, but this is midnight except on days when daylig
 deactivated. I'd recommend   not doing analysis on those days anyhow.) So 25200 is 7 AM (7 hours * 60 minutes/hour * 60
 seconds/minute = 25200) and 32400 is 9 AM.
 
-`bannedRoutes` specifies routes that should not be used by this request. It is formatted as `agencyid_routeid` using the
-entities from the GTFS feeds. Be aware that this is currently affected by [OTP issue 1755](https://github.com/opentripplanner/OpenTripPlanner/issues/1755),
-which means that all routes take on the ID of the first agency in their feed.
+`scenario` specifies modifications on top of the graph that should be made prior to performing this request. A scenario
+has a numeric ID and textual description (which are immaterial for this discussion) and a list of modifications. A modification
+has a `type` parameter and then a number of additional parameters depending on the type specifying how it should be applied.
+The various types of modifications are described below.
 
 The remainder of the parameters are documented in the [OTP API
 documentation](http://dev.opentripplanner.org/javadoc/master/org/opentripplanner/profile/ProfileRequest.html). They
@@ -285,3 +298,311 @@ the query specified by `key1` and the difference is displayed. Yellow represents
 the travel time relative to the time limit; blue represents are that could be reached in less than the time limit before
 but now can be reached faster, with the opacity indicating the ratio; and purple indicates new service, with the opacity
 representing the travel time relative to the time limit.
+
+## Types of modifications
+
+There are a number of types of modifications that can be made on top of a graph to specify arbitrary scenarios that can
+be quickly tested without requiring a graph rebuild.
+
+### Removing trips
+
+This modification has the same effect as the former `bannedRoutes` parameter---it removes trips or routes.
+
+```
+{
+  "type": "remove-trip",
+  "agencyId": "AGENCY ID",
+  "routeId": ["Route ID 1", "Route ID 2"],
+  "tripId": ["Trip ID 1", "Trip ID 2"]
+}
+```
+
+The `agencyId` parameter specifies the agency ID of trips to remove. `routeId` and `tripId` are lists of IDs which are used
+to select routes and trips. They are combines with a logical `and`, meaning that a trip must be referenced both by trip ID
+and route ID to be removed. If either trip ID or route ID is left `null`, it is treated as a wildcard matching all trip
+or route IDs.
+
+### Adjusting frequencies
+
+This modification allows adjusting the headway of frequency-based trips (it will have no effect on scheduled trips).
+
+```
+{
+  "type": "adjust-headway",
+  "agencyId": "AGENCY ID",
+  "routeId": ["Route ID 1", "Route ID 2"],
+  "tripId": ["Trip ID 1", "Trip ID 2"],
+  "headway": 600
+}
+```
+
+Parameters are the same as for removing trips, with the addition of the `headway` parameter, which is the new headway
+in seconds.
+
+### Adjusting dwell times
+
+```
+{
+  "type": "adjust-dwell-time",
+  "agencyId": "AGENCY ID",
+  "routeId": ["Route ID 1", "Route ID 2"],
+  "tripId": ["Trip ID 1", "Trip ID 2"],
+  "stopId": ["stop ID 1", "stop ID 2"],
+  "dwellTime": 30
+}
+```
+
+Again parameters are the same with the addition of the `stopId` parameter which matches stops along a trip, with the same
+semantics as the other (if left null all stops on all matched trips are updated).
+
+### Skipping stops
+
+```
+{
+  "type": "skip-stop",
+  "agencyId": "AGENCY ID",
+  "routeId": ["Route ID 1", "Route ID 2"],
+  "tripId": ["Trip ID 1", "Trip ID 2"],
+  "stopId": ["stop ID 1", "stop ID 2"]
+}
+```
+
+This causes stops to be skipped. Parameters are the same as adjusting dwell times, but of course without specifying a dwell
+time. Skipped stops are no longer served by the matched trips, and and dwell time at a skipped stop is removed from the schedule.
+If stops are skipped at the start of a trip, the start of the trip is simply removed; the remaining times are not shifted.
+
+## Multipoint Analysis
+
+It is also possible to perform multipoint analysis, wherein single point analysis is run as a batch over many origins and
+the results are summarized. For example, one might run a query showing the job accessibility change for every Census
+block in a city. To start a multipoint job, you POST a JSON object to `/api/query`:
+
+```
+{
+  "name": "query name",
+  "shapefileId": <pointset ID>,
+  "projectId": <project ID>,
+  "bundleId": <bundle ID>,
+  "profileRequest": {
+    "date": "2015-05-26",
+    "fromTime": 25200,
+    "toTime": 32400,
+    "accessModes": "WALK",
+    "egressModes": "WALK",
+    "walkSpeed": 1.3333333333333333,
+    "bikeSpeed": 4.1,
+    "carSpeed": 20,
+    "streetTime": 90,
+    "maxWalkTime": 20,
+    "maxBikeTime": 45,
+    "maxCarTime": 45,
+    "minBikeTime": 10,
+    "minCarTime": 10,
+    "suboptimalMinutes": 5,
+    "analyst": true,
+    "bikeSafe": 1,
+    "bikeSlope": 1,
+    "bikeTime": 1,
+    "scenario": {
+      "id": 0,
+      "description": "No description",
+      "modifications": [
+      {
+        "type": "remove-trip",
+        "agencyId": "1",
+        "routeId": ["Red"],
+        "tripId": null
+      }
+      ]
+    }
+  }
+}
+```
+
+This contains a basic definition of the parameters for the query. The name is simply a human-readable string referring
+to what this query is. The `shapefileId` defines the pointset ID that should be used for this query; currently, the same
+pointset is used as both origins and destinations (this [will be changed
+soon](https://github.com/conveyal/analyst-server/issues/84)). Accessibility is calculated to all of the attributes of the
+pointset, as in single point mode; there is no need to specify an attribute. Project ID is an analyst server project ID
+(see `/api/project`); it is not strictly necessary, but allows the output of queries to be viewed in the Analyst UI,
+helpful for debugging.
+
+The response looks like this:
+
+```
+{
+  "id": "20dfd9b05cac968a6eb6a195fdaeb01e",
+  "projectId": "14e4274a080d86ef0993deea2c6af986",
+  "name": "query name",
+  "mode": null,
+  "shapefileId": "14e4274a080d86ef0993deea2c6af986_f41d86e7f826fb644e6b0a27d58897a5",
+  "scenarioId": null,
+  "status": null,
+  "totalPoints": 142,
+  "completePoints": 0,
+  "fromTime": 0,
+  "toTime": 0,
+  "date": null,
+  "graphId": "78953923453b6da1a585cc58621eebc7",
+  "profileRequest": {
+    "fromLat": 0,
+    "fromLon": 0,
+    "toLat": 0,
+    "toLon": 0,
+    "fromTime": 25200,
+    "toTime": 32400,
+    "walkSpeed": 1.3333334,
+    "bikeSpeed": 4.1,
+    "carSpeed": 20,
+    "streetTime": 90,
+    "maxWalkTime": 20,
+    "maxBikeTime": 45,
+    "maxCarTime": 45,
+    "minBikeTime": 10,
+    "minCarTime": 10,
+    "date": [
+      2015,
+      5,
+      26
+    ],
+    "orderBy": null,
+    "limit": 0,
+    "accessModes": {
+      "qModes": [
+        {
+          "mode": "WALK",
+          "qualifiers": []
+        }
+      ]
+    },
+    "egressModes": {
+      "qModes": [
+        {
+          "mode": "WALK",
+          "qualifiers": []
+        }
+      ]
+    },
+    "directModes": null,
+    "transitModes": null,
+    "analyst": true,
+    "bikeSafe": 1,
+    "bikeSlope": 1,
+    "bikeTime": 1,
+    "suboptimalMinutes": 5,
+    "scenario": {
+      "id": 0,
+      "description": "No description",
+      "modifications": [
+        {
+          "type": "remove-trip",
+          "warnings": [],
+          "agencyId": "1",
+          "routeId": [
+            "Red"
+          ],
+          "tripId": null
+        }
+      ]
+    }
+  },
+  "routingRequest": null,
+  "shapefileName": "tract",
+  "transit": null,
+  "percent": 0
+}
+```
+
+For the most part it just gives your parameters back to you. There are many null fields, which are used when using
+predefined scenarios (it is possible to define scenarios in Analyst Server and then leave the `profileRequest` field
+blank on the initial request, with values filled in from the scenario). It also has fields `completePoints` and
+`totalPoints`; initially both are zero. Once the pointset has been read by the server, `totalPoints` will be the number
+of origins in the pointset, and `completePoints` will be the number of points that have been completed. This data can be
+refreshed by requesting
+
+      /api/query/<id>
+
+with `id` being the `id` attribute of the original response.
+
+### Tiles
+
+Query result tiles are available at the following URL.
+
+    /tile/query/<id>/<z>/<x>/<y>.png?timeLimit=<timeLimit>&attributeName=<attribute name>&which=<accessibility type>
+
+`id` is the `id` attribute from the original response. `timeLimit` is the limit in seconds for which to retrieve
+accessibility. `attributeName` is the name of the attribute to use for accessibility in the shapefile. `which` is one of
+`WORST_CASE`, `AVERAGE`, or `BEST_CASE`, indicating what type of accessibility you wish to calculate.
+
+If you wish to compare multiple queries, you can do that like so:
+
+    /tile/query/<id>/<otherId>/<z>/<x>/<y>.png?timeLimit=<timeLimit>&attributeName=<attribute name>&which=<accessibility type>
+
+The query with ID `otherId` will be subtracted from the query with id `id` and then the results will be rendered.
+
+### Legends
+
+The tiles don't have a clearly defined color scheme, as the single point tiles do. Rather, they are classified using
+a [Natural Breaks classifier](http://en.wikipedia.org/wiki/Jenks_natural_breaks_optimization). Thus they need a legend
+so that they can be interpreted. This legend is available from
+
+    /api/query/<id>/bins?timeLimit=<time limit>&attributeName=<attr name>&which=<accessibility type>
+
+or, for a multipoint query,
+
+    /api/query/<id>/<id2>/bins?timeLimit=<time limit>&attributeName=<attr name>&which=<accessibility type>
+
+The response looks like this:
+
+```
+[
+  {
+    "lower": -1.0999999999999999e-07,
+    "upper": 116004102,
+    "lowerPercent": -6.230556574296034e-16,
+    "upperPercent": 0.7227701203614078,
+    "hexColor": "#ffffff"
+  },
+  {
+    "lower": 116004102,
+    "upper": 331289814,
+    "lowerPercent": 0.7227701203614078,
+    "upperPercent": 2.0641199286150105,
+    "hexColor": "#ccccff"
+  },
+  {
+    "lower": 331289814,
+    "upper": 650310327,
+    "lowerPercent": 2.0641199286150105,
+    "upperPercent": 4.051795283222454,
+    "hexColor": "#9999ff"
+  },
+  {
+    "lower": 650310327,
+    "upper": 1116192323,
+    "lowerPercent": 4.051795283222454,
+    "upperPercent": 6.954499416246413,
+    "hexColor": "#6666ff"
+  },
+  {
+    "lower": 1116192323,
+    "upper": 1781270588,
+    "lowerPercent": 6.954499416246413,
+    "upperPercent": 11.098307172663564,
+    "hexColor": "#3333ff"
+  },
+  {
+    "lower": 1781270588,
+    "upper": 2933247564,
+    "lowerPercent": 11.098307172663564,
+    "upperPercent": 18.27576489391803,
+    "hexColor": "#0000ff"
+  }
+]
+```
+
+It is an array of objects, each one representing one class on the map. It has the lower and upper bounds of each class
+represented as an absolute number (`lower` and `upper`) as well as as a percentage of the sum of that attribute over
+all features in the pointset (be aware that this number is sensitive to how large the pointset is geographically; for instance,
+  if a New York analysis run happened to also include Philadelphia, the percentage accessible would be artificially deflated.)
+Finally, they include the hex color of that bin on the map tiles.

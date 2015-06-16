@@ -5,24 +5,21 @@ import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.joda.JodaModule;
 import models.*;
-import org.joda.time.LocalDate;
 import otp.Analyst;
 import play.libs.Akka;
-import play.libs.Json;
 import play.mvc.Controller;
 import play.mvc.Http;
 import play.mvc.Result;
 import play.mvc.Security;
 import scala.concurrent.duration.Duration;
 import utils.JsonUtil;
-import utils.QueryResults;
-import utils.QueueManager;
-import utils.ResultEnvelope;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.temporal.ChronoField;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipException;
@@ -35,10 +32,6 @@ public class Api extends Controller {
 	public static Analyst analyst = new Analyst();
 
 	static ObjectMapper mapper = JsonUtil.getObjectMapper();
-	
-	static {
-		mapper.registerModule(new JodaModule());
-	}
 
     private static JsonFactory jf = new JsonFactory();
 
@@ -55,147 +48,45 @@ public class Api extends Controller {
         return sw.toString();
     }
 
-
-    private static class AccesibilitySummary {
-    	public Long total = 0l;
-    	public Long accessible = 0l;
-    }
-    
     /**
      * Get a day that has ostensibly normal service, one would guess. Uses the next Tuesday that
      * is covered by all transit feeds in the project.
      */
     public static Result getExemplarDay(String projectId) throws Exception {
-    	Collection<Bundle> scenarios = Bundle.getBundles(projectId);
-    	
-    	LocalDate originalDate = new LocalDate().dayOfWeek().setCopy("Tuesday");
-    	LocalDate date = originalDate;
-    	
-    	// date is now a nearby Tuesday
-    	
-    	// don't loop an excessive amount 
-    	LocalDate dateBound = date.plusYears(2);
-    	
-    	// TODO: actually infer a date
-    	return ok(originalDate.toString());
-    	
-    	/*// search forward first
-    	DATES: while (date.isBefore(dateBound)) {
-    		for (Scenario s : scenarios) {
-    			Graph graph = analyst.getGraph(s.id);
-    			
-    			long dateInLocalTime = date.toDateTimeAtStartOfDay(DateTimeZone.forTimeZone(graph.getTimeZone()))
-    					.toDate().getTime();
-    			if (!graph.transitFeedCovers(dateInLocalTime)) {
-    				date = date.plusWeeks(1);
-    				continue DATES;
-    			}
-    		}
-    		
-    		// if we got here, this date is within the transit service range for all graphs in the project
-    		return ok(date.toString());
-    	}
-    	
-    	// if we got here, there is no future date where all the graphs have service
-    	date = originalDate;
-    	dateBound = date.minusYears(2);
-    	
-    	// search forward first
-    	BDATES: while (date.isAfter(dateBound)) {
-    		for (Scenario s : scenarios) {
-    			Graph graph = analyst.getGraph(s.id);
-    			
-    			long dateInLocalTime = date.toDateTimeAtStartOfDay(DateTimeZone.forTimeZone(graph.getTimeZone()))
-    					.toDate().getTime();
-    			if (!graph.transitFeedCovers(dateInLocalTime)) {
-    				date = date.minusWeeks(1);
-    				continue BDATES;
-    			}
-    		}
-    		
-    		// if we got here, this date is within the transit service range for all graphs in the project
-    		return ok(date.toString());
-    	}
-    	
-    	// we don't have a date to return that is valid in all feeds
-    	return ok(originalDate.toString());*/
-    }
+        Collection<Bundle> bundles = Bundle.getBundles(projectId);
+        if (bundles == null)
+            return notFound();
 
-    public static Result queryBins(String queryId, Integer timeLimit, String weightByShapefile, String weightByAttribute, String groupBy,
-    		String which, String attributeName, String compareTo) {
-    	
-		response().setHeader(CACHE_CONTROL, "no-cache, no-store, must-revalidate");
-		response().setHeader(PRAGMA, "no-cache");
-		response().setHeader(EXPIRES, "0");
+        LocalDate defaultDate = LocalDate.now().with(ChronoField.DAY_OF_WEEK, DayOfWeek.TUESDAY.getValue());
 
-		ResultEnvelope.Which whichEnum;
-		try {
-			whichEnum = ResultEnvelope.Which.valueOf(which);
-		} catch (Exception e) {
-			// no need to pollute the console with a stack trace
-			return badRequest("Invalid value for which parameter");
-		}
+        if (defaultDate.isAfter(LocalDate.now()))
+            defaultDate = defaultDate.minusDays(7);
 
-		Query query = Query.getQuery(queryId);
+        LocalDate startDate = null, endDate = null;
 
-		if(query == null)
-			return badRequest();
-		Query otherQuery = null;
-		
-		if (compareTo != null) {
-			otherQuery = Query.getQuery(compareTo);
-			
-			if (otherQuery == null) {
-				return badRequest("Non-existent comparison query.");
-			}
-		}
-	   	
-    	try {
+        for (Bundle b : bundles) {
+            if (!b.failed && b.startDate != null && b.endDate != null && !b.startDate.isAfter(b.endDate)) {
+                if (startDate == null || startDate.isBefore(b.startDate))
+                    startDate = b.startDate;
 
-    		String queryKey = queryId + "_" + timeLimit + "_" + which + "_" + attributeName;
-
-    		QueryResults qr = null;
-
-    		synchronized(QueryResults.queryResultsCache) {
-    			if(!QueryResults.queryResultsCache.containsKey(queryKey)) {
-	    			qr = new QueryResults(query, timeLimit, whichEnum, attributeName);
-	    			QueryResults.queryResultsCache.put(queryKey, qr);
-	    		}
-	    		else
-	    			qr = QueryResults.queryResultsCache.get(queryKey);
-    		}
-    		
-    		if (otherQuery != null) {
-        		QueryResults otherQr = null;
-        		
-    			queryKey = compareTo + "_" + timeLimit + "_" + which + "_" + attributeName;
-    			if (!QueryResults.queryResultsCache.containsKey(queryKey)) {
-    				otherQr = new QueryResults(otherQuery, timeLimit, whichEnum, attributeName);
-    				QueryResults.queryResultsCache.put(queryKey, otherQr);
-    			}
-    			else {
-    				otherQr = QueryResults.queryResultsCache.get(queryKey);
-    			}
-    			
-    			qr = qr.subtract(otherQr);
-    		}
-
-            if(weightByShapefile == null) {
-            	return ok(Json.toJson(qr.classifier.getBins()));
+                if (endDate == null || endDate.isAfter(b.endDate))
+                    endDate = b.endDate;
             }
-            else {
-            	Shapefile aggregateTo = Shapefile.getShapefile(groupBy);
+        }
 
-				Shapefile weightBy = Shapefile.getShapefile(weightByShapefile);
-				return ok(Json.toJson(qr.aggregate(aggregateTo, weightBy, weightByAttribute).classifier.getBins()));
-	        
-            }
+        if (startDate == null || endDate == null || startDate.isAfter(endDate))
+            return ok(defaultDate.toString());
 
+        // find a tuesday between the start and end date
+        LocalDate ret = endDate;
 
-    	} catch (Exception e) {
-	    	e.printStackTrace();
-	    	return badRequest();
-	    }
+        while (!ret.isBefore(startDate)) {
+            if (ret.getDayOfWeek().equals(DayOfWeek.TUESDAY))
+                return ok(ret.toString());
+            ret = ret.minusDays(1);
+        }
+
+        return ok(defaultDate.toString());
     }
 
 
@@ -658,7 +549,6 @@ public class Api extends Controller {
         return ok();
     }
 
-
     // **** query controllers ****
 
     public static Result getQueryById(String id) {
@@ -739,12 +629,10 @@ public class Api extends Controller {
         	return badRequest();
 
         // cancel the job if it is running
-        QueueManager.getManager().cancelJob(q);
+        //QueueManager.getManager().cancelJob(q);
 
         q.delete();
 
         return ok();
     }
-
-
 }

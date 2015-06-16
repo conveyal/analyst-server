@@ -5,8 +5,6 @@ version := "1.0-SNAPSHOT"
 lazy val root = (project in file(".")).enablePlugins(PlayJava)
 
 libraryDependencies ++= Seq(
-  javaJdbc,
-  javaEbean,
   cache,
   "org.mapdb" % "mapdb" % "1.0.6",
   "org.julienrf" %% "play-jsmessages" % "1.6.2",
@@ -14,6 +12,7 @@ libraryDependencies ++= Seq(
   "com.amazonaws" % "aws-java-sdk" % "1.9.25",
   "com.typesafe.akka" % "akka-remote_2.10" % "2.3.5",
   "org.opentripplanner" % "otp" % "0.19.0-SNAPSHOT",
+  "org.apache.httpcomponents" % "httpclient" % "4.3.1", 
   "com.conveyal" % "gtfs-lib" % "0.1-SNAPSHOT",
   "com.fasterxml.jackson.datatype" % "jackson-datatype-joda" % "2.4.0",
   "com.logentries" % "logentries-appender" % "1.1.30"

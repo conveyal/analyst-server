@@ -1,5 +1,6 @@
 package models;
 
+import com.conveyal.otpac.PointSetDatastore;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.vividsolutions.jts.geom.Envelope;
@@ -37,6 +38,18 @@ import scala.concurrent.ExecutionContext;
 import utils.*;
 
 import java.io.*;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
+import java.util.zip.ZipFile;
+import utils.Bounds;
+import utils.DataStore;
+import utils.HaltonPoints;
+import utils.HashUtils;
+
+import java.io.*;
+import java.lang.ref.SoftReference;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.zip.ZipEntry;
@@ -88,7 +101,7 @@ public class Shapefile implements Serializable {
 	public HashMap<String,Attribute> attributes = new HashMap<String,Attribute>();
 
 	/** the pointset for this shapefile */
-	private transient PointSet pointSet;
+	private transient SoftReference<PointSet> pointSet;
 
 	@JsonIgnore
 	public File file;
@@ -97,7 +110,7 @@ public class Shapefile implements Serializable {
 	transient private DataStore<ShapeFeature> shapeFeatures;
 
 	@JsonIgnore
-	transient private STRtree spatialIndex;
+	transient private SoftReference<STRtree> spatialIndex;
 
 	public Shapefile() {
 		
@@ -204,8 +217,12 @@ public class Shapefile implements Serializable {
 	
 	@JsonIgnore
 	public synchronized STRtree getSpatialIndex() {
-		if(spatialIndex == null)
-			buildIndex();
+		STRtree spatialIndex = this.spatialIndex != null ? this.spatialIndex.get() : null;
+
+		if (spatialIndex == null) {
+			spatialIndex = buildIndex ();
+			this.spatialIndex = new SoftReference<STRtree>(spatialIndex);
+		}
 
 		return spatialIndex;
 	}
@@ -215,6 +232,8 @@ public class Shapefile implements Serializable {
 	 */
 	@JsonIgnore
 	public synchronized PointSet getPointSet() {
+		PointSet pointSet = this.pointSet != null ? this.pointSet.get() : null;
+
 		if (pointSet != null)
 			return pointSet;
 
@@ -250,6 +269,8 @@ public class Shapefile implements Serializable {
 		}
 
 		pointSet.setLabel(categoryId, this.name);
+
+		this.pointSet = new SoftReference<>(pointSet);
 
 		return pointSet;
 	}
@@ -290,7 +311,7 @@ public class Shapefile implements Serializable {
 	public DataStore<ShapeFeature> getShapeFeatureStore() {
 
 		if(shapeFeatures == null){
-			shapeFeatures = new DataStore<ShapeFeature>(getShapeDataPath(), id);
+			shapeFeatures = new DataStore<ShapeFeature>(getShapeDataPath(), id, true, true, true);
 		}
 
 		return shapeFeatures;
@@ -320,16 +341,18 @@ public class Shapefile implements Serializable {
 		return getShapeFeatureStore().size();
 	}
 
-	private void buildIndex() {
+	private STRtree buildIndex() {
 		Logger.info("building index for shapefile " + this.id);
 
 		// it's not possible to make an R-tree with only one node, so we make an r-tree with two
 		// nodes and leave one empty.
-		spatialIndex = new STRtree(Math.max(getShapeFeatureStore().size(), 2));
+		STRtree spatialIndex = new STRtree(Math.max(getShapeFeatureStore().size(), 2));
 
 		for(ShapeFeature feature : getShapeFeatureStore().getAll()) {
 			spatialIndex.insert(feature.geom.getEnvelopeInternal(), feature);
 		}
+
+		return spatialIndex;
 	}
 
 	public List<ShapeFeature> query(Envelope env) {

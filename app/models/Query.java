@@ -1,14 +1,25 @@
 package models;
 
-import com.beust.jcommander.internal.Lists;
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import com.conveyal.otpac.message.JobSpec;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Lists;
+import controllers.Api;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.opentripplanner.analyst.PointFeature;
 import org.opentripplanner.analyst.PointSet;
+import org.opentripplanner.analyst.cluster.AnalystClusterRequest;
+import org.opentripplanner.analyst.scenario.RemoveTrip;
+import org.opentripplanner.analyst.scenario.Scenario;
 import org.opentripplanner.common.model.GenericLocation;
+import org.opentripplanner.profile.ProfileRequest;
+import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.TraverseModeSet;
 import otp.Analyst;
 import play.Logger;
@@ -17,10 +28,7 @@ import utils.*;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -38,10 +46,12 @@ public class Query implements Serializable {
 	public String projectId;
 	public String name;
 
+	/** The mode. Can be left null if both graphId and profileRequest or routingRequest are set */
 	public String mode;
 	
 	public String shapefileId;
-	
+
+	/** The scenario. Can be left null if both graphId and either profileRequest or routingRequest are set */
 	public String scenarioId;
 	public String status;
 	
@@ -51,13 +61,31 @@ public class Query implements Serializable {
 	/** Has this query finished computing _and_ processing? */
 	public boolean complete = false;
 	
-	// the from time of this query
+	/** the from time of this query. Can be left unset if both graphId and profileRequest or routingRequest are set */
 	public int fromTime;
-	
-	// the to time of this query
+
+	/** the to time of this query. Can be left unset if both graphId and profileRequest or routingRequest are set */
 	public int toTime;
-	
+
+	/** the date of this query. Can be left unset if both graphId and profileRequest or routingRequest are set */
 	public LocalDate date;
+
+	/** The graph to use. If profileRequest and routingRequest are both null this will be ignored */
+	public String graphId;
+
+	/**
+	 * Profile request to use for this query. If set, graphId must not be null. If set, mode, fromTime, toTime,
+	 * scenarioId, and date will be ignored.
+	 *
+	 * Takes precedence over routingRequest; if both are set, a profile request will be performed.
+	 */
+	public ProfileRequest profileRequest;
+
+	/**
+	 * Routing request to use for this query. If set, graphId must not be null. If set, mode, fromTime, toTime,
+	 * scenarioId, and date will be ignored.
+	 */
+	public RoutingRequest routingRequest;
 	
 	@JsonIgnore 
 	transient private QueryResultStore results;
@@ -93,11 +121,25 @@ public class Query implements Serializable {
 	/**
 	 * Does this query use transit?
 	 */
-	public Boolean isTransit () {
-		if (this.mode == null)
-			return null;
-		
-		return new TraverseModeSet(this.mode).isTransit();
+	public boolean isTransit () {
+		if (this.routingRequest == null && this.profileRequest == null)
+			return new TraverseModeSet(this.mode).isTransit();
+
+		else if (this.profileRequest != null)
+			return true;
+
+		else
+			return this.routingRequest.modes.isTransit();
+	}
+
+	/**
+	 * Is this a profile request?
+	 */
+	public boolean isProfile () {
+		if (this.routingRequest == null && this.profileRequest == null)
+			return isTransit();
+		else
+			return this.profileRequest != null;
 	}
 	
 	public void save() {
@@ -139,28 +181,21 @@ public class Query implements Serializable {
 			AnalystClusterRequest req;
 
 			if (this.isTransit()) {
-				OneToManyProfileRequest pr = new OneToManyProfileRequest();
-				pr.options = Analyst.buildProfileRequest(this.mode, this.date, this.fromTime, this.toTime, pf.getLat(), pf.getLon());
-				pr.options.bannedRoutes = scenario.bannedRoutes.stream().map(rs -> rs.agencyId + "_" + rs.id).collect(Collectors.toList());
-				req = pr;
+				ProfileRequest pr = Analyst.buildProfileRequest(this.mode, this.date, this.fromTime, this.toTime, pf.getLat(), pf.getLon());
+				req = new AnalystClusterRequest(this.shapefileId, scenario.bundleId, pr);
 			} else {
-				OneToManyRequest rr = new OneToManyRequest();
 				GenericLocation from = new GenericLocation(pf.getLat(), pf.getLon());
-				rr.options = Analyst.buildRequest(rr.graphId, this.date, this.fromTime, from, this.mode, 120, DateTimeZone.forID(bundle.timeZone));
-				req = rr;
+				RoutingRequest rr = Analyst.buildRequest(scenario.bundleId, this.date, this.fromTime, from, this.mode, 120, DateTimeZone.forID(bundle.timeZone));
+				req = new AnalystClusterRequest(this.shapefileId, scenario.bundleId, rr);
 			}
 
-			req.destinationPointsetId = this.shapefileId;
-			req.graphId = scenario.bundleId;
-			req.outputQueue = Play.application().configuration().getString("cluster.results-bucket");
 			req.jobId = this.id;
-			req.id = pf.getId() != null ? pf.getId() : "" + i;
 			req.includeTimes = false;
 
 			requests.add(req);
 		}
 
-		qm.enqueueBatch(requests);
+		qm.enqueue(requests);
 
 		Logger.info("Enqueued {} items in {}ms", ps.capacity, System.currentTimeMillis() - now);
 	}
@@ -225,7 +260,7 @@ public class Query implements Serializable {
 			return data;
 		}	
 	}
-	
+
 	/**
 	 * Get all the queries for a point set.
 	 */

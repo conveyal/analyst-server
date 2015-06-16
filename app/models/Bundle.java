@@ -2,9 +2,9 @@ package models;
 
 import com.conveyal.gtfs.GTFSFeed;
 import com.conveyal.gtfs.model.*;
+import com.conveyal.otpac.ClusterGraphService;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -22,13 +22,16 @@ import play.Play;
 import play.libs.Akka;
 import scala.concurrent.ExecutionContext;
 import scala.concurrent.duration.Duration;
-import utils.*;
+import utils.Bounds;
+import utils.ClassLoaderSerializer;
+import utils.DataStore;
+import utils.HashUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
+import java.time.LocalDate;
 import java.util.*;
-import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipException;
 
@@ -71,6 +74,12 @@ public class Bundle implements Serializable {
 	public String description;
 	
 	public String timeZone;
+	
+	/** What is the earliest date all feeds cover in this bundle? */
+	public LocalDate startDate;
+	
+	/** What is the latest date all feeds cover in this bundle? */
+	public LocalDate endDate;
 	
 	public Boolean processingGtfs = false;
 	public Boolean processingOsm = false;
@@ -207,7 +216,7 @@ public class Bundle implements Serializable {
 		// if the shapes are null, compute them.
 		// They are built on upload, but older databases may not have them.
 		// but don't rebuild failed uploads every time the server is started
-		if ((this.getSegments().isEmpty() || this.timeZone == null) && this.failed != null && !this.failed) {
+		if ((this.getSegments().isEmpty() || this.timeZone == null || this.startDate == null || this.endDate == null) && this.failed != null && !this.failed) {
 			processGtfs();
 		}
 	}
@@ -238,7 +247,47 @@ public class Bundle implements Serializable {
 				for(Stop s : feed.stops.values()) {
 					envelope.include(s.stop_lon, s.stop_lat);
 				}
-				
+
+
+				// figure out the service range
+				LocalDate start = null, end = null;
+
+				for (Service c : feed.services.values()) {
+					if (c.calendar != null) {
+						LocalDate cs = fromInt(c.calendar.start_date);
+						LocalDate ce = fromInt(c.calendar.end_date);
+
+						if (start == null || cs.isBefore(start))
+							start = cs;
+
+						if (end == null || ce.isAfter(end))
+							end = ce;
+					}
+					
+					for (CalendarDate cd : c.calendar_dates.values()) {
+						if (cd.exception_type == 2)
+							// removed service, does not count
+							continue;
+
+						LocalDate ld = LocalDate.of(cd.date.getYear(), cd.date.getMonthOfYear(), cd.date.getMonthOfYear());
+
+						if (start == null || ld.isBefore(start))
+							start = ld;
+
+						if (end == null || ld.isAfter(end))
+							end = ld;
+					}
+				}
+
+				if (start != null && end != null) {
+					// we want the dates when *all* feeds are active
+					if (this.startDate == null || start.isAfter(this.startDate))
+						this.startDate = start;
+
+					if (this.endDate == null || end.isBefore(this.endDate))
+						this.endDate = end;
+				}
+
 				Agency a = feed.agency.values().iterator().next();
 				this.timeZone = a.agency_timezone;
 				
@@ -249,11 +298,7 @@ public class Bundle implements Serializable {
 				
 				// build the spatial index for the map view
 				Collection<Trip> exemplarTrips =
-						Collections2.transform(feed.findPatterns().values(), new Function<List<String>, Trip> () {
-							public Trip apply(List<String> tripIds) {
-								return feed.trips.get(tripIds.get(0));
-							}
-						});
+						Collections2.transform(feed.findPatterns().values(), tripIds -> feed.trips.get(tripIds.get(0)));
 				
 				GeometryFactory gf = new GeometryFactory();
 				
@@ -268,7 +313,7 @@ public class Bundle implements Serializable {
 						int i = 0;
 						
 						int lastKey = Integer.MIN_VALUE;
-						for (Entry<Tuple2<String, Integer>, Shape> e : shape.entrySet()) {
+						for (Map.Entry<Tuple2<String, Integer>, Shape> e : shape.entrySet()) {
 							if (e.getKey().b < lastKey)
 								throw new IllegalStateException("Non-sequential shape keys.");
 							
@@ -299,7 +344,7 @@ public class Bundle implements Serializable {
 		}
 		
 		// if we've done all that and we still don't have a time zone, then this was a failure
-		if (this.timeZone == null)
+		if (this.timeZone == null || this.startDate == null || this.endDate == null)
 			this.failed = true;
 		else
 			this.bounds = new Bounds(envelope);
@@ -307,6 +352,13 @@ public class Bundle implements Serializable {
 		this.segmentsDb.commit();
 		
 		this.save();
+	}
+
+	static public LocalDate fromInt (int date) {
+		int year = date / 10000;
+		int month = (date % 10000) / 100;
+		int day = date % 100;
+		return LocalDate.of(year, month, day);
 	}
 	
 	static public void writeAllToClusterCache () throws IOException {

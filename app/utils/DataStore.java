@@ -119,6 +119,7 @@ public class DataStore<T> {
         	.pumpSource(iter)
         	.pumpPresort(100000) 
         	.keySerializer(keySerializer)
+			.valueSerializer(new ClassLoaderSerializer())
         	.make();
 		
 		// close/flush db 
@@ -127,6 +128,7 @@ public class DataStore<T> {
 		// re-connect with transactions enabled
 		db = DBMaker.newFileDB(new File(directory, dataFile + ".db"))
 				.closeOnJvmShutdown()
+				.cacheWeakRefEnable()
 		        .make();
 		
 		map = db.getTreeMap(dataFile);

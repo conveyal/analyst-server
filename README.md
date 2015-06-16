@@ -12,7 +12,8 @@ against it almost immediately.
 
 First, clone the repository locally. The only external dependency is a copy of [Play](http://www.playframework.com) and
 a [vanilla extract](https://github.com/conveyal/vanilla-extract.git) server, which may be local or remote; configure its
-URL in conf/application.conf. First copy conf/application.conf.template to conf/application.conf.
+URL in conf/application.conf. First copy conf/application.conf.template to conf/application.conf and edit the file following
+the instructions in the comments.
 
 Start the program by typing `activator run -mem <large number>`. The number is in megabytes, and should be as much as
 you can spare; I typically use 8GB (8192), although you should be able to get by with less. Create the first user by going to http://localhost:9000/createUser?username=...&password=...&email=...

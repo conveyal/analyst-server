@@ -14,6 +14,8 @@ application.secret="cAb`]/Ynfo55ehWX:6gv^>gtsNn`:Wg?xSBojvieIDf1dNLAT>kOSEBYIQsb
 api.allow-unauthenticated-access=false
 
 # Path for data files
+# Note that if you choose to start the server with `activator start` instead of `activator run` (recommended in production),
+# this and the temp dir (below) need to be absolute paths.
 application.data=data/
 
 # path to temp files

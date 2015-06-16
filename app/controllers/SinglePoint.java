@@ -1,39 +1,42 @@
 package controllers;
 
+
 import com.csvreader.CsvWriter;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.Maps;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import models.Shapefile;
 import org.opentripplanner.analyst.Histogram;
 import org.opentripplanner.analyst.ResultSet;
+import org.opentripplanner.analyst.cluster.AnalystClusterRequest;
 import play.Play;
 import play.libs.F;
 import play.mvc.Controller;
 import play.mvc.Result;
-import utils.*;
+import utils.IdUtils;
+import utils.JsonUtil;
+import utils.QueueManager;
+import utils.ResultEnvelope;
 import utils.ResultEnvelope.Which;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.Map;
 import java.util.Map.Entry;
 
 /**
  * Controllers for getting result sets used in single point mode.
  */
 public class SinglePoint extends Controller {
-    // cache the result envelopes. 250MB in-memory cache.
-    // this doesn't need to be very large; it needs only to store as many result envelopes as there are expected to be
-    // active users. Once the user has moved the pin, the probability they will put it back on exactly the same spot
-    // is for all intents and purposes zero, so the cache miss rate is very big regardless of cache size.
-    //private static ConcurrentMap<String, ResultEnvelope> envelopeCache = DBMaker.newCache(.25);
-	private static Map<String, ResultEnvelope> envelopeCache = Maps.newHashMap();
-    
+    // cache the result envelopes, but don't run out of memory
+	// if we use a direct cache from MapDB, the system comes apart at the seams because MapDB has a lot of trouble serializing
+	// the isochrones
+	private static Cache<String, ResultEnvelope> envelopeCache = CacheBuilder.newBuilder().maximumSize(500).build();
+
     /** re-use object mapper */
     private static final ObjectMapper objectMapper = JsonUtil.getObjectMapper();
     
@@ -55,29 +58,14 @@ public class SinglePoint extends Controller {
     	
     	boolean profile = params.get("profile").asBoolean();
 
-		AnalystClusterRequest req;
-
-		if (profile) {
-			req = objectMapper.treeToValue(params, OneToManyProfileRequest.class);
-		}
-		else {
-			req = objectMapper.treeToValue(params, OneToManyRequest.class);
-		}
-
-		// state tracking
-		req.jobId = null;
-		// put the ID first for better performance with S3 writes
-		// S3 uses some sort of tree/sequential index, by varying prefixes you write to different parts of that index.
-		req.id = IdUtils.getId() + "_single";
+		AnalystClusterRequest req = objectMapper.treeToValue(params, AnalystClusterRequest.class);
 
 		req.includeTimes = true;
+		req.jobId = IdUtils.getId();
 
 		F.RedeemablePromise<Result> result = F.RedeemablePromise.empty();
 
-		QueueManager.getManager().enqueue(req, env -> {
-            envelopeCache.put(env.id, env);
-            result.success(ok(resultSetToJson(env)).as("application/json"));
-        });
+		QueueManager.getManager().enqueue(req);
 
 		return result;
     }
@@ -111,7 +99,7 @@ public class SinglePoint extends Controller {
     	Which whichEnum = Which.valueOf(which);
     	
     	// get the resultset
-    	ResultEnvelope env = envelopeCache.get(key);
+    	ResultEnvelope env = envelopeCache.getIfPresent(key);
     	
     	if (env == null)
     		return notFound();
@@ -272,6 +260,6 @@ public class SinglePoint extends Controller {
 
     /** Get a result set with times from the cache, or null if the key doesn't exist/has fallen out of the cache */
     public static ResultEnvelope getResultSet (String key) {
-    	return envelopeCache.get(key);
+    	return envelopeCache.getIfPresent(key);
     }
 }
