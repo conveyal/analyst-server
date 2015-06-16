@@ -1,35 +1,28 @@
 package models;
 
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import com.conveyal.otpac.message.JobSpec;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
-import controllers.Api;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.opentripplanner.analyst.PointFeature;
 import org.opentripplanner.analyst.PointSet;
 import org.opentripplanner.analyst.cluster.AnalystClusterRequest;
-import org.opentripplanner.analyst.scenario.RemoveTrip;
-import org.opentripplanner.analyst.scenario.Scenario;
 import org.opentripplanner.common.model.GenericLocation;
 import org.opentripplanner.profile.ProfileRequest;
 import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.TraverseModeSet;
 import otp.Analyst;
 import play.Logger;
-import play.Play;
 import utils.*;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Query implements Serializable {
@@ -169,8 +162,6 @@ public class Query implements Serializable {
 		completePoints = 0;
 		this.save();
 
-		QueryResultStore.accumulate(this);
-
 		List<AnalystClusterRequest> requests = Lists.newArrayList();
 
 		// TODO batch?
@@ -195,7 +186,22 @@ public class Query implements Serializable {
 			requests.add(req);
 		}
 
-		qm.enqueue(requests);
+		qm.addCallback(id, re -> {
+			getResults().store(re);
+
+			synchronized (this) {
+				this.completePoints++;
+
+				if (this.completePoints == this.totalPoints || this.completePoints % 200 == 0)
+					this.save();
+			}
+
+			// when the job is complete return false to remove this callback from the rotation
+			return this.completePoints < this.totalPoints;
+		});
+
+		// enqueue the requests
+		qm.enqueue(this.projectId, this.graphId, this.id, requests);
 
 		Logger.info("Enqueued {} items in {}ms", ps.capacity, System.currentTimeMillis() - now);
 	}

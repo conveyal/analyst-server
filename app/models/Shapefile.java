@@ -1,6 +1,5 @@
 package models;
 
-import com.conveyal.otpac.PointSetDatastore;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.vividsolutions.jts.geom.Envelope;
@@ -36,17 +35,6 @@ import play.Play;
 import play.libs.Akka;
 import scala.concurrent.ExecutionContext;
 import utils.*;
-
-import java.io.*;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipException;
-import java.util.zip.ZipFile;
-import utils.Bounds;
-import utils.DataStore;
-import utils.HaltonPoints;
-import utils.HashUtils;
 
 import java.io.*;
 import java.lang.ref.SoftReference;

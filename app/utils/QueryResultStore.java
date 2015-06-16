@@ -1,22 +1,16 @@
 package utils;
 
-import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import controllers.Application;
 import models.Query;
-import models.Shapefile;
-import org.mapdb.*;
+import org.mapdb.Fun;
 import org.opentripplanner.analyst.Histogram;
 import org.opentripplanner.analyst.ResultSet;
-import play.Logger;
 import play.Play;
 
 import java.io.*;
 import java.util.*;
-import java.util.Map.Entry;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -118,47 +112,6 @@ public class QueryResultStore {
 		FileReader r = new FileReader(new File(outDir, filename));
 		readerCache.add(r);
 		return r;
-	}
-
-	/**
-	 * Await results for query q.
-	 *
-	 * Note that this does not have to be run on the same machine as the UI.
-	 */
-	public static void accumulate (final Query query) {
-		QueueManager qm = QueueManager.getManager();
-
-		final QueryResultStore store = new QueryResultStore(query);
-		final Set<String> receivedResults = Sets.newHashSet();
-
-		// note that callback will never be called in parallel as there is a synchronized block in the
-		// queue manager.
-		qm.registerJobCallback(query, re -> {
-			// don't save twice
-			if (receivedResults.contains(re.id)) {
-				Logger.warn("Received duplicate result for origin {}", re.id);
-				return true;
-			}
-
-			store.store(re);
-
-			receivedResults.add(re.id);
-
-			query.completePoints = receivedResults.size();
-
-			if (query.completePoints % 200 == 0)
-				query.save();
-
-			if (query.completePoints.equals(query.totalPoints)) {
-				// TODO write to S3 here so that this can be separated from the UI.
-				query.save();
-				store.close();
-				// stop iteration, remove callback
-				return false;
-			}
-
-			return true;
-		});
 	}
 
 	/** Write resultsets to a flat file */

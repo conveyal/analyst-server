@@ -2,7 +2,6 @@ package models;
 
 import com.conveyal.gtfs.GTFSFeed;
 import com.conveyal.gtfs.model.*;
-import com.conveyal.otpac.ClusterGraphService;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.Collections2;
@@ -22,10 +21,7 @@ import play.Play;
 import play.libs.Akka;
 import scala.concurrent.ExecutionContext;
 import scala.concurrent.duration.Duration;
-import utils.Bounds;
-import utils.ClassLoaderSerializer;
-import utils.DataStore;
-import utils.HashUtils;
+import utils.*;
 
 import java.io.File;
 import java.io.IOException;

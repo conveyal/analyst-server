@@ -9,7 +9,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import models.Bundle;
+import models.Project;
 import models.Shapefile;
+import models.User;
 import org.opentripplanner.analyst.Histogram;
 import org.opentripplanner.analyst.ResultSet;
 import org.opentripplanner.analyst.cluster.AnalystClusterRequest;
@@ -42,7 +45,8 @@ public class SinglePoint extends Controller {
     
     /** Create a result from a JSON-ified OneToMany[Profile]Request. */
     public static F.Promise<Result> result () throws JsonProcessingException {
-    	if (session().get("username") == null &&
+		String username = session().get("username");
+    	if (username == null &&
     			Play.application().configuration().getBoolean("api.allow-unauthenticated-access") != true)
     		return F.Promise.pure((Result) unauthorized());
     	
@@ -55,17 +59,39 @@ public class SinglePoint extends Controller {
     	// figure out if it's profile or not
     	
     	JsonNode params = request().body().asJson();
-    	
-    	boolean profile = params.get("profile").asBoolean();
-
 		AnalystClusterRequest req = objectMapper.treeToValue(params, AnalystClusterRequest.class);
 
 		req.includeTimes = true;
 		req.jobId = IdUtils.getId();
 
-		F.RedeemablePromise<Result> result = F.RedeemablePromise.empty();
+		Bundle bundle = Bundle.getBundle(req.graphId);
+		Shapefile ps = Shapefile.getShapefile(req.destinationPointsetId);
 
-		QueueManager.getManager().enqueue(req);
+		// provide some security; if we don't have this bundle and shapefile here, don't let them make a request
+		// against it (they may have the UUID from somewhere else and be trying to use our server as a back door
+		// to the cluster)
+		if (bundle == null || ps == null)
+			return F.Promise.pure((Result) notFound());
+
+		if (!bundle.projectId.equals(ps.projectId))
+			return F.Promise.pure((Result) badRequest());
+
+		// permissions check
+		Project p = Project.getProject(bundle.projectId);
+		User u = username != null ? User.getUser(username) : null;
+		if (u != null && !u.hasPermission(p))
+			return F.Promise.pure((Result) unauthorized());
+
+		F.RedeemablePromise < Result > result = F.RedeemablePromise.empty();
+
+		// for safety, add the callback before enqueing the job.
+		QueueManager.getManager().addCallback(req.jobId, re -> {
+			result.success(ok(resultSetToJson(re)).as("application/json"));
+			// remove callback
+			return false;
+		});
+
+		QueueManager.getManager().enqueue(p.id, bundle.id, req.id, req);
 
 		return result;
     }

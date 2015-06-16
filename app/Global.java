@@ -3,7 +3,6 @@ import models.Query;
 import models.Shapefile;
 import play.Application;
 import play.GlobalSettings;
-import utils.QueryResultStore;
 
 import java.io.IOException;
 
@@ -24,7 +23,7 @@ public class Global extends GlobalSettings {
 
 		for (Query q : Query.getAll()) {
 			if (q.completePoints == null || !q.completePoints.equals(q.totalPoints)) {
-				QueryResultStore.accumulate(q);
+				// TODO accumulate results
 			}
 		}
 	}

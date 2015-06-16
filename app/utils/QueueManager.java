@@ -2,6 +2,8 @@ package utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -17,6 +19,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.function.Predicate;
 
 /** Generic queuing support to enable us to throw stuff into SQS */
 public class QueueManager {
@@ -30,6 +33,9 @@ public class QueueManager {
 
 	private ObjectMapper objectMapper = JsonUtil.getObjectMapper();
 
+	/** per-job callbacks */
+	private Multimap<String, Predicate<ResultEnvelope>> callbacks = HashMultimap.create();
+
 	private String broker;
 
 	/** QueueManagers are singletons and thus cannot be constructed directly */
@@ -38,12 +44,12 @@ public class QueueManager {
 	}
 
 	/** enqueue an arbitrary number of requests */
-	public void enqueue (AnalystClusterRequest... requests) {
-		enqueue(Arrays.asList(requests));
+	public void enqueue (String userId, String graphId, String jobId, AnalystClusterRequest... requests) {
+		enqueue(userId, graphId, jobId, Arrays.asList(requests));
 	}
 
 	/** enqueue an arbitrary number of requests */
-	public void enqueue (Collection<AnalystClusterRequest> requests) {
+	public void enqueue (String userId, String graphId, String jobId, Collection<AnalystClusterRequest> requests) {
 		// Should we chunk these before sending them?
 
 		// Construct a POST request
@@ -66,7 +72,7 @@ public class QueueManager {
 		}
 
 		try {
-			req.setURI(new URI(broker));
+			req.setURI(new URI(broker + "/" + userId + "/" + graphId + "/" + jobId));
 		} catch (URISyntaxException e) {
 			e.printStackTrace();
 			throw new RuntimeException(e);
@@ -81,7 +87,7 @@ public class QueueManager {
 			throw new RuntimeException(e);
 		}
 
-		if (res.getStatusLine().getStatusCode() != 200)
+		if (res.getStatusLine().getStatusCode() != 200 && res.getStatusLine().getStatusCode() != 202)
 			System.out.println("not ok: " + res.getStatusLine().getStatusCode() + " " + res.getStatusLine().getReasonPhrase());
 
 		try {
@@ -94,6 +100,21 @@ public class QueueManager {
 		req.releaseConnection();
 
 		Logger.info("enqueued {} requests", requests.size());
+	}
+
+	/**
+	 * Add a callback to a job. Callbacks should return true if they wish to continue receiving results from that
+	 * job, false if they wish to be removed.
+	 * @param jobId
+	 */
+	public void addCallback(String jobId, Predicate<ResultEnvelope> callback) {
+		this.callbacks.put(jobId, callback);
+	}
+
+	/** cancel a job */
+	public void cancelJob (String jobId) {
+		// TODO dequeue all requests
+		this.callbacks.removeAll(jobId);
 	}
 
 	public static QueueManager getManager () {
