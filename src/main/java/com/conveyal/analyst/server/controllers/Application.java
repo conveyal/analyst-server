@@ -2,64 +2,43 @@ package com.conveyal.analyst.server.controllers;
 
 import models.Project;
 import models.User;
-import play.Play;
-import play.mvc.Controller;
-import play.mvc.Result;
-import play.mvc.Security;
 import spark.Request;
 import spark.Response;
-import views.html.*;
 
 import java.io.IOException;
 
-public class Application extends Controller {
-	public static final String tmpPath = Play.application().configuration().getString("application.tmp");
-	public static final String dataPath = Play.application().configuration().getString("application.data");
-	public static final String binPath = Play.application().configuration().getString("application.bin");
-	
-	public static Object index(Request request, Response response) {
-		return ok(index.render());
-    }
+import static com.conveyal.analyst.server.controllers.Status.NOT_FOUND;
+import static com.conveyal.analyst.server.controllers.Status.UNAUTHORIZED;
+import static spark.Spark.halt;
 
-	public static Result tutorial() throws IOException  {
+public class Application {
+	public static String doLogin(Request request, Response response) throws IOException  {
 
-		String username = session().get("username");
-		return ok(tutorial.render(username));
-	}
-
-	public static Result login() throws IOException  {
-		return ok(login.render());
-    }
-
-	public static Result doLogin() throws IOException  {
-
-		String username = request().body().asFormUrlEncoded().get("username")[0];
-		String password = request().body().asFormUrlEncoded().get("password")[0];
+		String username = (String) request.attribute("username");
+		String password = (String) request.attribute("password");
 
 		User user = User.getUserByUsername(username);
 
-		if(user == null)
-			return notFound();
+		if(user == null) {
+			response.status(NOT_FOUND);
+			return "no such user";
+		}
 
 		if(user.checkPassword(password)) {
-			session().put("username", user.username);
-			return ok();
+			request.session().attribute("username", user.username);
+			return "welcome " + user.username + "!";
 		}
 		else {
-			return unauthorized();
+			response.status(UNAUTHORIZED);
+			return "bad username or password";
 		}
-
 	}
 
-	public static Result createUserForm() {
-		return ok(create.render());
-	}
+	public static String createUser(Request request, Response response) {
 
-	public static Result createUser() {
-
-		String username = request().body().asFormUrlEncoded().get("username")[0];
-		String password = request().body().asFormUrlEncoded().get("password")[0];
-		String email = request().body().asFormUrlEncoded().get("email")[0];
+		String username = (String) request.attribute("username");
+		String password = (String) request.attribute("password");
+		String email = (String) request.attribute("email");
 
 		User u;
 
@@ -73,21 +52,27 @@ public class Application extends Controller {
 			u.addReadOnlyProjectPermission("db7c31708ec68280a1a94a8ca633dae1");
 			u.save();
 
-			session().put("username", u.username);
+			request.session().attribute("username", u.username);
+			return "welcome " + u.username + "!";
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
-		return redirect("/#db7c31708ec68280a1a94a8ca633dae1/-99.10929679870605/19.42223967548736/12/analysis-single/");
+		response.redirect("/#db7c31708ec68280a1a94a8ca633dae1/-99.10929679870605/19.42223967548736/12/analysis-single/");
+		return "welcome";
 	}
 
-	public static Result setPassword() {
+	public static String setPassword(Request request, Response response) {
 
-		String userId = request().body().asFormUrlEncoded().get("userId")[0];
-		String password = request().body().asFormUrlEncoded().get("password")[0];
+		String userId = (String) request.attribute("userId");
+		String password = (String) request.attribute("password");
 
 		User u = User.getUser(userId);
+
+		if (!u.username.equals(request.session().attribute("username")))
+			halt(UNAUTHORIZED, "cannot reset other user's password");
+
 		try {
 			u.passwordHash = User.getPasswordHash(password);
 			u.save();
@@ -96,18 +81,10 @@ public class Application extends Controller {
 			e.printStackTrace();
 		}
 
-		return ok();
-	}
-
-	public static Result linkUserProject(String username, String projectId) {
-
-		User u = User.getUserByUsername(username);
-		u.addProjectPermission(projectId);
-		u.save();
-		return ok();
+		return "password reset";
 	}
 	
-	public static Result createDemoProject() {
+	public static String createDemoProject(Request request, Response response) {
 		
 		if(Project.getProject("db7c31708ec68280a1a94a8ca633dae1") == null) {
 			Project demoProject = new Project();
@@ -120,15 +97,11 @@ public class Application extends Controller {
 			demoProject.save();
 		}
 		
-		return ok();
+		return "demo project created";
 	}
 
-	public static Result logout() throws IOException  {
-		session().clear();
-		return redirect(routes.Application.login());
+	public static String logout(Request request, Response response)  {
+		request.session().removeAttribute("username");
+		return "good night";
     }
-
-	public static Result jsMessages() {
-	    return ok(messages.generate("window.Messages"));
-	}
 }

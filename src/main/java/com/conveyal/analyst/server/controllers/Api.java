@@ -1,16 +1,11 @@
 package com.conveyal.analyst.server.controllers;
 
 import com.conveyal.analyst.server.otp.Analyst;
-import com.conveyal.analyst.server.utils.JsonUtil;
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerationException;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import models.*;
+import spark.Request;
+import spark.Response;
 
 import java.io.IOException;
-import java.io.StringWriter;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.ChronoField;
@@ -18,38 +13,23 @@ import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipException;
 
-@Security.Authenticated(Secured.class)
-public class Api extends Controller {
+import static com.conveyal.analyst.server.controllers.Status.NOT_FOUND;
+import static spark.Spark.halt;
+
+public class Api {
 
 	public static int maxTimeLimit = 120; // in minutes
 
 	public static Analyst analyst = new Analyst();
 
-	static ObjectMapper mapper = JsonUtil.getObjectMapper();
-
-    private static JsonFactory jf = new JsonFactory();
-
-
-    static String toJson(Object pojo, boolean prettyPrint)
-        throws JsonMappingException, JsonGenerationException, IOException {
-
-    	StringWriter sw = new StringWriter();
-        JsonGenerator jg = jf.createJsonGenerator(sw);
-        if (prettyPrint) {
-            jg.useDefaultPrettyPrinter();
-        }
-        mapper.writeValue(jg, pojo);
-        return sw.toString();
-    }
-
     /**
      * Get a day that has ostensibly normal service, one would guess. Uses the next Tuesday that
      * is covered by all transit feeds in the project.
      */
-    public static Result getExemplarDay(String projectId) throws Exception {
-        Collection<Bundle> bundles = Bundle.getBundles(projectId);
+    public static String getExemplarDay(Request req, Response res) throws Exception {
+        Collection<Bundle> bundles = Bundle.getBundles(req.params("projectId"));
         if (bundles == null)
-            return notFound();
+            halt(NOT_FOUND);
 
         LocalDate defaultDate = LocalDate.now().with(ChronoField.DAY_OF_WEEK, DayOfWeek.TUESDAY.getValue());
 
@@ -69,103 +49,19 @@ public class Api extends Controller {
         }
 
         if (startDate == null || endDate == null || startDate.isAfter(endDate))
-            return ok(defaultDate.toString());
+            return defaultDate.toString();
 
         // find a tuesday between the start and end date
         LocalDate ret = endDate;
 
         while (!ret.isBefore(startDate)) {
             if (ret.getDayOfWeek().equals(DayOfWeek.TUESDAY))
-                return ok(ret.toString());
+                return ret.toString();
             ret = ret.minusDays(1);
         }
 
-        return ok(defaultDate.toString());
+        return defaultDate.toString();
     }
-
-
-// **** user controllers ****
-
-    public static Result getUser(String id) {
-
-    	try {
-
-            if(id != null) {
-
-            	User u = null;
-
-            	if(id.toLowerCase().equals("self")) {
-            		u = User.getUserByUsername(session().get("username"));
-            	}
-            	else {
-            		 u = User.getUser(id);
-            	}
-
-                if(u != null)
-                    return ok(Api.toJson(u, false));
-                else
-                    return notFound();
-            }
-            else {
-                return ok(Api.toJson(User.getUsers(), false));
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return badRequest();
-        }
-
-    }
-
-    public static Result createUser() {
-        User u;
-
-        try {
-
-        	u = mapper.readValue(request().body().asJson().traverse(), User.class);
-            u.save();
-
-            return ok(Api.toJson(u, false));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return badRequest();
-        }
-    }
-
-    public static Result updateUser(String id) {
-
-    	User u;
-
-        try {
-
-        	u = mapper.readValue(request().body().asJson().traverse(), User.class);
-
-        	if(u.id == null || User.getUser(u.id) == null)
-                return badRequest();
-
-        	u.save();
-
-            return ok(Api.toJson(u, false));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return badRequest();
-        }
-    }
-
-
-    public static Result deleteUser(String id) {
-        if(id == null)
-            return badRequest();
-
-        User u = User.getUser(id);
-
-        if(u == null)
-        	return badRequest();
-
-        u.delete();
-
-        return ok();
-    }
-
 
 	// **** project controllers ****
 
