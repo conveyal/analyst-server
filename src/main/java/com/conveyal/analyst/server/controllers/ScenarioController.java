@@ -29,9 +29,9 @@ public class ScenarioController extends Controller {
 	}
 	
 	public static Collection<TransportScenario> get (Request req, Response res) throws JsonMappingException, JsonGenerationException, IOException {
-		String projectId = req.params("projectId");
+		String projectId = req.queryParams("projectId");
 
-		if (projectId == null || Project.getProject(projectId) == null || !currentUser(req).hasReadPermission(projectId))
+		if (projectId != null && (Project.getProject(projectId) == null || !currentUser(req).hasReadPermission(projectId)))
 			halt(NOT_FOUND);
 
 		Collection<TransportScenario> s;

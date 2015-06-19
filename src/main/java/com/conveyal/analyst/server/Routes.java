@@ -14,6 +14,9 @@ public class Routes {
         // serve assets
         staticFileLocation("/public");
 
+        // messages are dynamically generated
+        get("/messages", MessagesController::messages);
+
         // login/logout/admin
         post("/doLogin", Application::doLogin);
         post("/createUser", Application::createUser);
