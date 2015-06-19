@@ -44,7 +44,7 @@ public class SinglePoint extends Controller {
     private static final ObjectMapper objectMapper = JsonUtil.getObjectMapper();
     
     /** Create a result from a JSON-ified OneToMany[Profile]Request. */
-    public static void result (Request request, Response res) throws JsonProcessingException {
+    public static Object result (Request request, Response res) throws JsonProcessingException {
 		Authentication.authenticatedOrCors(request, res);
     	
     	// deserialize a result
@@ -97,7 +97,13 @@ public class SinglePoint extends Controller {
 		});
 
 		QueueManager.getManager().enqueue(p.id, bundle.id, req.id, req);
+		return null;
     }
+
+	public static String options (Request req, Response res) {
+		Authentication.authenticatedOrCors(req, res);
+		return "";
+	}
     
     /** Create a CSV result 
      * @throws IOException */

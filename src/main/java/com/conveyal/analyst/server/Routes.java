@@ -60,6 +60,14 @@ public class Routes {
         put("/api/bundle/:id", BundleController::updateBundle, json);
         delete("/api/bundle/:id", BundleController::deleteBundle, json);
 
+        // scenario routes
+        before("/api/scenario*", Authentication::authenticated);
+        get("/api/scenario", ScenarioController::get, json);
+        get("/api/scenario/:id", ScenarioController::getById, json);
+        post("/api/scenario", ScenarioController::create, json);
+        put("/api/scenario/:id", ScenarioController::update, json);
+        delete("/api/scenario/:id", ScenarioController::delete, json);
+
         // query routes
         // note: auth is handled by each individual controller as some allow unauthenticated access
         get("/api/query", QueryController::getQuery, json);
@@ -68,6 +76,18 @@ public class Routes {
         put("/api/query/:id", QueryController::updateQuery, json);
         delete("/api/query/:id", QueryController::deleteQuery, json);
         get("/api/query/:id/bins", QueryController::queryBins, json);
+        get("/api/query/:id/:compareTo/bins", QueryController::queryBins, json);
+
+        // single point analysis results
+        // note: auth is handled in the controller
+        // JSON rendered by controller, no need for a result filter
+        post("/api/single", SinglePoint::result);
+        options("/api/single", SinglePoint::options);
+        get("/csv/single", SinglePoint::csv);
+
+        // GIS routes
+        before("/gis*", Authentication::authenticated);
+        get("/gis/query", Gis::query);
 
         // finally, serve assets from the public folder at /
         staticFileLocation("/public");

@@ -1,8 +1,8 @@
 package models;
 
+import com.conveyal.analyst.server.utils.DataStore;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
-import utils.DataStore;
 
 import java.io.Serializable;
 import java.util.Collection;

@@ -20,6 +20,9 @@ public class Controller {
     /** 418 I am a teapot (https://tools.ietf.org/html/rfc2324) */
     public static final int I_AM_A_TEAPOT = 418;
 
+    /** 500 Internal server error */
+    public static final int INTERNAL_SERVER_ERROR = 500;
+
     /** Get the current user */
     protected static User currentUser(Request request) {
         return User.getUserByUsername((String) request.attribute("username"));

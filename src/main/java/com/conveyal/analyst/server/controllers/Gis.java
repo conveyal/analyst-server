@@ -1,13 +1,16 @@
 package com.conveyal.analyst.server.controllers;
 
+import com.conveyal.analyst.server.utils.DirectoryZip;
+import com.conveyal.analyst.server.utils.HashUtils;
+import com.conveyal.analyst.server.utils.QueryResults;
+import com.google.common.io.Files;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Point;
-import models.Attribute;
 import models.Query;
 import models.Shapefile;
 import models.Shapefile.ShapeFeature;
-import org.apache.commons.io.FileUtils;
+import models.User;
 import org.geotools.data.DataUtilities;
 import org.geotools.data.DefaultTransaction;
 import org.geotools.data.Transaction;
@@ -20,49 +23,43 @@ import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
-import org.opentripplanner.analyst.PointSet;
-import org.opentripplanner.analyst.ResultSet;
-import play.Logger;
-import play.mvc.Controller;
-import play.mvc.Result;
-import play.mvc.Security;
-import utils.DirectoryZip;
-import utils.HashUtils;
-import utils.QueryResults;
-import utils.ResultEnvelope;
-import utils.ResultEnvelope.Which;
+import org.opentripplanner.analyst.cluster.ResultEnvelope;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import spark.Request;
+import spark.Response;
 
 import java.io.File;
+import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.*;
-@Security.Authenticated(Secured.class)
+
+import static spark.Spark.halt;
 public class Gis extends Controller {
-	
-	static File TMP_PATH = new File(Application.tmpPath);
-	
-	public static Result query(String queryId, Integer timeLimit, String weightByShapefile, String weightByAttribute,
-			String groupBy, String which, String attributeName, String compareTo) {
-    	
-		response().setHeader(CACHE_CONTROL, "no-cache, no-store, must-revalidate");
-		response().setHeader(PRAGMA, "no-cache");
-		response().setHeader(EXPIRES, "0");
-		
-		ResultEnvelope.Which whichEnum;
-		try {
-			whichEnum = ResultEnvelope.Which.valueOf(which);
-		} catch (Exception e) {
-			// no need to pollute the console with a stack trace
-			return badRequest("Invalid value for which parameter");
-		}
+	private static final Logger LOG = LoggerFactory.getLogger(Gis.class);
+
+	public static Object query(Request req, Response res) {
+    	String queryId = req.queryParams("queryId");
+		int timeLimit = Integer.parseInt(req.queryParams("timeLimit"));
+		String weightByShapefile = req.queryParams("weightByShapefile");
+		String weightByAttribute = req.queryParams("weightByAttribute");
+		String attributeName = req.queryParams("attributeName");
+		String groupBy = req.queryParams("groupBy");
+		String compareTo = req.queryParams("compareTo");
+		ResultEnvelope.Which which = ResultEnvelope.Which.valueOf(req.queryParams("which"));
 		
 		Query query = Query.getQuery(queryId);
 		
 		Query query2 = compareTo != null ? Query.getQuery(compareTo) : null;
-		
-		if(query == null)
-			return badRequest();
-		
-		String shapeName = (timeLimit / 60) + "_mins_" + whichEnum.toString().toLowerCase() + "_";
+
+		User u = currentUser(req);
+
+		if(query == null || (query2 == null && compareTo != null) ||
+				!u.hasReadPermission(query.projectId) ||
+				(query2 != null && !u.hasReadPermission(query2.projectId)));
+			halt(NOT_FOUND, "Could not find query or you do not have access to it");
+
+		String shapeName = (timeLimit / 60) + "_mins_" + which.toString().toLowerCase() + "_";
     	
     	try {
 	    
@@ -72,7 +69,7 @@ public class Gis extends Controller {
 
 			synchronized(QueryResults.queryResultsCache) {
 				if(!QueryResults.queryResultsCache.containsKey(queryKey)) {
-					qr = new QueryResults(query, timeLimit, whichEnum, attributeName);
+					qr = new QueryResults(query, timeLimit, which, attributeName);
 					QueryResults.queryResultsCache.put(queryKey, qr);
 				}
 				else
@@ -82,7 +79,7 @@ public class Gis extends Controller {
 	    			String q2key = compareTo + "_" + timeLimit + "_" + which;
 	    			
 					if(!QueryResults.queryResultsCache.containsKey(q2key)) {
-						qr2 = new QueryResults(query2, timeLimit, whichEnum, attributeName);
+						qr2 = new QueryResults(query2, timeLimit, which, attributeName);
 						QueryResults.queryResultsCache.put(q2key, qr2);
 					}
 					else {
@@ -122,8 +119,8 @@ public class Gis extends Controller {
             	shapeName += "access_" + shp.name.replaceAll("\\W+", "").toLowerCase() +
             			(query2 != null ? "_compare_" + query2.name : "");
             	
-            	return ok(generateZippedShapefile(shapeName, fields, gisFeatures, false));
-            	
+            	generateZippedShapefile(shapeName, fields, gisFeatures, false, res);
+				return "";
             }
             else {
             
@@ -131,7 +128,7 @@ public class Gis extends Controller {
         	
             	if(groupBy == null) {
             		
-            		return badRequest("Must specify a weight by clause when specifying a normalize by clause!");
+            		halt(BAD_REQUEST, "Must specify a weight by clause when specifying a normalize by clause!");
             
             	}
             	else {
@@ -166,19 +163,22 @@ public class Gis extends Controller {
                 	shapeName += "_" + shp.name.replaceAll("\\W+", "") + "_norm_" + shpNorm.name.replaceAll("\\W+", "") + "_group_" +
                 			aggregateToSf.name.replaceAll("\\W+", "").toLowerCase() + (query2 != null ? "_compare_" + query2.name : "");
                 	
-                	return ok(generateZippedShapefile(shapeName, fields, gisFeatures, false));
+                	generateZippedShapefile(shapeName, fields, gisFeatures, false, res);
+					return "";
             	}
             }     	
     	} catch (Exception e) {
 	    	e.printStackTrace();
-	    	return badRequest();
+	    	halt(INTERNAL_SERVER_ERROR, e.getMessage());
 	    }
+
+		return null;
     }
 	
-	
+
 	/**
      * Get a ResultSet.
-     */
+     *//*
     public static Result result(String key, String which) {     
     	Which whichEnum = Which.valueOf(which);
     	
@@ -234,7 +234,7 @@ public class Gis extends Controller {
     
 	/**
      * Get a comparison.
-     */
+     *//*
     public static Result resultComparison(String key1, String key2, String which) {
 
     	Which whichEnum = Which.valueOf(which);
@@ -305,6 +305,7 @@ public class Gis extends Controller {
 	    	return badRequest();
 	    }
     }
+    */
 	
 	public static class GisShapeFeature {
 		
@@ -317,19 +318,11 @@ public class Gis extends Controller {
 		
 	}
 	
-	static File generateZippedShapefile(String fileName, ArrayList<String> fieldNames, List<GisShapeFeature> features, boolean difference) {
+	static void generateZippedShapefile(String fileName, ArrayList<String> fieldNames, List<GisShapeFeature> features, boolean difference, Response res) {
 			
 		String shapeFileId = HashUtils.hashString("shapefile_" + (new Date()).toString()).substring(0, 6) + "_" + fileName;
-		
-		if(!TMP_PATH.exists())
-			TMP_PATH.mkdirs();
-		
-		File outputZipFile = new File(TMP_PATH, shapeFileId + ".zip");
-		
-		File outputDirectory = new File(TMP_PATH, shapeFileId);
-		
-		Logger.info("outfile path:" + outputDirectory.getAbsolutePath());
-		
+
+		File outputDirectory = Files.createTempDir();
 		File outputShapefile = new File(outputDirectory, shapeFileId + ".shp");
        
         try
@@ -430,17 +423,17 @@ public class Gis extends Controller {
             {
             	throw new Exception(typeName + " does not support read/write access");
             }
-            
-            DirectoryZip.zip(outputDirectory, outputZipFile);
-            FileUtils.deleteDirectory(outputDirectory);    
+
+			OutputStream os = res.raw().getOutputStream();
+            DirectoryZip.zip(outputDirectory, os);
+			os.close();
+            outputDirectory.delete();
         }
         catch(Exception e)
         {	
-        	Logger.error("Unable to process GIS export: ", e.toString());
+        	LOG.error("Unable to process GIS export: ", e.toString());
         	e.printStackTrace();
-        } 
-        
-        return outputZipFile;
+        }
 	}
 	
 	  

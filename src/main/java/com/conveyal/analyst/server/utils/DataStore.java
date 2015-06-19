@@ -1,10 +1,11 @@
 package com.conveyal.analyst.server.utils;
 
-import controllers.Application;
+import com.conveyal.analyst.server.AnalystMain;
 import org.mapdb.*;
 import org.mapdb.DB.BTreeMapMaker;
 import org.mapdb.Fun.Tuple2;
-import play.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,6 +13,8 @@ import java.util.*;
 import java.util.Map.Entry;
 
 public class DataStore<T> {
+
+	public static final Logger LOG = LoggerFactory.getLogger(DataStore.class);
 
 	DB db;
 	Map<String,T> map;
@@ -22,13 +25,14 @@ public class DataStore<T> {
 	public DataStore(String dataFile) {
 		
 		// allow models to be used outside of the application by specifying a data path directly
-		this(new File(dataPath != null ? dataPath : Application.dataPath), dataFile, true, false, false);
+		this(new File(dataPath != null ? dataPath : AnalystMain.config.getProperty(
+				"application.data")), dataFile, true, false, false);
 	}
 
 	/** Create a new data store in the default location with transactional support enabled and the default cache */
 	public DataStore(String dataFile, boolean useJavaSerialization) {
 	
-		this(new File(dataPath != null ? dataPath : Application.dataPath), dataFile, true, false, useJavaSerialization);
+		this(new File(dataPath != null ? dataPath : AnalystMain.config.getProperty("application.data")), dataFile, true, false, useJavaSerialization);
 	}
 	
 	/**
@@ -52,7 +56,7 @@ public class DataStore<T> {
 			directory.mkdirs();
 		
 		try {
-			Logger.info(directory.getCanonicalPath());
+			LOG.info(directory.getCanonicalPath());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -85,7 +89,7 @@ public class DataStore<T> {
 			directory.mkdirs();
 		
 		try {
-			Logger.info(directory.getCanonicalPath());
+			LOG.info(directory.getCanonicalPath());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

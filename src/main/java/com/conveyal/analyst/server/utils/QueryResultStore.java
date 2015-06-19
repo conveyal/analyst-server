@@ -1,12 +1,13 @@
 package com.conveyal.analyst.server.utils;
 
+import com.conveyal.analyst.server.AnalystMain;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import models.Query;
 import org.mapdb.Fun;
 import org.opentripplanner.analyst.Histogram;
 import org.opentripplanner.analyst.ResultSet;
-import play.Play;
+import org.opentripplanner.analyst.cluster.ResultEnvelope;
 
 import java.io.*;
 import java.util.*;
@@ -43,7 +44,7 @@ public class QueryResultStore {
 	/** we need to keep references to these because we need to close them */
 	private Collection<FileReader> readerCache = Lists.newArrayList();
 
-	private static File scenarioDir = new File(Play.application().configuration().getString("application.data"), "flat_results");
+	private static File scenarioDir = new File(AnalystMain.config.getProperty("application.data"), "flat_results");
 
 	public QueryResultStore (Query q) {
 		this(q.id, q.completePoints == q.totalPoints, new File(scenarioDir, q.id));

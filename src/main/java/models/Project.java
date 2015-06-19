@@ -1,9 +1,10 @@
 package models;
 
+import com.conveyal.analyst.server.utils.DataStore;
+import com.conveyal.analyst.server.utils.HashUtils;
 import com.vividsolutions.jts.geom.Geometry;
-import play.Logger;
-import utils.DataStore;
-import utils.HashUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -12,6 +13,7 @@ import java.util.Date;
 
 
 public class Project implements Serializable {
+	private static final Logger LOG = LoggerFactory.getLogger(Project.class);
 
 	private static final long serialVersionUID = 1L;
 
@@ -41,18 +43,18 @@ public class Project implements Serializable {
 			Date d = new Date();
 			id = HashUtils.hashString("p_" + d.toString());
 			
-			Logger.info("created project p " + id);
+			LOG.info("created project p " + id);
 		}
 		
 		projectData.save(id, this);
 		
-		Logger.info("saved project p " +id);
+		LOG.info("saved project p " +id);
 	}
 	
 	public void delete() {
 		projectData.delete(id);
 		
-		Logger.info("delete project p " +id);
+		LOG.info("delete project p " +id);
 	}
 
 	static public Project getProject(String id) {
@@ -71,7 +73,7 @@ public class Project implements Serializable {
 		Collection<Project> projectsByUser = new ArrayList<Project>();
 		
 		for(Project p : projectData.getAll()) {
-			if(u.hasPermission(p)) {
+			if(u.hasReadPermission(p)) {
 				projectsByUser.add(p);
 			}
 		}

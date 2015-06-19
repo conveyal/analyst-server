@@ -3,11 +3,11 @@ package com.conveyal.analyst.server.controllers;
 import com.conveyal.analyst.server.utils.Bin;
 import com.conveyal.analyst.server.utils.JsonUtil;
 import com.conveyal.analyst.server.utils.QueryResults;
-import com.conveyal.analyst.server.utils.ResultEnvelope;
 import models.Project;
 import models.Query;
 import models.Shapefile;
 import models.User;
+import org.opentripplanner.analyst.cluster.ResultEnvelope;
 import spark.Request;
 import spark.Response;
 

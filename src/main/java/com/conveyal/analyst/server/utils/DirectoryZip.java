@@ -10,11 +10,10 @@ import java.util.zip.ZipOutputStream;
 public class DirectoryZip {
 
 	
-	public static void zip(File directory, File zipfile) throws IOException {
+	public static void zip(File directory, OutputStream out) throws IOException {
 	    URI base = directory.toURI();
 	    Deque<File> queue = new LinkedList<File>();
 	    queue.push(directory);
-	    OutputStream out = new FileOutputStream(zipfile);
 	    Closeable res = out;
 	    try {
 	      ZipOutputStream zout = new ZipOutputStream(out);
