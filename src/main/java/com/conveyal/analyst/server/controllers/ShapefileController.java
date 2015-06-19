@@ -1,23 +1,19 @@
 package com.conveyal.analyst.server.controllers;
 
 import com.conveyal.analyst.server.utils.JsonUtil;
-import com.google.common.io.ByteStreams;
-import com.google.common.io.Files;
 import models.Project;
 import models.Shapefile;
 import models.User;
 import org.apache.commons.fileupload.FileItem;
-import org.apache.commons.fileupload.FileUploadException;
-import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import spark.Request;
 import spark.Response;
 
-import java.io.*;
+import java.io.File;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.zip.ZipException;
 
 import static spark.Spark.halt;
 
@@ -56,37 +52,28 @@ public class ShapefileController extends Controller {
     }
 
 
-    public static Shapefile createShapefile(Request req, Response res) throws ZipException,
-            FileUploadException, IOException {
+    public static Shapefile createShapefile(Request req, Response res) throws Exception {
         // see https://github.com/perwendel/spark/issues/26
         // TODO should we be initializing this every time?
-        DiskFileItemFactory fileItemFactory = new DiskFileItemFactory();
-        File repo = Files.createTempDir();
-        fileItemFactory.setRepository(repo);
 
         ServletFileUpload sfu = new ServletFileUpload(fileItemFactory);
-        List<FileItem> files = sfu.parseRequest(req.raw());
+        Map<String, List<FileItem>> files = sfu.parseParameterMap(req.raw());
 
-        FileItem file = files.stream().filter(f -> "file".equals(f.getFieldName())).findFirst().get();
+        FileItem file = files.get("file").get(0);
 
         if (file != null) {
 
-            String projectId = req.queryParams("projectId");
+            String projectId = files.get("projectId").get(0).getString();
 
             // make sure the project exists
             if (Project.getProject(projectId) == null || !currentUser(req).hasWritePermission(projectId))
                 halt(NOT_FOUND, "Project not found or you do not have access to it");
 
-            String name = req.queryParams("name");
+            String name = files.get("name").get(0).getString();
 
             // copy it to a temporary file
-            // this seems silly because it's probably on the file system somewhere
             File tempFile = File.createTempFile("shape", ".zip");
-            InputStream is = file.getInputStream();
-            OutputStream os = new BufferedOutputStream(new FileOutputStream(tempFile));
-            ByteStreams.copy(is, os);
-            is.close();
-            os.close();
+            file.write(tempFile);
 
             Shapefile s = Shapefile.create(tempFile, projectId, name);
             tempFile.delete();
@@ -97,12 +84,9 @@ public class ShapefileController extends Controller {
 
             s.writeToClusterCache();
 
-            repo.delete();
-
             return s;
         }
         else {
-            repo.delete();
             halt(BAD_REQUEST, "Please upload a file");
         }
 

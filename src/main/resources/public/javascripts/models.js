@@ -33,7 +33,7 @@ var Analyst = Analyst || {};
 	});
 
 	A.models.Shapefile = Backbone.Model.extend({
-		urlRoot: '/api/shapefile/',
+		urlRoot: '/api/shapefile',
 
 		defaults: {
 			id: null,
