@@ -14,6 +14,9 @@ public class Routes {
         // serve assets
         staticFileLocation("/public");
 
+        // send people to the login page if necessary
+        before("/", Authentication::uiAuthenticated);
+
         // messages are dynamically generated
         get("/messages", MessagesController::messages);
 
@@ -25,7 +28,6 @@ public class Routes {
         post("/setPassword", Application::setPassword);
 
         // TODO this shouldn't be a GET as it's not idempotent
-        before("/logout", Authentication::authenticated);
         get("/logout", Application::logout);
 
         before("/createDemoProject", Authentication::authenticated);

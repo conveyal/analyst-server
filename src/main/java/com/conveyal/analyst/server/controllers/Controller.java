@@ -8,6 +8,12 @@ import spark.Request;
  */
 public class Controller {
     // HTTP status codes
+    /** 301 Moved Permanently */
+    public static final int MOVED_PERMANENTLY = 301;
+
+    /** 302 Moved Temporarily */
+    public static final int MOVED_TEMPORARILY = 302;
+
     /** 400 Bad Request */
     public static final int BAD_REQUEST = 400;
 

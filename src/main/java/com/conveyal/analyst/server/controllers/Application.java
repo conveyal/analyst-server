@@ -100,6 +100,7 @@ public class Application extends Controller {
 
 	public static String logout(Request request, Response response)  {
 		request.session().removeAttribute("username");
-		return "good night";
-    }
+		response.redirect("/login.html", MOVED_TEMPORARILY);
+		return null;
+	}
 }

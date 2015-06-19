@@ -5,7 +5,7 @@ import models.User;
 import spark.Request;
 import spark.Response;
 
-import static spark.Spark.halt;
+import static spark.Spark.*;
 
 /** handle authentication */
 public class Authentication extends Controller {
@@ -13,6 +13,14 @@ public class Authentication extends Controller {
         String username = (String) request.session().attribute("username");
         if (username == null || User.getUserByUsername(username) == null) {
             halt(UNAUTHORIZED, "you must log in to access this page");
+        }
+    }
+
+    /** same as above but generates a redirect instead of a 401 Unauthorized */
+    public static void uiAuthenticated (Request req, Response res) {
+        String username = (String) req.session().attribute("username");
+        if (username == null || User.getUserByUsername(username) == null) {
+            res.redirect("/login.html", MOVED_TEMPORARILY);
         }
     }
 

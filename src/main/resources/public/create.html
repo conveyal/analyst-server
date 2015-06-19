@@ -1,27 +1,114 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>@title</title>
+
+	<meta charset="utf-8"></meta>
+
+	<!-- open sans -->
+	<link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Open+Sans:400,300">
 
 
-	<div class="login-body">
+	<link rel="icon" href="images/favicon.png">
 
-		<h4><strong><span style="color: #98b8eb;"><img src="/images/logo.png" style="height: 50px; margin-top: -5px; margin-right: 5px;"/> Transport</span></strong> Analyst</h4>
-
-
-		<p>Create a user account to access a demo version of the application and sample data from Mexico City.</p>
-
-		<form id="loginForm" action="/createUser" method="POST">
-			<div class="form-group">
-				<label for="username">Username</label>
-				<input type="text" class="form-control" id="username" name="username" placeholder="" value="">
-			</div>
-			<div class="form-group">
-				<label for="email">Email</label>
-				<input type="text" class="form-control" id="email" name="email" placeholder="" value="">
-			</div>
-			<div class="form-group">
-				<label for="password">Password</label>
-				<input type="password" class="form-control" id="password" name="password" placeholder="" value="">
-			</div>
+	<link rel="stylesheet" href="lib/bootstrap/css/bootstrap.css">
 
 
-			<button type="submit" class="login btn btn-primary">Create User</button>  <a href="/login" class="login btn btn-default">Login</a> <a href="/tutorial" class="login btn btn-default">Tutorial</a>
-		</form>
-	</div>
+	<link rel="stylesheet" href="lib/bootstrap-colorpicker/css/bootstrap-colorpicker.css">
+
+	<link rel="stylesheet" href="lib/bootstrap-slider/bootstrap-slider.css">
+	<link rel="stylesheet" href="lib/bootstrap-tour/bootstrap-tour.css">
+
+	<link rel="stylesheet" href="lib/leaflet/leaflet.css">
+	<link rel="stylesheet" href="lib/leaflet.draw/leaflet.draw.css">
+
+	<link rel="stylesheet" href="lib/metricsgraphics/metricsgraphics.css">
+
+	<link rel="stylesheet" href="stylesheets/otpagraph.css" />
+
+	<link href="lib/bootstrap-editable/css/bootstrap-editable.css" rel="stylesheet">
+
+	<link href="lib/bootstrap-datetimepicker/bootstrap-datetimepicker.min.css" rel="stylesheet">
+
+	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.min.css">
+	<link rel="stylesheet" href="lib/select2/css/select2.min.css">
+
+	<link rel="stylesheet" href="stylesheets/main.css">
+
+
+	<script src="lib/jquery-2.1.1.min.js" type="text/javascript"></script>
+	<script src="lib/jquery.iframe-transport.js" type="text/javascript"></script>
+
+	<script src="lib/bootstrap/js/bootstrap.js" type="text/javascript"></script>
+
+	<script src="lib/bootstrap-colorpicker/js/bootstrap-colorpicker.js"></script>
+
+	<script src="lib/moment/moment.min.js"></script>
+	<script src="lib/bootstrap-datetimepicker/bootstrap-datetimepicker.min.js"></script>
+
+	<script src="lib/bootstrap-slider/bootstrap-slider.js"></script>
+	<script src="lib/bootstrap-tour/bootstrap-tour.js"></script>
+
+	<script src="lib/bootstrap-editable/js/bootstrap-editable.js"></script>
+
+	<script src="lib/underscore.js" type="text/javascript"></script>
+	<script src="lib/backbone.js" type="text/javascript"></script>
+	<script src="lib/backbone.syphon.js" type="text/javascript"></script>
+	<script src="lib/backbone.marionette.js" type="text/javascript"></script>
+	<script src="lib/handlebars-v1.3.0.js" type="text/javascript"></script>
+
+	<script src="lib/leaflet/leaflet.js" type="text/javascript"></script>
+	<script src="lib/leaflet.draw/leaflet.draw.js" type="text/javascript"></script>
+	<script src="lib/Polyline.encoded.js" type="text/javascript"></script>
+	<script src="lib/leaflet.utfgrid.js" type="text/javascript"></script>
+	<script src="lib/select2/js/select2.min.js" type="text/javascript"></script>
+
+	<script src="lib/d3.min.js" type="text/javascript" charset="utf-8"></script>
+	<script src="lib/crossfilter.js" type="text/javascript" charset="utf-8"></script>
+	<script src="lib/metricsgraphics/metricsgraphics.js" type="text/javascript" charset="utf-8"></script>
+</head>
+
+<body>
+
+<div id="app"></div>
+
+<script>
+	var Analyst = Analyst || {};
+
+	Analyst.config = {};
+
+	Analyst.config.templatePath = 'templates';
+
+</script>
+
+<div class="login-body">
+
+	<h4><strong><span style="color: #98b8eb;"><img src="/images/logo.png" style="height: 50px; margin-top: -5px; margin-right: 5px;"/> Transport</span></strong> Analyst</h4>
+
+
+	<p>Create a user account to access a demo version of the application and sample data from Mexico City.</p>
+
+	<form id="loginForm" action="/createUser" method="POST">
+		<div class="form-group">
+			<label for="username">Username</label>
+			<input type="text" class="form-control" id="username" name="username" placeholder="" value="">
+		</div>
+		<div class="form-group">
+			<label for="email">Email</label>
+			<input type="text" class="form-control" id="email" name="email" placeholder="" value="">
+		</div>
+		<div class="form-group">
+			<label for="password">Password</label>
+			<input type="password" class="form-control" id="password" name="password" placeholder="" value="">
+		</div>
+
+
+		<button type="submit" class="login btn btn-primary">Create User</button>  <a href="/login" class="login btn btn-default">Login</a> <a href="/tutorial" class="login btn btn-default">Tutorial</a>
+	</form>
+</div>
+
+<script src="javascripts/messages.js" type="text/javascript"></script>
+<script src="javascripts/util.js" type="text/javascript"></script>
+</body>
+</html>
