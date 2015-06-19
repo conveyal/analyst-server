@@ -24,3 +24,4 @@ conf/application.conf
 *~
 nbproject
 conf/logger.xml
+application.conf

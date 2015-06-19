@@ -1,5 +1,11 @@
 package models;
 
+import com.conveyal.analyst.server.AnalystMain;
+import com.conveyal.analyst.server.jobs.ProcessTransitBundleJob;
+import com.conveyal.analyst.server.utils.Bounds;
+import com.conveyal.analyst.server.utils.ClassLoaderSerializer;
+import com.conveyal.analyst.server.utils.DataStore;
+import com.conveyal.analyst.server.utils.HashUtils;
 import com.conveyal.gtfs.GTFSFeed;
 import com.conveyal.gtfs.model.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -9,26 +15,21 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.index.strtree.STRtree;
-import controllers.Application;
 import jersey.repackaged.com.google.common.collect.Lists;
-import jobs.ProcessTransitBundleJob;
 import org.apache.commons.io.FileUtils;
 import org.geotools.geometry.Envelope2D;
 import org.mapdb.*;
 import org.mapdb.Fun.Tuple2;
-import play.Logger;
-import play.Play;
-import play.libs.Akka;
-import scala.concurrent.ExecutionContext;
-import scala.concurrent.duration.Duration;
-import utils.*;
+import org.opentripplanner.analyst.cluster.ClusterGraphService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import java.util.zip.ZipException;
 
 
@@ -42,13 +43,16 @@ import java.util.zip.ZipException;
 public class Bundle implements Serializable {
 
 	private static final long serialVersionUID = 1L;
+
+	private static final Logger LOG = LoggerFactory.getLogger(Bundle.class);
 	
 	private static ClusterGraphService clusterGraphService;
 	
 	static {
-		String s3credentials = Play.application().configuration().getString("cluster.aws-credentials");
-		String bucket = Play.application().configuration().getString("cluster.graphs-bucket");
-		boolean workOffline = Play.application().configuration().getBoolean("cluster.work-offline");
+		String s3credentials = AnalystMain.config.getProperty("cluster.aws-credentials");
+		String bucket = AnalystMain.config.getProperty("cluster.pointsets-bucket");
+		boolean workOffline = Boolean.parseBoolean(
+				AnalystMain.config.getProperty("cluster.work-offline"));
 		clusterGraphService = new ClusterGraphService(s3credentials, workOffline, bucket);
 	}
 	
@@ -56,7 +60,7 @@ public class Bundle implements Serializable {
 	static DataStore<Bundle> bundleData = new DataStore<Bundle>("bundle", true);
 	
 	// a db to hold the shapes. uses tuple indexing, so we can't use datastore
-	static DB segmentsDb = DBMaker.newFileDB(new File(Application.dataPath, "bundle_shapes.db"))
+	static DB segmentsDb = DBMaker.newFileDB(new File(AnalystMain.config.getProperty("application.data"), "bundle_shapes.db"))
 				.cacheSize(2000)
 				.make();
 	
@@ -161,17 +165,17 @@ public class Bundle implements Serializable {
 			Date d = new Date();
 			id = HashUtils.hashString("b_" + d.toString());
 			
-			Logger.info("created bundle " + id);
+			LOG.info("created bundle " + id);
 		}
 		
 		bundleData.save(id, this);
 		
-		Logger.info("saved bundle " +id);
+		LOG.info("saved bundle " +id);
 	}
 	
 	@JsonIgnore
 	private static File getBundleDir() {
-		File bundlePath = new File(Application.dataPath, "graphs");
+		File bundlePath = new File(AnalystMain.config.getProperty("application.data"), "graphs");
 		
 		bundlePath.mkdirs();
 		
@@ -193,17 +197,11 @@ public class Bundle implements Serializable {
 		
 		FileUtils.deleteDirectory(getBundleDataPath());
 		
-		Logger.info("delete bundle s" +id);
+		LOG.info("delete bundle s" +id);
 	}
 	
 	public void processGtfs(final File gtfsFile, final String bundleType, final String augmentBundleId) {
-		ExecutionContext graphBuilderContext = Akka.system().dispatchers().lookup("contexts.graph-builder-analyst-context");
-		
-		Akka.system().scheduler().scheduleOnce(
-			        Duration.create(10, TimeUnit.MILLISECONDS),
-			        new ProcessTransitBundleJob(this, gtfsFile, bundleType, augmentBundleId),
-			        graphBuilderContext
-			);
+		new Thread(new ProcessTransitBundleJob(this, gtfsFile, bundleType, augmentBundleId)).start();
 	}
 	
 	public void writeToClusterCache () throws IOException {
@@ -224,13 +222,13 @@ public class Bundle implements Serializable {
 			if(f.getName().toLowerCase().endsWith(".zip")) {
 				final GTFSFeed feed;
 				
-				Logger.info("Processing file " + f.getName());
+				LOG.info("Processing file " + f.getName());
 				
 				try {
 					feed = GTFSFeed.fromFile(f.getAbsolutePath());
 				} catch (RuntimeException e) {
 					if (e.getCause() instanceof ZipException) {
-						Logger.error("Unable to process GTFS file for bundle %s, project %s", this.name, Project.getProject(this.projectId).name);
+						LOG.error("Unable to process GTFS file for bundle %s, project %s", this.name, Project.getProject(this.projectId).name);
 						continue;
 					}
 					throw e;
@@ -368,25 +366,13 @@ public class Bundle implements Serializable {
 		return bundleData.getById(id);	
 	}
 	
-	static public Collection<Bundle> getBundles(String projectId) throws IOException {
-		
-		if(projectId == null)
-			return bundleData.getAll();
-		
-		else {
-			
-			Collection<Bundle> data = new ArrayList<Bundle>();
-			
-			for(Bundle sd : bundleData.getAll()) {
-				if(sd.projectId == null )
-					sd.delete();
-				else if(sd.projectId.equals(projectId))
-					data.add(sd);
-			}
-		
-			return data;
-		}
-		
+	static public Collection<Bundle> getBundlesByProject(String projectId) {
+		return bundleData.getAll().stream().filter(b -> projectId.equals(b.projectId))
+				.collect(Collectors.toList());
+	}
+
+	public static Collection<Bundle> getBundles () {
+		return bundleData.getAll();
 	}
 	
 	@JsonIgnore
@@ -445,7 +431,7 @@ public class Bundle implements Serializable {
 			return;
 		}
 		
-		Logger.info("Importing legacy scenarios . . .");
+		LOG.info("Importing legacy scenarios . . .");
 		
 		int count = 0;
 		
@@ -466,6 +452,6 @@ public class Bundle implements Serializable {
 			count++;
 		}
 	
-		Logger.info("Imported {} scenarios", count);
+		LOG.info("Imported {} scenarios", count);
 	}
 }

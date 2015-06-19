@@ -1,9 +1,13 @@
 package com.conveyal.analyst.server.controllers;
 
+import models.User;
+import spark.Request;
+
 /**
- * Hold web server status codes.
+ * Convenience methods for controllers.
  */
-public class Status {
+public class Controller {
+    // HTTP status codes
     /** 400 Bad Request */
     public static final int BAD_REQUEST = 400;
 
@@ -15,4 +19,9 @@ public class Status {
 
     /** 418 I am a teapot (https://tools.ietf.org/html/rfc2324) */
     public static final int I_AM_A_TEAPOT = 418;
+
+    /** Get the current user */
+    protected static User currentUser(Request request) {
+        return User.getUserByUsername((String) request.attribute("username"));
+    }
 }

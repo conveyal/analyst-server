@@ -1,185 +1,190 @@
 package com.conveyal.analyst.server.controllers;
 
+import com.conveyal.analyst.server.utils.Bin;
+import com.conveyal.analyst.server.utils.JsonUtil;
+import com.conveyal.analyst.server.utils.QueryResults;
+import com.conveyal.analyst.server.utils.ResultEnvelope;
+import models.Project;
 import models.Query;
 import models.Shapefile;
-import play.Play;
-import play.libs.Json;
-import play.mvc.Controller;
-import play.mvc.Result;
-import play.mvc.Security;
-import utils.QueryResults;
-import utils.ResultEnvelope;
+import models.User;
+import spark.Request;
+import spark.Response;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import static spark.Spark.halt;
 
 /**
  * Multipoint query controller
  */
 public class QueryController extends Controller {
+    public static Object getQuery(Request req, Response res) {
+        // auth is not handled controller-wide as there is more nuance here,
+        // this particulate method requires auth
+        Authentication.authenticated(req, res);
 
-    // **** query controllers ****
+        String projectId = req.queryParams("projectId");
 
-    @Security.Authenticated(Secured.class)
-    public static Result getQueryById(String id) {
-        return getQuery(id, null, null);
-    }
+        if(req.params().containsKey("id")) {
+            Query q = Query.getQuery(req.params("id"));
+            if (q != null && currentUser(req).hasReadPermission(q.projectId))
+                return q;
+            else
+                halt(NOT_FOUND, "Could not find query");
+        }
+        else if (projectId != null) {
+            if (Project.getProject(projectId) == null || !currentUser(req).hasReadPermission(projectId))
+                halt(NOT_FOUND, "Could not find project");
 
-    @Security.Authenticated(Secured.class)
-    public static Result getQuery(String id, String projectId, String pointSetId) {
+            return Query.getQueriesByProject(projectId);
+        }
+        else {
+            // all queries for the user
+            Set<String> userProjects = currentUser(req).projectPermissions.stream()
+                    .filter(pp -> pp.read)
+                    .map(pp -> pp.projectId)
+                    .collect(Collectors.toSet());
 
-        try {
-
-            if(id != null) {
-                Query q = Query.getQuery(id);
-                if(q != null)
-                    return ok(Api.toJson(q, false));
-                else
-                    return notFound();
-            }
-            else if (projectId != null){
-                return ok(Api.toJson(Query.getQueries(projectId), false));
-            }
-            else {
-                return ok(Api.toJson(Query.getQueriesByPointSet(pointSetId), false));
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return badRequest();
+            return Query.getQueries().stream().filter(q -> userProjects.contains(q.projectId))
+                    .collect(Collectors.toList());
         }
 
+        return null;
     }
 
-    @Security.Authenticated(Secured.class)
-    public static Result createQuery() throws IOException {
+    public static Query createQuery(Request req, Response res) throws IOException {
+        Authentication.authenticated(req, res);
 
-        Query  q = Query.create();
+        Query q = JsonUtil.getObjectMapper().readValue(req.body(), Query.class);
 
-        q = Api.mapper.readValue(request().body().asJson().traverse(), Query.class);
+        if (q.projectId == null || !currentUser(req).hasWritePermission(q.projectId))
+            halt(UNAUTHORIZED, "You do not have write access to this project");
 
         q.save();
 
         q.run();
 
-        return ok(Api.toJson(q, false));
+        return q;
 
     }
 
-    @Security.Authenticated(Secured.class)
-    public static Result updateQuery(String id) {
+    public static Query updateQuery(Request req, Response res) {
+        Authentication.authenticated(req, res);
 
         Query q;
 
         try {
 
-            q = Api.mapper.readValue(request().body().asJson().traverse(), Query.class);
+            q = JsonUtil.getObjectMapper().readValue(req.body(), Query.class);
 
-            if(q.id == null || Query.getQuery(q.id) == null)
-                return badRequest();
+            if (q.id == null)
+                halt(BAD_REQUEST, "please specify an ID");
+
+            Query ex = Query.getQuery(q.id);
+            User u = currentUser(req);
+
+            if (ex == null || !u.hasWritePermission(q.projectId) || !u.hasWritePermission(ex.projectId))
+                halt(NOT_FOUND, "Query not found or you do not have permission to access it");
 
             q.save();
 
-            return ok(Api.toJson(q, false));
+            return q;
         } catch (Exception e) {
             e.printStackTrace();
-            return badRequest();
+            halt(BAD_REQUEST, e.getMessage());
         }
+        return null;
     }
 
-    @Security.Authenticated(Secured.class)
-    public static Result deleteQuery(String id) throws IOException {
-        if(id == null)
-            return badRequest();
+    public static Query deleteQuery (Request req, Response res) throws IOException {
+        Authentication.authenticated(req, res);
+
+        String id = req.params("id");
+        if (id == null || id.isEmpty())
+            halt(BAD_REQUEST, "ID must not be null");
 
         Query q = Query.getQuery(id);
 
-        if(q == null)
-            return badRequest();
+        if (q == null || !currentUser(req).hasWritePermission(q.projectId))
+            halt(NOT_FOUND, "Query not found or you do not have permission to delete it");
 
         q.delete();
 
-        return ok();
+        return q;
     }
 
     /** Get the classes/bins for a particular query */
-    public static Result queryBins(String queryId, Integer timeLimit, String weightByShapefile, String weightByAttribute, String groupBy,
-                                   String which, String attributeName, String compareTo) {
+    public static List<Bin> queryBins(Request req, Response res) {
+        Authentication.authenticatedOrCors(req, res);
 
-        if (session().get("username") == null &&
-                Play.application().configuration().getBoolean("api.allow-unauthenticated-access") != true)
-            return unauthorized();
-
-        // allow cross-origin access if we don't need auth
-        if (Play.application().configuration().getBoolean("api.allow-unauthenticated-access") == true)
-            response().setHeader("Access-Control-Allow-Origin", "*");
-
-        response().setHeader(CACHE_CONTROL, "no-cache, no-store, must-revalidate");
-        response().setHeader(PRAGMA, "no-cache");
-        response().setHeader(EXPIRES, "0");
-
-        ResultEnvelope.Which whichEnum;
-        try {
-            whichEnum = ResultEnvelope.Which.valueOf(which);
-        } catch (Exception e) {
-            // no need to pollute the console with a stack trace
-            return badRequest("Invalid value for which parameter");
-        }
+        String queryId = req.params("id");
+        int timeLimit = Integer.parseInt(req.queryParams("timeLimit"));
+        String weightByShapefile = req.queryParams("weightByShapefile");
+        String weightByAttribute = req.queryParams("weightByAttribute");
+        String groupBy = req.queryParams("groupBy");
+        ResultEnvelope.Which which = ResultEnvelope.Which.valueOf(req.queryParams("which"));
+        String attributeName = req.queryParams("attributeName");
+        String compareTo = req.queryParams("compareTo");
 
         Query query = Query.getQuery(queryId);
 
-        if (query == null)
-            return badRequest();
+        User u = currentUser(req);
+
+        // if u is null then auth is turned off for this api endpoint
+        if (query == null || (u != null && !u.hasReadPermission(query.projectId)))
+            halt(NOT_FOUND, "Query not found or you do not have access to it");
+
         Query otherQuery = null;
 
         if (compareTo != null) {
             otherQuery = Query.getQuery(compareTo);
 
+            if (otherQuery == null || (u != null && !u.hasReadPermission(otherQuery.projectId)))
+                halt(NOT_FOUND, "Query not found or you do not have access to it");
+
             if (otherQuery == null) {
-                return badRequest("Non-existent comparison query.");
+                halt(NOT_FOUND, "non-existent comparison query");
             }
         }
 
-        try {
+        String queryKey = queryId + "_" + timeLimit + "_" + which + "_" + attributeName;
 
-            String queryKey = queryId + "_" + timeLimit + "_" + which + "_" + attributeName;
+        QueryResults qr = null;
 
-            QueryResults qr = null;
+        synchronized (QueryResults.queryResultsCache) {
+            if (!QueryResults.queryResultsCache.containsKey(queryKey)) {
+                qr = new QueryResults(query, timeLimit, which, attributeName);
+                QueryResults.queryResultsCache.put(queryKey, qr);
+            } else
+                qr = QueryResults.queryResultsCache.get(queryKey);
+        }
 
-            synchronized (QueryResults.queryResultsCache) {
-                if (!QueryResults.queryResultsCache.containsKey(queryKey)) {
-                    qr = new QueryResults(query, timeLimit, whichEnum, attributeName);
-                    QueryResults.queryResultsCache.put(queryKey, qr);
-                } else
-                    qr = QueryResults.queryResultsCache.get(queryKey);
-            }
+        if (otherQuery != null) {
+            QueryResults otherQr = null;
 
-            if (otherQuery != null) {
-                QueryResults otherQr = null;
-
-                queryKey = compareTo + "_" + timeLimit + "_" + which + "_" + attributeName;
-                if (!QueryResults.queryResultsCache.containsKey(queryKey)) {
-                    otherQr = new QueryResults(otherQuery, timeLimit, whichEnum, attributeName);
-                    QueryResults.queryResultsCache.put(queryKey, otherQr);
-                } else {
-                    otherQr = QueryResults.queryResultsCache.get(queryKey);
-                }
-
-                qr = qr.subtract(otherQr);
-            }
-
-            if (weightByShapefile == null) {
-                return ok(Json.toJson(qr.classifier.getBins()));
+            queryKey = compareTo + "_" + timeLimit + "_" + which + "_" + attributeName;
+            if (!QueryResults.queryResultsCache.containsKey(queryKey)) {
+                otherQr = new QueryResults(otherQuery, timeLimit, which, attributeName);
+                QueryResults.queryResultsCache.put(queryKey, otherQr);
             } else {
-                Shapefile aggregateTo = Shapefile.getShapefile(groupBy);
-
-                Shapefile weightBy = Shapefile.getShapefile(weightByShapefile);
-                return ok(Json.toJson(qr.aggregate(aggregateTo, weightBy, weightByAttribute).classifier.getBins()));
-
+                otherQr = QueryResults.queryResultsCache.get(queryKey);
             }
 
+            qr = qr.subtract(otherQr);
+        }
 
-        } catch (Exception e) {
-            e.printStackTrace();
-            return badRequest();
+        if (weightByShapefile == null) {
+            return qr.classifier.getBins();
+        } else {
+            Shapefile aggregateTo = Shapefile.getShapefile(groupBy);
+
+            Shapefile weightBy = Shapefile.getShapefile(weightByShapefile);
+            return qr.aggregate(aggregateTo, weightBy, weightByAttribute).classifier.getBins();
+
         }
     }
 }

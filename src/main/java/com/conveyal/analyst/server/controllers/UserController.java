@@ -4,13 +4,12 @@ import models.User;
 import spark.Request;
 import spark.Response;
 
-import static com.conveyal.analyst.server.controllers.Status.*;
 import static spark.Spark.halt;
 
 /**
  * User controllers.
  */
-public class UserController {
+public class UserController extends Controller {
     // **** user controllers ****
 
     public static Object getUser (Request request, Response response) {

@@ -7,11 +7,9 @@ import spark.Response;
 
 import java.io.IOException;
 
-import static com.conveyal.analyst.server.controllers.Status.NOT_FOUND;
-import static com.conveyal.analyst.server.controllers.Status.UNAUTHORIZED;
 import static spark.Spark.halt;
 
-public class Application {
+public class Application extends Controller {
 	public static String doLogin(Request request, Response response) throws IOException  {
 
 		String username = (String) request.attribute("username");
@@ -24,7 +22,7 @@ public class Application {
 			return "no such user";
 		}
 
-		if(user.checkPassword(password)) {
+		if(user.checkPassword(password) && Boolean.TRUE.equals(user.active)) {
 			request.session().attribute("username", user.username);
 			return "welcome " + user.username + "!";
 		}
@@ -70,7 +68,7 @@ public class Application {
 
 		User u = User.getUser(userId);
 
-		if (!u.username.equals(request.session().attribute("username")))
+		if (!u.username.equals(request.session().attribute("username")) && !Boolean.TRUE.equals(u.admin))
 			halt(UNAUTHORIZED, "cannot reset other user's password");
 
 		try {

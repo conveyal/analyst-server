@@ -1,11 +1,13 @@
 package models;
 
+import com.conveyal.analyst.server.AnalystMain;
+import com.conveyal.analyst.server.utils.DataStore;
+import com.conveyal.analyst.server.utils.HashUtils;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.apache.commons.codec.digest.DigestUtils;
-import play.Logger;
-import play.Play;
-import utils.DataStore;
-import utils.HashUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
@@ -18,6 +20,8 @@ public class User implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
+	private static final Logger LOG = LoggerFactory.getLogger(User.class);
+
 	static private DataStore<User> userData = new DataStore<User>("users", true);
 	
 	public String id;
@@ -29,6 +33,7 @@ public class User implements Serializable {
 
 	public ArrayList<ProjectPermissions> projectPermissions = new ArrayList<ProjectPermissions>();
 
+	@JsonIgnore
 	public String passwordHash;
 	
 	public User(){
@@ -67,18 +72,18 @@ public class User implements Serializable {
 			Date d = new Date();
 			id = getUserId(this.username);
 			
-			Logger.info("created user u " + id);
+			LOG.info("created user u " + id);
 		}
 		
 		userData.save(id, this);
 		
-		Logger.info("saved user u " +id);
+		LOG.info("saved user u " +id);
 	}
 	
 	public void delete() {
 		userData.delete(id);
 		
-		Logger.info("delete user u " +id);
+		LOG.info("delete user u " +id);
 	}
 	
 	public void addProjectPermission(String projectId) {
@@ -132,13 +137,30 @@ public class User implements Serializable {
 		pp.admin = false;
 
 	}
-	
-	public Boolean hasPermission(Project p) {
+
+	public boolean hasReadPermission(Project project) {
+		return hasReadPermission(project.id);
+	}
+
+	public boolean hasReadPermission(String projectId) {
 		for(ProjectPermissions pp : projectPermissions) {
-			if(pp.projectId.equals(p.id) && pp.read)
+			if(pp.projectId.equals(projectId) && pp.read)
 				return true;
 		}
 		
+		return false;
+	}
+
+	public boolean hasWritePermission(Project project) {
+		return hasWritePermission(project.id);
+	}
+
+	public boolean hasWritePermission(String projectId) {
+		for(ProjectPermissions pp : projectPermissions) {
+			if(pp.projectId.equals(projectId) && pp.write)
+				return true;
+		}
+
 		return false;
 	}
 
@@ -159,7 +181,7 @@ public class User implements Serializable {
 	}
 	
 	static public String getPasswordHash(String password) throws UnsupportedEncodingException {
-		byte[] bytesOfMessage = (password + Play.application().configuration().getString("application.secret")).getBytes("UTF-8");	
+		byte[] bytesOfMessage = (password + AnalystMain.config.getProperty("application.salt")).getBytes("UTF-8");
 		
 		return DigestUtils.shaHex(bytesOfMessage);
 	}
@@ -180,7 +202,7 @@ public class User implements Serializable {
 		
 	}
 	
-	static class ProjectPermissions implements Serializable {
+	public static class ProjectPermissions implements Serializable {
 
 		private static final long serialVersionUID = 1L;
 		public String projectId;

@@ -6,15 +6,27 @@ import models.Shapefile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Properties;
 
-import static spark.Spark.*;
+import static spark.Spark.port;
 
 public class AnalystMain {
 	private static final Logger LOG = LoggerFactory.getLogger(AnalystMain.class);
 
-	public static void main (String... args) {
-		LOG.info("initializing datastore . . .")
+	public static final Properties config = new Properties();
+
+	public static void main (String... args) throws Exception {
+		LOG.info("Welcome to Transport Analyst by conveyal");
+		LOG.info("Reading properties . . .");
+		// TODO don't hardwire
+		FileInputStream in = new FileInputStream(new File("application.conf"));
+		config.load(in);
+		in.close();
+
+		LOG.info("Initializing datastore . . .");
 		initialize();
 
 		// parse out the port number
@@ -26,7 +38,7 @@ public class AnalystMain {
 		// set routes
 		Routes.routes();
 
-
+		LOG.info("Server started!");
 	}
 
 	/** initialize the database */

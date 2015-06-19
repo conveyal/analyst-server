@@ -1,5 +1,7 @@
 package models;
 
+import com.conveyal.analyst.server.AnalystMain;
+import com.conveyal.analyst.server.utils.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.vividsolutions.jts.geom.Envelope;
@@ -8,7 +10,6 @@ import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.geom.prep.PreparedPolygon;
 import com.vividsolutions.jts.index.strtree.STRtree;
-import controllers.Application;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.geotools.data.DataStoreFinder;
@@ -30,16 +31,14 @@ import org.opentripplanner.analyst.EmptyPolygonException;
 import org.opentripplanner.analyst.PointFeature;
 import org.opentripplanner.analyst.PointSet;
 import org.opentripplanner.analyst.UnsupportedGeometryException;
-import play.Logger;
-import play.Play;
-import play.libs.Akka;
-import scala.concurrent.ExecutionContext;
-import utils.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.lang.ref.SoftReference;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
@@ -50,6 +49,8 @@ import java.util.zip.ZipFile;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Shapefile implements Serializable {
+	private static final Logger LOG = LoggerFactory.getLogger(Shapefile.class);
+
 	// this should remain constant unless we make a change where we explicitly want to break deserialization
 	// so that users have to start fresh.
 	private static final long serialVersionUID = 2L;
@@ -57,9 +58,10 @@ public class Shapefile implements Serializable {
 	private static PointSetDatastore datastore;
 	
 	static {
-		String s3credentials = Play.application().configuration().getString("cluster.aws-credentials");
-		String bucket = Play.application().configuration().getString("cluster.pointsets-bucket");
-		boolean workOffline = Play.application().configuration().getBoolean("cluster.work-offline");
+		String s3credentials = AnalystMain.config.getProperty("cluster.aws-credentials");
+		String bucket = AnalystMain.config.getProperty("cluster.pointsets-bucket");
+		boolean workOffline = Boolean.parseBoolean(
+				AnalystMain.config.getProperty("cluster.work-offline"));
 		
 		datastore = new PointSetDatastore(10, s3credentials, workOffline, bucket);
 	}
@@ -308,7 +310,7 @@ public class Shapefile implements Serializable {
 
 	@JsonIgnore
 	private static File getShapeDataPath() {
-		File shapeDataPath = new File(Application.dataPath, "shape_data");
+		File shapeDataPath = new File(AnalystMain.config.getProperty("application.data"), "shape_data");
 
 		shapeDataPath.mkdirs();
 
@@ -330,7 +332,7 @@ public class Shapefile implements Serializable {
 	}
 
 	private STRtree buildIndex() {
-		Logger.info("building index for shapefile " + this.id);
+		LOG.info("building index for shapefile " + this.id);
 
 		// it's not possible to make an R-tree with only one node, so we make an r-tree with two
 		// nodes and leave one empty.
@@ -376,13 +378,13 @@ public class Shapefile implements Serializable {
 
 		if(shapefilesData.getById(shapefileId) != null) {
 
-			Logger.info("loading shapefile " + shapefileId);
+			LOG.info("loading shapefile " + shapefileId);
 
 			originalShapefileZip.delete();
 			return shapefilesData.getById(shapefileId);
 		}
 
-		Logger.info("creating shapefile " + shapefileId);
+		LOG.info("creating shapefile " + shapefileId);
 
 		Shapefile shapefile = new Shapefile();
 
@@ -399,11 +401,11 @@ public class Shapefile implements Serializable {
 
 	    Boolean hasShp = false;
 	    Boolean hasDbf = false;
-	    
+
 	    while(entries.hasMoreElements()) {
 
 	        ZipEntry entry = entries.nextElement();
-	        
+
 	        if (entry.getName().startsWith("__MACOSX"))
 	        	continue;
 
@@ -423,15 +425,15 @@ public class Shapefile implements Serializable {
 	    	shapefile.file = new File(Shapefile.getShapeDataPath(),  shapefileId + ".zip");
 	    	FileUtils.copyFile(originalShapefileZip, shapefile.file);
 
-	    	Logger.info("loading shapefile " + shapefileId);
+	    	LOG.info("loading shapefile " + shapefileId);
 	    	List<Fun.Tuple2<String,ShapeFeature>> features = shapefile.getShapeFeatures();
-	    	Logger.info("saving " + features.size() + " features...");
+	    	LOG.info("saving " + features.size() + " features...");
 
 	    	shapefile.setShapeFeatureStore(features);
 
 	    	shapefile.save();
 	    		    	
-	    	Logger.info("done loading shapefile " + shapefileId);
+	    	LOG.info("done loading shapefile " + shapefileId);
 	    }
 	    else
 	    	shapefile = null;
@@ -503,13 +505,13 @@ public class Shapefile implements Serializable {
 			while( iterator.hasNext() ) {
 
 				try {
-
 					ShapeFeature feature = new ShapeFeature();
 
 					SimpleFeature sFeature = iterator.next();
 
 					feature.id = (String)sFeature.getID();
-			    	feature.geom = JTS.transform((Geometry)sFeature.getDefaultGeometry(),  transform);
+			    	feature.geom = JTS
+							.transform((Geometry) sFeature.getDefaultGeometry(), transform);
 
 			    	envelope.expandToInclude(feature.geom.getEnvelopeInternal());
 			    	
@@ -612,15 +614,8 @@ public class Shapefile implements Serializable {
 	}
 
 	public void save() {
-
-		// assign id at save
-		if(id == null || id.isEmpty()) {
-			Logger.info("created shapefile  " + id);
-		}
-
 		shapefilesData.save(id, this);
-
-		Logger.info("saved shapefile " +id);
+		LOG.info("saved shapefile " +id);
 	}
 
 	public void delete() {
@@ -632,11 +627,11 @@ public class Shapefile implements Serializable {
 		try {
 			cleanupUnzippedShapefile();
 		} catch (IOException e) {
-			Logger.error("unable delete shapefile p " +id);
+			LOG.error("unable delete shapefile p " +id);
 			e.printStackTrace();
 		}
 
-		Logger.info("delete shapefile p " +id);
+		LOG.info("delete shapefile p " +id);
 	}
 
 	static public Shapefile getShapefile(String id) {
@@ -644,30 +639,17 @@ public class Shapefile implements Serializable {
 		return shapefilesData.getById(id);
 	}
 
-	static public Collection<Shapefile> getShapfiles(String projectId) {
-		if(projectId == null)
-			return shapefilesData.getAll();
+	static public Collection<Shapefile> getShapefilesByProject(String projectId) {
+		return shapefilesData.getAll().stream().filter(s -> projectId.equals(s.projectId))
+				.collect(Collectors.toList());
+	}
 
-		else {
-
-			Collection<Shapefile> data = new ArrayList<Shapefile>();
-
-			for(Shapefile sf : shapefilesData.getAll()) {
-				if(sf.projectId == null )
-					sf.delete();
-				else if(sf.projectId.equals(projectId))
-					data.add(sf);
-			}
-
-			return data;
-		}
-
+	public static Collection<Shapefile> getShapefiles () {
+		return shapefilesData.getAll();
 	}
 
 	public static void writeAllToClusterCache() {
-		ExecutionContext ctx = Akka.system().dispatchers().defaultGlobalDispatcher();
-		
-		for (Shapefile shapefile : getShapfiles(null)) {
+		for (Shapefile shapefile : shapefilesData.getAll()) {
 			try {
 				shapefile.writeToClusterCache();
 			} catch (IOException e) {

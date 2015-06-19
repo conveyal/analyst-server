@@ -1,10 +1,15 @@
 package com.conveyal.analyst.server.jobs;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import com.conveyal.analyst.server.AnalystMain;
+import com.conveyal.analyst.server.utils.HashUtils;
+import com.conveyal.analyst.server.utils.ZipUtils;
+import com.google.common.collect.Lists;
+import com.google.common.io.ByteStreams;
+import models.Bundle;
+import org.apache.commons.io.FileUtils;
+import org.slf4j.LoggerFactory;
+
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -13,24 +18,12 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import models.Bundle;
-
-import org.apache.commons.io.FileUtils;
-
-import play.Logger;
-import play.Play;
-import utils.HashUtils;
-import utils.ZipUtils;
-
-import com.google.common.collect.Lists;
-import com.google.common.io.ByteStreams;
-
-import controllers.Application;
-
 /**
  * Process an uploaded GTFS file or shapefile.
  */
 public class ProcessTransitBundleJob implements Runnable {
+	private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(ProcessTransitBundleJob.class);
+
 	private Bundle bundle;
 	private File uploadFile;
 	private String bundleType;
@@ -140,7 +133,7 @@ public class ProcessTransitBundleJob implements Runnable {
 			Double north = bundle.bounds.north > bundle.bounds.south ? bundle.bounds.north : bundle.bounds.south;
 			Double east = bundle.bounds.east > bundle.bounds.west ? bundle.bounds.east : bundle.bounds.west;
 
-			String vexUrl = Play.application().configuration().getString("application.vex");
+			String vexUrl = AnalystMain.config.getProperty("application.vex");
 
 			if (!vexUrl.endsWith("/"))
 				vexUrl += "/";
@@ -188,7 +181,7 @@ public class ProcessTransitBundleJob implements Runnable {
 			bundle.writeToClusterCache();
 		} catch (IOException e) {
 			e.printStackTrace();
-			Logger.error("Failed to write graph to cluster cache");
+			LOG.error("Failed to write graph to cluster cache");
 		}
 	}
 }

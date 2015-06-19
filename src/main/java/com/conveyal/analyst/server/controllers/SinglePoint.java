@@ -1,11 +1,12 @@
 package com.conveyal.analyst.server.controllers;
 
-
+import com.conveyal.analyst.server.utils.IdUtils;
+import com.conveyal.analyst.server.utils.JsonUtil;
+import com.conveyal.analyst.server.utils.QueueManager;
 import com.csvreader.CsvWriter;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -13,23 +14,22 @@ import models.Bundle;
 import models.Project;
 import models.Shapefile;
 import models.User;
+import org.eclipse.jetty.continuation.Continuation;
+import org.eclipse.jetty.continuation.ContinuationSupport;
 import org.opentripplanner.analyst.Histogram;
 import org.opentripplanner.analyst.ResultSet;
 import org.opentripplanner.analyst.cluster.AnalystClusterRequest;
-import play.Play;
-import play.libs.F;
-import play.mvc.Controller;
-import play.mvc.Result;
-import utils.IdUtils;
-import utils.JsonUtil;
-import utils.QueueManager;
-import utils.ResultEnvelope;
-import utils.ResultEnvelope.Which;
+import org.opentripplanner.analyst.cluster.ResultEnvelope;
+import spark.Request;
+import spark.Response;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.util.Map.Entry;
+
+import static spark.Spark.halt;
 
 /**
  * Controllers for getting result sets used in single point mode.
@@ -44,22 +44,17 @@ public class SinglePoint extends Controller {
     private static final ObjectMapper objectMapper = JsonUtil.getObjectMapper();
     
     /** Create a result from a JSON-ified OneToMany[Profile]Request. */
-    public static F.Promise<Result> result () throws JsonProcessingException {
-		String username = session().get("username");
-    	if (username == null &&
-    			Play.application().configuration().getBoolean("api.allow-unauthenticated-access") != true)
-    		return F.Promise.pure((Result) unauthorized());
-    	
-    	// allow cross-origin access if we don't need auth
-    	if (Play.application().configuration().getBoolean("api.allow-unauthenticated-access") == true)
-    		response().setHeader("Access-Control-Allow-Origin", "*");
-    		
+    public static void result (Request request, Response res) throws JsonProcessingException {
+		Authentication.authenticatedOrCors(request, res);
     	
     	// deserialize a result
     	// figure out if it's profile or not
-    	
-    	JsonNode params = request().body().asJson();
-		AnalystClusterRequest req = objectMapper.treeToValue(params, AnalystClusterRequest.class);
+		AnalystClusterRequest req = null;
+		try {
+			req = objectMapper.readValue(request.body(), AnalystClusterRequest.class);
+		} catch (IOException e) {
+			halt(BAD_REQUEST, e.getMessage());
+		}
 
 		req.includeTimes = true;
 		req.jobId = IdUtils.getId();
@@ -71,68 +66,57 @@ public class SinglePoint extends Controller {
 		// against it (they may have the UUID from somewhere else and be trying to use our server as a back door
 		// to the cluster)
 		if (bundle == null || ps == null)
-			return F.Promise.pure((Result) notFound());
+			halt(NOT_FOUND, "No such bundle or pointset, or you do not have permission to access them");
 
 		if (!bundle.projectId.equals(ps.projectId))
-			return F.Promise.pure((Result) badRequest());
+			halt(BAD_REQUEST, "bundle and pointset do not match");
 
 		// permissions check
 		Project p = Project.getProject(bundle.projectId);
-		User u = username != null ? User.getUser(username) : null;
-		if (u != null && !u.hasPermission(p))
-			return F.Promise.pure((Result) unauthorized());
+		User u = currentUser(request);
+		if (u != null && !u.hasReadPermission(p))
+			// NB this message is exactly the same as the one above, so as to not reveal any information
+			halt(NOT_FOUND, "No such bundle or pointset, or you do not have permission to access them");
 
-		F.RedeemablePromise < Result > result = F.RedeemablePromise.empty();
+		Continuation continuation = ContinuationSupport.getContinuation(request.raw());
 
 		// for safety, add the callback before enqueing the job.
 		QueueManager.getManager().addCallback(req.jobId, re -> {
-			result.success(ok(resultSetToJson(re)).as("application/json"));
+			continuation.resume();
+			res.type("application/json");
+			try {
+				OutputStream os = res.raw().getOutputStream();
+				os.write(resultSetToJson(re).getBytes());
+				os.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			// TODO how to send the request?
 			// remove callback
 			return false;
 		});
 
 		QueueManager.getManager().enqueue(p.id, bundle.id, req.id, req);
-
-		return result;
-    }
-    
-    /** Options request for unauthenticated CORS if enabled */
-    public static Result options () {
-    	if (session().get("username") == null &&
-    			Play.application().configuration().getBoolean("api.allow-unauthenticated-access") != true)
-    		return unauthorized();
-    	
-    	// allow cross-origin access if we don't need auth
-    	if (Play.application().configuration().getBoolean("api.allow-unauthenticated-access") == true) {
-    		response().setHeader("Access-Control-Allow-Origin", "*");
-    		response().setHeader("Access-Control-Request-Method", "POST");
-    		response().setHeader("Access-Control-Allow-Headers", "Content-Type");
-    	}
-    	
-    	return ok();
     }
     
     /** Create a CSV result 
      * @throws IOException */
-    public static Result csv(String key, String which) throws IOException {
-    	if (session().get("username") == null &&
-    			Play.application().configuration().getBoolean("api.allow-unauthenticated-access") != true)
-    		return unauthorized();
-    	
-    	if (Play.application().configuration().getBoolean("api.allow-unauthenticated-access") == true)
-    		response().setHeader("Access-Control-Allow-Origin", "*");
-    	
-    	Which whichEnum = Which.valueOf(which);
+    public static String csv(Request req, Response res) throws IOException {
+		Authentication.authenticatedOrCors(req, res);
+
+		ResultEnvelope.Which which = ResultEnvelope.Which.valueOf(req.queryParams("which"));
+		String key = req.params("key");
     	
     	// get the resultset
     	ResultEnvelope env = envelopeCache.getIfPresent(key);
     	
     	if (env == null)
-    		return notFound();
+    		halt(NOT_FOUND, "no such key");
     	
-    	ResultSet rs = env.get(whichEnum);
+    	ResultSet rs = env.get(which);
     	
     	// create a CSV
+		// TODO: stream directly into request
     	ByteArrayOutputStream baos = new ByteArrayOutputStream();
     	CsvWriter writer = new CsvWriter(baos, ',', Charset.forName("UTF-8"));
     	
@@ -175,21 +159,20 @@ public class SinglePoint extends Controller {
     	writer.close();
     	
     	// make a file name
-    	String filename = key.substring(0, 5) + "_" + whichEnum.toString().toLowerCase() + ".csv";
+    	String filename = key.substring(0, 5) + "_" + which.toString().toLowerCase() + ".csv";
     	
-    	response().setHeader("Content-Disposition", "attachment; filename=" + filename);
+    	res.header("Content-Disposition", "attachment; filename=" + filename);
     	
-    	return ok(baos.toString())
-    			.as("text/csv");
+    	return baos.toString();
     }
     
     private static String resultSetToJson (ResultEnvelope rs) {
     	try {
-    		ResultSet worst = rs.get(Which.WORST_CASE);
-    		ResultSet point = rs.get(Which.POINT_ESTIMATE);
-    		ResultSet avg   = rs.get(Which.AVERAGE);
-    		ResultSet best  = rs.get(Which.BEST_CASE);
-    		ResultSet spread= rs.get(Which.SPREAD); 
+    		ResultSet worst = rs.get(ResultEnvelope.Which.WORST_CASE);
+    		ResultSet point = rs.get(ResultEnvelope.Which.POINT_ESTIMATE);
+    		ResultSet avg   = rs.get(ResultEnvelope.Which.AVERAGE);
+    		ResultSet best  = rs.get(ResultEnvelope.Which.BEST_CASE);
+    		ResultSet spread= rs.get(ResultEnvelope.Which.SPREAD);
     	
 	    	ByteArrayOutputStream baos = new ByteArrayOutputStream();
 	    	// TODO: are the features in the same order here (!)

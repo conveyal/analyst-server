@@ -11,7 +11,9 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.opentripplanner.analyst.cluster.AnalystClusterRequest;
-import play.Logger;
+import org.opentripplanner.analyst.cluster.ResultEnvelope;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -23,6 +25,8 @@ import java.util.function.Predicate;
 
 /** Generic queuing support to enable us to throw stuff into SQS */
 public class QueueManager {
+	private static final Logger LOG = LoggerFactory.getLogger(QueueManager.class);
+
 	/** maintain a singleton manager */
 	private static QueueManager manager;
 
@@ -99,7 +103,7 @@ public class QueueManager {
 
 		req.releaseConnection();
 
-		Logger.info("enqueued {} requests", requests.size());
+		LOG.info("enqueued {} requests", requests.size());
 	}
 
 	/**

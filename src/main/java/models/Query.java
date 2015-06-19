@@ -1,33 +1,36 @@
 package models;
 
+import com.conveyal.analyst.server.otp.Analyst;
+import com.conveyal.analyst.server.utils.DataStore;
+import com.conveyal.analyst.server.utils.IdUtils;
+import com.conveyal.analyst.server.utils.QueryResultStore;
+import com.conveyal.analyst.server.utils.QueueManager;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.opentripplanner.analyst.PointFeature;
 import org.opentripplanner.analyst.PointSet;
 import org.opentripplanner.analyst.cluster.AnalystClusterRequest;
+import org.opentripplanner.analyst.cluster.ResultEnvelope;
 import org.opentripplanner.common.model.GenericLocation;
 import org.opentripplanner.profile.ProfileRequest;
 import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.TraverseModeSet;
-import otp.Analyst;
-import play.Logger;
-import utils.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Query implements Serializable {
-
-	private static final ObjectMapper objectMapper = JsonUtil.getObjectMapper();
+	private static final Logger LOG = LoggerFactory.getLogger(Query.class);
 
 	private static HashMap<String, List<ResultEnvelope>> resultsQueue = new HashMap<String, List<ResultEnvelope>>();
 	
@@ -141,12 +144,12 @@ public class Query implements Serializable {
 		if(id == null || id.isEmpty()) {
 			id = IdUtils.getId();
 			
-			Logger.info("created query q " + id);
+			LOG.info("created query q " + id);
 		}
 		
 		queryData.save(id, this);
 		
-		Logger.info("saved query q " +id);
+		LOG.info("saved query q " +id);
 	}
 	
 	public void run() {
@@ -172,7 +175,9 @@ public class Query implements Serializable {
 			AnalystClusterRequest req;
 
 			if (this.isTransit()) {
-				ProfileRequest pr = Analyst.buildProfileRequest(this.mode, this.date, this.fromTime, this.toTime, pf.getLat(), pf.getLon());
+				ProfileRequest pr = Analyst
+						.buildProfileRequest(this.mode, this.date, this.fromTime, this.toTime,
+								pf.getLat(), pf.getLon());
 				req = new AnalystClusterRequest(this.shapefileId, scenario.bundleId, pr);
 			} else {
 				GenericLocation from = new GenericLocation(pf.getLat(), pf.getLon());
@@ -203,13 +208,13 @@ public class Query implements Serializable {
 		// enqueue the requests
 		qm.enqueue(this.projectId, this.graphId, this.id, requests);
 
-		Logger.info("Enqueued {} items in {}ms", ps.capacity, System.currentTimeMillis() - now);
+		LOG.info("Enqueued {} items in {}ms", ps.capacity, System.currentTimeMillis() - now);
 	}
 
 	public void delete() throws IOException {
 		queryData.delete(id);
 		
-		Logger.info("delete query q" +id);
+		LOG.info("delete query q" +id);
 	}
 
 	private synchronized void makeResultDb() {
@@ -248,37 +253,12 @@ public class Query implements Serializable {
 		return queryData.getById(id);	
 	}
 	
-	static public Collection<Query> getQueries(String projectId) {
-		
-		if(projectId == null)
-			return queryData.getAll();
-		
-		else {
-			
-			Collection<Query> data = new ArrayList<Query>();
-			
-			for(Query sd : queryData.getAll()) {
-				if(sd.projectId != null && sd.projectId.equals(projectId))
-					data.add(sd);
-				
-			}
-				
-			return data;
-		}	
+	static public Collection<Query> getQueriesByProject(String projectId) {
+		return queryData.getAll().stream().filter(q -> projectId.equals(q.projectId))
+				.collect(Collectors.toList());
 	}
 
-	/**
-	 * Get all the queries for a point set.
-	 */
-	public static Collection<Query> getQueriesByPointSet(String shapefileId) {
-		Collection<Query> ret = new ArrayList<Query>();
-
-		for (Query q : queryData.getAll()) {
-			if (q.shapefileId != null && q.shapefileId.equals(shapefileId)) {
-				ret.add(q);
-			}
-		}
-
-		return ret;
+	public static Collection<Query> getQueries () {
+		return queryData.getAll();
 	}
 }
