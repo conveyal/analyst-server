@@ -11,6 +11,9 @@ public class Routes {
     private static final JsonTransformer json = new JsonTransformer();
 
     public static void routes () {
+        // serve assets
+        staticFileLocation("/public");
+
         // login/logout/admin
         post("/doLogin", Application::doLogin);
         post("/createUser", Application::createUser);
@@ -88,8 +91,5 @@ public class Routes {
         // GIS routes
         before("/gis*", Authentication::authenticated);
         get("/gis/query", Gis::query);
-
-        // finally, serve assets from the public folder at /
-        staticFileLocation("/public");
     }
 }

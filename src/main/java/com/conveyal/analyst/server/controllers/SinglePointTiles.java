@@ -1,20 +1,12 @@
 package com.conveyal.analyst.server.controllers;
 
-import play.Play;
-import play.libs.F;
-import play.libs.F.Promise;
-import play.mvc.Result;
-import tiles.AnalystTileRequest;
-import tiles.SurfaceComparisonTile;
-import tiles.SurfaceTile;
-import utils.ResultEnvelope;
-
 /**
  * Tiles for single point. Intentionally not annotated with @Security.Authenticated;
  * as it is possible to turn off auth for this controller and thus auth is handled
  * individually.
  */
 public class SinglePointTiles extends Tiles {
+	/*
 	public static Promise<Result> surface(String key, String which, Integer x, Integer y, Integer z,
 			   Boolean showIso, Boolean showPoints, Integer timeLimit) {
     	if (session().get("username") == null &&
@@ -39,5 +31,5 @@ public class SinglePointTiles extends Tiles {
 		AnalystTileRequest tileRequest = new SurfaceComparisonTile(key1, key2, whichEnv, x, y, z,
 				   			showIso, showPoints, timeLimit, format);
 		return tileBuilder(tileRequest);
- }
+ }*/
 }

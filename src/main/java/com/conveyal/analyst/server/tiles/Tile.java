@@ -1,5 +1,6 @@
 package com.conveyal.analyst.server.tiles;
 
+import com.conveyal.analyst.server.utils.HaltonPoints;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
@@ -13,7 +14,6 @@ import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.TransformException;
 import org.opentripplanner.analyst.core.SlippyTile;
 import org.opentripplanner.analyst.request.TileRequest;
-import utils.HaltonPoints;
 
 import javax.imageio.ImageIO;
 import java.awt.*;

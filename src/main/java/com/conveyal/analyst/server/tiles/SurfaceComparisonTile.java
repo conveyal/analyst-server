@@ -1,20 +1,19 @@
 package com.conveyal.analyst.server.tiles;
 
+import com.conveyal.analyst.server.controllers.SinglePoint;
+import com.conveyal.analyst.server.utils.HaltonPoints;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.index.strtree.STRtree;
-import controllers.SinglePoint;
 import models.Attribute;
 import models.Shapefile;
 import org.opengis.geometry.MismatchedDimensionException;
 import org.opengis.referencing.operation.TransformException;
 import org.opentripplanner.analyst.PointSet;
 import org.opentripplanner.analyst.ResultSet;
-import utils.HaltonPoints;
-import utils.ResultEnvelope;
-import utils.ResultEnvelope.Which;
+import org.opentripplanner.analyst.cluster.ResultEnvelope;
 
 import java.awt.*;
 import java.io.IOException;
@@ -33,7 +32,7 @@ public class SurfaceComparisonTile extends AnalystTileRequest implements UTFIntG
     final Integer timeLimit;
     private static final GeometryFactory geometryFactory = new GeometryFactory();
 
-    public SurfaceComparisonTile(String key1, String key2, Which which, Integer x, Integer y, Integer z,
+    public SurfaceComparisonTile(String key1, String key2, ResultEnvelope.Which which, Integer x, Integer y, Integer z,
 			   Boolean showIso, Boolean showPoints, Integer timeLimit, String format) {
         super(x, y, z, "surface_comparison", format);
         
@@ -153,7 +152,7 @@ public class SurfaceComparisonTile extends AnalystTileRequest implements UTFIntG
 	public int[][] getGrid() {
         // note that this may occasionally return null if someone's had the site open for a very long
         // time because the result will have fallen out of the cache.
-    	ResultEnvelope env1 = SinglePoint.getResultSet(resultKey1); 
+    	ResultEnvelope env1 = SinglePoint.getResultSet(resultKey1);
         ResultSet result1 = env1.get(which);
         
         // note that this may occasionally return null if someone's had the site open for a very long

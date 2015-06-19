@@ -1,17 +1,8 @@
 package com.conveyal.analyst.server.controllers;
 
-import play.libs.F.Function0;
-import play.libs.F.Promise;
-import play.mvc.Result;
-import play.mvc.Security;
-import tiles.AnalystTileRequest;
-import tiles.AnalystTileRequest.*;
-import utils.ResultEnvelope;
-
 /** These are tiles which require authentication in all cases */
-@Security.Authenticated(Secured.class)
 public class TilesImpl extends Tiles {
-
+/*
 	public static Promise<Result> spatial(String shapefileId, Integer x, Integer y, Integer z, String selectedAttributes) {
 
 
@@ -68,7 +59,7 @@ public class TilesImpl extends Tiles {
 
 	public static Result traffic(String scenarioId, Integer x, Integer y, Integer z) {
 
-		/*response().setHeader(CACHE_CONTROL, "no-cache, no-store, must-revalidate");
+		response().setHeader(CACHE_CONTROL, "no-cache, no-store, must-revalidate");
 		response().setHeader(PRAGMA, "no-cache");
 		response().setHeader(EXPIRES, "0");
 
@@ -99,9 +90,9 @@ public class TilesImpl extends Tiles {
 		} catch (Exception e) {
 	    	e.printStackTrace();
 	    	return badRequest();
-	    } */
+	    }
 
 		return ok();
 
-	}
+	}*/
 }

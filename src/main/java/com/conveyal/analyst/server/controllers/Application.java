@@ -12,8 +12,8 @@ import static spark.Spark.halt;
 public class Application extends Controller {
 	public static String doLogin(Request request, Response response) throws IOException  {
 
-		String username = (String) request.attribute("username");
-		String password = (String) request.attribute("password");
+		String username = (String) request.queryParams("username");
+		String password = (String) request.queryParams("password");
 
 		User user = User.getUserByUsername(username);
 

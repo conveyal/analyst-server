@@ -1,36 +1,15 @@
-import java.awt.Polygon;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+package com.conveyal.analyst.server;
 
-import junit.framework.TestCase;
-
-import com.fasterxml.jackson.databind.JsonNode;
+import com.conveyal.analyst.server.utils.GeoUtils;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
-
+import junit.framework.TestCase;
 import org.geotools.geometry.jts.JTS;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
-import org.junit.*;
-import org.opengis.referencing.FactoryException;
-import org.opengis.referencing.NoSuchAuthorityCodeException;
+import org.junit.Test;
 import org.opengis.referencing.operation.MathTransform;
-
-import play.mvc.*;
-import play.test.*;
-import play.data.DynamicForm;
-import play.data.validation.ValidationError;
-import play.data.validation.Constraints.RequiredValidator;
-import play.i18n.Lang;
-import play.libs.F;
-import play.libs.F.*;
-import utils.GeoUtils;
-import static play.test.Helpers.*;
-import static org.fest.assertions.Assertions.*;
-import static org.junit.Assert.assertTrue;
 
 
 /**

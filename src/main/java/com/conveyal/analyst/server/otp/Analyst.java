@@ -11,11 +11,12 @@ import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.TraverseMode;
 import org.opentripplanner.routing.core.TraverseModeSet;
 import org.opentripplanner.routing.spt.DominanceFunction;
-import play.Logger;
-import utils.PrototypeAnalystProfileRequest;
-import utils.PrototypeAnalystRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class Analyst { 	
+public class Analyst {
+	private static final Logger LOG = LoggerFactory.getLogger(Analyst.class);
+
 	public Analyst() {
 		
 	}
@@ -27,7 +28,7 @@ public class Analyst {
 	 */
 	
 	public static RoutingRequest buildRequest(String graphId, LocalDate date, int time, GenericLocation latLon, String mode, int cutoffMinutes, DateTimeZone tz) {
-		RoutingRequest req = new PrototypeAnalystRequest();
+		RoutingRequest req = new RoutingRequest();
 		
 		req.dateTime = date.toDateTimeAtStartOfDay(tz).toDate().getTime() / 1000;
 		req.dateTime += time;
@@ -41,7 +42,7 @@ public class Analyst {
 		req.clampInitialWait = 0;
 		
 		if (req.modes.isTransit()) {
-			Logger.warn("Building a non-profile transit routing request, this probably shouldn't be happening.");
+			LOG.warn("Building a non-profile transit routing request, this probably shouldn't be happening.");
 			req.walkReluctance = 1.0;
 		}
 

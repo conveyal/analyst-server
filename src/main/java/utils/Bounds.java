@@ -1,4 +1,4 @@
-package com.conveyal.analyst.server.utils;
+package utils;
 
 import com.vividsolutions.jts.geom.Envelope;
 import org.geotools.geometry.Envelope2D;

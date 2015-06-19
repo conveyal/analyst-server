@@ -33,6 +33,7 @@ import org.opentripplanner.analyst.PointSet;
 import org.opentripplanner.analyst.UnsupportedGeometryException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import utils.Bounds;
 
 import java.io.*;
 import java.lang.ref.SoftReference;

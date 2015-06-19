@@ -1,7 +1,5 @@
 package com.conveyal.analyst.server.utils;
 
-import utils.QueryResults.QueryResultItem;
-
 import java.awt.*;
 import java.util.*;
 import java.util.List;
@@ -13,7 +11,7 @@ public class NaturalBreaksClassifier extends Classifier {
 	public NaturalBreaksClassifier(QueryResults qr, int numCategories, Color color1, Color color2) {
 		double[] list = new double[qr.items.size()];
 		
-		Iterator<QueryResultItem> qrIt = qr.items.values().iterator();
+		Iterator<QueryResults.QueryResultItem> qrIt = qr.items.values().iterator();
 		
 		for (int i = 0; i < list.length; i++) {
 			list[i] = qrIt.next().value;

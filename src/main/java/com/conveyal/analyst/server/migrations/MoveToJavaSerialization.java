@@ -1,15 +1,14 @@
 package com.conveyal.analyst.server.migrations;
 
-import java.io.File;
-import java.util.Map.Entry;
-
+import com.conveyal.analyst.server.utils.DataStore;
 import com.google.common.io.Files;
-
 import models.Attribute;
 import models.Project;
 import models.Shapefile;
 import models.User;
-import utils.DataStore;
+
+import java.io.File;
+import java.util.Map.Entry;
 
 /**
  * Move the storage of most of the data to Java Serialization format; see discussion in issue 68.

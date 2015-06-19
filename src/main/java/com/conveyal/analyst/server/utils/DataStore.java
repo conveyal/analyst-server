@@ -6,6 +6,7 @@ import org.mapdb.DB.BTreeMapMaker;
 import org.mapdb.Fun.Tuple2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import utils.ClassLoaderSerializer;
 
 import java.io.File;
 import java.io.IOException;

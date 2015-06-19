@@ -13,8 +13,6 @@ var Analyst = Analyst || {};
 
 	A.app.instance.addInitializer(function(options){
 		A.app.allProjects = new A.models.Projects();
-
-		A.app.allProjects.url = "/api/allProjects"
 		A.app.allProjects.fetch();
 
 		A.app.user = new A.models.User({id:"self"});

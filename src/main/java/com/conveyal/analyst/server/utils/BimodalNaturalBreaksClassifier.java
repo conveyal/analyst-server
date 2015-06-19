@@ -1,7 +1,5 @@
 package com.conveyal.analyst.server.utils;
 
-import utils.QueryResults.QueryResultItem;
-
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -39,7 +37,7 @@ public class BimodalNaturalBreaksClassifier extends Classifier {
 		int lower = 0;
 		int upper = qr.items.size() - 1;
 		
-		for (QueryResultItem item : qr.items.values()) {
+		for (QueryResults.QueryResultItem item : qr.items.values()) {
 			if (item.value == null) {
 				throw new NullPointerException("Item value should not be null");
 			}

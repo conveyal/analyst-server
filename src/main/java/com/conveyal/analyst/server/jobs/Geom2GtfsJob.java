@@ -1,15 +1,12 @@
 package com.conveyal.analyst.server.jobs;
 
+import com.conveyal.analyst.server.AnalystMain;
+import models.Bundle;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-
-import org.apache.commons.io.FileUtils;
-
-import utils.HashUtils;
-import controllers.Application;
-import models.Bundle;
 
 /**
  * Run geom2gtfs with the given shapefile and config file for the given scenario.
@@ -37,7 +34,7 @@ public class Geom2GtfsJob implements Runnable {
 				newFile.delete();
 	
 			ProcessBuilder pb = new ProcessBuilder("java"
-					,"-jar",new File(Application.binPath, "geom2gtfs.jar").getAbsolutePath(),  shapeFile.getAbsolutePath(), configFile.getAbsolutePath(), newFile.getAbsolutePath());
+					,"-jar",new File(AnalystMain.config.getProperty("application.bin"), "geom2gtfs.jar").getAbsolutePath(),  shapeFile.getAbsolutePath(), configFile.getAbsolutePath(), newFile.getAbsolutePath());
 			// show messages from stderr as well
 			pb.redirectErrorStream(true);
 			Process p;

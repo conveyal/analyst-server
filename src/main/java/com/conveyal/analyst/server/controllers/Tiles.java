@@ -1,33 +1,11 @@
 package com.conveyal.analyst.server.controllers;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
-import gnu.trove.map.TIntIntMap;
-import gnu.trove.map.hash.TIntIntHashMap;
-import play.libs.Akka;
-import play.libs.F.Function;
-import play.libs.F.Function0;
-import play.libs.F.Promise;
-import play.mvc.Controller;
-import play.mvc.Result;
-import scala.concurrent.ExecutionContext;
-import tiles.AnalystTileRequest;
-import tiles.TileCache;
-import tiles.UTFIntGridRequest;
-import utils.PromiseUtils;
-import utils.QueryResults;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import com.conveyal.analyst.server.tiles.TileCache;
 
 public abstract class Tiles extends Controller {
 
 	protected static TileCache tileCache = new TileCache();
-
-	public static void resetTileCache() {
-		tileCache.clear();
-	}
-
+/*
 	public static void resetQueryCache(String queryId) {
 		QueryResults.queryResultsCache.remove(queryId);
 		tileCache.clear();

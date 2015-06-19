@@ -23,7 +23,7 @@ public class ProjectController extends Controller {
      * is covered by all transit feeds in the project.
      */
     public static String getExemplarDay(Request req, Response res) throws Exception {
-        Collection<Bundle> bundles = Bundle.getBundles(req.params("id"));
+        Collection<Bundle> bundles = Bundle.getBundlesByProject(req.params("id"));
         if (bundles == null)
             halt(NOT_FOUND);
 

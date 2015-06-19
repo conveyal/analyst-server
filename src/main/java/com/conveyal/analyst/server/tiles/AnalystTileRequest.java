@@ -1,5 +1,8 @@
 package com.conveyal.analyst.server.tiles;
 
+import com.conveyal.analyst.server.utils.HaltonPoints;
+import com.conveyal.analyst.server.utils.NaturalBreaksClassifier;
+import com.conveyal.analyst.server.utils.QueryResults;
 import com.google.common.base.Charsets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
@@ -13,11 +16,7 @@ import models.Shapefile;
 import models.Shapefile.ShapeFeature;
 import org.opengis.geometry.MismatchedDimensionException;
 import org.opengis.referencing.operation.TransformException;
-import utils.HaltonPoints;
-import utils.NaturalBreaksClassifier;
-import utils.QueryResults;
-import utils.QueryResults.QueryResultItem;
-import utils.ResultEnvelope;
+import org.opentripplanner.analyst.cluster.ResultEnvelope;
 
 import java.awt.*;
 import java.io.IOException;
@@ -438,7 +437,7 @@ public abstract class AnalystTileRequest {
 		    		QueryResults groupedQr = qr.aggregate(aggregateTo, weightBy, weightByAttribute);
 
 		    		// TODO: don't loop over everything here, only the items in this tile
-		    		for(QueryResultItem item : groupedQr.items.values()) {
+		    		for(QueryResults.QueryResultItem item : groupedQr.items.values()) {
 
 		            	Color color = null;
 

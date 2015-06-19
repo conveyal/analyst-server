@@ -1,4 +1,4 @@
-package com.conveyal.analyst.server.utils;
+package utils;
 
 import org.apache.commons.io.input.ClassLoaderObjectInputStream;
 import org.mapdb.Serializer;

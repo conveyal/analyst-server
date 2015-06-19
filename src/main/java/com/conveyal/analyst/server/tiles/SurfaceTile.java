@@ -1,15 +1,14 @@
 package com.conveyal.analyst.server.tiles;
 
-import controllers.SinglePoint;
+import com.conveyal.analyst.server.controllers.SinglePoint;
+import com.conveyal.analyst.server.utils.HaltonPoints;
 import models.Attribute;
 import models.Shapefile;
 import org.opengis.geometry.MismatchedDimensionException;
 import org.opengis.referencing.operation.TransformException;
 import org.opentripplanner.analyst.PointSet;
 import org.opentripplanner.analyst.ResultSet;
-import utils.HaltonPoints;
-import utils.ResultEnvelope;
-import utils.ResultEnvelope.Which;
+import org.opentripplanner.analyst.cluster.ResultEnvelope;
 
 import java.awt.*;
 import java.io.IOException;
@@ -25,7 +24,7 @@ public class SurfaceTile extends AnalystTileRequest {
         final Boolean showPoints;
         final Integer timeLimit;
 
-        public SurfaceTile(String key, Which which, Integer x, Integer y, Integer z,
+        public SurfaceTile(String key, ResultEnvelope.Which which, Integer x, Integer y, Integer z,
 						   Boolean showIso, Boolean showPoints, Integer timeLimit) {
             super(x, y, z, "surface");
             

@@ -2,8 +2,8 @@ package models;
 
 import com.conveyal.analyst.server.AnalystMain;
 import com.conveyal.analyst.server.jobs.ProcessTransitBundleJob;
-import com.conveyal.analyst.server.utils.Bounds;
-import com.conveyal.analyst.server.utils.ClassLoaderSerializer;
+import utils.Bounds;
+import utils.ClassLoaderSerializer;
 import com.conveyal.analyst.server.utils.DataStore;
 import com.conveyal.analyst.server.utils.HashUtils;
 import com.conveyal.gtfs.GTFSFeed;
