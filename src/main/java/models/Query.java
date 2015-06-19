@@ -206,9 +206,19 @@ public class Query implements Serializable {
 		});
 
 		// enqueue the requests
-		qm.enqueue(this.projectId, this.graphId, this.id, requests);
+		qm.enqueue(this.projectId, this.getGraphId(), this.id, requests);
 
 		LOG.info("Enqueued {} items in {}ms", ps.capacity, System.currentTimeMillis() - now);
+	}
+
+	public String getGraphId () {
+		if (this.graphId != null)
+			return this.graphId;
+
+		else if (this.scenarioId != null && TransportScenario.getScenario(this.scenarioId) != null)
+			return TransportScenario.getScenario(this.scenarioId).bundleId;
+
+		else return null;
 	}
 
 	public void delete() throws IOException {

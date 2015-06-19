@@ -106,7 +106,7 @@ var Analyst = Analyst || {};
 	});
 
 	A.models.Query = Backbone.Model.extend({
-		urlRoot: '/api/query/',
+		urlRoot: '/api/query',
 
 		defaults: {
 			id: null,

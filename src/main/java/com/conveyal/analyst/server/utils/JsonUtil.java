@@ -7,8 +7,9 @@ import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.module.SimpleKeyDeserializers;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.module.SimpleSerializers;
-import com.fasterxml.jackson.datatype.joda.JodaModule;
 import org.onebusaway.gtfs.model.AgencyAndId;
+import org.opentripplanner.api.model.JodaLocalDateSerializer;
+import org.opentripplanner.api.parameter.QualifiedModeSet;
 import org.opentripplanner.routing.core.TraverseModeSet;
 
 import java.io.IOException;
@@ -22,7 +23,7 @@ public class JsonUtil {
     static {
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new CustomSerializerModule());
-        objectMapper.registerModule(new JodaModule());
+        objectMapper.registerModule(JodaLocalDateSerializer.makeModule());
     }
 
     public static ObjectMapper getObjectMapper() {
@@ -34,6 +35,14 @@ public class JsonUtil {
         @Override
         public void serialize(TraverseModeSet traverseModeSet, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException, JsonProcessingException {
             jsonGenerator.writeString(traverseModeSet.toString());
+        }
+    }
+
+    /** Serialize a traverse mode set as a string. No need for a deserializer as TraverseModeSet has a single-arg string constructor */
+    public static class QualifiedModeSetSerializer extends JsonSerializer<QualifiedModeSet> {
+        @Override
+        public void serialize(QualifiedModeSet qualifiedModeSet, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException, JsonProcessingException {
+            jsonGenerator.writeString(qualifiedModeSet.toString());
         }
     }
 
@@ -61,6 +70,7 @@ public class JsonUtil {
 
             SimpleSerializers s = new SimpleSerializers();
             s.addSerializer(TraverseModeSet.class, new TraverseModeSetSerializer());
+            s.addSerializer(QualifiedModeSet.class, new QualifiedModeSetSerializer());
             ctx.addSerializers(s);
         }
     }

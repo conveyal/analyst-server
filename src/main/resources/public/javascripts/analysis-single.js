@@ -397,11 +397,11 @@ var Analyst = Analyst || {};
 
 			// TODO probably not the best place for a bunch of defaults
 			var isochrone = this.$('input[name="isochrone"]:checked').val() == 'true';
+			var profile = this.$('input.profile:checked').val() == "true";
 			var params = {
 				// if we're requesting only isochrones, don't pass in a pointset
 				destinationPointsetId: isochrone ? null : this.$('#shapefile').val(),
-				graphId: this.scenario1.get('bundleId'),
-				profile:  this.$('input.profile:checked').val() == "true",
+				graphId: this.scenario1.get('bundleId')
 			};
 
 			var mods1 = _.map(this.scenario1.get('bannedRoutes'), function (route) {
@@ -420,8 +420,8 @@ var Analyst = Analyst || {};
 				// this can happen when the shapefiles have not yet loaded
 				return;
 
-			if (params.profile) {
-				params.options = {
+			if (profile) {
+				params.profileRequest = {
 					fromLat:  A.map.marker.getLatLng().lat,
 					fromLon: A.map.marker.getLatLng().lng,
 					toLat:  A.map.marker.getLatLng().lat,
@@ -453,7 +453,7 @@ var Analyst = Analyst || {};
 				var date = this.$('#date').data('DateTimePicker').getDate();
 				date = date.add(Number(fromTime), 'seconds');
 
-				params.options = {
+				params.routingRequest = {
 					// TODO flesh this out, or better yet set server-side defaults
 					// however defaults in routingrequest will be applied
 					from: {

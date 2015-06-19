@@ -81,22 +81,23 @@ public class SinglePoint extends Controller {
 		Continuation continuation = ContinuationSupport.getContinuation(request.raw());
 
 		// for safety, add the callback before enqueing the job.
-		QueueManager.getManager().addCallback(req.jobId, re -> {
-			continuation.resume();
-			res.type("application/json");
-			try {
-				OutputStream os = res.raw().getOutputStream();
-				os.write(resultSetToJson(re).getBytes());
-				os.close();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-			// TODO how to send the request?
-			// remove callback
-			return false;
-		});
+		try {
+			QueueManager.getManager().getSinglePoint(req, re -> {
+				continuation.resume();
+				res.type("application/json");
+				try {
+					OutputStream os = res.raw().getOutputStream();
+					os.write(resultSetToJson(re).getBytes());
+					os.close();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			});
+		} catch (Exception e) {
+			e.printStackTrace();
+			halt(INTERNAL_SERVER_ERROR, e.getMessage());
+		}
 
-		QueueManager.getManager().enqueue(p.id, bundle.id, req.id, req);
 		return null;
     }
 

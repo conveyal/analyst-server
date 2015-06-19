@@ -4,7 +4,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
+import models.Query;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -16,15 +18,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 /** Generic queuing support to enable us to throw stuff into SQS */
-public class QueueManager {
+public class 	QueueManager {
 	private static final Logger LOG = LoggerFactory.getLogger(QueueManager.class);
 
 	/** maintain a singleton manager */
@@ -92,7 +96,10 @@ public class QueueManager {
 		}
 
 		if (res.getStatusLine().getStatusCode() != 200 && res.getStatusLine().getStatusCode() != 202)
-			System.out.println("not ok: " + res.getStatusLine().getStatusCode() + " " + res.getStatusLine().getReasonPhrase());
+			LOG.warn("not ok: " + res.getStatusLine().getStatusCode() + " " + res.getStatusLine()
+					.getReasonPhrase());
+		else
+			LOG.info("enqueued {} requests", requests.size());
 
 		try {
 			res.close();
@@ -103,7 +110,39 @@ public class QueueManager {
 
 		req.releaseConnection();
 
-		LOG.info("enqueued {} requests", requests.size());
+	}
+
+	/** Get a single point job */
+	public void getSinglePoint (AnalystClusterRequest req, Consumer<ResultEnvelope> callback)
+			throws IOException {
+		String json = objectMapper.writeValueAsString(req);
+		HttpPost post = new HttpPost();
+		post.setHeader("Content-Type", "application/json");
+
+		try {
+			post.setURI(new URI(broker + "/tasks"));
+		} catch (URISyntaxException e) {
+			LOG.error("Malformed broker URI {}, analysis will not be possible", broker);
+			return;
+		}
+
+		post.setEntity(new StringEntity(json));
+
+		CloseableHttpResponse res = httpClient.execute(post);
+
+		if (res.getStatusLine().getStatusCode() != 200 && res.getStatusLine().getStatusCode() != 202)
+			LOG.warn("not ok: " + res.getStatusLine().getStatusCode() + " " + res.getStatusLine()
+					.getReasonPhrase());
+
+		// read the response
+		InputStream is = res.getEntity().getContent();
+		ResultEnvelope re = objectMapper.readValue(is, ResultEnvelope.class);
+		is.close();
+
+		res.close();
+		post.releaseConnection();
+
+		callback.accept(re);
 	}
 
 	/**
@@ -117,8 +156,30 @@ public class QueueManager {
 
 	/** cancel a job */
 	public void cancelJob (String jobId) {
-		// TODO dequeue all requests
 		this.callbacks.removeAll(jobId);
+
+		Query q = Query.getQuery(jobId);
+
+		// figure out the graph ID
+		String graphId = q.getGraphId();
+
+		try {
+			HttpDelete req = new HttpDelete();
+			req.setURI(new URI(broker + "/" + q.projectId + "/" + graphId + "/" + jobId));
+
+			CloseableHttpResponse res = httpClient.execute(req);
+
+			if (res.getStatusLine().getStatusCode() != 200 && res.getStatusLine().getStatusCode()
+					!= 202)
+				LOG.warn(
+						"not ok: " + res.getStatusLine().getStatusCode() + " " + res.getStatusLine()
+								.getReasonPhrase());
+
+			res.close();
+			req.releaseConnection();
+		} catch (URISyntaxException | IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public static QueueManager getManager () {

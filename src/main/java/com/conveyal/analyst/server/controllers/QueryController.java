@@ -3,6 +3,7 @@ package com.conveyal.analyst.server.controllers;
 import com.conveyal.analyst.server.utils.Bin;
 import com.conveyal.analyst.server.utils.JsonUtil;
 import com.conveyal.analyst.server.utils.QueryResults;
+import com.conveyal.analyst.server.utils.QueueManager;
 import models.Project;
 import models.Query;
 import models.Shapefile;
@@ -112,6 +113,7 @@ public class QueryController extends Controller {
         if (q == null || !currentUser(req).hasWritePermission(q.projectId))
             halt(NOT_FOUND, "Query not found or you do not have permission to delete it");
 
+        QueueManager.getManager().cancelJob(q.id);
         q.delete();
 
         return q;
