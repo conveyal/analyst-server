@@ -76,11 +76,11 @@ label {
 
 @font-face {
 	font-family: 'icons';
-	src:url('/assets/fonts/icons.eot?11u8qc');
-	src:url('/assets/fonts/iscons.eot?#iefix11u8qc') format('embedded-opentype'),
-		url('/assets/fonts/icons.woff?11u8qc') format('woff'),
-		url('/assets/fonts/icons.ttf?11u8qc') format('truetype'),
-		url('/assets/fonts/icons.svg?11u8qc#icomoon') format('svg');
+	src:url('/fonts/icons.eot?11u8qc');
+	src:url('/fonts/iscons.eot?#iefix11u8qc') format('embedded-opentype'),
+		url('/fonts/icons.woff?11u8qc') format('woff'),
+		url('/fonts/icons.ttf?11u8qc') format('truetype'),
+		url('/fonts/icons.svg?11u8qc#icomoon') format('svg');
 	font-weight: normal;
 	font-style: normal;
 }
