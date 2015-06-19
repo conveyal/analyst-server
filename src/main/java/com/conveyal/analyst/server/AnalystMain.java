@@ -37,8 +37,6 @@ public class AnalystMain {
 
 		// set routes
 		Routes.routes();
-
-		LOG.info("Server started!");
 	}
 
 	/** initialize the database */
