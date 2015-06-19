@@ -1,0 +1,43 @@
+# Analyst Server configuration
+
+# The salt is used to salt hashed passwords in the database
+# If you are migrating from the play-based analyst server, you should set this to the value of application.secret in
+# your play configuration file
+application.salt=cAb`]/Ynfo55ehWX:6gv^>gtsNn`:Wg?xSBojvieIDf1dNLAT>kOSEBYIQsbO2K@
+
+# If set to true, unauthenticated users will be able to run single-point jobs via the API, and access
+# all tiles.
+# (they will need to know the IDs of bundles, however, which can only be accessed by logging in)
+# The rest of the UI and API remains authenticated.
+# This is useful e.g. for building frontend apps with Analyst.js
+api.allow-unauthenticated-access=false
+
+# Path for data files
+# Note that if you choose to start the server with `activator start` instead of `activator run` (recommended in production),
+# this and the temp dir (below) need to be absolute paths.
+application.data=data/
+
+# Path to bin files (geom2gtfs)
+application.bin=bin/
+
+# Where to find AWS credentials
+cluster.aws-credentials=<PATH TO S3 CREDENTIALS>
+
+# The prefix for SQS queues.
+cluster.queue-prefix=<PREFIX>
+
+# The SQS queue in which multipoint results are communicated to the server
+# Must be unique for each application accessing your cluster infrastructure
+cluster.results-queue=<QUEUE NAME>
+
+# The S3 bucket in which to store graphs
+cluster.graphs-bucket=<BUCKET NAME>
+
+# The S3 bucket in which to store pointsets
+cluster.pointsets-bucket=<BUCKET NAME>
+
+# The URL of your vex server
+application.vex=http://osm.conveyal.com
+
+# Default application language
+application.lang="en"
