@@ -1,12 +1,23 @@
 package com.conveyal.analyst.server.controllers;
 
+import com.google.common.io.Files;
 import models.User;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import spark.Request;
+
+import java.io.File;
 
 /**
  * Convenience methods for controllers.
  */
 public class Controller {
+    protected static DiskFileItemFactory fileItemFactory = new DiskFileItemFactory();
+    static {
+        File repo = Files.createTempDir();
+        fileItemFactory.setRepository(repo);
+        repo.deleteOnExit();
+    }
+
     // HTTP status codes
     /** 301 Moved Permanently */
     public static final int MOVED_PERMANENTLY = 301;

@@ -1,20 +1,18 @@
 package com.conveyal.analyst.server.controllers;
 
 import com.conveyal.analyst.server.utils.JsonUtil;
-import com.google.common.io.ByteStreams;
-import com.google.common.io.Files;
 import models.Bundle;
 import models.Project;
 import models.User;
 import org.apache.commons.fileupload.FileItem;
-import org.apache.commons.fileupload.FileUploadException;
-import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import spark.Request;
 import spark.Response;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -51,21 +49,18 @@ public class BundleController extends Controller {
         return null;
     }
 
-    public static Bundle createBundle(Request req, Response res) throws FileUploadException, IOException {
+    public static Bundle createBundle(Request req, Response res) throws Exception {
         // see https://github.com/perwendel/spark/issues/26
-        // TODO should we be initializing this every time?
-        DiskFileItemFactory fileItemFactory = new DiskFileItemFactory();
-        File repo = Files.createTempDir();
-        fileItemFactory.setRepository(repo);
-
         ServletFileUpload sfu = new ServletFileUpload(fileItemFactory);
-        List<FileItem> files = sfu.parseRequest(req.raw());
+        Map<String, List<FileItem>> files = sfu.parseParameterMap(req.raw());
 
-        FileItem file = files.stream().filter(f -> "file".equals(f.getFieldName())).findFirst().get();
+        FileItem file = files.get("file").get(0);
 
         if (file != null) {
 
-            String projectId = req.queryParams("projectId");
+            String projectId = files.get("projectId").get(0).getString();
+            String bundleType = files.get("bundleType").get(0).getString();
+            String augmentBundleId = files.containsKey("augmentBundleId") ? files.get("augmentBundleId").get(0).getString() : null;
 
             // make sure the project exists
             if (Project.getProject(projectId) == null || !currentUser(req).hasWritePermission(projectId))
@@ -74,28 +69,19 @@ public class BundleController extends Controller {
             // copy it to a temporary file
             // this seems silly because it's probably on the file system somewhere
             File tempFile = File.createTempFile("shape", ".zip");
-            InputStream is = file.getInputStream();
-            OutputStream os = new BufferedOutputStream(new FileOutputStream(tempFile));
-            ByteStreams.copy(is, os);
-            is.close();
-            os.close();
-
-            String bundleType = req.queryParams("bundleType");
-            String augmentBundleId = req.queryParams("augmentBundleId");
+            file.write(tempFile);
 
             Bundle s = Bundle.create(tempFile, bundleType, augmentBundleId);
 
-            s.name = req.queryParams("name");
-            s.description = req.queryParams("description");
+            s.name = files.get("name").get(0).getString();
+            s.description = files.get("description").get(0).getString();
             s.projectId = projectId;
 
             s.save();
-            repo.delete();
 
             return s;
         }
         else {
-            repo.delete();
             halt(BAD_REQUEST, "Please upload a file");
         }
 
