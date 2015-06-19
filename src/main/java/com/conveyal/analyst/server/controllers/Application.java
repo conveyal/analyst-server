@@ -69,7 +69,7 @@ public class Application extends Controller {
 		User u = User.getUser(userId);
 
 		if (!u.username.equals(request.session().attribute("username")) && !Boolean.TRUE.equals(u.admin))
-			halt(UNAUTHORIZED, "cannot reset other user's password");
+			halt(UNAUTHORIZED, "cannot reset other user's password unless admin");
 
 		try {
 			u.passwordHash = User.getPasswordHash(password);
