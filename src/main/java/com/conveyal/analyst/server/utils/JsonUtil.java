@@ -1,9 +1,11 @@
 package com.conveyal.analyst.server.utils;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.databind.module.SimpleDeserializers;
 import com.fasterxml.jackson.databind.module.SimpleKeyDeserializers;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.module.SimpleSerializers;
@@ -13,6 +15,8 @@ import org.opentripplanner.api.parameter.QualifiedModeSet;
 import org.opentripplanner.routing.core.TraverseModeSet;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 /**
  * Maintains a singleton ObjectMapper, with appropriate serialization and deserialization config.
@@ -57,6 +61,24 @@ public class JsonUtil {
         }
     }
 
+    /** Serializer for java.time.LocalDate */
+    public static class JavaLocalDateIsoSerializer extends JsonSerializer<LocalDate> {
+        @Override public void serialize(LocalDate localDate, JsonGenerator jsonGenerator,
+                SerializerProvider serializerProvider) throws IOException, JsonProcessingException {
+            jsonGenerator.writeString(localDate.format(DateTimeFormatter.ISO_DATE));
+        }
+    }
+
+    /** Deserializer for java.time.LocalDate */
+    public static class JavaLocalDateIsoDeserializer extends JsonDeserializer<LocalDate> {
+
+        @Override public LocalDate deserialize(JsonParser jsonParser,
+                DeserializationContext deserializationContext)
+                throws IOException, JsonProcessingException {
+            return LocalDate.from(DateTimeFormatter.ISO_DATE.parse(jsonParser.getValueAsString()));
+        }
+    }
+
     public static class CustomSerializerModule extends SimpleModule {
         public CustomSerializerModule () {
             super("CustomSerializerModule", new Version(0, 0, 1, null, null, null));
@@ -71,7 +93,12 @@ public class JsonUtil {
             SimpleSerializers s = new SimpleSerializers();
             s.addSerializer(TraverseModeSet.class, new TraverseModeSetSerializer());
             s.addSerializer(QualifiedModeSet.class, new QualifiedModeSetSerializer());
+            s.addSerializer(LocalDate.class, new JavaLocalDateIsoSerializer());
             ctx.addSerializers(s);
+
+            SimpleDeserializers d = new SimpleDeserializers();
+            d.addDeserializer(LocalDate.class, new JavaLocalDateIsoDeserializer());
+            ctx.addDeserializers(d);
         }
     }
 }

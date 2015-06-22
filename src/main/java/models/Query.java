@@ -1,10 +1,7 @@
 package models;
 
 import com.conveyal.analyst.server.otp.Analyst;
-import com.conveyal.analyst.server.utils.DataStore;
-import com.conveyal.analyst.server.utils.IdUtils;
-import com.conveyal.analyst.server.utils.QueryResultStore;
-import com.conveyal.analyst.server.utils.QueueManager;
+import com.conveyal.analyst.server.utils.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.Lists;
@@ -153,7 +150,7 @@ public class Query implements Serializable {
 	}
 	
 	public void run() {
-		QueueManager qm = QueueManager.getManager();
+		QueueManager qm = ClusterQueueManager.getManager();
 
 		// enqueue all the requests
 		Shapefile shp = Shapefile.getShapefile(this.shapefileId);
@@ -206,7 +203,7 @@ public class Query implements Serializable {
 		});
 
 		// enqueue the requests
-		qm.enqueue(this.projectId, this.getGraphId(), this.id, requests);
+		qm.enqueue(requests);
 
 		LOG.info("Enqueued {} items in {}ms", ps.capacity, System.currentTimeMillis() - now);
 	}

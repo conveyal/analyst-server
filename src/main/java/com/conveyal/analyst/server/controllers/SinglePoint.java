@@ -14,8 +14,6 @@ import models.Bundle;
 import models.Project;
 import models.Shapefile;
 import models.User;
-import org.eclipse.jetty.continuation.Continuation;
-import org.eclipse.jetty.continuation.ContinuationSupport;
 import org.opentripplanner.analyst.Histogram;
 import org.opentripplanner.analyst.ResultSet;
 import org.opentripplanner.analyst.cluster.AnalystClusterRequest;
@@ -25,7 +23,6 @@ import spark.Response;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.util.Map.Entry;
 
@@ -43,7 +40,11 @@ public class SinglePoint extends Controller {
     /** re-use object mapper */
     private static final ObjectMapper objectMapper = JsonUtil.getObjectMapper();
     
-    /** Create a result from a JSON-ified OneToMany[Profile]Request. */
+    /**
+	 * Create a result from a JSON-ified OneToMany[Profile]Request.
+	 *
+	 * TODO: this should be made asynchronous, but that's not an easy thing to do within the confines of Spark.
+	 */
     public static Object result (Request request, Response res) throws JsonProcessingException {
 		Authentication.authenticatedOrCors(request, res);
     	
@@ -60,16 +61,22 @@ public class SinglePoint extends Controller {
 		req.jobId = IdUtils.getId();
 
 		Bundle bundle = Bundle.getBundle(req.graphId);
-		Shapefile ps = Shapefile.getShapefile(req.destinationPointsetId);
 
 		// provide some security; if we don't have this bundle and shapefile here, don't let them make a request
 		// against it (they may have the UUID from somewhere else and be trying to use our server as a back door
 		// to the cluster)
-		if (bundle == null || ps == null)
+		if (bundle == null)
 			halt(NOT_FOUND, "No such bundle or pointset, or you do not have permission to access them");
 
-		if (!bundle.projectId.equals(ps.projectId))
-			halt(BAD_REQUEST, "bundle and pointset do not match");
+		if (req.destinationPointsetId != null) {
+			Shapefile shp = Shapefile.getShapefile(req.destinationPointsetId);
+
+			if (shp == null)
+				halt(NOT_FOUND, "No such bundle or pointset, or you do not have permission to access them");
+
+			if (!bundle.projectId.equals(shp.projectId))
+				halt(BAD_REQUEST, "bundle and pointset do not match");
+		}
 
 		// permissions check
 		Project p = Project.getProject(bundle.projectId);
@@ -78,21 +85,12 @@ public class SinglePoint extends Controller {
 			// NB this message is exactly the same as the one above, so as to not reveal any information
 			halt(NOT_FOUND, "No such bundle or pointset, or you do not have permission to access them");
 
-		Continuation continuation = ContinuationSupport.getContinuation(request.raw());
+		boolean processing = true;
 
-		// for safety, add the callback before enqueing the job.
 		try {
-			QueueManager.getManager().getSinglePoint(req, re -> {
-				continuation.resume();
-				res.type("application/json");
-				try {
-					OutputStream os = res.raw().getOutputStream();
-					os.write(resultSetToJson(re).getBytes());
-					os.close();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			});
+			ResultEnvelope re = QueueManager.getManager().getSinglePoint(req);
+			res.type("application/json");
+			return resultSetToJson(re);
 		} catch (Exception e) {
 			e.printStackTrace();
 			halt(INTERNAL_SERVER_ERROR, e.getMessage());
