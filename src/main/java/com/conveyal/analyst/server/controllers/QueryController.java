@@ -130,7 +130,7 @@ public class QueryController extends Controller {
         String groupBy = req.queryParams("groupBy");
         ResultEnvelope.Which which = ResultEnvelope.Which.valueOf(req.queryParams("which"));
         String attributeName = req.queryParams("attributeName");
-        String compareTo = req.queryParams("compareTo");
+        String compareTo = req.params("compareTo");
 
         Query query = Query.getQuery(queryId);
 

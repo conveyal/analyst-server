@@ -131,7 +131,8 @@ public class Tiles extends Controller {
         ResultEnvelope.Which which = ResultEnvelope.Which.valueOf(req.queryParams("which"));
         String queryId = req.params("queryId");
         int x = Integer.parseInt(req.params("x"));
-        int y = Integer.parseInt(req.params("y"));
+        String[] yformat = req.params("yformat").split("\\.");
+        int y = Integer.parseInt(yformat[0]);
         int z = Integer.parseInt(req.params("z"));
         String attributeName = req.queryParams("attributeName");
         String compareTo = req.params("compareTo");
@@ -154,7 +155,8 @@ public class Tiles extends Controller {
     public static Object transit (Request req, Response res) {
         String scenarioId = req.queryParams("bundleId");
         int x = Integer.parseInt(req.queryParams("x"));
-        int y = Integer.parseInt(req.queryParams("y"));
+        String[] yformat = req.params("yformat").split("\\.");
+        int y = Integer.parseInt(yformat[0]);
         int z = Integer.parseInt(req.queryParams("z"));
 
         AnalystTileRequest tileRequest = new AnalystTileRequest.TransitTile(scenarioId, x, y, z);

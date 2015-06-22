@@ -11,6 +11,7 @@ import org.opentripplanner.analyst.PointFeature;
 import org.opentripplanner.analyst.PointSet;
 import org.opentripplanner.analyst.cluster.AnalystClusterRequest;
 import org.opentripplanner.analyst.cluster.ResultEnvelope;
+import org.opentripplanner.analyst.scenario.RemoveTrip;
 import org.opentripplanner.common.model.GenericLocation;
 import org.opentripplanner.profile.ProfileRequest;
 import org.opentripplanner.routing.core.RoutingRequest;
@@ -20,9 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -155,8 +154,6 @@ public class Query implements Serializable {
 		// enqueue all the requests
 		Shapefile shp = Shapefile.getShapefile(this.shapefileId);
 		PointSet ps = shp.getPointSet();
-		TransportScenario scenario = TransportScenario.getScenario(this.scenarioId);
-		Bundle bundle = Bundle.getBundle(scenario.bundleId);
 
 		totalPoints = ps.capacity;
 		completePoints = 0;
@@ -171,18 +168,57 @@ public class Query implements Serializable {
 
 			AnalystClusterRequest req;
 
-			if (this.isTransit()) {
-				ProfileRequest pr = Analyst
-						.buildProfileRequest(this.mode, this.date, this.fromTime, this.toTime,
-								pf.getLat(), pf.getLon());
-				req = new AnalystClusterRequest(this.shapefileId, scenario.bundleId, pr);
-			} else {
-				GenericLocation from = new GenericLocation(pf.getLat(), pf.getLon());
-				RoutingRequest rr = Analyst.buildRequest(scenario.bundleId, this.date, this.fromTime, from, this.mode, 120, DateTimeZone.forID(bundle.timeZone));
-				req = new AnalystClusterRequest(this.shapefileId, scenario.bundleId, rr);
+			ProfileRequest pr = this.profileRequest;
+			RoutingRequest rr = this.routingRequest;
+
+			String graphId = this.graphId;
+
+			// users can define params either through scenario IDs, etc., or by specifying a profile request
+			// directly.
+			if (pr == null && rr == null) {
+				// build the requests
+				// TODO not necessary to do this for every feature
+				TransportScenario scenario = TransportScenario.getScenario(this.scenarioId);
+				graphId = scenario.bundleId;
+
+				if (this.isTransit()) {
+					// create a profile request
+					pr = Analyst.buildProfileRequest(this.mode, this.date, this.fromTime, this.toTime, 0, 0);
+
+					pr.scenario = new org.opentripplanner.analyst.scenario.Scenario(0);
+
+					if (scenario.bannedRoutes != null) {
+						pr.scenario.modifications = scenario.bannedRoutes.stream().map(rs -> {
+							RemoveTrip ret = new RemoveTrip();
+							ret.agencyId = rs.agencyId;
+							ret.routeId = Arrays.asList(rs.id);
+							return ret;
+						}).collect(Collectors.toList());
+					}
+					else {
+						pr.scenario.modifications = Collections.emptyList();
+					}
+				}
+				else {
+					// this is not a transit request, no need for computationally-intensive profile routing
+					graphId = this.scenarioId;
+					Bundle s = Bundle.getBundle(graphId);
+					rr = Analyst.buildRequest(this.scenarioId, this.date, this.fromTime, null, this.mode, 120, DateTimeZone.forID(s.timeZone));
+				}
+			}
+
+			if (pr != null) {
+				pr.fromLat = pr.toLat = pf.getLat();
+				pr.fromLon = pr.toLon = pf.getLon();
+				req = new AnalystClusterRequest(this.shapefileId, graphId, pr);
+			}
+			else {
+				rr.from = rr.to = new GenericLocation(pf.getLat(), pf.getLon());
+				req = new AnalystClusterRequest(this.shapefileId, graphId, rr);
 			}
 
 			req.jobId = this.id;
+			req.id = pf.getId();
 			req.includeTimes = false;
 
 			requests.add(req);
@@ -191,15 +227,22 @@ public class Query implements Serializable {
 		qm.addCallback(id, re -> {
 			getResults().store(re);
 
+			boolean done;
+
 			synchronized (this) {
 				this.completePoints++;
 
-				if (this.completePoints == this.totalPoints || this.completePoints % 200 == 0)
+				done = this.completePoints.equals(this.totalPoints);
+
+				if (done || this.completePoints % 200 == 0)
 					this.save();
 			}
 
+			if (done)
+				this.closeResults();
+
 			// when the job is complete return false to remove this callback from the rotation
-			return this.completePoints < this.totalPoints;
+			return !done;
 		});
 
 		// enqueue the requests

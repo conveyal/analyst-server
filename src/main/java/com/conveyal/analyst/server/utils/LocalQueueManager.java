@@ -135,6 +135,7 @@ public class LocalQueueManager extends QueueManager {
         re.destinationPointsetId = req.destinationPointsetId;
         re.jobId = req.jobId;
         re.profile = true;
+        re.id = req.id;
 
         return re;
     }

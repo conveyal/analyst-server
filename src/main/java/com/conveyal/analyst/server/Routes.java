@@ -111,7 +111,7 @@ public class Routes {
         before("/tile*", Authentication::authenticatedOrCors);
         get("/tile/spatial", Tiles::spatial);
         get("/tile/shapefile", Tiles::shape);
-        get("/tile/query/:queryId/:compareTo/:z/:x/:y.png", Tiles::query);
+        get("/tile/query/:queryId/:compareTo/:z/:x/:yformat", Tiles::query);
         get("/tile/query/:queryId/:z/:x/:yformat", Tiles::query);
         get("/tile/transit", Tiles::transit);
         get("/tile/transitComparison", Tiles::transitComparison);
