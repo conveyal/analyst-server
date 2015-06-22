@@ -17,9 +17,6 @@ api.allow-unauthenticated-access=false
 # this and the temp dir (below) need to be absolute paths.
 application.data=data/
 
-# Path to bin files (geom2gtfs)
-application.bin=bin/
-
 # Where to find AWS credentials
 cluster.aws-credentials=<PATH TO S3 CREDENTIALS>
 
