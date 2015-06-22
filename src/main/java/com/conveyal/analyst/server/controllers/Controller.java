@@ -19,6 +19,10 @@ public class Controller {
     }
 
     // HTTP status codes
+
+    /** 200 OK */
+    public static final int OK = 200;
+
     /** 301 Moved Permanently */
     public static final int MOVED_PERMANENTLY = 301;
 
