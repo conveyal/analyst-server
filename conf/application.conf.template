@@ -63,7 +63,7 @@ cluster.work-offline=true
 #}
 
 # The URL of your vex server
-application.vex="http://osm.conveyal.com"
+application.vex="http://osm.conveyal.com/vex"
 
 # The application languages
 # ~~~~~
