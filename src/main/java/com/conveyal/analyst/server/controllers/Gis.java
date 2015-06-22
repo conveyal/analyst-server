@@ -7,6 +7,7 @@ import com.google.common.io.Files;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Point;
+import models.Attribute;
 import models.Query;
 import models.Shapefile;
 import models.Shapefile.ShapeFeature;
@@ -23,6 +24,8 @@ import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
+import org.opentripplanner.analyst.PointSet;
+import org.opentripplanner.analyst.ResultSet;
 import org.opentripplanner.analyst.cluster.ResultEnvelope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -178,134 +181,124 @@ public class Gis extends Controller {
 
 	/**
      * Get a ResultSet.
-     *//*
-    public static Result result(String key, String which) {     
-    	Which whichEnum = Which.valueOf(which);
-    	
-        try {
-        	ResultEnvelope env = SinglePoint.getResultSet(key);
-        	ResultSet result = env.get(whichEnum);
-        	
-        	final Shapefile shp = Shapefile.getShapefile(env.destinationPointsetId);
-			       
-	        Collection<ShapeFeature> features = shp.getShapeFeatureStore().getAll();
-	     
-	        ArrayList<String> fields = new ArrayList<String>();
-	        
-	        for (Attribute a : shp.attributes.values()) {
-	        	if (a.numeric) {
-            		fields.add(a.name);
-	        	}
-	        }
-        	        	
-        	ArrayList<GisShapeFeature> gisFeatures = new ArrayList<GisShapeFeature>();
+     */
+    public static String single(Request req, Response res) {
+    	ResultEnvelope.Which whichEnum = ResultEnvelope.Which.valueOf(req.queryParams("which"));
+		String key = req.queryParams("key");
 
-        	PointSet ps = shp.getPointSet();
+		ResultEnvelope env = SinglePoint.getResultSet(key);
+		ResultSet result = env.get(whichEnum);
 
-        	for (ShapeFeature feature : features) {
-            	
-            	int sampleTime = result.times[ps.getIndexForFeature(feature.id)];
-        		GisShapeFeature gf = new GisShapeFeature();
-        		gf.geom = feature.geom;
-        		gf.id = feature.id;
-        		gf.time = sampleTime != Integer.MAX_VALUE ? sampleTime : null; 
+		final Shapefile shp = Shapefile.getShapefile(env.destinationPointsetId);
 
-        		// TODO: handle non-integer attributes
-        		for (Attribute a : shp.attributes.values()) {
-        			if (a.numeric) {
-                		gf.fields.add(feature.getAttribute(a.name));
-        			}
-        		}
-        		
-        		gisFeatures.add(gf);
-        	
-            }
-   
-        	String shapeName = shp.name.toLowerCase().replaceAll("\\W", "") + "_time";
-   
-        	return ok(generateZippedShapefile(shapeName, fields, gisFeatures, false));
-       
-        	
-    	} catch (Exception e) {
-	    	e.printStackTrace();
-	    	return badRequest();
-	    }
+		Collection<ShapeFeature> features = shp.getShapeFeatureStore().getAll();
+
+		ArrayList<String> fields = new ArrayList<String>();
+
+		for (Attribute a : shp.attributes.values()) {
+			if (a.numeric) {
+				fields.add(a.name);
+			}
+		}
+
+		ArrayList<GisShapeFeature> gisFeatures = new ArrayList<GisShapeFeature>();
+
+		PointSet ps = shp.getPointSet();
+
+		for (ShapeFeature feature : features) {
+
+			int sampleTime = result.times[ps.getIndexForFeature(feature.id)];
+			GisShapeFeature gf = new GisShapeFeature();
+			gf.geom = feature.geom;
+			gf.id = feature.id;
+			gf.time = sampleTime != Integer.MAX_VALUE ? sampleTime : null;
+
+			// TODO: handle non-integer attributes
+			for (Attribute a : shp.attributes.values()) {
+				if (a.numeric) {
+					gf.fields.add(feature.getAttribute(a.name));
+				}
+			}
+
+			gisFeatures.add(gf);
+
+		}
+
+		String shapeName = shp.name.toLowerCase().replaceAll("\\W", "") + "_time";
+
+		generateZippedShapefile(shapeName, fields, gisFeatures, false, res);
+		return "";
     }
     
 	/**
      * Get a comparison.
-     *//*
-    public static Result resultComparison(String key1, String key2, String which) {
+     */
+    public static String singleComparison(Request req, Response res) {
 
-    	Which whichEnum = Which.valueOf(which);
-        
-        try {
-        	ResultEnvelope env1 = SinglePoint.getResultSet(key1);
-        	ResultSet result = env1.get(whichEnum);
-        	ResultEnvelope env2 = SinglePoint.getResultSet(key2);
-        	ResultSet result2 = env2.get(whichEnum);
-        	
-        	if (env1 == null || env2 == null)
-        		notFound();
-        	
-        	if (!env1.destinationPointsetId.equals(env2))
-        		badRequest();
-        	
-        	final Shapefile shp = Shapefile.getShapefile(env1.destinationPointsetId);
-			       
-	        Collection<ShapeFeature> features = shp.getShapeFeatureStore().getAll();
-	     
-	        ArrayList<String> fields = new ArrayList<String>();
-	        
-	        for (Attribute a : shp.attributes.values()) {
-	        	if (a.numeric) {
-            		fields.add(a.name);
-	        	}
-	        }
-        	        	
-        	ArrayList<GisShapeFeature> gisFeatures = new ArrayList<GisShapeFeature>();
+		ResultEnvelope.Which whichEnum = ResultEnvelope.Which.valueOf(req.queryParams("which"));
+		String key1 = req.queryParams("key1");
+		String key2 = req.queryParams("key2");
 
-        	PointSet ps = shp.getPointSet();
+		ResultEnvelope env1 = SinglePoint.getResultSet(key1);
+		ResultSet result = env1.get(whichEnum);
+		ResultEnvelope env2 = SinglePoint.getResultSet(key2);
+		ResultSet result2 = env2.get(whichEnum);
 
-        	for (ShapeFeature feature : features) {
-            	
-        		int fidx = ps.getIndexForFeature(feature.id);
-        		GisShapeFeature gf = new GisShapeFeature();
-        		gf.geom = feature.geom;
-        		gf.id = feature.id;
-        		
-        		int time1 = result.times[fidx];
-        		gf.time = time1 != Integer.MAX_VALUE ? time1 : null;
-        		int time2 = result2.times[fidx];
-        		gf.time2 = time2 != Integer.MAX_VALUE ? time2 : null;
-        		
-        		if (gf.time != null && gf.time2 != null)
-        			gf.difference = gf.time2 - gf.time;
-        		else
-        			gf.difference = null;
+		if (env1 == null || env2 == null)
+			halt(NOT_FOUND, "no such key");
 
-        		// TODO: handle non-integer attributes
-        		for (Attribute a : shp.attributes.values()) {
-        			if (a.numeric) {
-                		gf.fields.add(feature.getAttribute(a.name));
-        			}
-        		}
-        		
-        		gisFeatures.add(gf);
-        	
-            }
-   
-        	String shapeName = shp.name.toLowerCase().replaceAll("\\W", "") + "_time_diff";
-   
-        	return ok(generateZippedShapefile(shapeName, fields, gisFeatures, true));
-       
-        	
-    	} catch (Exception e) {
-	    	e.printStackTrace();
-	    	return badRequest();
-	    }
-    }
-    */
+		if (!env1.destinationPointsetId.equals(env2.destinationPointsetId))
+			halt(BAD_REQUEST, "pointsets must match");
+
+		final Shapefile shp = Shapefile.getShapefile(env1.destinationPointsetId);
+
+		Collection<ShapeFeature> features = shp.getShapeFeatureStore().getAll();
+
+		ArrayList<String> fields = new ArrayList<String>();
+
+		for (Attribute a : shp.attributes.values()) {
+			if (a.numeric) {
+				fields.add(a.name);
+			}
+		}
+
+		ArrayList<GisShapeFeature> gisFeatures = new ArrayList<GisShapeFeature>();
+
+		PointSet ps = shp.getPointSet();
+
+		for (ShapeFeature feature : features) {
+
+			int fidx = ps.getIndexForFeature(feature.id);
+			GisShapeFeature gf = new GisShapeFeature();
+			gf.geom = feature.geom;
+			gf.id = feature.id;
+
+			int time1 = result.times[fidx];
+			gf.time = time1 != Integer.MAX_VALUE ? time1 : null;
+			int time2 = result2.times[fidx];
+			gf.time2 = time2 != Integer.MAX_VALUE ? time2 : null;
+
+			if (gf.time != null && gf.time2 != null)
+				gf.difference = gf.time2 - gf.time;
+			else
+				gf.difference = null;
+
+			// TODO: handle non-integer attributes
+			for (Attribute a : shp.attributes.values()) {
+				if (a.numeric) {
+					gf.fields.add(feature.getAttribute(a.name));
+				}
+			}
+
+			gisFeatures.add(gf);
+
+		}
+
+		String shapeName = shp.name.toLowerCase().replaceAll("\\W", "") + "_time_diff";
+
+		generateZippedShapefile(shapeName, fields, gisFeatures, true, res);
+		return "";
+	}
 	
 	public static class GisShapeFeature {
 		

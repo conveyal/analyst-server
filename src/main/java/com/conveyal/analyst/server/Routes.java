@@ -104,6 +104,8 @@ public class Routes {
         // GIS routes
         before("/gis*", Authentication::authenticated);
         get("/gis/query", Gis::query);
+        get("/gis/single", Gis::single);
+        get("/gis/singleComparison", Gis::singleComparison);
 
         // all tiles are accessible by the world if unauthenticated API access is enabled.
         before("/tile*", Authentication::authenticatedOrCors);
