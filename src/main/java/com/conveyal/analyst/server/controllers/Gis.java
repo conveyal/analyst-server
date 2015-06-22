@@ -191,6 +191,8 @@ public class Gis extends Controller {
 
 		final Shapefile shp = Shapefile.getShapefile(env.destinationPointsetId);
 
+		res.header("Content-Disposition", "attachment; filename=" + shp.name.replaceAll("[^a-zA-Z0-9]", "") + "_time.zip");
+
 		Collection<ShapeFeature> features = shp.getShapeFeatureStore().getAll();
 
 		ArrayList<String> fields = new ArrayList<String>();
@@ -234,7 +236,6 @@ public class Gis extends Controller {
      * Get a comparison.
      */
     public static String singleComparison(Request req, Response res) {
-
 		ResultEnvelope.Which whichEnum = ResultEnvelope.Which.valueOf(req.queryParams("which"));
 		String key1 = req.queryParams("key1");
 		String key2 = req.queryParams("key2");
@@ -251,6 +252,8 @@ public class Gis extends Controller {
 			halt(BAD_REQUEST, "pointsets must match");
 
 		final Shapefile shp = Shapefile.getShapefile(env1.destinationPointsetId);
+
+		res.header("Content-Disposition", "attachment; filename=" + shp.name.replaceAll("[^a-zA-Z0-9]", "") + "_compare.zip");
 
 		Collection<ShapeFeature> features = shp.getShapeFeatureStore().getAll();
 

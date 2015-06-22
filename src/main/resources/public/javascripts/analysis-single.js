@@ -753,7 +753,7 @@ var Analyst = Analyst || {};
 
 
 			if (this.scenario2Data)
-				window.location.href = '/gis/singleComparison?key1=' + this.scenario1Data.key + '&key2' + this.scenario2Data.key + '&which=' + which;
+				window.location.href = '/gis/singleComparison?key1=' + this.scenario1Data.key + '&key2=' + this.scenario2Data.key + '&which=' + which;
 			else
 				window.location.href = '/gis/single?key=' + this.scenario1Data.key + '&which=' + which;
 
