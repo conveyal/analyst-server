@@ -97,7 +97,7 @@ public class Routes {
         // JSON rendered by controller, no need for a result filter
         post("/api/single", SinglePoint::result);
         options("/api/single", SinglePoint::options);
-        after("/api/single", json::type);
+        after("/api/single*", json::type);
 
         get("/csv/single", SinglePoint::csv);
 
