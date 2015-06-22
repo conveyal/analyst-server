@@ -112,10 +112,10 @@ public class Routes {
         get("/tile/spatial", Tiles::spatial);
         get("/tile/shapefile", Tiles::shape);
         get("/tile/query/:queryId/:compareTo/:z/:x/:y.png", Tiles::query);
-        get("/tile/query/:queryId/:z/:x/:y.png", Tiles::query);
+        get("/tile/query/:queryId/:z/:x/:yformat", Tiles::query);
         get("/tile/transit", Tiles::transit);
         get("/tile/transitComparison", Tiles::transitComparison);
-        get("/tile/single/:key/:z/:x/:y.png", SinglePointTiles::single);
-        get("/tile/single/:key1/:key2/:z/:x/:y.:format", SinglePointTiles::compare);
+        get("/tile/single/:key/:z/:x/:yformat", SinglePointTiles::single);
+        get("/tile/single/:key1/:key2/:z/:x/:yformat", SinglePointTiles::compare);
     }
 }

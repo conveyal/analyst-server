@@ -85,10 +85,12 @@ public class SinglePoint extends Controller {
 			// NB this message is exactly the same as the one above, so as to not reveal any information
 			halt(NOT_FOUND, "No such bundle or pointset, or you do not have permission to access them");
 
-		boolean processing = true;
-
 		try {
 			ResultEnvelope re = QueueManager.getManager().getSinglePoint(req);
+			re.id = req.jobId;
+
+			envelopeCache.put(re.id, re);
+
 			res.type("application/json");
 			return resultSetToJson(re);
 		} catch (Exception e) {
@@ -110,7 +112,7 @@ public class SinglePoint extends Controller {
 		Authentication.authenticatedOrCors(req, res);
 
 		ResultEnvelope.Which which = ResultEnvelope.Which.valueOf(req.queryParams("which"));
-		String key = req.params("key");
+		String key = req.queryParams("key");
     	
     	// get the resultset
     	ResultEnvelope env = envelopeCache.getIfPresent(key);
