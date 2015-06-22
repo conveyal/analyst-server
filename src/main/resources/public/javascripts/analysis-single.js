@@ -483,7 +483,7 @@ var Analyst = Analyst || {};
 					params.graphId = this.scenario2.get('bundleId');
 
 					// TODO banned routes only supported in profile mode
-					if (params.profile) {
+					if (profile) {
 						var mods2 = _.map(this.scenario2.get('bannedRoutes'), function (route) {
 							return {
 								type: 'remove-trip',
@@ -495,7 +495,7 @@ var Analyst = Analyst || {};
 						if (window.modifications2)
 							mods2 = mods2.concat(window.modifications2);
 
-						params.options.scenario.modifications = mods2;
+						params.profileRequest.scenario = { modifications : mods2 };
 					}
 
 					var p2 = $.ajax({
