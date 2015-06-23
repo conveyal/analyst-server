@@ -1,5 +1,6 @@
 package com.conveyal.analyst.server.utils;
 
+import com.conveyal.analyst.server.AnalystMain;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.HashMultimap;
@@ -44,7 +45,10 @@ public class ClusterQueueManager extends QueueManager {
 
 	/** QueueManagers are singletons and thus cannot be constructed directly */
 	ClusterQueueManager() {
-		broker = "http://localhost:9001";
+		broker = AnalystMain.config.getProperty("cluster.broker");
+
+		if (!broker.endsWith("/"))
+			broker += "/";
 	}
 
 	/** enqueue an arbitrary number of requests */
@@ -76,7 +80,7 @@ public class ClusterQueueManager extends QueueManager {
 		}
 
 		try {
-			req.setURI(new URI(broker));
+			req.setURI(new URI(broker + "tasks"));
 		} catch (URISyntaxException e) {
 			e.printStackTrace();
 			throw new RuntimeException(e);
@@ -116,7 +120,7 @@ public class ClusterQueueManager extends QueueManager {
 		post.setHeader("Content-Type", "application/json");
 
 		try {
-			post.setURI(new URI(broker + "/tasks"));
+			post.setURI(new URI(broker + "priority"));
 		} catch (URISyntaxException e) {
 			LOG.error("Malformed broker URI {}, analysis will not be possible", broker);
 			return null;
