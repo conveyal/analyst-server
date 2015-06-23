@@ -276,7 +276,7 @@ of the things you want to compare. You can then request tiles using the followin
 
 For a single request:
 
-    /tile/single/<key>/<z>/<x>/<y>.png?which=<which>&timeLimit=<timeLimit>&showPoints=<showPoints>&showIso=<showIso>
+    /tile/single/&lt;key&gt;/&lt;z&gt;/&lt;x&gt;/&lt;y&gt;.png?which=<which>&timeLimit=<timeLimit>&showPoints=<showPoints>&showIso=<showIso>
 
 The `key` is the key attribute in the response from the single-point query performed above. The time limit is how large
 the represented isochrone should be, in seconds; for instance, if set to 3600, the tiles will show a smooth gradient
@@ -291,7 +291,7 @@ or `WORST_CASE` (guaranteed).
 
 Comparison requests are very similar:
 
-  /tile/single/<key1>/<key2>/<z>/<x>/<y>.png?which=<which>&timeLimit=<timeLimit>&showPoints=<showPoints>&showIso=<showIso>
+  /tile/single/&lt;key1&gt;/&lt;key2&gt;/&lt;z&gt;/&lt;x&gt;/&lt;y&gt;.png?which=<which>&timeLimit=<timeLimit>&showPoints=<showPoints>&showIso=<showIso>
 
 Note that the the `key` attribute has been replaced by `key1` and `key2`; the query specified by `key2` is subtracted from
 the query specified by `key1` and the difference is displayed. Yellow represents no change, with the opacity indicating
