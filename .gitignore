@@ -25,3 +25,4 @@ conf/application.conf
 nbproject
 conf/logger.xml
 application.conf
+src/main/resources/logback.xml
