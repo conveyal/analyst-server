@@ -6,6 +6,8 @@ import models.Shapefile;
 import models.User;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
 
@@ -21,6 +23,8 @@ import static spark.Spark.halt;
  * Shapefile controllers.
  */
 public class ShapefileController extends Controller {
+    private static final Logger LOG = LoggerFactory.getLogger(ShapefileController.class);
+
     public static Object getShapefile(Request req, Response res) {
         if (req.params().containsKey("id")) {
             Shapefile s = Shapefile.getShapefile(req.params().get("id"));
@@ -114,7 +118,7 @@ public class ShapefileController extends Controller {
 
             return s;
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.error("Error updating shapefile", e);
             halt(BAD_REQUEST, e.getMessage());
         }
 

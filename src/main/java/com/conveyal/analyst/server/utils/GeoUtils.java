@@ -13,8 +13,12 @@ import org.opengis.referencing.crs.CRSAuthorityFactory;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.crs.GeographicCRS;
 import org.opengis.referencing.operation.MathTransform;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class GeoUtils {
+    private static final Logger LOG = LoggerFactory.getLogger(GeoUtils.class);
+
    public static double RADIANS = 2 * Math.PI;
    
    public static MathTransform recentMathTransform = null;
@@ -71,12 +75,10 @@ public class GeoUtils {
        GeoUtils.recentMathTransform = transform;
        
        return transform;
-     } catch (final NoSuchIdentifierException e) {
-       // TODO Auto-generated catch block
-       e.printStackTrace();
+     } catch (NoSuchIdentifierException e) {
+         LOG.error("Error retrieving EPSG data", e);
      } catch (final FactoryException e) {
-       // TODO Auto-generated catch block
-       e.printStackTrace();
+         LOG.error("Error creating MathTransform", e);
      }
 
      return null;

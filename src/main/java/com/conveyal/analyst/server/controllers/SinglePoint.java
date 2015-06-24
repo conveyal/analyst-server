@@ -18,6 +18,8 @@ import org.opentripplanner.analyst.Histogram;
 import org.opentripplanner.analyst.ResultSet;
 import org.opentripplanner.analyst.cluster.AnalystClusterRequest;
 import org.opentripplanner.analyst.cluster.ResultEnvelope;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
 
@@ -32,6 +34,8 @@ import static spark.Spark.halt;
  * Controllers for getting result sets used in single point mode.
  */
 public class SinglePoint extends Controller {
+	private static final Logger LOG = LoggerFactory.getLogger(SinglePoint.class);
+
     // cache the result envelopes, but don't run out of memory
 	// if we use a direct cache from MapDB, the system comes apart at the seams because MapDB has a lot of trouble serializing
 	// the isochrones
@@ -94,7 +98,7 @@ public class SinglePoint extends Controller {
 			res.type("application/json");
 			return resultSetToJson(re);
 		} catch (Exception e) {
-			e.printStackTrace();
+			LOG.error("Error creating single-point result", e);
 			halt(INTERNAL_SERVER_ERROR, e.getMessage());
 		}
 

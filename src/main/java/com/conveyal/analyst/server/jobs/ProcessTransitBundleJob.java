@@ -164,8 +164,7 @@ public class ProcessTransitBundleJob implements Runnable {
 			System.out.println("osm pbf retrieved");
 			
 		} catch (IOException e) {
-			e.printStackTrace();
-			System.out.println("Failed to process gtfs");
+			LOG.error("Failed to process GTFS", e);
 
 			bundle.failed = true;
 			bundle.save();
@@ -180,8 +179,7 @@ public class ProcessTransitBundleJob implements Runnable {
 		try {
 			bundle.writeToClusterCache();
 		} catch (IOException e) {
-			e.printStackTrace();
-			LOG.error("Failed to write graph to cluster cache");
+			LOG.error("Failed to write graph to cluster cache", e);
 		}
 	}
 }

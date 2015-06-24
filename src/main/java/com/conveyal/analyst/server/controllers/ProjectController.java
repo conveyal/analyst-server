@@ -4,6 +4,8 @@ import com.conveyal.analyst.server.utils.JsonUtil;
 import models.Bundle;
 import models.Project;
 import models.User;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
 
@@ -18,6 +20,8 @@ import static spark.Spark.halt;
  * Project controllers.
  */
 public class ProjectController extends Controller {
+    private static final Logger LOG = LoggerFactory.getLogger(ProjectController.class);
+
     /**
      * Get a day that has ostensibly normal service, one would guess. Uses the next Tuesday that
      * is covered by all transit feeds in the project.
@@ -81,22 +85,21 @@ public class ProjectController extends Controller {
         Project p;
 
         try {
-
             p = JsonUtil.getObjectMapper().readValue(req.body(), Project.class);
-            p.save();
-
-            // add newly created project to user permission
-            User u = currentUser(req);
-            u.addProjectPermission(p.id);
-            u.save();
-
-            return p;
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.error("error parsing project JSON on project create", e);
             halt(BAD_REQUEST, e.getMessage());
+            return null;
         }
 
-        return null;
+        p.save();
+
+        // add newly created project to user permission
+        User u = currentUser(req);
+        u.addProjectPermission(p.id);
+        u.save();
+
+        return p;
     }
 
     public static Object updateProject(Request req, Response res) {
@@ -105,26 +108,23 @@ public class ProjectController extends Controller {
         User u = currentUser(req);
 
         try {
-
             p = JsonUtil.getObjectMapper().readValue(req.body(), Project.class);
-
-            if (p.id == null)
-                halt(BAD_REQUEST, "Must specify a project ID");
-
-            Project ex = Project.getProject(p.id);
-
-            if (ex == null || !u.hasWritePermission(p))
-                halt(NOT_FOUND, "Cannot update project that does not exist");
-
-            p.save();
-
-            return p;
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.error("error parsing project JSON on project update", e);
             halt(BAD_REQUEST, e.getMessage());
+            return null;
         }
+        if (p.id == null)
+            halt(BAD_REQUEST, "Must specify a project ID");
 
-        return null;
+        Project ex = Project.getProject(p.id);
+
+        if (ex == null || !u.hasWritePermission(p))
+            halt(NOT_FOUND, "Cannot update project that does not exist");
+
+        p.save();
+
+        return p;
     }
 
 

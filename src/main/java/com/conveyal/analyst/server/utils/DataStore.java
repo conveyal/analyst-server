@@ -59,8 +59,8 @@ public class DataStore<T> {
 		try {
 			LOG.info(directory.getCanonicalPath());
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOG.error("IO exception reading data directory", e);
+			throw new RuntimeException(e);
 		}
 		
 		DBMaker dbm = DBMaker.newFileDB(new File(directory, dataFile + ".db"))
@@ -92,8 +92,8 @@ public class DataStore<T> {
 		try {
 			LOG.info(directory.getCanonicalPath());
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOG.error("IO exception reading data directory", e);
+			throw new RuntimeException(e);
 		}
 		
 		db = DBMaker.newFileDB(new File(directory, dataFile + ".db"))

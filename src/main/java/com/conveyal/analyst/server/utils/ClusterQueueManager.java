@@ -88,49 +88,56 @@ public class ClusterQueueManager extends QueueManager {
 		// TODO use a scheduling engine, e.g. Quartz?
 		new Thread(() -> {
 			while (true) {
-				if (callbacks.size() > 0) {
-					// query across all jobs at once
-					String jobs = String.join(",", callbacks.keySet());
-					HttpGet get = new HttpGet();
-					get.setConfig(taskConfig);
+				try {
+					if (callbacks.size() > 0) {
+						// query across all jobs at once
+						String jobs = String.join(",", callbacks.keySet());
+						HttpGet get = new HttpGet();
+						get.setConfig(taskConfig);
 
-					try {
-						get.setURI(new URI(broker + "status/" + jobs));
-					} catch (URISyntaxException e) {
-						LOG.error("Invalid broker URL");
-						throw new RuntimeException(e);
-					}
+						try {
+							get.setURI(new URI(broker + "status/" + jobs));
+						} catch (URISyntaxException e) {
+							LOG.error("Invalid broker URL");
+							throw new RuntimeException(e);
+						}
 
-					CloseableHttpResponse res;
-					try {
-						res = httpClient.execute(get);
-					} catch (IOException e) {
-						e.printStackTrace();
-						continue;
-					}
+						CloseableHttpResponse res;
+						try {
+							res = httpClient.execute(get);
+						} catch (IOException e) {
+							LOG.error("Error retrieving job status", e);
+							continue;
+						}
 
-					if (res.getStatusLine().getStatusCode() != 200 && res.getStatusLine().getStatusCode() != 202)
-						LOG.warn("error retrieving job status: " + res.getStatusLine().getStatusCode() + " " + res.getStatusLine()
-								.getReasonPhrase());
+						if (res.getStatusLine().getStatusCode() != 200 && res.getStatusLine().getStatusCode() != 202)
+							LOG.warn("error retrieving job status: " + res.getStatusLine()
+									.getStatusCode() + " " + res.getStatusLine().getReasonPhrase());
 
-					try {
-						InputStream is = res.getEntity().getContent();
-						List<JobStatus> stats = objectMapper.readValue(is, new TypeReference<List<JobStatus>> () {});
-						is.close();
-						res.close();
-						get.releaseConnection();
-						stats.forEach(status -> {
-							callbacks.get(status.jobId).forEach(cb -> {
-								executor.execute(() -> {
-									if (!cb.test(status)) {
-										callbacks.remove(status.jobId, cb);
-									}
+						try {
+							InputStream is = res.getEntity().getContent();
+							List<JobStatus> stats = objectMapper
+									.readValue(is, new TypeReference<List<JobStatus>>() {
+									});
+							is.close();
+							res.close();
+							get.releaseConnection();
+							stats.forEach(status -> {
+								callbacks.get(status.jobId).forEach(cb -> {
+									executor.execute(() -> {
+										if (!cb.test(status)) {
+											callbacks.remove(status.jobId, cb);
+										}
+									});
 								});
 							});
-						});
-					} catch (IOException e) {
-						e.printStackTrace();
+						} catch (IOException e) {
+							LOG.error("Error retrieving job status", e);
+						}
 					}
+				} catch (Exception e) {
+					// don't let the thread crash
+					LOG.error("Error retrieving job status", e);
 				}
 
 				try {
@@ -164,21 +171,21 @@ public class ClusterQueueManager extends QueueManager {
 		try {
 			json = objectMapper.writeValueAsString(requests);
 		} catch (JsonProcessingException e) {
-			e.printStackTrace();
+			LOG.error("unable to convert requests to JSON", e);
 			throw new RuntimeException(e);
 		}
 
 		try {
 			req.setEntity(new StringEntity(json));
 		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
+			LOG.error("JSON is in unsupported encoding", e);
 			throw new RuntimeException(e);
 		}
 
 		try {
 			req.setURI(new URI(broker + "enqueue/jobs"));
 		} catch (URISyntaxException e) {
-			e.printStackTrace();
+			LOG.error("Invalid broker URL", e);
 			throw new RuntimeException(e);
 		}
 
@@ -186,7 +193,7 @@ public class ClusterQueueManager extends QueueManager {
 		try {
 			res = httpClient.execute(req);
 		} catch (IOException e) {
-			e.printStackTrace();
+			LOG.error("Network error enqueing requests", e);
 			// TODO retry
 			throw new RuntimeException(e);
 		}
@@ -200,7 +207,7 @@ public class ClusterQueueManager extends QueueManager {
 		try {
 			res.close();
 		} catch (IOException e) {
-			e.printStackTrace();
+			LOG.warn("Error closing request (most likely not harmful)", e);
 			// recoverable
 		}
 
@@ -275,7 +282,7 @@ public class ClusterQueueManager extends QueueManager {
 			res.close();
 			req.releaseConnection();
 		} catch (URISyntaxException | IOException e) {
-			e.printStackTrace();
+			LOG.error("error canceling job", e);
 		}
 	}
 }

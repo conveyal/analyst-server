@@ -8,6 +8,8 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import gnu.trove.map.TIntIntMap;
 import gnu.trove.map.hash.TIntIntHashMap;
 import org.opentripplanner.analyst.cluster.ResultEnvelope;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
 
@@ -16,6 +18,8 @@ import java.io.ByteArrayOutputStream;
 import static spark.Spark.halt;
 
 public class Tiles extends Controller {
+    private static final Logger LOG = LoggerFactory.getLogger(Tiles.class);
+
     protected static TileCache tileCache = new TileCache();
 
     public static Object tileBuilder(Request request, Response res,
@@ -93,7 +97,7 @@ public class Tiles extends Controller {
                 return bais.toString();
 
             } catch (Exception e) {
-                e.printStackTrace();
+                LOG.error("error creating tile", e);
                 halt(INTERNAL_SERVER_ERROR, e.getMessage());
             }
         } else {

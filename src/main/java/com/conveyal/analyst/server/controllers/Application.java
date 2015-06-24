@@ -32,7 +32,7 @@ public class Application extends Controller {
 		}
 	}
 
-	public static String createUser(Request request, Response response) {
+	public static String createUser(Request request, Response response) throws Exception {
 
 		String username = (String) request.attribute("username");
 		String password = (String) request.attribute("password");
@@ -41,27 +41,26 @@ public class Application extends Controller {
 		User u;
 
 		// hard coding demo user creation with id for DF project
-		try {
-
-			if(User.getUserByUsername(username) != null)
-				username = username + "_1";
+		// ensure uniqueness of usernames
+		synchronized (User.class) {
+			int i = 1;
+			String baseUsername = username;
+			while (User.getUserByUsername(username) != null) {
+				username = baseUsername + "_" + i++;
+			}
 
 			u = new User(username, password, email);
-			u.addReadOnlyProjectPermission("db7c31708ec68280a1a94a8ca633dae1");
-			u.save();
-
-			request.session().attribute("username", u.username);
-			return "welcome " + u.username + "!";
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
+		u.addReadOnlyProjectPermission("db7c31708ec68280a1a94a8ca633dae1");
+		u.save();
+
+		request.session().attribute("username", u.username);
 
 		response.redirect("/#db7c31708ec68280a1a94a8ca633dae1/-99.10929679870605/19.42223967548736/12/analysis-single/");
 		return "welcome";
 	}
 
-	public static String setPassword(Request request, Response response) {
+	public static String setPassword(Request request, Response response) throws Exception {
 
 		String userId = (String) request.attribute("userId");
 		String password = (String) request.attribute("password");
@@ -71,13 +70,8 @@ public class Application extends Controller {
 		if (!u.username.equals(request.session().attribute("username")) && !Boolean.TRUE.equals(u.admin))
 			halt(UNAUTHORIZED, "cannot reset other user's password unless admin");
 
-		try {
-			u.passwordHash = User.getPasswordHash(password);
-			u.save();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		u.passwordHash = User.getPasswordHash(password);
+		u.save();
 
 		return "password reset";
 	}

@@ -6,6 +6,8 @@ import models.Project;
 import models.User;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
 
@@ -22,6 +24,8 @@ import static spark.Spark.halt;
  * Bundle create/delete logic.
  */
 public class BundleController extends Controller {
+    private static Logger LOG = LoggerFactory.getLogger(BundleController.class);
+
     public static Object getBundle(Request req, Response res) {
         if (req.params().containsKey("id")) {
             Bundle s = Bundle.getBundle(req.params("id"));
@@ -96,24 +100,24 @@ public class BundleController extends Controller {
 
             s = JsonUtil.getObjectMapper().readValue(req.body(), Bundle.class);
 
-            if (s.id == null)
-                halt(BAD_REQUEST, "Please specify an ID");
-
-            Bundle ex = Bundle.getBundle(s.id);
-            User u = currentUser(req);
-
-            if (ex == null || !u.hasWritePermission(ex.projectId) || !u.hasWritePermission(s.projectId))
-                halt(NOT_FOUND, "not found");
-
-            s.save();
-
-            return s;
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.warn("error updating bundle", e);
             halt(BAD_REQUEST, e.getMessage());
+            return null;
         }
 
-        return null;
+        if (s.id == null)
+            halt(BAD_REQUEST, "Please specify an ID");
+
+        Bundle ex = Bundle.getBundle(s.id);
+        User u = currentUser(req);
+
+        if (ex == null || !u.hasWritePermission(ex.projectId) || !u.hasWritePermission(s.projectId))
+            halt(NOT_FOUND, "not found");
+
+        s.save();
+
+        return s;
     }
 
     public static Bundle deleteBundle (Request req, Response res) throws IOException {

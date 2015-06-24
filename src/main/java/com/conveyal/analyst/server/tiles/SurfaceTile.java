@@ -9,115 +9,115 @@ import org.opengis.referencing.operation.TransformException;
 import org.opentripplanner.analyst.PointSet;
 import org.opentripplanner.analyst.ResultSet;
 import org.opentripplanner.analyst.cluster.ResultEnvelope;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.io.IOException;
 import java.util.List;
 
 /**
-* Created by matthewc on 3/4/15.
-*/
+ * Surface (single-point) tile.
+ */
 public class SurfaceTile extends AnalystTileRequest {
-		final String resultKey;
-		final ResultEnvelope.Which which;
-        final Boolean showIso;
-        final Boolean showPoints;
-        final Integer timeLimit;
+    private static final Logger LOG = LoggerFactory.getLogger(SurfaceTile.class);
 
-        public SurfaceTile(String key, ResultEnvelope.Which which, Integer x, Integer y, Integer z,
-						   Boolean showIso, Boolean showPoints, Integer timeLimit) {
-            super(x, y, z, "surface");
-            
-			resultKey = key;
-			this.which = which;
-            this.showIso = showIso;
-            this.showPoints = showPoints;
-            this.timeLimit = timeLimit;
+    final String resultKey;
+    final ResultEnvelope.Which which;
+    final Boolean showIso;
+    final Boolean showPoints;
+    final Integer timeLimit;
+
+    public SurfaceTile(String key, ResultEnvelope.Which which, Integer x, Integer y, Integer z,
+                       Boolean showIso, Boolean showPoints, Integer timeLimit) {
+        super(x, y, z, "surface");
+
+        resultKey = key;
+        this.which = which;
+        this.showIso = showIso;
+        this.showPoints = showPoints;
+        this.timeLimit = timeLimit;
+    }
+
+    public String getId() {
+        return super.getId() + "_" + resultKey + "_" + which + "_" + showIso + "_" + showPoints + "_" + timeLimit;
+    }
+
+    public byte[] render(){
+        // note that this may occasionally return null if someone's had the site open for a very long
+        // time because the result will have fallen out of the cache.
+        ResultEnvelope env = SinglePoint.getResultSet(resultKey);
+        ResultSet result = env.get(which);
+
+        if (result == null) {
+            return null;
         }
 
-        public String getId() {
-            return super.getId() + "_" + resultKey + "_" + which + "_" + showIso + "_" + showPoints + "_" + timeLimit;
-        }
+        Tile tile = new Tile(this);
 
-        public byte[] render(){
-            // note that this may occasionally return null if someone's had the site open for a very long
-            // time because the result will have fallen out of the cache.
-            ResultEnvelope env = SinglePoint.getResultSet(resultKey);
-            ResultSet result = env.get(which);
-            
-            if (result == null) {
-            	return null;
-            }
-        	
-            Tile tile = new Tile(this);
+        Shapefile shp = Shapefile.getShapefile(env.destinationPointsetId);
 
-            Shapefile shp = Shapefile.getShapefile(env.destinationPointsetId);
+        if(shp == null)
+            return null;
 
-            if(shp == null)
-                return null;
+        List<Shapefile.ShapeFeature> features = shp.query(tile.envelope);
 
-            List<Shapefile.ShapeFeature> features = shp.query(tile.envelope);
+        PointSet ps = shp.getPointSet();
 
-            PointSet ps = shp.getPointSet();
+        for(Shapefile.ShapeFeature feature : features) {
 
-            for(Shapefile.ShapeFeature feature : features) {
+            Integer sampleTime = result.times[ps.getIndexForFeature(feature.id)];
+            if(sampleTime == null)
+                continue;
 
-                Integer sampleTime = result.times[ps.getIndexForFeature(feature.id)];
-                if(sampleTime == null)
-                    continue;
+            if(sampleTime == Integer.MAX_VALUE)
+                continue;
 
-                if(sampleTime == Integer.MAX_VALUE)
-                    continue;
+            if(showIso) {
 
-                if(showIso) {
+                Color color = null;
 
-                    Color color = null;
+                 if(sampleTime < timeLimit){
+                     float opacity = 1.0f - (float)((float)sampleTime / (float)timeLimit);
+                     color = new Color(0.9f,0.7f,0.2f,opacity);
+                 }
+                else {
+                    color = new Color(0.0f,0.0f,0.0f,0.2f);
+                }
 
-                     if(sampleTime < timeLimit){
-                         float opacity = 1.0f - (float)((float)sampleTime / (float)timeLimit);
-                         color = new Color(0.9f,0.7f,0.2f,opacity);
+                 if (color != null) {
+                     try {
+                         tile.renderPolygon(feature.geom, color, null);
+                     } catch (MismatchedDimensionException | TransformException e) {
+                        LOG.error("error rendering polygon to tile", e);
                      }
-                    else {
-                        color = new Color(0.0f,0.0f,0.0f,0.2f);
-                    }
+                 }
+            }
 
-                     if(color != null)
-                        try {
-                            tile.renderPolygon(feature.geom, color, null);
-                        } catch (MismatchedDimensionException e) {
-                            // TODO Auto-generated catch block
-                            e.printStackTrace();
-                        } catch (TransformException e) {
-                            // TODO Auto-generated catch block
-                            e.printStackTrace();
-                        }
-                }
+            // draw halton points for indicator
 
-                // draw halton points for indicator
+            if(showPoints && sampleTime < timeLimit) {
 
-                if(showPoints && sampleTime < timeLimit) {
+                for(Attribute a : shp.attributes.values()) {
 
-                    for(Attribute a : shp.attributes.values()) {
+                    HaltonPoints hp = feature.getHaltonPoints(a.fieldName);
 
-                        HaltonPoints hp = feature.getHaltonPoints(a.fieldName);
+                    if(hp.getNumPoints() > 0) {
 
-                        if(hp.getNumPoints() > 0) {
+                        Color color = new Color(Integer.parseInt(a.color.replace("#", ""), 16));
 
-                            Color color = new Color(Integer.parseInt(a.color.replace("#", ""), 16));
-
-                            tile.renderHaltonPoints(hp, color);
-                        }
+                        tile.renderHaltonPoints(hp, color);
                     }
                 }
             }
-
-            try {
-                return tile.generateImage();
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-                return null;
-            }
-
         }
+
+        try {
+            return tile.generateImage();
+        } catch (IOException e) {
+            LOG.error("error generating tile image", e);
+            return null;
+        }
+
+    }
 }

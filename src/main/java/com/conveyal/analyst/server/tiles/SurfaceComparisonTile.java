@@ -14,15 +14,18 @@ import org.opengis.referencing.operation.TransformException;
 import org.opentripplanner.analyst.PointSet;
 import org.opentripplanner.analyst.ResultSet;
 import org.opentripplanner.analyst.cluster.ResultEnvelope;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.io.IOException;
 import java.util.List;
 
 /**
-* Created by matthewc on 3/4/15.
+* Compare single-point results.
 */
 public class SurfaceComparisonTile extends AnalystTileRequest implements UTFIntGridRequest {
+    private static final Logger LOG = LoggerFactory.getLogger(SurfaceComparisonTile.class);
 
 	final String resultKey1;
 	final String resultKey2;
@@ -114,12 +117,8 @@ public class SurfaceComparisonTile extends AnalystTileRequest implements UTFIntG
                  if(color != null)
                     try {
                         tile.renderPolygon(feature.geom, color, null);
-                    } catch (MismatchedDimensionException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    } catch (TransformException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
+                    } catch (MismatchedDimensionException | TransformException e) {
+                        LOG.error("Unable to render polygon", e);
                     }
             }
 
@@ -142,8 +141,7 @@ public class SurfaceComparisonTile extends AnalystTileRequest implements UTFIntG
         try {
             return tile.generateImage();
         } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            LOG.error("unable to generate tile image", e);
             return null;
         }
     }

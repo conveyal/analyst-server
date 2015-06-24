@@ -290,8 +290,7 @@ public class Query implements Serializable {
 
 				this.closeResults();
 			} catch (S3IOException e) {
-				e.getCause().printStackTrace();
-				LOG.error("exception caught, retrying result retrieval");
+				LOG.error("exception caught, retrying result retrieval", e.getCause());
 				return true;
 			}
 

@@ -48,7 +48,7 @@ public class AnalystMain {
 			Bundle.writeAllToClusterCache();
 			Shapefile.writeAllToClusterCache();
 		} catch (IOException e) {
-			e.printStackTrace();
+			LOG.error("error accessing S3", e);
 			throw new RuntimeException(e);
 		}
 

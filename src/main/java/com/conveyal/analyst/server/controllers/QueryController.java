@@ -9,6 +9,8 @@ import models.Query;
 import models.Shapefile;
 import models.User;
 import org.opentripplanner.analyst.cluster.ResultEnvelope;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
 
@@ -23,9 +25,11 @@ import static spark.Spark.halt;
  * Multipoint query controller
  */
 public class QueryController extends Controller {
+    private static final Logger LOG = LoggerFactory.getLogger(QueryController.class);
+
     public static Object getQuery(Request req, Response res) {
         // auth is not handled controller-wide as there is more nuance here,
-        // this particulate method requires auth
+        // this particular method requires auth
         Authentication.authenticated(req, res);
 
         String projectId = req.queryParams("projectId");
@@ -57,10 +61,17 @@ public class QueryController extends Controller {
         return null;
     }
 
-    public static Query createQuery(Request req, Response res) throws IOException {
+    public static Query createQuery(Request req, Response res) {
         Authentication.authenticated(req, res);
 
-        Query q = JsonUtil.getObjectMapper().readValue(req.body(), Query.class);
+        Query q;
+        try {
+            q = JsonUtil.getObjectMapper().readValue(req.body(), Query.class);
+        } catch (Exception e) {
+            LOG.warn("error processing query creation json", e);
+            halt(BAD_REQUEST, "error processing JSON");
+            return null;
+        }
 
         if (q.projectId == null || !currentUser(req).hasWritePermission(q.projectId))
             halt(UNAUTHORIZED, "You do not have write access to this project");
@@ -79,26 +90,25 @@ public class QueryController extends Controller {
         Query q;
 
         try {
-
             q = JsonUtil.getObjectMapper().readValue(req.body(), Query.class);
-
-            if (q.id == null)
-                halt(BAD_REQUEST, "please specify an ID");
-
-            Query ex = Query.getQuery(q.id);
-            User u = currentUser(req);
-
-            if (ex == null || !u.hasWritePermission(q.projectId) || !u.hasWritePermission(ex.projectId))
-                halt(NOT_FOUND, "Query not found or you do not have permission to access it");
-
-            q.save();
-
-            return q;
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.warn("error processing query update JSON", e);
             halt(BAD_REQUEST, e.getMessage());
+            return null;
         }
-        return null;
+
+        if (q.id == null)
+            halt(BAD_REQUEST, "please specify an ID");
+
+        Query ex = Query.getQuery(q.id);
+        User u = currentUser(req);
+
+        if (ex == null || !u.hasWritePermission(q.projectId) || !u.hasWritePermission(ex.projectId))
+            halt(NOT_FOUND, "Query not found or you do not have permission to access it");
+
+        q.save();
+
+        return q;
     }
 
     public static Query deleteQuery (Request req, Response res) throws IOException {

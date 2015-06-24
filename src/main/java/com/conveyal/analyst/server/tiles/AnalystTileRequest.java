@@ -1,7 +1,6 @@
 package com.conveyal.analyst.server.tiles;
 
 import com.conveyal.analyst.server.utils.HaltonPoints;
-import com.conveyal.analyst.server.utils.NaturalBreaksClassifier;
 import com.conveyal.analyst.server.utils.QueryResults;
 import com.google.common.base.Charsets;
 import com.google.common.hash.HashCode;
@@ -17,18 +16,17 @@ import models.Shapefile.ShapeFeature;
 import org.opengis.geometry.MismatchedDimensionException;
 import org.opengis.referencing.operation.TransformException;
 import org.opentripplanner.analyst.cluster.ResultEnvelope;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class AnalystTileRequest {
-		
-		public static  Map<String, NaturalBreaksClassifier> naturalBreaksClassifierCache = new ConcurrentHashMap<String, NaturalBreaksClassifier>();
-	
+	private static final Logger LOG = LoggerFactory.getLogger(AnalystTileRequest.class);
+
 	final public String format;
 	final public String type;
 	final public Integer x, y, z;
@@ -97,16 +95,14 @@ public abstract class AnalystTileRequest {
     			try {
 					tile.renderLineString(seg.geom, color, null);
 				} catch (MismatchedDimensionException | TransformException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					LOG.error("Error rendering line string to tile", e);
 				}
     		}
     		
     		try {
 				return tile.generateImage();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				LOG.error("Error generating image", e);
 				return null;
 			}
 			
@@ -236,12 +232,8 @@ public abstract class AnalystTileRequest {
 
             		try {
 						tile.renderPolygon(feature.geom, color, stroke);
-					} catch (MismatchedDimensionException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (TransformException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+					} catch (MismatchedDimensionException | TransformException e) {
+						LOG.error("Error rendering polygon to tile", e);
 					}
             	}
             }
@@ -249,8 +241,7 @@ public abstract class AnalystTileRequest {
     		try {
 				return tile.generateImage();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				LOG.error("Error generating image", e);
 				return null;
 			}
 			
@@ -313,20 +304,15 @@ public abstract class AnalystTileRequest {
 
         		try {
 					tile.renderPolygon(feature.geom, color, stroke);
-				} catch (MismatchedDimensionException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (TransformException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+				} catch (TransformException | MismatchedDimensionException e) {
+					LOG.error("Error rendering polygon to tile", e);
 				}
             }
 		           
     		try {
 				return tile.generateImage();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				LOG.error("Error generating tile image", e);
 				return null;
 			}
 			
@@ -411,17 +397,13 @@ public abstract class AnalystTileRequest {
 						color = new Color(0.0f,0.0f,0.0f,0.1f);
 					}
 
-		         	if(color != null)
+		         	if (color != null) {
 						try {
 							tile.renderPolygon(feature.geom, color, null);
-						} catch (MismatchedDimensionException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						} catch (TransformException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
+						} catch (MismatchedDimensionException | TransformException e) {
+							LOG.error("error rendering polygon to tile", e);
 						}
-
+					}
 		        }
 		    }
 		    else {
@@ -449,12 +431,8 @@ public abstract class AnalystTileRequest {
 
 		            	try {
 							tile.renderPolygon(item.feature.geom, color, null);
-						} catch (MismatchedDimensionException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						} catch (TransformException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
+						} catch (MismatchedDimensionException | TransformException e) {
+							LOG.error("error rendering polygon to tile", e);
 						}
 
 		            }
@@ -464,8 +442,7 @@ public abstract class AnalystTileRequest {
     		try {
 				return tile.generateImage();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				LOG.error("error generating tile", e);
 				return null;
 			}
 			

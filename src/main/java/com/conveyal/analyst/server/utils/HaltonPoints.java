@@ -6,8 +6,11 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Polygon;
 import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.TransformException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HaltonPoints {
+	private static final Logger LOG = LoggerFactory.getLogger(HaltonPoints.class);
 		
 	private Coordinate[] boundaryPoints;
 	
@@ -16,7 +19,6 @@ public class HaltonPoints {
 	private double[] coords;
 
 	public HaltonPoints(Geometry geom, Integer numberPoints) {
-		
 		if(numberPoints < 0) 
 			numberPoints = 0;
 			
@@ -76,8 +78,7 @@ public class HaltonPoints {
 		try {
 			transform.transform(coords, 0, transformedCoords, 0, coords.length/2);
 		} catch (TransformException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOG.error("Transform exception", e);
 		}
 		
 		return transformedCoords;

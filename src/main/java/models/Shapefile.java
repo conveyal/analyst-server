@@ -252,7 +252,7 @@ public class Shapefile implements Serializable {
 				pf = new PointFeature(sf.id.toString(), sf.geom, propertyData);
 				pointSet.addFeature(pf, index);
 			} catch (EmptyPolygonException | UnsupportedGeometryException e) {
-				e.printStackTrace();
+				LOG.warn("Invalid/unsupported geometry", e);
 			}
 
 
@@ -488,7 +488,7 @@ public class Shapefile implements Serializable {
 		try {
 			transform = CRS.findMathTransform(shpCRS, DefaultGeographicCRS.WGS84, true);
 		} catch (FactoryException e1) {
-			e1.printStackTrace();
+			LOG.warn("Could not find projection for shapefile, returning unprojected file", e1);
 			return features;
 		}
 
@@ -549,7 +549,7 @@ public class Shapefile implements Serializable {
 				}
 				catch(Exception e) {
 					skippedFeatures++;
-					e.printStackTrace();
+					LOG.warn("Skipping invalid feature", e);
 					continue;
 				}
 		     }
@@ -628,8 +628,7 @@ public class Shapefile implements Serializable {
 		try {
 			cleanupUnzippedShapefile();
 		} catch (IOException e) {
-			LOG.error("unable delete shapefile p " +id);
-			e.printStackTrace();
+			LOG.error("unable delete shapefile p " +id, e);
 		}
 
 		LOG.info("delete shapefile p " +id);

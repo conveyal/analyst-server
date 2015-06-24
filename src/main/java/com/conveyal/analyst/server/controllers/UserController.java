@@ -10,36 +10,28 @@ import static spark.Spark.halt;
  * User controllers.
  */
 public class UserController extends Controller {
-    // **** user controllers ****
-
     public static Object getUser (Request request, Response response) {
 
         String id = request.params("id");
 
-        try {
+        if(id != null) {
 
-            if(id != null) {
+            User u = null;
 
-                User u = null;
-
-                if(id.toLowerCase().equals("self")) {
-                    u = User.getUserByUsername(request.session().attribute("username"));
-                }
-                else {
-                    u = User.getUser(id);
-                }
-
-                if(u != null)
-                    return u;
-                else
-                    halt(NOT_FOUND);
+            if(id.toLowerCase().equals("self")) {
+                u = User.getUserByUsername(request.session().attribute("username"));
             }
             else {
-                return User.getUsers();
+                u = User.getUser(id);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-            halt(BAD_REQUEST, e.getMessage());
+
+            if(u != null)
+                return u;
+            else
+                halt(NOT_FOUND);
+        }
+        else {
+            return User.getUsers();
         }
 
         return null;
