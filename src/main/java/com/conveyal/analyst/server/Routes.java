@@ -1,6 +1,11 @@
 package com.conveyal.analyst.server;
 
 import com.conveyal.analyst.server.controllers.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.ByteArrayOutputStream;
+import java.io.PrintWriter;
 
 import static spark.Spark.*;
 
@@ -8,6 +13,8 @@ import static spark.Spark.*;
  * Routes for Analyst Server.
  */
 public class Routes {
+    private static final Logger LOG = LoggerFactory.getLogger(Routes.class);
+
     private static final JsonTransformer json = new JsonTransformer();
 
     public static void routes () {
@@ -127,5 +134,26 @@ public class Routes {
         get("/tile/transitComparison", Tiles::transitComparison);
         get("/tile/single/:key/:z/:x/:yformat", SinglePointTiles::single);
         get("/tile/single/:key1/:key2/:z/:x/:yformat", SinglePointTiles::compare);
+
+        exception(Exception.class, (e, req, res) -> {
+            LOG.info("unhandled exception, caught by server thread", e);
+            if (Boolean.TRUE.equals(
+                    Boolean.parseBoolean(AnalystMain.config.getProperty("application.prod")))) {
+                res.status(Controller.INTERNAL_SERVER_ERROR);
+                res.type("text/plain");
+                res.body("Internal Server Error");
+            }
+            else {
+                res.status(Controller.INTERNAL_SERVER_ERROR);
+                res.type("text/plain");
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                PrintWriter pw = new PrintWriter(baos);
+                pw.write("500 Internal Server Error\n\n");
+
+                e.printStackTrace(pw);
+                pw.close();
+                res.body(baos.toString());
+            }
+        });
     }
 }
