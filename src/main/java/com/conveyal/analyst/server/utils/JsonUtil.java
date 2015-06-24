@@ -1,5 +1,6 @@
 package com.conveyal.analyst.server.utils;
 
+import com.conveyal.geojson.GeoJsonModule;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -28,6 +29,7 @@ public class JsonUtil {
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new CustomSerializerModule());
         objectMapper.registerModule(JodaLocalDateSerializer.makeModule());
+        objectMapper.registerModule(new GeoJsonModule());
     }
 
     public static ObjectMapper getObjectMapper() {
