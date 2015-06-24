@@ -142,18 +142,9 @@ public class NaturalBreaksClassifier extends Classifier {
 			breaks[0] = list[0] - 0.0000001;
 			
 			for (int j = numclass; j >= 2; j--) {
-			
-					//System.out.println("rank = " + mat1[k][j]);
-					int id =  (int) (mat1[k][j]) - 2;
-					//System.out.println("val = " + list.get(id));
-					
-					//System.out.println(mat2[k][j]);
-					
-					breaks[j - 1] = list[id];
-	
-					k = (int) mat1[k][j] - 1;
-				
-				
+				int id =  (int) (mat1[k][j]) - 2;
+				breaks[j - 1] = list[id];
+				k = (int) mat1[k][j] - 1;
 			}
 			
 			return breaks;

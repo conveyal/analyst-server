@@ -2,6 +2,8 @@ package com.conveyal.analyst.server.jobs;
 
 import com.conveyal.analyst.server.AnalystMain;
 import models.Bundle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -14,6 +16,8 @@ import java.io.InputStreamReader;
  *
  */
 public class Geom2GtfsJob implements Runnable {
+	private static final Logger LOG = LoggerFactory.getLogger(Geom2GtfsJob.class);
+
 	private File configFile;
 	private File shapeFile;
 	private File newFile;
@@ -44,10 +48,10 @@ public class Geom2GtfsJob implements Runnable {
 			String line;
 	
 			while((line = bufferedReader.readLine()) != null){
-				System.out.println("geom2gtfs: " + line); 
+				LOG.info("geom2gtfs: " + line);
 			}
 	
-			System.out.println("shapefile " + shapeFile.getName() + " processed.");
+			LOG.info("shapefile " + shapeFile.getName() + " processed.");
 		} catch (IOException e) {
 			// rethrow as unchecked
 			throw new RuntimeException(e);

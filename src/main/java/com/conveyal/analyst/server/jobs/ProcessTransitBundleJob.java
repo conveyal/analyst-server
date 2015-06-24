@@ -145,8 +145,7 @@ public class ProcessTransitBundleJob implements Runnable {
 			conn.connect();
 
 			if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
-				System.err.println("Received response code " +
-						conn.getResponseCode() + " from vex server");
+				LOG.warn("Received response code {} from vex server", conn.getResponseCode());
 				bundle.failed = true;
 				bundle.save();
 				return;
@@ -161,7 +160,7 @@ public class ProcessTransitBundleJob implements Runnable {
 			
 			graphFiles.add(osmPbfFile);
 
-			System.out.println("osm pbf retrieved");
+			LOG.info("osm pbf retrieved");
 			
 		} catch (IOException e) {
 			LOG.error("Failed to process GTFS", e);
