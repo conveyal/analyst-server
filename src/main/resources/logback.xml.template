@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<configuration>
+    <!-- You won't generally need to swap in this file, but if you want to log to Logentries, copy this
+        logback.conf, set your token below, and rebuild -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <!-- encoders are assigned the type
+             ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="LE"
+              class="com.logentries.logback.LogentriesAppender">
+        <Debug>False</Debug>
+        <Token>LOGENTRIES_TOKEN</Token>
+        <Ssl>False</Ssl>
+        <facility>USER</facility>
+        <layout>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </layout>
+    </appender>
+
+    <root level="info">
+        <appender-ref ref="LE" />
+        <appender-ref ref="STDOUT" />
+    </root>
+</configuration>
