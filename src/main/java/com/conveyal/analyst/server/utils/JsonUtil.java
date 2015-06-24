@@ -38,7 +38,7 @@ public class JsonUtil {
     public static class TraverseModeSetSerializer extends JsonSerializer<TraverseModeSet> {
         @Override
         public void serialize(TraverseModeSet traverseModeSet, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException, JsonProcessingException {
-            jsonGenerator.writeString(traverseModeSet.toString());
+            jsonGenerator.writeString(traverseModeSet.getAsStr());
         }
     }
 
