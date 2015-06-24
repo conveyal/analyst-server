@@ -39,7 +39,6 @@ cluster.work-offline=false
 # The URL of your vex server
 application.vex=http://osm.conveyal.com
 
-# The application languages
-# ~~~~~
+# default language
 application.lang=en
 
