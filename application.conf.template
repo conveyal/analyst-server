@@ -1,40 +1,45 @@
-# Analyst Server configuration
+# This is the main configuration file for the application.
+# ~~~~~
 
-# The salt is used to salt hashed passwords in the database
-# If you are migrating from the play-based analyst server, you should set this to the value of application.secret in
-# your play configuration file
+# Secret key
+# ~~~~~
+# The secret key is used to secure cryptographics functions.
+# If you deploy your application to several instances be sure to use the same key!
 application.salt=cAb`]/Ynfo55ehWX:6gv^>gtsNn`:Wg?xSBojvieIDf1dNLAT>kOSEBYIQsbO2K@
 
-# If set to true, unauthenticated users will be able to run single-point jobs via the API, and access
-# all tiles.
-# (they will need to know the IDs of bundles, however, which can only be accessed by logging in)
-# The rest of the UI and API remains authenticated.
-# This is useful e.g. for building frontend apps with Analyst.js
-api.allow-unauthenticated-access=false
+# Port to use, optional, default 9090
+#application.port=9090
+
+# IP address, default all interfaces
+#application.ip=127.0.0.1
+
+api.allow-unauthenticated-access=true
 
 # Path for data files
-# Note that if you choose to start the server with `activator start` instead of `activator run` (recommended in production),
-# this and the temp dir (below) need to be absolute paths.
 application.data=data/
 
-# Where to find AWS credentials
-cluster.aws-credentials=<PATH TO S3 CREDENTIALS>
-
-# The prefix for SQS queues.
-cluster.queue-prefix=<PREFIX>
-
-# The SQS queue in which multipoint results are communicated to the server
-# Must be unique for each application accessing your cluster infrastructure
-cluster.results-queue=<QUEUE NAME>
+# Set to prod in production (disables sending of stack traces to client)
+application.prod=false
 
 # The S3 bucket in which to store graphs
-cluster.graphs-bucket=<BUCKET NAME>
+cluster.graphs-bucket=<BUCKET>
 
 # The S3 bucket in which to store pointsets
-cluster.pointsets-bucket=<BUCKET NAME>
+cluster.pointsets-bucket=<BUCKET>
+
+# The S3 bucket in which to store results
+cluster.results-bucket=<BUCKET>
+
+# The URL of your cluster broker
+cluster.broker=http://localhost:9001
+
+# If true, single-point results will be computed by OTP internally. Multipoint results will not work.
+cluster.work-offline=false
 
 # The URL of your vex server
 application.vex=http://osm.conveyal.com
 
-# Default application language
-application.lang="en"
+# The application languages
+# ~~~~~
+application.lang=en
+

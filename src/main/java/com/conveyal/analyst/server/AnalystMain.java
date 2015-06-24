@@ -11,7 +11,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
-import static spark.Spark.port;
+import static spark.SparkBase.ipAddress;
+import static spark.SparkBase.port;
 
 public class AnalystMain {
 	private static final Logger LOG = LoggerFactory.getLogger(AnalystMain.class);
@@ -29,9 +30,10 @@ public class AnalystMain {
 		LOG.info("Initializing datastore . . .");
 		initialize();
 
-		// parse out the port number
-		int portNo = args.length > 0 ? Integer.parseInt(args[0]) : 9090;
-		LOG.info("Starting up server on port {}", portNo);
+		// figure out host and port
+		int portNo = Integer.parseInt(config.getProperty("application.port", "9090"));
+		String ip = config.getProperty("application.ip");
+		if (ip != null) ipAddress(ip);
 
 		port(portNo);
 
