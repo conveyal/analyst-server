@@ -7,6 +7,7 @@ import models.Shapefile;
 import org.opentripplanner.analyst.PointSet;
 import org.opentripplanner.analyst.ResultSet;
 import org.opentripplanner.analyst.SampleSet;
+import org.opentripplanner.analyst.broker.JobStatus;
 import org.opentripplanner.analyst.cluster.AnalystClusterRequest;
 import org.opentripplanner.analyst.cluster.ResultEnvelope;
 import org.opentripplanner.graph_builder.GraphBuilder;
@@ -22,8 +23,6 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Predicate;
 
 /**
@@ -34,69 +33,29 @@ import java.util.function.Predicate;
 public class LocalQueueManager extends QueueManager {
     private static final Logger LOG = LoggerFactory.getLogger(LocalQueueManager.class);
 
-    /** the queue of requests */
-    private Queue<AnalystClusterRequest> queue = new ConcurrentLinkedQueue<>();
-
     /** the callbacks */
-    private Multimap<String, Predicate<ResultEnvelope>> callbacks = HashMultimap.create();
+    private Multimap<String, Predicate<JobStatus>> callbacks = HashMultimap.create();
 
     private Router router;
-    private SampleSet sampleSet;
 
     LocalQueueManager () {
-        LOG.warn("Working offline; this is intended for testing only and will not perform well under load");
-
-        // set up queue watching
-        new Thread(() -> {
-            int previousQueueSize = -1;
-            while (true) {
-                try {
-                    int queueSize = queue.size();
-
-                    if (queueSize != previousQueueSize) {
-                        LOG.info("queue size {}", queueSize);
-                        previousQueueSize = queueSize;
-                    }
-
-                    AnalystClusterRequest req = queue.poll();
-
-                    if (req != null)
-                        handle(req);
-                    else
-                        Thread.sleep(1000);
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    // the loop continues
-                }
-            }
-        }).start();
+        LOG.warn("Working offline; this is intended for testing only and will not perform well under load; additionally it does not support multipoint requests.");
     }
 
     @Override public void enqueue(Collection<AnalystClusterRequest> requests) {
-        queue.addAll(requests);
+        LOG.error("Multipoint requests are unsupported in local mode.");
     }
 
     @Override public ResultEnvelope getSinglePoint(AnalystClusterRequest req) throws IOException {
         return compute(req);
     }
 
-    @Override public void addCallback(String jobId, Predicate<ResultEnvelope> callback) {
+    @Override public void addCallback(String jobId, Predicate<JobStatus> callback) {
         callbacks.put(jobId, callback);
     }
 
     @Override public void cancelJob(String jobId) {
         LOG.warn("Job cancellation is not implemented when working offline. We recommend you use a computation cluster.");
-    }
-
-    /** handle a result envelope coming off the queue */
-    private void handle (AnalystClusterRequest req) {
-        ResultEnvelope re = compute(req);
-
-        for (Predicate<ResultEnvelope> callback : callbacks.get(re.jobId)) {
-            if (!callback.test(re))
-                callbacks.remove(re.jobId, callback);
-        }
     }
 
     /** compute a result envelope */

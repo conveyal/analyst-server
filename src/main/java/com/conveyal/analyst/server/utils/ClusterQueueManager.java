@@ -6,13 +6,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import models.Query;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.opentripplanner.analyst.broker.JobStatus;
 import org.opentripplanner.analyst.cluster.AnalystClusterRequest;
 import org.opentripplanner.analyst.cluster.ResultEnvelope;
 import org.slf4j.Logger;
@@ -25,6 +28,9 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.function.Predicate;
 
 /** Generic queuing support to enable us to throw stuff into SQS */
@@ -32,16 +38,39 @@ public class ClusterQueueManager extends QueueManager {
 	private static final Logger LOG = LoggerFactory.getLogger(ClusterQueueManager.class);
 
 	/** set up an HTTP client */
-	private CloseableHttpClient httpClient = HttpClients.custom()
-			.setConnectionManager(new PoolingHttpClientConnectionManager())
+	private static final CloseableHttpClient httpClient;
+
+	static {
+		PoolingHttpClientConnectionManager mgr = new PoolingHttpClientConnectionManager();
+		mgr.setDefaultMaxPerRoute(20);
+		httpClient = HttpClients.custom()
+			.setConnectionManager(mgr)
 			.build();
+	}
+
+	/** Configuration for a priority job, includes a long socket timeout to allow for graph building */
+	private static final RequestConfig priorityConfig = RequestConfig.custom()
+			// ten minutes: marginally long enough to build a New York State graph
+			.setSocketTimeout(600 * 1000)
+			.setConnectTimeout(10 * 1000)
+			.build();
+
+	/** configuration for enqueing requests. Shorter timeout as this should not take long */
+	private static final RequestConfig taskConfig = RequestConfig.custom()
+			.setSocketTimeout(10 * 1000)
+			.setConnectTimeout(10 * 1000)
+			.build();
+
 
 	private ObjectMapper objectMapper = JsonUtil.getObjectMapper();
 
 	/** per-job callbacks */
-	private Multimap<String, Predicate<ResultEnvelope>> callbacks = HashMultimap.create();
+	private Multimap<String, Predicate<JobStatus>> callbacks = HashMultimap.create();
 
 	private String broker;
+
+	/** The executor used to execute callbacks. Callbacks do things like retrieve results from S3, so should not block the polling thread */
+	private Executor executor;
 
 	/** QueueManagers are singletons and thus cannot be constructed directly */
 	ClusterQueueManager() {
@@ -49,6 +78,64 @@ public class ClusterQueueManager extends QueueManager {
 
 		if (!broker.endsWith("/"))
 			broker += "/";
+
+		// set up the executor used to execute callbacks
+		// TODO this may be heavier than what is needed
+		executor = Executors.newCachedThreadPool();
+
+		// and set up polling
+		// TODO use a scheduling engine, e.g. Quartz?
+		new Thread(() -> {
+			while (true) {
+				if (callbacks.size() > 0) {
+					// query across all jobs at once
+					String jobs = String.join(",", callbacks.keySet());
+					HttpGet get = new HttpGet();
+					get.setConfig(taskConfig);
+
+					try {
+						get.setURI(new URI(broker + "status/" + jobs));
+					} catch (URISyntaxException e) {
+						LOG.error("Invalid broker URL");
+						throw new RuntimeException(e);
+					}
+
+					CloseableHttpResponse res;
+					try {
+						res = httpClient.execute(get);
+					} catch (IOException e) {
+						e.printStackTrace();
+						continue;
+					}
+
+					if (res.getStatusLine().getStatusCode() != 200 && res.getStatusLine().getStatusCode() != 202)
+						LOG.warn("error retrieving job status: " + res.getStatusLine().getStatusCode() + " " + res.getStatusLine()
+								.getReasonPhrase());
+
+					try {
+						InputStream is = res.getEntity().getContent();
+						List<JobStatus> stats = objectMapper.readValue(is, List.class);
+						stats.forEach(status -> {
+							callbacks.get(status.jobId).forEach(cb -> {
+								executor.execute(() -> {
+									if (!cb.test(status)) {
+										callbacks.remove(status.jobId, cb);
+									}
+								});
+							});
+						});
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+
+				try {
+					Thread.sleep(10000l);
+				} catch (InterruptedException e) {
+					break;
+				}
+			}
+		}).start();
 	}
 
 	/** enqueue an arbitrary number of requests */
@@ -63,6 +150,7 @@ public class ClusterQueueManager extends QueueManager {
 		// Construct a POST request
 		HttpPost req = new HttpPost();
 		req.addHeader("Content-Type", "application/json");
+		req.setConfig(taskConfig);
 		String json;
 
 		try {
@@ -80,7 +168,7 @@ public class ClusterQueueManager extends QueueManager {
 		}
 
 		try {
-			req.setURI(new URI(broker + "tasks"));
+			req.setURI(new URI(broker + "enqueue/jobs"));
 		} catch (URISyntaxException e) {
 			e.printStackTrace();
 			throw new RuntimeException(e);
@@ -118,9 +206,10 @@ public class ClusterQueueManager extends QueueManager {
 		String json = objectMapper.writeValueAsString(req);
 		HttpPost post = new HttpPost();
 		post.setHeader("Content-Type", "application/json");
+		post.setConfig(priorityConfig);
 
 		try {
-			post.setURI(new URI(broker + "priority"));
+			post.setURI(new URI(broker + "enqueue/priority"));
 		} catch (URISyntaxException e) {
 			LOG.error("Malformed broker URI {}, analysis will not be possible", broker);
 			return null;
@@ -146,11 +235,11 @@ public class ClusterQueueManager extends QueueManager {
 	}
 
 	/**
-	 * Add a callback to a job. Callbacks should return true if they wish to continue receiving results from that
-	 * job, false if they wish to be removed.
+	 * Add a callback to a job. Callbacks should return true if they wish the job to continue, false
+	 * otherwise.
 	 * @param jobId
 	 */
-	@Override public void addCallback(String jobId, Predicate<ResultEnvelope> callback) {
+	@Override public void addCallback(String jobId, Predicate<JobStatus> callback) {
 		this.callbacks.put(jobId, callback);
 	}
 

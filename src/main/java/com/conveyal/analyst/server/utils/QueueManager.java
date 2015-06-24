@@ -1,6 +1,7 @@
 package com.conveyal.analyst.server.utils;
 
 import com.conveyal.analyst.server.AnalystMain;
+import org.opentripplanner.analyst.broker.JobStatus;
 import org.opentripplanner.analyst.cluster.AnalystClusterRequest;
 import org.opentripplanner.analyst.cluster.ResultEnvelope;
 
@@ -25,7 +26,8 @@ public abstract class QueueManager {
 	public abstract ResultEnvelope getSinglePoint (AnalystClusterRequest req)
 			throws IOException;
 
-	public abstract void addCallback(String jobId, Predicate<ResultEnvelope> callback);
+	/** Add a callback for job status. Note that it may be called multiple times in parallel if it takes a long time to return */
+	public abstract void addCallback(String jobId, Predicate<JobStatus> callback);
 
 	public abstract void cancelJob(String jobId);
 
