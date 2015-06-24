@@ -82,7 +82,17 @@
       <groupId>com.conveyal</groupId>
       <artifactId>gtfs-lib</artifactId>
       <version>0.1-SNAPSHOT</version>
+
+      <!-- GTFS Lib includes an SLF4j backend but we're using Logback -->
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-simple</artifactId>
+        </exclusion>
+      </exclusions>
+
     </dependency>
+
     <dependency>
 	<groupId>org.mapdb</groupId>
 	<artifactId>mapdb</artifactId>
@@ -129,9 +139,29 @@
     </dependency>
 
     <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-core</artifactId>
+      <version>1.1.1</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.7.10</version>
+    </dependency>
+
+    <dependency>
       <groupId>com.sparkjava</groupId>
       <artifactId>spark-core</artifactId>
       <version>2.2</version>
+
+      <!-- exclude the slf4j-simple logging backend -->
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-simple</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <!-- file upload support -->

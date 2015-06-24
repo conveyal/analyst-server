@@ -24,3 +24,10 @@ but you will need to set up computation in order to see any analysis results.
 ## Setting up computation
 
 [TODO]
+
+## Setting up custom logging
+
+It is possible to log messages to Logentries. To do this, copy `logentries.xml.template` to any convenient
+location, edit the file to add you logentries key, and start the server with `-Dlogback.configurationFile=path/to/logentries.xml`.
+If it's in the working directory you must refer to it as `./logentries.xml` or Logback will attempt
+to find it on the classpath.

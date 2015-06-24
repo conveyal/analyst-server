@@ -23,6 +23,6 @@ conf/application.conf
 /cache/
 *~
 nbproject
-conf/logger.xml
+logentries.xml
 application.conf
 src/main/resources/logback.xml
