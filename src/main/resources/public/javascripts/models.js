@@ -5,7 +5,7 @@ var Analyst = Analyst || {};
 	A.models = {}
 
 	A.models.Project = Backbone.Model.extend({
-	    urlRoot: '/api/project/',
+	    urlRoot: '/api/project',
 
 	    defaults: {
 	      id: null,
