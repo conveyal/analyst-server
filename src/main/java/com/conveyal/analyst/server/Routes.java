@@ -33,9 +33,24 @@ public class Routes {
         before("/createDemoProject", Authentication::authenticated);
         get("/createDemoProject", Application::createDemoProject);
 
+        // authentication for API excludes two resources
+        before("/api/*", (req, res) -> {
+            // single and query allow CORS access and auth is handled in controllers
+            String[] whitelist = new String[] {
+                    "/api/single",
+                    "/api/query"
+            };
+
+            for (String root : whitelist) {
+                if (req.pathInfo().startsWith(root))
+                    return;
+            }
+
+            Authentication.authenticated(req, res);
+        });
+
         // user controllers
         // TODO ensure / matches /api/user
-        before("/api/user*", Authentication::authenticated);
         get("/api/user", UserController::getUser, json);
         get("/api/user/:id", UserController::getUser, json);
         delete("/api/user", UserController::deleteUser, json);
@@ -44,7 +59,6 @@ public class Routes {
         // TODO edit user: slightly tricky due to the hashed password
 
         // project routes
-        before("/api/project*", Authentication::authenticated);
         // return value is plain text
         get("/api/project/:id/exemplarDay", ProjectController::getExemplarDay);
         get("/api/project", ProjectController::getProject, json);
@@ -55,7 +69,6 @@ public class Routes {
         after("/api/project*", json::type);
 
         // shapefile routes
-        before("/api/shapefile*", Authentication::authenticated);
         get("/api/shapefile", ShapefileController::getShapefile, json);
         get("/api/shapefile/:id", ShapefileController::getShapefile, json);
         post("/api/shapefile", ShapefileController::createShapefile, json);
@@ -64,7 +77,6 @@ public class Routes {
         after("/api/shapefile*", json::type);
 
         // bundle routes
-        before("/api/bundle*", Authentication::authenticated);
         get("/api/bundle", BundleController::getBundle, json);
         get("/api/bundle/:id", BundleController::getBundle, json);
         post("/api/bundle", BundleController::createBundle, json);
@@ -73,7 +85,6 @@ public class Routes {
         after("/api/bundle*", json::type);
 
         // scenario routes
-        before("/api/scenario*", Authentication::authenticated);
         get("/api/scenario", ScenarioController::get, json);
         get("/api/scenario/:id", ScenarioController::getById, json);
         post("/api/scenario", ScenarioController::create, json);
@@ -98,17 +109,16 @@ public class Routes {
         post("/api/single", SinglePoint::result);
         options("/api/single", SinglePoint::options);
         after("/api/single*", json::type);
-
         get("/csv/single", SinglePoint::csv);
 
         // GIS routes
-        before("/gis*", Authentication::authenticated);
+        before("/gis/*", Authentication::authenticated);
         get("/gis/query", Gis::query);
         get("/gis/single", Gis::single);
         get("/gis/singleComparison", Gis::singleComparison);
 
         // all tiles are accessible by the world if unauthenticated API access is enabled.
-        before("/tile*", Authentication::authenticatedOrCors);
+        before("/tile/*", Authentication::authenticatedOrCors);
         get("/tile/spatial", Tiles::spatial);
         get("/tile/shapefile", Tiles::shape);
         get("/tile/query/:queryId/:compareTo/:z/:x/:yformat", Tiles::query);
