@@ -2,6 +2,7 @@ package com.conveyal.analyst.server.utils;
 
 import com.conveyal.analyst.server.AnalystMain;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -114,7 +115,10 @@ public class ClusterQueueManager extends QueueManager {
 
 					try {
 						InputStream is = res.getEntity().getContent();
-						List<JobStatus> stats = objectMapper.readValue(is, List.class);
+						List<JobStatus> stats = objectMapper.readValue(is, new TypeReference<List<JobStatus>> () {});
+						is.close();
+						res.close();
+						get.releaseConnection();
 						stats.forEach(status -> {
 							callbacks.get(status.jobId).forEach(cb -> {
 								executor.execute(() -> {
@@ -146,6 +150,10 @@ public class ClusterQueueManager extends QueueManager {
 	/** enqueue an arbitrary number of requests */
 	@Override public void enqueue(Collection<AnalystClusterRequest> requests) {
 		// Should we chunk these before sending them?
+
+		for (AnalystClusterRequest clusterRequest : requests) {
+			clusterRequest.outputLocation = AnalystMain.config.getProperty("cluster.results-bucket");
+		}
 
 		// Construct a POST request
 		HttpPost req = new HttpPost();

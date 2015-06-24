@@ -1,5 +1,10 @@
 package models;
 
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.ObjectListing;
+import com.amazonaws.services.s3.model.S3Object;
+import com.conveyal.analyst.server.AnalystMain;
 import com.conveyal.analyst.server.otp.Analyst;
 import com.conveyal.analyst.server.utils.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -9,6 +14,7 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.opentripplanner.analyst.PointFeature;
 import org.opentripplanner.analyst.PointSet;
+import org.opentripplanner.analyst.broker.JobStatus;
 import org.opentripplanner.analyst.cluster.AnalystClusterRequest;
 import org.opentripplanner.analyst.cluster.ResultEnvelope;
 import org.opentripplanner.analyst.scenario.RemoveTrip;
@@ -19,10 +25,13 @@ import org.opentripplanner.routing.core.TraverseModeSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.zip.GZIPInputStream;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Query implements Serializable {
@@ -37,6 +46,8 @@ public class Query implements Serializable {
 	public String id;
 	public String projectId;
 	public String name;
+
+	private static final AmazonS3 s3 = new AmazonS3Client();
 
 	/** The mode. Can be left null if both graphId and profileRequest or routingRequest are set */
 	public String mode;
@@ -224,31 +235,72 @@ public class Query implements Serializable {
 			requests.add(req);
 		}
 
-		qm.addCallback(id, re -> {
-			getResults().store(re);
-
-			boolean done;
-
-			synchronized (this) {
-				this.completePoints++;
-
-				done = this.completePoints.equals(this.totalPoints);
-
-				if (done || this.completePoints % 200 == 0)
-					this.save();
-			}
-
-			if (done)
-				this.closeResults();
-
-			// when the job is complete return false to remove this callback from the rotation
-			return !done;
-		});
+		qm.addCallback(id, this::updateStatus);
 
 		// enqueue the requests
 		qm.enqueue(requests);
 
 		LOG.info("Enqueued {} items in {}ms", ps.capacity, System.currentTimeMillis() - now);
+	}
+
+	/**
+	 * Update the status of this query.
+	 * It would seem ill-advised to synchronize on a mapdb object, which may be serialized/deserialized at will,
+	 * but this method is getting passed in as the callback, so it will always have a reference to this object.
+	 *
+	 * TODO will this cause locking in the Executor thread pool?
+	 */
+	private synchronized boolean updateStatus(JobStatus jobStatus) {
+		if (this.complete)
+			// query should not have a callback clearly
+			return false;
+
+		this.completePoints = jobStatus.complete;
+		this.save();
+
+		if (this.completePoints.equals(this.totalPoints)) {
+			// retrieve results from S3
+			QueryResultStore results = getResults();
+
+			String resultBucket = AnalystMain.config.getProperty("cluster.results-bucket");
+
+			ObjectListing listing = null;
+			try {
+				do {
+					listing = listing == null ? s3.listObjects(resultBucket, this.id + "/") : s3.listNextBatchOfObjects(listing);
+
+					// safe to do gets in parallel because the storage mechanism is synchronized
+					listing.getObjectSummaries().parallelStream().forEach(os -> {
+						S3Object obj = s3.getObject(os.getBucketName(), os.getKey());
+
+						ResultEnvelope env;
+						try {
+							InputStream is = new GZIPInputStream(new BufferedInputStream(obj.getObjectContent()));
+							env = JsonUtil.getObjectMapper()
+									.readValue(is, ResultEnvelope.class);
+							is.close();
+						} catch (IOException e) {
+							throw new S3IOException(e);
+						}
+
+						results.store(env);
+					});
+
+				} while (listing.isTruncated());
+
+				this.closeResults();
+			} catch (S3IOException e) {
+				e.getCause().printStackTrace();
+				LOG.error("exception caught, retrying result retrieval");
+				return true;
+			}
+
+			this.complete = true;
+			this.save();
+			return false;
+		}
+
+		return true;
 	}
 
 	public String getGraphId () {
@@ -310,5 +362,12 @@ public class Query implements Serializable {
 
 	public static Collection<Query> getQueries () {
 		return queryData.getAll();
+	}
+
+	/** A class to indicate that we couldn't get results from S3 */
+	private static class S3IOException extends RuntimeException {
+		public S3IOException(Throwable e) {
+			super(e);
+		}
 	}
 }
