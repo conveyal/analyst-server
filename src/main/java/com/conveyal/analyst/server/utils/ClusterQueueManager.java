@@ -102,13 +102,8 @@ public class ClusterQueueManager extends QueueManager {
 							throw new RuntimeException(e);
 						}
 
-						CloseableHttpResponse res;
-						try {
-							res = httpClient.execute(get);
-						} catch (IOException e) {
-							LOG.error("Error retrieving job status", e);
-							continue;
-						}
+						// don't catch errors here, allow them to be thrown to the next level up
+						CloseableHttpResponse res= httpClient.execute(get);
 
 						if (res.getStatusLine().getStatusCode() != 200 && res.getStatusLine().getStatusCode() != 202)
 							LOG.warn("error retrieving job status: " + res.getStatusLine()
@@ -193,9 +188,16 @@ public class ClusterQueueManager extends QueueManager {
 		try {
 			res = httpClient.execute(req);
 		} catch (IOException e) {
-			LOG.error("Network error enqueing requests", e);
-			// TODO retry
-			throw new RuntimeException(e);
+			LOG.error("Network error enqueing requests, trying again in 15 seconds", e);
+			executor.execute(() -> {
+				try {
+					Thread.sleep(15000l);
+				} catch (InterruptedException e1) {
+					/* do nothing */
+				}
+				enqueue(requests);
+			});
+			return;
 		}
 
 		if (res.getStatusLine().getStatusCode() != 200 && res.getStatusLine().getStatusCode() != 202)
