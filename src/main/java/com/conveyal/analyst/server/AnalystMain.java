@@ -1,5 +1,6 @@
 package com.conveyal.analyst.server;
 
+import com.conveyal.analyst.server.utils.QueueManager;
 import models.Bundle;
 import models.Query;
 import models.Shapefile;
@@ -54,9 +55,10 @@ public class AnalystMain {
 			throw new RuntimeException(e);
 		}
 
+		// accumulate results from running queries
 		for (Query q : Query.getAll()) {
-			if (q.completePoints == null || !q.completePoints.equals(q.totalPoints)) {
-				// TODO accumulate results
+			if (!q.complete) {
+				QueueManager.getManager().addCallback(q.id, q::updateStatus);
 			}
 		}
 	}

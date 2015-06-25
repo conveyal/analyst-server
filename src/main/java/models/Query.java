@@ -250,7 +250,7 @@ public class Query implements Serializable {
 	 *
 	 * TODO will this cause locking in the Executor thread pool?
 	 */
-	private synchronized boolean updateStatus(JobStatus jobStatus) {
+	public synchronized boolean updateStatus(JobStatus jobStatus) {
 		if (this.complete)
 			// query should not have a callback clearly
 			return false;
