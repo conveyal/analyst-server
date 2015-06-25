@@ -27,7 +27,7 @@ public class BundleController extends Controller {
     private static Logger LOG = LoggerFactory.getLogger(BundleController.class);
 
     public static Object getBundle(Request req, Response res) {
-        if (req.params().containsKey("id")) {
+        if (req.params("id") != null) {
             Bundle s = Bundle.getBundle(req.params("id"));
             if(s != null && currentUser(req).hasReadPermission(s.projectId))
                 return s;

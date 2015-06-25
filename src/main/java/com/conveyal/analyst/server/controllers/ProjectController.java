@@ -65,7 +65,7 @@ public class ProjectController extends Controller {
 
     public static Object getProject(Request req, Response res) {
         User u = currentUser(req);
-        if (req.params().containsKey("id")) {
+        if (req.params("id") != null) {
             Project p = Project.getProject(req.params("id"));
             if (p != null && u.hasReadPermission(p))
                 return p;

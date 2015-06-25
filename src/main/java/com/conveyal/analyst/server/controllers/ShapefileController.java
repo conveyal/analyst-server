@@ -26,7 +26,7 @@ public class ShapefileController extends Controller {
     private static final Logger LOG = LoggerFactory.getLogger(ShapefileController.class);
 
     public static Object getShapefile(Request req, Response res) {
-        if (req.params().containsKey("id")) {
+        if (req.params("id") != null) {
             Shapefile s = Shapefile.getShapefile(req.params().get("id"));
             if(s != null || !currentUser(req).hasReadPermission(Project.getProject(s.projectId)))
                 return s;

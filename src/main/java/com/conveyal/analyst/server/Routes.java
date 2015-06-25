@@ -101,8 +101,8 @@ public class Routes {
 
         // query routes
         // note: auth is handled by each individual controller as some allow unauthenticated access
-        get("/api/query", QueryController::getQuery, json);
         get("/api/query/:id", QueryController::getQuery, json);
+        get("/api/query", QueryController::getQuery, json);
         post("/api/query", QueryController::createQuery, json);
         put("/api/query/:id", QueryController::updateQuery, json);
         delete("/api/query/:id", QueryController::deleteQuery, json);
@@ -135,6 +135,8 @@ public class Routes {
         get("/tile/single/:key/:z/:x/:yformat", SinglePointTiles::single);
         get("/tile/single/:key1/:key2/:z/:x/:yformat", SinglePointTiles::compare);
 
+        // handle exceptions by reporting the proper HTTP status code, printing a stack trace to the logs
+        // and sending it to the browser in dev mode.
         exception(Exception.class, (e, req, res) -> {
             LOG.info("unhandled exception, caught by server thread", e);
             if (Boolean.TRUE.equals(

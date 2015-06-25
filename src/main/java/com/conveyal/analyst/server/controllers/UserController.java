@@ -19,7 +19,7 @@ public class UserController extends Controller {
             User u = null;
 
             if(id.toLowerCase().equals("self")) {
-                u = User.getUserByUsername(request.session().attribute("username"));
+                u = currentUser(request);
             }
             else {
                 u = User.getUser(id);

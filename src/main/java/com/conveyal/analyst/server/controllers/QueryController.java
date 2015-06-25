@@ -34,7 +34,7 @@ public class QueryController extends Controller {
 
         String projectId = req.queryParams("projectId");
 
-        if(req.params().containsKey("id")) {
+        if(req.params("id") != null) {
             Query q = Query.getQuery(req.params("id"));
             if (q != null && currentUser(req).hasReadPermission(q.projectId))
                 return q;
