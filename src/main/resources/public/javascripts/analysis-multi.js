@@ -79,9 +79,6 @@ var Analyst = Analyst || {};
         reset: true,
         data: {
           projectId: A.app.selectedProject
-        },
-        success: function(collection, response, options) {
-
         }
       });
 
@@ -199,7 +196,7 @@ var Analyst = Analyst || {};
     initialize: function() {
       var _this = this;
       this.updateInterval = setInterval(function() {
-        if (!_this.isComplete()) {
+        if (!_this.model.get('complete')) {
           _this.model.fetch();
         } else {
           // don't keep polling
@@ -225,9 +222,7 @@ var Analyst = Analyst || {};
       var data = this.model.toJSON();
 
       if (this.isStarting())
-        data['starting'] = true;
-      else if (this.isComplete())
-        data['complete'] = true;
+        data.starting = true;
 
       data['pointSetName'] = this.model.pointSetName();
 
@@ -237,12 +232,6 @@ var Analyst = Analyst || {};
 
     isStarting: function() {
       return this.model.get("completePoints") === 0;
-    },
-
-    isComplete: function() {
-      var tp = this.model.get("totalPoints");
-      var cp = this.model.get("completePoints");
-      return tp !== null && cp !== null && tp == cp;
     },
 
     clickItem: function(evt) {
@@ -487,7 +476,7 @@ var Analyst = Analyst || {};
         _this.render();
       });
 
-      if (this.isComplete()) {
+      if (this.model.get('complete')) {
         if (this.model.get('profile')) {
           // profile request
           this.$('.whichMulti input[value="POINT_ESTIMATE"]').parent().remove();

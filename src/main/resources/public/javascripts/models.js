@@ -118,6 +118,7 @@ var Analyst = Analyst || {};
 			status: null,
 			totalPoints: null,
 			completePoints: null,
+			complete: false,
 			envelope: null
 		},
 
