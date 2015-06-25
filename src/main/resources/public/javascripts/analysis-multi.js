@@ -218,11 +218,9 @@ var Analyst = Analyst || {};
     },
 
     serializeData: function() {
-
       var data = this.model.toJSON();
-
-      if (this.isStarting())
-        data.starting = true;
+      data.starting = this.isStarting();
+      data.assemblingResults = this.isAssemblingResults();
 
       data['pointSetName'] = this.model.pointSetName();
 
@@ -232,6 +230,12 @@ var Analyst = Analyst || {};
 
     isStarting: function() {
       return this.model.get("completePoints") === 0;
+    },
+
+    /** Is this currently assembling results? */
+    isAssemblingResults: function () {
+      return !this.model.get('complete') && this.model.get('completePoints') == this.model.get('totalPoints') &&
+        this.model.get('totalPoints');
     },
 
     clickItem: function(evt) {

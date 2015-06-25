@@ -10,10 +10,16 @@
 	{{/unless}}
 
 	{{#if starting}}
-		<small>queued for calculation...</smal>
+		<small>queued for calculation&nbsp;.&nbsp;.&nbsp;.</small>
 	{{else}}
 		{{#unless complete}}
-			<small>({{completePoints}} of {{totalPoints}} complete)<small>
+			<small>
+				{{#if assemblingResults}}
+					assembling results&nbsp;.&nbsp;.&nbsp;.
+				{{else}}
+				 {{completePoints}} of {{totalPoints}} complete
+				{{/if}}
+			<small>
 		{{/unless}}
 	{{/if}}
 
