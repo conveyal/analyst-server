@@ -271,7 +271,7 @@ public class ClusterQueueManager extends QueueManager {
 
 		try {
 			HttpDelete req = new HttpDelete();
-			req.setURI(new URI(broker + "/" + q.projectId + "/" + graphId + "/" + jobId));
+			req.setURI(new URI(broker + "/jobs/" + jobId));
 
 			CloseableHttpResponse res = httpClient.execute(req);
 
