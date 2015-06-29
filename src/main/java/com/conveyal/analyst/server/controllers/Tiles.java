@@ -159,8 +159,7 @@ public class Tiles extends Controller {
     public static Object transit (Request req, Response res) {
         String scenarioId = req.queryParams("bundleId");
         int x = Integer.parseInt(req.queryParams("x"));
-        String[] yformat = req.params("yformat").split("\\.");
-        int y = Integer.parseInt(yformat[0]);
+        int y = Integer.parseInt(req.queryParams("y"));
         int z = Integer.parseInt(req.queryParams("z"));
 
         AnalystTileRequest tileRequest = new AnalystTileRequest.TransitTile(scenarioId, x, y, z);
