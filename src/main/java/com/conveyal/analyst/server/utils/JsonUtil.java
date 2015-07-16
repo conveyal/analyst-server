@@ -30,6 +30,7 @@ public class JsonUtil {
         objectMapper.registerModule(new CustomSerializerModule());
         objectMapper.registerModule(JodaLocalDateSerializer.makeModule());
         objectMapper.registerModule(new GeoJsonModule());
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
     public static ObjectMapper getObjectMapper() {
