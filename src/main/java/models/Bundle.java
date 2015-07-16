@@ -50,7 +50,7 @@ public class Bundle implements Serializable {
 	
 	static {
 		String s3credentials = AnalystMain.config.getProperty("cluster.aws-credentials");
-		String bucket = AnalystMain.config.getProperty("cluster.pointsets-bucket");
+		String bucket = AnalystMain.config.getProperty("cluster.graphs-bucket");
 		boolean workOffline = Boolean.parseBoolean(
 				AnalystMain.config.getProperty("cluster.work-offline"));
 		clusterGraphService = new ClusterGraphService(s3credentials, workOffline, bucket);
@@ -142,6 +142,8 @@ public class Bundle implements Serializable {
 		bundle.save();
 		
 		bundle.processGtfs(gtfsFile, bundleType, augmentBundleId);
+
+		bundle.writeToClusterCache();
 		
 		return bundle;
 	}
