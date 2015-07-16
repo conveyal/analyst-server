@@ -34,9 +34,9 @@ public class Application extends Controller {
 
 	public static String createUser(Request request, Response response) throws Exception {
 
-		String username = (String) request.attribute("username");
-		String password = (String) request.attribute("password");
-		String email = (String) request.attribute("email");
+		String username = request.params("username");
+		String password = request.params("password");
+		String email = request.params("email");
 
 		User u;
 
