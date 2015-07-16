@@ -6,7 +6,6 @@ import com.conveyal.analyst.server.utils.QueueManager;
 import com.csvreader.CsvWriter;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -49,7 +48,7 @@ public class SinglePoint extends Controller {
 	 *
 	 * TODO: this should be made asynchronous, but that's not an easy thing to do within the confines of Spark.
 	 */
-    public static Object result (Request request, Response res) throws JsonProcessingException {
+    public static Object result (Request request, Response res) throws Exception {
 		Authentication.authenticatedOrCors(request, res);
     	
     	// deserialize a result
@@ -177,105 +176,101 @@ public class SinglePoint extends Controller {
     	return baos.toString();
     }
     
-    private static String resultSetToJson (ResultEnvelope rs) {
-    	try {
-    		ResultSet worst = rs.get(ResultEnvelope.Which.WORST_CASE);
-    		ResultSet point = rs.get(ResultEnvelope.Which.POINT_ESTIMATE);
-    		ResultSet avg   = rs.get(ResultEnvelope.Which.AVERAGE);
-    		ResultSet best  = rs.get(ResultEnvelope.Which.BEST_CASE);
-    		ResultSet spread= rs.get(ResultEnvelope.Which.SPREAD);
-    	
-	    	ByteArrayOutputStream baos = new ByteArrayOutputStream();
-	    	// TODO: are the features in the same order here (!)
-	    	// I think they are if the caches are cleaned regularly, because we cache the pointset on startup
-	    	// However, I'm not positive that every time we start the server we get a pointset in the same order
-	    	// I think we do, because MapDB iteration order is defined in a TreeMap, and getAll returns map.values . . .
-	    	// However, nothing is enforcing this . . .
-	    	JsonFactory jf = new JsonFactory();
-	    	JsonGenerator jgen = jf.createGenerator(baos);
-	    	jgen.setCodec(objectMapper);
-	    	
-	    	jgen.writeStartObject();
-	    	{
-	    		if (rs.destinationPointsetId != null) {
-					Shapefile shp = Shapefile.getShapefile(rs.destinationPointsetId);
-					shp.getPointSet().writeJsonProperties(jgen);
+    private static String resultSetToJson (ResultEnvelope rs) throws Exception {
+		ResultSet worst = rs.get(ResultEnvelope.Which.WORST_CASE);
+		ResultSet point = rs.get(ResultEnvelope.Which.POINT_ESTIMATE);
+		ResultSet avg   = rs.get(ResultEnvelope.Which.AVERAGE);
+		ResultSet best  = rs.get(ResultEnvelope.Which.BEST_CASE);
+		ResultSet spread= rs.get(ResultEnvelope.Which.SPREAD);
+
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		// TODO: are the features in the same order here (!)
+		// I think they are if the caches are cleaned regularly, because we cache the pointset on startup
+		// However, I'm not positive that every time we start the server we get a pointset in the same order
+		// I think we do, because MapDB iteration order is defined in a TreeMap, and getAll returns map.values . . .
+		// However, nothing is enforcing this . . .
+		JsonFactory jf = new JsonFactory();
+		JsonGenerator jgen = jf.createGenerator(baos);
+		jgen.setCodec(objectMapper);
+
+		jgen.writeStartObject();
+		{
+			if (rs.destinationPointsetId != null) {
+				Shapefile shp = Shapefile.getShapefile(rs.destinationPointsetId);
+				shp.getPointSet().writeJsonProperties(jgen);
+			}
+
+			jgen.writeStringField("key", rs.id);
+
+			ResultSet exemplar = point != null ? point : worst;
+
+			jgen.writeObjectFieldStart("data");
+			{
+				for (String propertyId : exemplar.histograms.keySet()) {
+					jgen.writeObjectFieldStart(propertyId);
+					{
+						if (worst != null) {
+							jgen.writeObjectFieldStart("worstCase");
+							worst.histograms.get(propertyId).writeJson(jgen);
+							jgen.writeEndObject();
+						}
+
+						// both pointEstimate and average are point estimates, pick whichever one is not null
+						if (point != null || avg != null) {
+							jgen.writeObjectFieldStart("pointEstimate");
+							(point != null ? point : avg).histograms.get(propertyId).writeJson(jgen);
+							jgen.writeEndObject();
+						}
+
+						if (best != null) {
+							jgen.writeObjectFieldStart("bestCase");
+							best.histograms.get(propertyId).writeJson(jgen);
+							jgen.writeEndObject();
+						}
+
+						if (spread != null) {
+							jgen.writeObjectFieldStart("spread");
+							spread.histograms.get(propertyId).writeJson(jgen);
+							jgen.writeEndObject();
+						}
+					}
+					jgen.writeEndObject();
 				}
-		    	
-		    	jgen.writeStringField("key", rs.id);
-		    	
-		    	ResultSet exemplar = point != null ? point : worst;
-		    	
-		    	jgen.writeObjectFieldStart("data");
-		    	{
-			    	for (String propertyId : exemplar.histograms.keySet()) {
-			    		jgen.writeObjectFieldStart(propertyId);
-			    		{
-				    		if (worst != null) {
-				    			jgen.writeObjectFieldStart("worstCase");
-				    			worst.histograms.get(propertyId).writeJson(jgen);
-				    			jgen.writeEndObject();
-				    		}
-				    		
-				    		// both pointEstimate and average are point estimates, pick whichever one is not null
-				    		if (point != null || avg != null) {
-				    			jgen.writeObjectFieldStart("pointEstimate");
-				    			(point != null ? point : avg).histograms.get(propertyId).writeJson(jgen);
-				    			jgen.writeEndObject();
-				    		}
-				    		
-				    		if (best != null) {
-				    			jgen.writeObjectFieldStart("bestCase");
-				    			best.histograms.get(propertyId).writeJson(jgen);
-				    			jgen.writeEndObject();
-				    		}
-				    		
-				    		if (spread != null) {
-				    			jgen.writeObjectFieldStart("spread");
-				    			spread.histograms.get(propertyId).writeJson(jgen);
-				    			jgen.writeEndObject();
-				    		}
-			    		}
-			    		jgen.writeEndObject();
-			    	}
-		    	
-		    	}
-		    	jgen.writeEndObject();
-		    	
-		    	if (exemplar.isochrones != null) {
-		    		jgen.writeObjectFieldStart("isochrones");
-		    		if (worst != null) {
-		    			jgen.writeObjectFieldStart("worstCase");
-		    			worst.writeIsochrones(jgen);
-		    			jgen.writeEndObject();
-		    		}
-		    		
-		    		// both pointEstimate and average are point estimates, pick whichever one is not null
-		    		if (point != null || avg != null) {
-		    			jgen.writeObjectFieldStart("pointEstimate");
-		    			(point != null ? point : avg).writeIsochrones(jgen);
-		    			jgen.writeEndObject();
-		    		}
-		    		
-		    		if (best != null) {
-		    			jgen.writeObjectFieldStart("bestCase");
-		    			best.writeIsochrones(jgen);
-		    			jgen.writeEndObject();
-		    		}
-		    		
-		    		if (spread != null) {
-		    			jgen.writeObjectFieldStart("spread");
-		    			spread.writeIsochrones(jgen);
-		    			jgen.writeEndObject();
-		    		}
-		    	}
-	    	}
-	    	jgen.writeEndObject();
-	    	jgen.close();
-	    	return baos.toString();
-    	} catch (Exception e) {
-    		return null;
-    	}
+
+			}
+			jgen.writeEndObject();
+
+			if (exemplar.isochrones != null) {
+				jgen.writeObjectFieldStart("isochrones");
+				if (worst != null) {
+					jgen.writeObjectFieldStart("worstCase");
+					worst.writeIsochrones(jgen);
+					jgen.writeEndObject();
+				}
+
+				// both pointEstimate and average are point estimates, pick whichever one is not null
+				if (point != null || avg != null) {
+					jgen.writeObjectFieldStart("pointEstimate");
+					(point != null ? point : avg).writeIsochrones(jgen);
+					jgen.writeEndObject();
+				}
+
+				if (best != null) {
+					jgen.writeObjectFieldStart("bestCase");
+					best.writeIsochrones(jgen);
+					jgen.writeEndObject();
+				}
+
+				if (spread != null) {
+					jgen.writeObjectFieldStart("spread");
+					spread.writeIsochrones(jgen);
+					jgen.writeEndObject();
+				}
+			}
+		}
+		jgen.writeEndObject();
+		jgen.close();
+		return baos.toString();
     }
 
     /** Get a result set with times from the cache, or null if the key doesn't exist/has fallen out of the cache */
