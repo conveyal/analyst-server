@@ -105,9 +105,16 @@ public class ClusterQueueManager extends QueueManager {
 						// don't catch errors here, allow them to be thrown to the next level up
 						CloseableHttpResponse res= httpClient.execute(get);
 
-						if (res.getStatusLine().getStatusCode() != 200 && res.getStatusLine().getStatusCode() != 202)
+						if (res.getStatusLine().getStatusCode() != 200) {
 							LOG.warn("error retrieving job status: " + res.getStatusLine()
 									.getStatusCode() + " " + res.getStatusLine().getReasonPhrase());
+
+							if (res.getStatusLine().getStatusCode() == 404) {
+								// TODO call every callback
+								callbacks.clear();
+								continue;
+							}
+						}
 
 						try {
 							InputStream is = res.getEntity().getContent();
