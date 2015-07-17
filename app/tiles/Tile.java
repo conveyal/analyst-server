@@ -20,6 +20,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.imageio.ImageIO;
 
+import utils.HaltonPoints;
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Envelope;
+import com.vividsolutions.jts.geom.Geometry;
+import org.apache.commons.imaging.ImageFormats;
+import org.apache.commons.imaging.ImageWriteException;
+import org.apache.commons.imaging.Imaging;
 import org.geotools.coverage.grid.GridEnvelope2D;
 import org.geotools.coverage.grid.GridGeometry2D;
 import org.geotools.geometry.Envelope2D;
@@ -31,11 +38,16 @@ import org.opengis.referencing.operation.TransformException;
 import org.opentripplanner.analyst.core.SlippyTile;
 import org.opentripplanner.analyst.request.TileRequest;
 
-import utils.HaltonPoints;
-
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
+
+import java.awt.*;
+import java.awt.geom.Path2D;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Tile {
 	
@@ -212,7 +224,7 @@ public class Tile {
     	gr.draw(path);    
 	}
 	
-	public byte[] generateImage() throws IOException {
+	public byte[] generateImage() throws IOException, ImageWriteException {
 		
 		if(this.scaleFactor > 1) {
 			
@@ -248,10 +260,10 @@ public class Tile {
 		if(gr != null)
 			gr.dispose();
 		gr = null;
-		
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ImageIO.write(buffer, "png", baos);
-        
-        return baos.toByteArray(); 
+
+		Map<String, Object> params = new HashMap<>();
+		//params.put(ImagingConstants.PARAM_KEY_COMPRESSION, PngConstants.COMPRESSION_DEFLATE_INFLATE);
+
+		return Imaging.writeImageToBytes(buffer, ImageFormats.PNG, params);
 	}
 }

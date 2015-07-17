@@ -6,6 +6,7 @@ import models.Attribute;
 import models.Shapefile;
 
 import org.joda.time.LocalDate;
+import org.apache.commons.imaging.ImageWriteException;
 import org.opengis.geometry.MismatchedDimensionException;
 import org.opengis.referencing.operation.TransformException;
 import org.opentripplanner.analyst.PointSet;
@@ -151,9 +152,8 @@ public class SurfaceComparisonTile extends AnalystTileRequest implements UTFIntG
 
         try {
             return tile.generateImage();
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        } catch (IOException | ImageWriteException e) {
+            LOG.error("unable to generate tile image", e);
             return null;
         }
     }
