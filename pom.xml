@@ -75,6 +75,19 @@
 	    <name>Conveyal Maven Repository</name>
 	    <url>http://maven.conveyal.com/</url>
 	</repository>
+
+    <!-- commons imaging -->
+    <repository>
+      <id>apache.snapshots</id>
+      <name>Apache Development Snapshot Repository</name>
+      <url>https://repository.apache.org/content/repositories/snapshots/</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
   </repositories>
 
   <dependencies>
@@ -212,6 +225,12 @@
       <groupId>com.logentries</groupId>
       <artifactId>logentries-appender</artifactId>
       <version>1.1.30</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-imaging</artifactId>
+      <version>1.0-SNAPSHOT</version>
     </dependency>
   </dependencies>
 </project>

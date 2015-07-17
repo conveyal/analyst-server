@@ -13,6 +13,7 @@ import models.Bundle.TransitSegment;
 import models.Query;
 import models.Shapefile;
 import models.Shapefile.ShapeFeature;
+import org.apache.commons.imaging.ImageWriteException;
 import org.opengis.geometry.MismatchedDimensionException;
 import org.opengis.referencing.operation.TransformException;
 import org.opentripplanner.analyst.cluster.ResultEnvelope;
@@ -101,11 +102,11 @@ public abstract class AnalystTileRequest {
     		
     		try {
 				return tile.generateImage();
-			} catch (IOException e) {
+			} catch (IOException | ImageWriteException e) {
 				LOG.error("Error generating image", e);
 				return null;
 			}
-			
+
 		}
 	}
 	
@@ -240,11 +241,11 @@ public abstract class AnalystTileRequest {
 		           
     		try {
 				return tile.generateImage();
-			} catch (IOException e) {
+			} catch (IOException | ImageWriteException e) {
 				LOG.error("Error generating image", e);
 				return null;
 			}
-			
+
 		}
 	}
 	
@@ -311,7 +312,7 @@ public abstract class AnalystTileRequest {
 		           
     		try {
 				return tile.generateImage();
-			} catch (IOException e) {
+			} catch (IOException | ImageWriteException e) {
 				LOG.error("Error generating tile image", e);
 				return null;
 			}
@@ -441,7 +442,7 @@ public abstract class AnalystTileRequest {
     		
     		try {
 				return tile.generateImage();
-			} catch (IOException e) {
+			} catch (IOException | ImageWriteException e) {
 				LOG.error("error generating tile", e);
 				return null;
 			}

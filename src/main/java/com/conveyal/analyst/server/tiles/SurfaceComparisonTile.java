@@ -9,6 +9,7 @@ import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.index.strtree.STRtree;
 import models.Attribute;
 import models.Shapefile;
+import org.apache.commons.imaging.ImageWriteException;
 import org.opengis.geometry.MismatchedDimensionException;
 import org.opengis.referencing.operation.TransformException;
 import org.opentripplanner.analyst.PointSet;
@@ -140,7 +141,7 @@ public class SurfaceComparisonTile extends AnalystTileRequest implements UTFIntG
 
         try {
             return tile.generateImage();
-        } catch (IOException e) {
+        } catch (IOException | ImageWriteException e) {
             LOG.error("unable to generate tile image", e);
             return null;
         }
