@@ -143,8 +143,6 @@ public class Bundle implements Serializable {
 		
 		bundle.processGtfs(gtfsFile, bundleType, augmentBundleId);
 
-		bundle.writeToClusterCache();
-		
 		return bundle;
 	}
 	
