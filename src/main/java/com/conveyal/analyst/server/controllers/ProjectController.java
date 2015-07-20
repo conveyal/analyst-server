@@ -54,13 +54,14 @@ public class ProjectController extends Controller {
         // find a tuesday between the start and end date
         LocalDate ret = endDate;
 
-        while (!ret.isBefore(startDate)) {
-            if (ret.getDayOfWeek().equals(DayOfWeek.TUESDAY))
-                return ret.toString();
-            ret = ret.minusDays(1);
-        }
+        if (defaultDate.isAfter(startDate) && defaultDate.isBefore(endDate))
+            return defaultDate.toString();
 
-        return defaultDate.toString();
+        else if (defaultDate.isBefore(startDate))
+            return startDate.plusDays(7).with(ChronoField.DAY_OF_WEEK, DayOfWeek.TUESDAY.getValue()).toString();
+
+        else
+            return endDate.with(ChronoField.DAY_OF_WEEK, DayOfWeek.TUESDAY.getValue()).toString();
     }
 
     public static Object getProject(Request req, Response res) {
