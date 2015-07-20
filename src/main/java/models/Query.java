@@ -289,8 +289,8 @@ public class Query implements Serializable {
 				} while (listing.isTruncated());
 
 				this.closeResults();
-			} catch (S3IOException e) {
-				LOG.error("exception caught, retrying result retrieval", e.getCause());
+			} catch (Exception e) {
+				LOG.error("exception caught, retrying result retrieval", e);
 				return true;
 			}
 

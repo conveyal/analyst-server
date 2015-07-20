@@ -129,6 +129,21 @@ public class ClusterQueueManager extends QueueManager {
 									executor.execute(() -> {
 										if (!cb.test(status)) {
 											callbacks.remove(status.jobId, cb);
+											// Delete the job from the cluster
+											HttpDelete delete = new HttpDelete();
+
+											try {
+												delete.setURI(new URI(broker + "/jobs/" + status.jobId));
+											} catch (URISyntaxException e) {
+												LOG.error("Invalid broker URL", e);
+												return;
+											}
+
+											try {
+												httpClient.execute(delete).close();
+											} catch (IOException e) {
+												LOG.error("Failed to delete job {}", status.jobId, e);
+											}
 										}
 									});
 								});
