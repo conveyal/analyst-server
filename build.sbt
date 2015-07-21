@@ -14,7 +14,8 @@ libraryDependencies ++= Seq(
   "org.opentripplanner" % "otp" % "0.19.0-SNAPSHOT",
   "org.apache.httpcomponents" % "httpclient" % "4.3.1", 
   "com.conveyal" % "gtfs-lib" % "0.1-SNAPSHOT",
-  "com.fasterxml.jackson.datatype" % "jackson-datatype-joda" % "2.4.0"
+  "com.fasterxml.jackson.datatype" % "jackson-datatype-joda" % "2.4.0",
+  "org.apache.commons" % "commons-imaging" % "1.0-SNAPSHOT"
 )
 
 watchSources := (watchSources.value
@@ -23,5 +24,5 @@ watchSources := (watchSources.value
   --- baseDirectory.value / "public" ** "*").get
 
 resolvers += "Local Maven Repository" at "file://"+Path.userHome.absolutePath+"/.m2/repository"
-
 resolvers += "Conveyal Maven Repository" at "http://maven.conveyal.com"
+resolvers += "Apache Dev" at "https://repository.apache.org/content/repositories/snapshots"

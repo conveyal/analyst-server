@@ -1,34 +1,25 @@
 package tiles;
 
-import controllers.Api;
-import controllers.SinglePoint;
-import models.Attribute;
-import models.Shapefile;
-
-import org.joda.time.LocalDate;
-import org.apache.commons.imaging.ImageWriteException;
-import org.opengis.geometry.MismatchedDimensionException;
-import org.opengis.referencing.operation.TransformException;
-import org.opentripplanner.analyst.PointSet;
-import org.opentripplanner.analyst.ResultSet;
-import org.opentripplanner.analyst.SampleSet;
-import org.opentripplanner.analyst.TimeSurface;
-import org.opentripplanner.analyst.core.SlippyTile;
-
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.index.strtree.STRtree;
-
+import controllers.SinglePoint;
+import models.Attribute;
+import models.Shapefile;
+import org.apache.commons.imaging.ImageWriteException;
+import org.opengis.geometry.MismatchedDimensionException;
+import org.opengis.referencing.operation.TransformException;
+import org.opentripplanner.analyst.PointSet;
+import org.opentripplanner.analyst.ResultSet;
 import utils.HaltonPoints;
 import utils.ResultEnvelope;
 import utils.ResultEnvelope.Which;
 
-import java.awt.Color;
+import java.awt.*;
 import java.io.IOException;
 import java.util.List;
-import java.util.Locale;
 
 /**
 * Created by matthewc on 3/4/15.
@@ -153,7 +144,7 @@ public class SurfaceComparisonTile extends AnalystTileRequest implements UTFIntG
         try {
             return tile.generateImage();
         } catch (IOException | ImageWriteException e) {
-            LOG.error("unable to generate tile image", e);
+            e.printStackTrace();
             return null;
         }
     }
