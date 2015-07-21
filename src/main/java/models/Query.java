@@ -235,10 +235,11 @@ public class Query implements Serializable {
 			requests.add(req);
 		}
 
-		qm.addCallback(id, this::updateStatus);
-
 		// enqueue the requests
 		qm.enqueue(requests);
+
+		// add the callback after enqueuing so it doesn't get deleted when the job is not found
+		qm.addCallback(id, this::updateStatus);
 
 		LOG.info("Enqueued {} items in {}ms", ps.capacity, System.currentTimeMillis() - now);
 	}
