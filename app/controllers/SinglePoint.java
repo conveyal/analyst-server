@@ -48,7 +48,7 @@ public class SinglePoint extends Controller {
     // cache the result envelopes, but don't run out of memory
 	// if we use a direct cache from MapDB, the system comes apart at the seams because MapDB has a lot of trouble serializing
 	// the isochrones
-	private static Cache<String, ResultEnvelope> envelopeCache = CacheBuilder.newBuilder().maximumSize(500).build();
+	private static Cache<String, ResultEnvelope> envelopeCache = CacheBuilder.newBuilder().maximumSize(200).build();
 
     /** re-use object mapper */
     private static final ObjectMapper objectMapper = new ObjectMapper();
@@ -125,7 +125,12 @@ public class SinglePoint extends Controller {
 			public Result apply(WorkResult result) throws Throwable {
                 ResultEnvelope res = new ResultEnvelope(result);
                 res.shapefile = shp != null ? shp.id : null;
-                envelopeCache.put(key, res);
+
+				// don't cache isochrones - they're too big
+				if (res.shapefile != null) {
+					envelopeCache.put(key, res);
+				}
+
                 String json = resultSetToJson(res, shp, key);
                 
                 if (json != null)
