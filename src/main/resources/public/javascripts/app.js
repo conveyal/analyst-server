@@ -19,7 +19,12 @@ var Analyst = Analyst || {};
 
 		// don't start the app until the user has loaded, because the user is needed to assess
 		// permissions. See issue #56.
-		A.app.user.fetch().always(function () {
+		A.app.user.fetch()
+		.fail(function (err) {
+			if (err.status == 401)
+				window.location.href='/login.html';
+		})
+		.always(function () {
 			A.app.controller =  new A.app.AppController();
 
 			A.app.projects  = new A.models.Projects();
@@ -29,6 +34,13 @@ var Analyst = Analyst || {};
 
 			if( ! Backbone.History.started) Backbone.history.start();
 
+		});
+
+		// any time we get a 401, redirect to the login page
+		$(document).ajaxError(function (ev, err) {
+			if (err.status == 401) {
+				window.location.href = '/login.html';
+			}
 		});
 
 	});
