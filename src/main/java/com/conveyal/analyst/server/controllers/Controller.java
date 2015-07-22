@@ -35,6 +35,9 @@ public class Controller {
     /** 401 Unauthorized */
     public static final int UNAUTHORIZED = 401;
 
+    /** 403 Forbidden */
+    public static final int FORBIDDEN = 403;
+
     /** 404 Not Found */
     public static final int NOT_FOUND = 404;
 

@@ -7,6 +7,9 @@
 # If you deploy your application to several instances be sure to use the same key!
 application.salt=cAb`]/Ynfo55ehWX:6gv^>gtsNn`:Wg?xSBojvieIDf1dNLAT>kOSEBYIQsbO2K@
 
+# If set to true, anyone can create themselves an account
+application.allow-user-create=true
+
 # Port to use, optional, default 9090
 #application.port=9090
 

@@ -1,5 +1,6 @@
 package com.conveyal.analyst.server.controllers;
 
+import com.conveyal.analyst.server.AnalystMain;
 import models.Project;
 import models.User;
 import spark.Request;
@@ -33,6 +34,9 @@ public class Application extends Controller {
 	}
 
 	public static String createUser(Request request, Response response) throws Exception {
+
+		if (!Boolean.parseBoolean(AnalystMain.config.getProperty("application.allow-user-create")))
+			halt(FORBIDDEN, "This server does not allow arbitrary account creation.");
 
 		String username = request.queryParams("username");
 		String password = request.queryParams("password");

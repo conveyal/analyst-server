@@ -405,6 +405,16 @@ public class Bundle implements Serializable {
 			this.longName = route.route_long_name;
 			this.id = route.route_id;
 			this.agencyId = route.agency.agency_id;
+
+			// workaround for #118
+			// OBA replaces agency ID with agency name, evidently, when there is no agency ID
+			// There is a comment in the OTP source (GtfsModule.java):
+			//  "TODO figure out how and why this is happening"
+			if (this.agencyId == null) {
+				this.agencyId = route.agency.agency_name;
+			}
+
+
 			this.feed = feedName;
 		}
 		
