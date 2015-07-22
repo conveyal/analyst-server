@@ -39,7 +39,7 @@ var Analyst = Analyst || {};
 			_this.$("#invalidLogin").addClass("hidden");
 
 			$.post('/doLogin', {username: this.$('#username').val(), password: this.$('#password').val()}, function() {
-				window.location.href = "/";
+				window.location.href = "/#" + window.location.hash;
 			}).fail(function() {
 				_this.$("#invalidLogin").removeClass("hidden");
 			});
