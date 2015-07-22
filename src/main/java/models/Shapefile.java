@@ -88,6 +88,8 @@ public class Shapefile implements Serializable {
 	
 	public Bounds bounds;
 
+	public Integer featureCount;
+
 	@JsonIgnore
 	public HashMap<String,Attribute> attributes = new HashMap<String,Attribute>();
 
@@ -329,7 +331,12 @@ public class Shapefile implements Serializable {
 	}
 
 	public Integer getFeatureCount() {
-		return getShapeFeatureStore().size();
+		if (featureCount == null || featureCount.equals(0)) {
+			featureCount = getShapeFeatureStore().size();
+			save();
+		}
+
+		return featureCount;
 	}
 
 	private STRtree buildIndex() {
