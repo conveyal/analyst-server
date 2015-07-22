@@ -160,8 +160,16 @@
     <div class="panel-body" style="padding: 10px;">
 
         <div id="queryProcessing" style="margin: 30px;">
-          <p><img src="/images/ajax-loader.gif"/> Processing query...<p>
-          </div>
+          <p><img src="/images/ajax-loader.gif"/>&nbsp;{{ I18n "analysis.processing" }}<p>
+        </div>
+
+        <div id="initializingCluster" style="margin: 30px;">
+          <p><img src="/images/ajax-loader.gif"/>&nbsp;{{ I18n "analysis.initializing-cluster" }}<p>
+        </div>
+
+        <div id="requestFailed" style="margin: 30px;">
+          <p><span class="glyphicon glyphicon-exclamation-sign"></span>&nbsp;{{ I18n "analysis.failed" }}<p>
+        </div>
 
         <div id="queryResults">
           <div id="chart"></div>

@@ -51,8 +51,8 @@ public class ClusterQueueManager extends QueueManager {
 
 	/** Configuration for a priority job, includes a long socket timeout to allow for graph building */
 	private static final RequestConfig priorityConfig = RequestConfig.custom()
-			// ten minutes: marginally long enough to build a New York State graph
-			.setSocketTimeout(600 * 1000)
+			// fifteen seconds - everything should complete in this amount of time
+			.setSocketTimeout(15 * 1000)
 			.setConnectTimeout(10 * 1000)
 			.build();
 
@@ -251,12 +251,17 @@ public class ClusterQueueManager extends QueueManager {
 			post.setURI(new URI(broker + "enqueue/priority"));
 		} catch (URISyntaxException e) {
 			LOG.error("Malformed broker URI {}, analysis will not be possible", broker);
-			return null;
+			throw new RuntimeException(e);
 		}
 
 		post.setEntity(new StringEntity(json));
 
 		CloseableHttpResponse res = httpClient.execute(post);
+
+		if (res.getStatusLine().getStatusCode() == 503) {
+			// tell the client to retry later
+			return null;
+		}
 
 		if (res.getStatusLine().getStatusCode() != 200 && res.getStatusLine().getStatusCode() != 202)
 			LOG.warn("not ok: " + res.getStatusLine().getStatusCode() + " " + res.getStatusLine()

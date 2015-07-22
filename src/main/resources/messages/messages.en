@@ -109,6 +109,10 @@ analysis.scenario-1=Scenario 1
 analysis.scenario-2=Scenario 2
 analysis.minutes=Minutes
 
+analysis.processing=Processing query...
+analysis.initializing-cluster=Initializing cluster (may take several minutes)...
+analysis.failed=Analysis failed.
+
 analysis.accessibility=Accessibility
 analysis.isochrone=Isochrones
 

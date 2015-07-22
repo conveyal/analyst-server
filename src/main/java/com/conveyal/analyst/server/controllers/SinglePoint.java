@@ -19,6 +19,7 @@ import org.opentripplanner.analyst.cluster.AnalystClusterRequest;
 import org.opentripplanner.analyst.cluster.ResultEnvelope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import spark.HaltException;
 import spark.Request;
 import spark.Response;
 
@@ -90,6 +91,13 @@ public class SinglePoint extends Controller {
 
 		try {
 			ResultEnvelope re = QueueManager.getManager().getSinglePoint(req);
+
+			if (re == null) {
+				// graph is still building/workers are starting
+				// Client should retry later
+				halt(SERVICE_UNAVAILABLE, "Workers starting up");
+			}
+
 			re.id = req.jobId;
 
 			envelopeCache.put(re.id, re);
@@ -97,6 +105,10 @@ public class SinglePoint extends Controller {
 			res.type("application/json");
 			return resultSetToJson(re);
 		} catch (Exception e) {
+			// don't halt if we've already halted
+			if (e instanceof HaltException)
+				throw e;
+
 			LOG.error("Error creating single-point result", e);
 			halt(INTERNAL_SERVER_ERROR, e.getMessage());
 		}

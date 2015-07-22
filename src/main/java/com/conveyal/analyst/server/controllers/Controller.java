@@ -44,6 +44,9 @@ public class Controller {
     /** 500 Internal server error */
     public static final int INTERNAL_SERVER_ERROR = 500;
 
+    /** 503 Service unavailable */
+    public static final int SERVICE_UNAVAILABLE = 503;
+
     /** Get the current user */
     protected static User currentUser(Request request) {
         return User.getUserByUsername(request.session().attribute("username"));

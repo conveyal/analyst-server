@@ -255,6 +255,8 @@ var Analyst = Analyst || {};
 			this.$('#isoLegend').hide();
 
 			this.$('#queryProcessing').hide();
+			this.$('#initializingCluster').hide();
+			this.$('#requestFailed').hide();
 			this.$('#showSettings').hide();
 			this.$('#queryResults').hide();
 
@@ -380,7 +382,9 @@ var Analyst = Analyst || {};
 			this.$('#querySettings').hide();
 			this.$('#showSettings').show();
 			this.$('#queryResults').hide();
+			this.$('#requestFailed').hide();
 			this.$('#queryProcessing').show();
+			this.$('#initializingCluster').hide();
 
 			var date = this.$('#date').data('DateTimePicker').getDate().format('YYYY-MM-DD');
 			var fromTime = A.util.makeTime(this.$('#fromTime').data('DateTimePicker').getDate());
@@ -471,6 +475,17 @@ var Analyst = Analyst || {};
 				}
 			}
 
+			// called when we get a 503 back from the cluster, which indicates that workers are starting
+			var unavailableCallback = function () {
+				_this.$('#queryProcessing').hide();
+				_this.$('#requestFailed').hide();
+				_this.$('#initializingCluster').show();
+
+				// call back in 15 seconds
+				// TODO updateResults gets called twice on comparison queries
+				setTimeout(_this.updateResults, 15000, _this);
+			};
+
 		    var p1 = $.ajax({
 					url: '/api/single',
 					data: JSON.stringify(params),
@@ -512,6 +527,15 @@ var Analyst = Analyst || {};
 
 						_this.updateMap();
 						_this.updateCharts();
+					})
+					.fail(function (a, b) {
+						if (a.status == 503 || b.status == 503) {
+							unavailableCallback();
+						} else {
+								_this.$('#queryProcessing').hide();
+								_this.$('#initializingCluster').hide();
+								_this.$('#requestFailed').show();
+							}
 					});
 
 		    }
@@ -523,6 +547,15 @@ var Analyst = Analyst || {};
 
 						_this.updateMap();
 						_this.updateCharts();
+					})
+					.fail(function (err) {
+						if (err.status == 503) {
+							unavailableCallback();
+						} else {
+							_this.$('#queryProcessing').hide();
+							_this.$('#initializingCluster').hide();
+							_this.$('#requestFailed').show();
+						}
 					});
 				}
 		},
@@ -532,6 +565,8 @@ var Analyst = Analyst || {};
 		 */
 		updateCharts: function () {
 			this.$('#queryProcessing').hide();
+			this.$('#initializingCluster').hide();
+			this.$('#requestFailed').hide();
 			this.$('#queryResults').show();
 
 			if (this.scenario1Data.isochrones === undefined) {
