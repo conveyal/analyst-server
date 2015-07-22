@@ -66,12 +66,14 @@ public class Application extends Controller {
 
 	public static String setPassword(Request request, Response response) throws Exception {
 
-		String userId = (String) request.attribute("userId");
-		String password = (String) request.attribute("password");
+		String userId = (String) request.queryParams("userId");
+		String password = (String) request.queryParams("password");
 
 		User u = User.getUser(userId);
 
-		if (!u.username.equals(request.session().attribute("username")) && !Boolean.TRUE.equals(u.admin))
+		User currentUser = currentUser(request);
+
+		if (!u.username.equals(currentUser.username) && !Boolean.TRUE.equals(currentUser.admin))
 			halt(UNAUTHORIZED, "cannot reset other user's password unless admin");
 
 		u.passwordHash = User.getPasswordHash(password);
