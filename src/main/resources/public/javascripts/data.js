@@ -464,8 +464,6 @@ A.data = {};
 			var _this = this;
 		    var values = {};
 
-		    if(event){ event.preventDefault(); }
-
 		    _.each(this.$('form').serializeArray(), function(input){
 		      values[ input.name ] = input.value;
 		    })
@@ -720,8 +718,6 @@ A.data = {};
 
 	 	    var _this = this;
 		    var values = {};
-
-		    if(event){ event.preventDefault(); }
 
 		    _.each(this.$('form').serializeArray(), function(input){
 		      values[ input.name ] = input.value;

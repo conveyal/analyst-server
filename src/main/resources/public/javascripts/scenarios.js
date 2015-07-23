@@ -186,11 +186,7 @@ var Analyst = Analyst || {};
 
       evt.preventDefault();
       var _this = this;
-
-      if (event) {
-        event.preventDefault();
-      }
-
+      
       this.model.set({
         projectId: this.projectId,
         bundleId: this.$('#bundleId').val(),
