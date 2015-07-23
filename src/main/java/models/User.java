@@ -32,6 +32,8 @@ public class User implements Serializable {
 	public final boolean active;
 	public final boolean admin;
 
+	public final String groupName;
+
 	/** the maximum number of origin points this user's group is allowed to calculate */
 	public final long quota;
 
@@ -59,6 +61,7 @@ public class User implements Serializable {
 		if (groups.getSize() == 0) {
 			LOG.warn("User {} has no groups, computation will be forbidden", username);
 			this.quota = 0;
+			this.groupName = null;
 		}
 		else {
 			Group group = groups.single();
@@ -70,6 +73,8 @@ public class User implements Serializable {
 			else {
 				this.quota = quota.longValue();
 			}
+
+			this.groupName = group.getName();
 		}
 
 		this.account = account;
@@ -83,7 +88,7 @@ public class User implements Serializable {
 
 	/** the number of origins that have been computed so far */
 	public long getQuotaUsage () {
-		return quotaStore.getQuotaUsage(username);
+		return quotaStore.getQuotaUsage(groupName);
 	}
 
 	public void addProjectPermission(String projectId) {
@@ -172,7 +177,7 @@ public class User implements Serializable {
 
 	/** increment the quota usage of this user */
 	public void incrementQuotaUsage (int increment) {
-		quotaStore.incrementQuotaUsage(username, increment);
+		quotaStore.incrementQuotaUsage(groupName, increment);
 	}
 
 	public static class ProjectPermissions implements Serializable {
