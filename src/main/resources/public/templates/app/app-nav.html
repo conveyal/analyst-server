@@ -1,0 +1,61 @@
+<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+<div class="container-fluid">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+        <span class="sr-only">Toggle navigation</span>
+      </button>
+      <a class="navbar-brand" href="#home">
+          <strong><span style="color: #98b8eb;"><img src="/images/logo.png" style="height: 30px; margin-top: -5px; margin-right: 5px;"/>Transport</span></strong> Analyst
+      </a>
+    </div>
+
+
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+
+      {{#if selectedProject}}
+
+          <ul class="nav navbar-nav">
+             <li id="spatialDataTab" class="dropdown {{#if spatialDataActive}}active{{/if}}">
+               <a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-th-list"></span> Data <span class="caret"></span></a>
+               <ul class="dropdown-menu" role="menu">
+                 <li id="transportDataTab" class="{{#if transportDataActive}}active{{/if}}"><a  href="#"><span class="glyphicon glyphicon-road"></span> Transport Bundles</a></li>
+                 <li id="transportScenarioTab" class="{{#if transportScenariosActive}}active{{/if}}"><a  href="#"><span class="glyphicon glyphicon-road"></span> Transport Scenarios</a></li>
+                 <li id="spatialDataTabShapefilesListItem"><a href="#"><span class="glyphicon glyphicon-globe"></span> Shapefiles</a></li>
+               </ul>
+             </li>
+             <li id="analysisTab" class="dropdown {{#if analysisActive}}active{{/if}}">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-cog Analysis"></span> Analysis <span class="caret"></span></a>
+                    <ul class="dropdown-menu" role="menu">
+                         <li id="analysisTabSinglePoint"><a href="#">Single-point Analysis</a></li>
+                         <li id="analysisTabRegional"><a href="#">Regional & Aggregate Analysis</a></li>
+                    </ul>
+             </li>
+             {{#writeAllowed}}<li id="projectSettingsTab" class="{{#if settingsActive}}active{{/if}}"><a href="#"><span class="glyphicon glyphicon-wrench"></span> Project Settings</a></li>{{/writeAllowed}}
+           </ul>
+
+      {{/if}}
+
+     <ul class="nav navbar-nav navbar-right">
+          <div id="projectDropdown" class="nav navbar-nav">
+
+          </div>
+          <div id="userDropdown" class="nav navbar-nav">
+
+          </div>
+
+          <!--<div id="helpDropdown" class="nav navbar-nav">
+               <li class="dropdown">
+                    <a href="#home" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-question-sign" ></span> <span class="caret"></span></a>
+                    <ul class="dropdown-menu" role="menu">
+                         <li id="helpWelcome"><a href="#home">{{I18n "app.welcome"}}</a></li>
+                         <li id="helpTutorial"><a href="#">{{I18n "app.tutorial"}}</a></li>
+                    </ul>
+               </li>
+          </div>-->
+     </ul>
+
+
+    </div><!-- /.navbar-collapse -->
+</div><!-- /.container-fluid -->
+</nav>

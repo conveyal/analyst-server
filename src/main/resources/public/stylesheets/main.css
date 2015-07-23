@@ -1,0 +1,156 @@
+html, body,  #app, #app-map,#app-body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  padding: 0px;
+  margin: 0px;
+  font-family: 'Open Sans', sans-serif;
+}
+
+#app-side-panel {
+  /* z-index needs to be relatively small so it stays behind the select2 popup menu */
+	z-index: 100;
+	position: fixed;
+	bottom: 10px;
+	right: 10px;
+	width: 450px;
+     max-height: 600px;
+     overflow: scroll;
+}
+
+.panel-body{
+     padding: 0px;
+}
+
+.login-body{
+     position: fixed;
+     top: 250px;
+     left: 100px;
+     width: 300px;
+}
+
+.list-group {
+     overflow: scroll;
+     max-height: 300px;
+}
+
+#app-center-panel {
+     z-index: 2000;
+     position: fixed;
+     top: -50px;
+     left: -10px;
+     width: 500px;
+}
+
+.pannel-header {
+     margin: 0px;
+     padding: 10px;
+     font-size: 14px;
+     background: rgba(183, 183, 183, 0.25);
+     color: #777777;
+}
+
+
+.glyphicon {
+	color: #98b8eb;
+  	cursor: pointer;
+}
+
+.title {
+
+}
+
+.container {
+	padding-left: 0px;
+	padding-right: 0px;
+	background: rgba(255,255,255,0.75);
+}
+
+.panel-title {
+	font-size: 14px;
+}
+
+label {
+	font-size: 12px;
+}
+
+@font-face {
+	font-family: 'icons';
+	src:url('/fonts/icons.eot?11u8qc');
+	src:url('/fonts/iscons.eot?#iefix11u8qc') format('embedded-opentype'),
+		url('/fonts/icons.woff?11u8qc') format('woff'),
+		url('/fonts/icons.ttf?11u8qc') format('truetype'),
+		url('/fonts/icons.svg?11u8qc#icomoon') format('svg');
+	font-weight: normal;
+	font-style: normal;
+}
+
+[class^="icon-"], [class*=" icon-"] {
+	font-family: 'icons';
+	speak: none;
+	font-style: normal;
+	font-weight: normal;
+	font-variant: normal;
+	text-transform: none;
+	line-height: 1;
+
+	/* Better Font Rendering =========== */
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+.icon-pedestrian:before {
+	content: "\e600";
+}
+.icon-car:before {
+	content: "\e601";
+}
+.icon-bus:before {
+	content: "\e602";
+}
+.icon-bike:before {
+	content: "\e603";
+}
+
+div.legend-item {
+	cursor: pointer;
+  padding-bottom: 5px
+}
+
+.legend-item-text {
+	margin-left: 15px;
+  float: left;
+}
+
+.indicator_box {
+	width:100%;
+	margin-top: 10px;
+}
+
+.isochrone-scale {
+	background: rgb(30,87,153); /* Old browsers */
+	background: -moz-linear-gradient(left, rgba(30,87,153,1) 0%, rgba(125,185,232,1) 100%); /* FF3.6+ */
+	background: -webkit-gradient(linear, left top, right top, color-stop(0%,rgba(30,87,153,1)), color-stop(100%,rgba(125,185,232,1))); /* Chrome,Safari4+ */
+	background: -webkit-linear-gradient(left, rgba(30,87,153,1) 0%,rgba(125,185,232,1) 100%); /* Chrome10+,Safari5.1+ */
+	background: -o-linear-gradient(left, rgba(30,87,153,1) 0%,rgba(125,185,232,1) 100%); /* Opera 11.10+ */
+	background: -ms-linear-gradient(left, rgba(30,87,153,1) 0%,rgba(125,185,232,1) 100%); /* IE10+ */
+	background: linear-gradient(to right, rgba(30,87,153,1) 0%,rgba(125,185,232,1) 100%); /* W3C */
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#1e5799', endColorstr='#7db9e8',GradientType=1 ); /* IE6-9 */
+}
+
+.colorbox {
+    float: left;
+    vertical-align: middle;
+    width: 17px;
+    height: 18px;
+    margin: 1.5ex 6px -3px 6px;
+    padding-bottom: 5px;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #b3b3b3;
+}
+
+
+.gray-icon {
+  color: #ccc;
+}

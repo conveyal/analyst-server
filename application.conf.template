@@ -1,0 +1,47 @@
+# This is the main configuration file for the application.
+# ~~~~~
+
+# Secret key
+# ~~~~~
+# The secret key is used to secure cryptographics functions.
+# If you deploy your application to several instances be sure to use the same key!
+application.salt=cAb`]/Ynfo55ehWX:6gv^>gtsNn`:Wg?xSBojvieIDf1dNLAT>kOSEBYIQsbO2K@
+
+# If set to true, anyone can create themselves an account
+application.allow-user-create=true
+
+# Port to use, optional, default 9090
+#application.port=9090
+
+# IP address, default all interfaces
+#application.ip=127.0.0.1
+
+api.allow-unauthenticated-access=true
+
+# Path for data files
+application.data=data/
+
+# Set to prod in production (disables sending of stack traces to client)
+application.prod=false
+
+# The S3 bucket in which to store graphs
+cluster.graphs-bucket=<BUCKET>
+
+# The S3 bucket in which to store pointsets
+cluster.pointsets-bucket=<BUCKET>
+
+# The S3 bucket in which to store results
+cluster.results-bucket=<BUCKET>
+
+# The URL of your cluster broker
+cluster.broker=http://localhost:9001
+
+# If true, single-point results will be computed by OTP internally. Multipoint results will not work.
+cluster.work-offline=false
+
+# The URL of your vex server
+application.vex=http://osm.conveyal.com
+
+# default language
+application.lang=en
+
