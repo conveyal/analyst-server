@@ -73,12 +73,23 @@ public class QueryController extends Controller {
             return null;
         }
 
-        if (q.projectId == null || !currentUser(req).hasWritePermission(q.projectId))
+        User u = currentUser(req);
+
+        if (q.projectId == null || !u.hasWritePermission(q.projectId))
             halt(UNAUTHORIZED, "You do not have write access to this project");
+
+        // ensure they have quota available
+        Shapefile shapefile = Shapefile.getShapefile(q.shapefileId);
+        if (u.quota - u.getQuotaUsage() < shapefile.getFeatureCount()) {
+            LOG.warn("User {} was unable to add query of size {} because their quota has been met", u.username, shapefile.getFeatureCount());
+            halt(FORBIDDEN, "you do not have sufficient origins available in your account to complete this query");
+        }
 
         q.save();
 
         q.run();
+
+        u.incrementQuotaUsage(shapefile.getFeatureCount());
 
         return q;
 
@@ -120,11 +131,16 @@ public class QueryController extends Controller {
 
         Query q = Query.getQuery(id);
 
-        if (q == null || !currentUser(req).hasWritePermission(q.projectId))
+        User u = currentUser(req);
+
+        if (q == null || !u.hasWritePermission(q.projectId))
             halt(NOT_FOUND, "Query not found or you do not have permission to delete it");
 
         QueueManager.getManager().cancelJob(q.id);
         q.delete();
+
+        // any points they didn't use go back on their quota
+        u.incrementQuotaUsage(-1 * (q.totalPoints - q.completePoints));
 
         return q;
     }

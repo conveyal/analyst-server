@@ -89,6 +89,10 @@ public class SinglePoint extends Controller {
 			// NB this message is exactly the same as the one above, so as to not reveal any information
 			halt(NOT_FOUND, "No such bundle or pointset, or you do not have permission to access them");
 
+		// TODO enforce quota for users who are not logged on, or remove unauthenticated access
+		if (u.quota - u.getQuotaUsage() < 1)
+			halt(FORBIDDEN, "You have met your computation quota.");
+
 		try {
 			ResultEnvelope re = QueueManager.getManager().getSinglePoint(req);
 
@@ -103,7 +107,12 @@ public class SinglePoint extends Controller {
 			envelopeCache.put(re.id, re);
 
 			res.type("application/json");
-			return resultSetToJson(re);
+
+			String json = resultSetToJson(re);
+
+			// increment the quota at the last possible moment so that we don't charge them if something went wrong
+			u.incrementQuotaUsage(1);
+			return json;
 		} catch (Exception e) {
 			// don't halt if we've already halted
 			if (e instanceof HaltException)
