@@ -14,6 +14,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -81,7 +82,7 @@ public class User implements Serializable {
 	}
 
 	public void save () {
-		account.getCustomData().put("analyst_projectPermissions", projectPermissions);
+		account.getCustomData().put(AnalystMain.config.getProperty("auth.stormpath-name") + "_projectPermissions", projectPermissions);
 		account.save();
 	}
 
@@ -99,16 +100,14 @@ public class User implements Serializable {
 		if(projectPermissions == null) {
 			projectPermissions = new ArrayList<>();
 		}
-		
-		ProjectPermissions pp = null;
-		
-		for(ProjectPermissions pp1 : projectPermissions) {
-			
-			if(pp1.projectId.equals(projectId))
-				pp = new ProjectPermissions();
-		}
-		
-		if(pp == null) {
+
+		// update existing if present
+		Optional<ProjectPermissions> opt = projectPermissions.stream().filter(pp -> projectId.equals(pp.projectId)).findFirst();
+		ProjectPermissions pp;
+
+		if (opt.isPresent())
+			pp = opt.get();
+		else {
 			pp = new ProjectPermissions();
 			pp.projectId = projectId;
 			projectPermissions.add(pp);
@@ -117,7 +116,6 @@ public class User implements Serializable {
 		pp.read = true;
 		pp.write = true;
 		pp.admin = true;
-		
 	}
 
 	public void addReadOnlyProjectPermission(String projectId) {
