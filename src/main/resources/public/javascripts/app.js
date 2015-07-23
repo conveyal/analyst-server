@@ -265,6 +265,7 @@ var Analyst = Analyst || {};
 		regions : {
 			projectDropdown: "#projectDropdown",
 			userDropdown: "#userDropdown",
+			userQuotaWarning: "#userQuotaWarning"
 		},
 
 		events : {
@@ -302,10 +303,11 @@ var Analyst = Analyst || {};
 			var projectDropdownView = new A.app.ProjectListView({collection: A.app.projects});
 
 			var userDropdownView = new A.app.UserMenuView({model: A.app.user});
+			var userQuotaWarningView = new A.app.UserQuotaWarningView({model: A.app.user});
 
 			this.projectDropdown.show(projectDropdownView);
 			this.userDropdown.show(userDropdownView);
-
+			this.userQuotaWarning.show(userQuotaWarningView);
 		},
 
 		clickTransportData : function(evt) {
@@ -401,13 +403,21 @@ var Analyst = Analyst || {};
 
 	});
 
+	A.app.UserQuotaWarningView = Backbone.Marionette.ItemView.extend({
+		template: Handlebars.getTemplate('app', 'app-user-quota-warning'),
+		tagName: 'li',
+
+		initialize: function () {
+			this.model.on('change', this.render);
+		}
+	});
+
 	A.app.ProjectListItemView = Backbone.Marionette.ItemView.extend({
 
 		template: Handlebars.getTemplate('project', 'project-list-item-template'),
 		tagName: 'li',
 
 		initialize: function () {
-
 			this.model.on('change', this.render);
 		}
 

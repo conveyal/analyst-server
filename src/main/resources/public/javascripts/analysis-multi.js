@@ -153,7 +153,8 @@ var Analyst = Analyst || {};
               projectId: A.app.selectedProject
             },
             success: function(collection, response, options) {
-
+              // refetch user to update quota display
+              A.app.user.fetch();
             }
           });
         }
@@ -315,7 +316,10 @@ var Analyst = Analyst || {};
     },
 
     deleteItem: function(evt) {
-      this.model.destroy();
+      this.model.destroy().done(function () {
+        // if this query had not yet completed, the origins that had not been computed will be "refunded"
+        A.app.user.fetch();
+      });
     },
 
     refreshMap: function() {

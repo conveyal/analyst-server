@@ -95,3 +95,57 @@ function(num){
 
 }
 );
+
+Handlebars.registerHelper('calcPercent', function (num, den) {
+  return Math.round(num / den * 100);
+});
+
+/**
+ * Returns info (blue) for percentages 0 - 0.75, warn (yellow) for 0.75 - 0.95, and danger (red) for 0.95 - 1
+ * Used to color the quota progress bar.
+ */
+Handlebars.registerHelper('colorByPercent', function (num, den) {
+  var v = num / den;
+
+  if (v <= 0.75)
+    return 'info';
+  else if (v <= 0.95)
+    return 'warning';
+  else return 'danger'; // will robinson, danger
+});
+
+/**
+ * Converts large numbers to human-friendly quantities
+ */
+Handlebars.registerHelper('humanNumber', function (num) {
+  divisors = [
+    [1, ''],
+    // intentionally skipping thousand as saying 1.8 thousand just looks odd.
+    [1e6, ' million'],
+    [1e9, ' billion'],
+    [1e12, ' trillion'],
+    [1e15, ' quadrillion'],
+    [1e18, ' quintillion'],
+    [1e21, ' sextillion'],
+    [1e24, ' septillion'],
+    [1e27, ' octillion']
+    // that's probably sufficient for pedestrian use
+  ]
+
+  var i = 0;
+
+  while (i + 1 < divisors.length && divisors[i + 1][0] < num) i++;
+
+  var val = (num / divisors[i][0])
+  var human;
+
+  if (i === 0) {
+    human = val.toFixed(0);
+    // insert commas as needed
+    if (human.length >= 4)
+      human = human.slice(0, -3) + ',' + human.slice(-3);
+  }
+  else human = val.toFixed(1);
+
+  return "" + human + divisors[i][1];
+});

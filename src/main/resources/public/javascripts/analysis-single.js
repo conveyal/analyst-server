@@ -527,6 +527,9 @@ var Analyst = Analyst || {};
 
 						_this.updateMap();
 						_this.updateCharts();
+
+						// update the progress bar for how many origin credits have been used
+						A.app.user.fetch();
 					})
 					.fail(function (a, b) {
 						if (a.status == 503 || b.status == 503) {
@@ -547,6 +550,9 @@ var Analyst = Analyst || {};
 
 						_this.updateMap();
 						_this.updateCharts();
+
+						// update the progress bar for how many origin credits have been used
+						A.app.user.fetch();
 					})
 					.fail(function (err) {
 						if (err.status == 503) {

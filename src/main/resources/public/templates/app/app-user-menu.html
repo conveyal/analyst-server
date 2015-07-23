@@ -1,6 +1,16 @@
 <li class="dropdown">
-     <a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-user" ></span> {{name}} <span class="caret"></span></a>
-     <ul class="dropdown-menu" role="menu">
-          <li id="userDropdownLoggout"><a href="/logout">{{I18n "app.account.logout"}}</a></li>
-     </ul>
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-user" ></span> {{name}} <span class="caret"></span></a>
+  <ul class="dropdown-menu" role="menu" style="width: 300px">
+    <li style="width: 260px; margin-left: 20px">
+      {{I18n "analysis.credit-usage" }}
+      <div class="progress">
+        <div class="progress-bar progress-bar-{{ colorByPercent quotaUsage quota }}" role="progressbar" aria-valuenow="{{quotaUsage}}"
+          aria-valuemin="0" aria-valuemax="{quota}" style="width: {{ calcPercent quotaUsage quota }}%">
+        </div>
+      </div>
+      {{ I18n "analysis.credit-count" (humanNumber quotaUsage) (humanNumber quota) }}
+    </li>
+    <li id="userDropdownLoggout"><a href="/logout">{{I18n "app.account.logout"}}</a>
+    </li>
+  </ul>
 </li>
