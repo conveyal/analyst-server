@@ -52,6 +52,6 @@ public class Controller {
 
     /** Get the current user */
     protected static User currentUser(Request request) {
-        return User.getUserByUsername(request.session().attribute("username"));
+        return Authentication.getUser(request.session().attribute("username"));
     }
 }

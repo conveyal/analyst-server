@@ -7,6 +7,10 @@
 # If you deploy your application to several instances be sure to use the same key!
 application.salt=cAb`]/Ynfo55ehWX:6gv^>gtsNn`:Wg?xSBojvieIDf1dNLAT>kOSEBYIQsbO2K@
 
+# The path to your stormpath apiKey.properties, and the name of your stormpath application
+auth.stormpath-config=<path/to/apiKey.properties>
+auth.stormpath-name=<STORMPATH NAME>
+
 # If set to true, anyone can create themselves an account
 application.allow-user-create=true
 
@@ -40,7 +44,7 @@ cluster.broker=http://localhost:9001
 cluster.work-offline=false
 
 # The URL of your vex server
-application.vex=http://osm.conveyal.com
+application.vex=<Java Vex server URL>
 
 # default language
 application.lang=en

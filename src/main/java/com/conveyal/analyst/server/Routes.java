@@ -27,18 +27,10 @@ public class Routes {
         // messages are dynamically generated
         get("/messages", MessagesController::messages);
 
-        // login/logout/admin
-        post("/doLogin", Application::doLogin);
-        post("/createUser", Application::createUser);
-
-        before("/setPassword", Authentication::authenticated);
-        post("/setPassword", Application::setPassword);
-
-        // TODO this shouldn't be a GET as it's not idempotent
-        get("/logout", Application::logout);
-
-        before("/createDemoProject", Authentication::authenticated);
-        get("/createDemoProject", Application::createDemoProject);
+        // login/logout
+        post("/doLogin", Authentication::doLogin);
+        get("/logout", Authentication::logout);
+        get("/api/user/self", Authentication::getCurrentUser, json);
 
         // authentication for API excludes two resources
         before("/api/*", (req, res) -> {
@@ -55,15 +47,6 @@ public class Routes {
 
             Authentication.authenticated(req, res);
         });
-
-        // user controllers
-        // TODO ensure / matches /api/user
-        get("/api/user", UserController::getUser, json);
-        get("/api/user/:id", UserController::getUser, json);
-        delete("/api/user", UserController::deleteUser, json);
-        after("/api/user", json::type);
-
-        // TODO edit user: slightly tricky due to the hashed password
 
         // project routes
         // return value is plain text
