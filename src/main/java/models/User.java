@@ -97,7 +97,7 @@ public class User implements Serializable {
 	public void addProjectPermission(String projectId) {
 		
 		if(projectPermissions == null) {
-			projectPermissions = new ArrayList<ProjectPermissions>();
+			projectPermissions = new ArrayList<>();
 		}
 		
 		ProjectPermissions pp = null;
