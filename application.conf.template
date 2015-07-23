@@ -2,6 +2,7 @@
 
 # The path to your stormpath apiKey.properties, and the name of your stormpath application
 auth.stormpath-config=<path/to/apiKey.properties>
+# The Stormpath app name is also used as a prefix for custom data stored with users and groups in stormpath
 auth.stormpath-name=<STORMPATH NAME>
 
 # Port to use, optional, default 9090

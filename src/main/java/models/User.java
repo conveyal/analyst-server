@@ -1,5 +1,6 @@
 package models;
 
+import com.conveyal.analyst.server.AnalystMain;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.stormpath.sdk.account.Account;
 import com.stormpath.sdk.account.AccountStatus;
@@ -38,7 +39,7 @@ public class User implements Serializable {
 		this.active = account.getStatus() == AccountStatus.ENABLED;
 		this.admin = Boolean.parseBoolean((String) account.getCustomData().get("analyst_admin"));
 
-		List<Object> projectPermissions = (List<Object>) account.getCustomData().get("analyst_projectPermissions");
+		List<Object> projectPermissions = (List<Object>) account.getCustomData().get(AnalystMain.config.getProperty("auth.stormpath-name") + "_projectPermissions");
 
 		this.projectPermissions = projectPermissions.stream().map(o -> {
 			if (o instanceof ProjectPermissions) return (ProjectPermissions) o;
