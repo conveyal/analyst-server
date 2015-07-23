@@ -88,7 +88,10 @@ public class User implements Serializable {
 
 	/** the number of origins that have been computed so far */
 	public long getQuotaUsage () {
-		return quotaStore.getQuotaUsage(groupName);
+		// it is possible for the usage to go slightly over the quota when there are concurrent users
+		// don't display confusing things in the UI
+		// TODO: synchronize to prevent this from happening?
+		return Math.min(quota, quotaStore.getQuotaUsage(groupName));
 	}
 
 	public void addProjectPermission(String projectId) {
