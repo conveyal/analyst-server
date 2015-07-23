@@ -291,7 +291,7 @@ or `WORST_CASE` (guaranteed).
 
 Comparison requests are very similar:
 
-  /tile/single/<key1>/<key2>/<z>/<x>/<y>.png?which=<which>&timeLimit=<timeLimit>&showPoints=<showPoints>&showIso=<showIso>
+    /tile/single/<key1>/<key2>/<z>/<x>/<y>.png?which=<which>&timeLimit=<timeLimit>&showPoints=<showPoints>&showIso=<showIso>
 
 Note that the the `key` attribute has been replaced by `key1` and `key2`; the query specified by `key2` is subtracted from
 the query specified by `key1` and the difference is displayed. Yellow represents no change, with the opacity indicating

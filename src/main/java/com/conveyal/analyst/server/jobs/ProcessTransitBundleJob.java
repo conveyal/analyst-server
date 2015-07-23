@@ -138,7 +138,7 @@ public class ProcessTransitBundleJob implements Runnable {
 			if (!vexUrl.endsWith("/"))
 				vexUrl += "/";
 
-			vexUrl += String.format("?n=%s&s=%s&e=%s&w=%s", north, south, east, west);
+			vexUrl += String.format("%.6f,%.6f,%.6f,%.6f.pbf", south, west, north, east);
 
 			HttpURLConnection conn = (HttpURLConnection) new URL(vexUrl).openConnection();
 

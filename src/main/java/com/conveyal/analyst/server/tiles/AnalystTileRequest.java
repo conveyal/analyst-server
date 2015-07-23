@@ -1,6 +1,7 @@
 package com.conveyal.analyst.server.tiles;
 
 import com.conveyal.analyst.server.utils.HaltonPoints;
+import com.conveyal.analyst.server.utils.NaturalBreaksClassifier;
 import com.conveyal.analyst.server.utils.QueryResults;
 import com.google.common.base.Charsets;
 import com.google.common.hash.HashCode;
@@ -24,10 +25,14 @@ import java.awt.*;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class AnalystTileRequest {
-	private static final Logger LOG = LoggerFactory.getLogger(AnalystTileRequest.class);
+	public static  Map<String, NaturalBreaksClassifier> naturalBreaksClassifierCache = new ConcurrentHashMap<String, NaturalBreaksClassifier>();
 
+	private static final Logger LOG = LoggerFactory.getLogger(AnalystTileRequest.class);
+	
 	final public String format;
 	final public String type;
 	final public Integer x, y, z;

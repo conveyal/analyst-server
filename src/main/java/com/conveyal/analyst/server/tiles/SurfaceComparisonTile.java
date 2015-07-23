@@ -7,6 +7,7 @@ import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.index.strtree.STRtree;
+
 import models.Attribute;
 import models.Shapefile;
 import org.apache.commons.imaging.ImageWriteException;
