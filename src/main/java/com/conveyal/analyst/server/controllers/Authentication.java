@@ -12,8 +12,11 @@ import com.stormpath.sdk.application.Applications;
 import com.stormpath.sdk.authc.AuthenticationRequest;
 import com.stormpath.sdk.authc.AuthenticationResult;
 import com.stormpath.sdk.authc.UsernamePasswordRequest;
+import com.stormpath.sdk.cache.Cache;
 import com.stormpath.sdk.client.Client;
 import com.stormpath.sdk.client.Clients;
+import com.stormpath.sdk.group.Group;
+import com.stormpath.sdk.group.GroupList;
 import com.stormpath.sdk.resource.ResourceException;
 import com.stormpath.sdk.tenant.Tenant;
 import models.User;
@@ -32,6 +35,7 @@ public class Authentication extends Controller {
     private static final Logger LOG = LoggerFactory.getLogger(Authentication.class);
 
     private static Application stormpathApp;
+    private static Client stormpathClient;
 
     static {
         File stormpathConfig = new File(AnalystMain.config.getProperty("auth.stormpath-config"));
@@ -40,8 +44,8 @@ public class Authentication extends Controller {
             LOG.error("Stormpath configuration does not exist");
 
         ApiKey key = ApiKeys.builder().setFileLocation(stormpathConfig.getAbsolutePath()).build();
-        Client authClient = Clients.builder().setApiKey(key).build();
-        Tenant tenant = authClient.getCurrentTenant();
+        stormpathClient = Clients.builder().setApiKey(key).build();
+        Tenant tenant = stormpathClient.getCurrentTenant();
         ApplicationList apps = tenant.getApplications(Applications.where(Applications.name().eqIgnoreCase(AnalystMain.config.getProperty("auth.stormpath-name"))));
         stormpathApp = apps.iterator().next();
 
@@ -58,6 +62,26 @@ public class Authentication extends Controller {
         try {
             AuthenticationResult res = stormpathApp.authenticateAccount(req);
             account = res.getAccount();
+
+            // hackily clear the Stormpath cache now so that the next currentUser request will get up-to-date data
+            // we need this so that if a user has their quota updated, they can log out and back in and see
+            // the updated quota.
+            try {
+                GroupList memberships = account.getGroups();
+
+                // quotas are stored as custom data so clear out relevant bits of the custom data cache.
+                Cache<String, Group> customDataCache = stormpathClient.getDataStore().getCacheManager()
+                        .getCache("com.stormpath.sdk.directory.CustomData");
+
+
+                for (Group g : memberships) {
+                    customDataCache.remove(g.getHref() + "/customData");
+                }
+
+                customDataCache.remove(account.getHref() + "/customData");
+            } catch (Exception e) {
+                LOG.error("Failed to clear caches on login", e);
+            }
         } catch (ResourceException e) {
             LOG.warn("Login attempt failed for user {}", username);
             halt(UNAUTHORIZED, "Invalid username or password");
