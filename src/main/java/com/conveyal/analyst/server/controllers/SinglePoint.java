@@ -91,7 +91,7 @@ public class SinglePoint extends Controller {
 
 		// TODO enforce quota for users who are not logged on, or remove unauthenticated access
 		if (u.quota - u.getQuotaUsage() < 1)
-			halt(FORBIDDEN, "You have met your computation quota.");
+			halt(FORBIDDEN, INSUFFICIENT_QUOTA);
 
 		try {
 			ResultEnvelope re = QueueManager.getManager().getSinglePoint(req);

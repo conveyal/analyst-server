@@ -135,6 +135,7 @@ analysis.profile=Range of departure times
 analysis.credit-usage=Origin credit usage
 analysis.credit-count={0} credits of {1} credits used.
 analysis.nearing-quota={0} origin credits remain
+analysis.insufficient-quota=You do not have enough origin credits to complete this operation.
 
 # {0} is the name and {1} is the field name from the shapefile
 analysis.attribute-name={0} ({1})

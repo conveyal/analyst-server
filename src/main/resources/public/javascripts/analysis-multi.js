@@ -125,8 +125,10 @@ var Analyst = Analyst || {};
     },
 
     createQuery: function(evt) {
-
       var _this = this;
+
+      this.$('#insufficientQuota').hide();
+      this.$('#requestFailed').hide();
 
       var data = {
         name: this.$("#name").val(),
@@ -147,16 +149,23 @@ var Analyst = Analyst || {};
       var query = new A.models.Query();
       query.save(data, {
         success: function() {
+          // update quota display
+          A.app.user.fetch();
           _this.queries.fetch({
             reset: true,
             data: {
               projectId: A.app.selectedProject
-            },
-            success: function(collection, response, options) {
-              // refetch user to update quota display
-              A.app.user.fetch();
             }
           });
+        },
+        error: function (model, err) {
+          if (err.status == 403 && err.responseText == 'INSUFFICIENT_QUOTA') {
+            _this.$('#insufficientQuota').show();
+            // refetch user to ensure that quota readout is up to date
+            A.app.user.fetch();
+          } else {
+            _this.$('#requestFailed').show();
+          }
         }
       });
 

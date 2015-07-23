@@ -82,7 +82,7 @@ public class QueryController extends Controller {
         Shapefile shapefile = Shapefile.getShapefile(q.shapefileId);
         if (u.quota - u.getQuotaUsage() < shapefile.getFeatureCount()) {
             LOG.warn("User {} was unable to add query of size {} because their quota has been met", u.username, shapefile.getFeatureCount());
-            halt(FORBIDDEN, "you do not have sufficient origins available in your account to complete this query");
+            halt(FORBIDDEN, INSUFFICIENT_QUOTA);
         }
 
         q.save();

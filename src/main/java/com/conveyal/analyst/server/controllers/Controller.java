@@ -50,6 +50,9 @@ public class Controller {
     /** 503 Service unavailable */
     public static final int SERVICE_UNAVAILABLE = 503;
 
+    // Machine-readable status messages
+    public static final String INSUFFICIENT_QUOTA = "INSUFFICIENT_QUOTA";
+
     /** Get the current user */
     protected static User currentUser(Request request) {
         return Authentication.getUser(request.session().attribute("username"));

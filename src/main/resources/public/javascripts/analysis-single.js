@@ -535,10 +535,16 @@ var Analyst = Analyst || {};
 						if (a.status == 503 || b.status == 503) {
 							unavailableCallback();
 						} else {
-								_this.$('#queryProcessing').hide();
-								_this.$('#initializingCluster').hide();
+							_this.$('#queryProcessing').hide();
+							_this.$('#initializingCluster').hide();
+							if (a.status == 403 && a.responseText == 'INSUFFICIENT_QUOTA'|| b.status == 403 && b.responseText == 'INSUFFICIENT_QUOTA') {
+							  _this.$('#insufficientQuota').show();
+								// refetch user to ensure that quota readout is up to date
+								A.app.user.fetch();
+							} else {
 								_this.$('#requestFailed').show();
 							}
+						}
 					});
 
 		    }
@@ -560,7 +566,13 @@ var Analyst = Analyst || {};
 						} else {
 							_this.$('#queryProcessing').hide();
 							_this.$('#initializingCluster').hide();
-							_this.$('#requestFailed').show();
+							if (err.status == 403 && err.responseText == 'INSUFFICIENT_QUOTA') {
+								_this.$('#insufficientQuota').show();
+								// refetch user to ensure that quota readout is up to date
+								A.app.user.fetch();
+							} else {
+								_this.$('#requestFailed').show();
+							}
 						}
 					});
 				}
