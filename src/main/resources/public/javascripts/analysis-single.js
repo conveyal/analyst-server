@@ -257,6 +257,7 @@ var Analyst = Analyst || {};
 			this.$('#queryProcessing').hide();
 			this.$('#initializingCluster').hide();
 			this.$('#requestFailed').hide();
+			this.$('#insufficientQuota').hide();
 			this.$('#showSettings').hide();
 			this.$('#queryResults').hide();
 
@@ -384,6 +385,7 @@ var Analyst = Analyst || {};
 			this.$('#queryResults').hide();
 			this.$('#requestFailed').hide();
 			this.$('#queryProcessing').show();
+			this.$('#insufficientQuota').hide();
 			this.$('#initializingCluster').hide();
 
 			var date = this.$('#date').data('DateTimePicker').getDate().format('YYYY-MM-DD');
@@ -479,6 +481,7 @@ var Analyst = Analyst || {};
 			var unavailableCallback = function () {
 				_this.$('#queryProcessing').hide();
 				_this.$('#requestFailed').hide();
+				_this.$('#insufficientQuota').hide();
 				_this.$('#initializingCluster').show();
 
 				// call back in 15 seconds
@@ -536,6 +539,8 @@ var Analyst = Analyst || {};
 							unavailableCallback();
 						} else {
 							_this.$('#queryProcessing').hide();
+							_this.$('#insufficientQuota').hide();
+							_this.$('#requestFailed').hide();
 							_this.$('#initializingCluster').hide();
 							if (a.status == 403 && a.responseText == 'INSUFFICIENT_QUOTA'|| b.status == 403 && b.responseText == 'INSUFFICIENT_QUOTA') {
 							  _this.$('#insufficientQuota').show();
@@ -565,6 +570,8 @@ var Analyst = Analyst || {};
 							unavailableCallback();
 						} else {
 							_this.$('#queryProcessing').hide();
+							_this.$('#insufficientQuota').hide();
+							_this.$('#requestFailed').hide();
 							_this.$('#initializingCluster').hide();
 							if (err.status == 403 && err.responseText == 'INSUFFICIENT_QUOTA') {
 								_this.$('#insufficientQuota').show();
@@ -585,6 +592,7 @@ var Analyst = Analyst || {};
 			this.$('#queryProcessing').hide();
 			this.$('#initializingCluster').hide();
 			this.$('#requestFailed').hide();
+			this.$('#insufficientQuota').hide();
 			this.$('#queryResults').show();
 
 			if (this.scenario1Data.isochrones === undefined) {
