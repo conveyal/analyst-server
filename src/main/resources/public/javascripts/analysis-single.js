@@ -419,6 +419,9 @@ var Analyst = Analyst || {};
 				};
 			});
 
+			if (this.scenario1.get('modifications'))
+				mods1 = mods1.concat(this.scenario1.get('modifications'));
+
 			if (window.modifications1)
 				mods1 = mods1.concat(window.modifications1);
 
@@ -510,6 +513,9 @@ var Analyst = Analyst || {};
 								routeId: [route.id],
 							};
 						});
+
+						if (this.scenario2.get('modifications'))
+							mods2 = mods2.concat(this.scenario2.get('modifications'));
 
 						if (window.modifications2)
 							mods2 = mods2.concat(window.modifications2);
