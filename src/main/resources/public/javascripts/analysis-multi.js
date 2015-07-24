@@ -13,7 +13,8 @@ var Analyst = Analyst || {};
     },
 
     regions: {
-      main: "#main"
+      main: "#main",
+      quotaWarning: "#quotaWarning"
     },
 
     initialize: function(options) {
@@ -31,6 +32,13 @@ var Analyst = Analyst || {};
       this.$('#date').datetimepicker({pickTime: false});
       this.$('#fromTime').datetimepicker({pickDate: false});
       this.$('#toTime').datetimepicker({pickDate: false});
+
+      // use a bare model to pass information about quota consumption estimates in the create query dialog
+      this.queryCreateQuotaUsage = new Backbone.Model();
+
+      this.queryCreateQuotaUsage.listenTo(A.app.user, 'change', function () {
+        _this.queryCreateQuotaUsage.set('remainingQuota', A.app.user.get('quota') - A.app.user.get('remainingQuota'));
+      });
 
       // pick a reasonable default date
       $.get('api/project/' + A.app.selectedProject + '/exemplarDay')
@@ -136,6 +144,7 @@ var Analyst = Analyst || {};
         shapefileId: this.$('#shapefile').val(),
         scenarioId: this.$('#scenario1').val(),
         projectId: A.app.selectedProject,
+        boardingAssumption: this.$('#boardingAssumption').val(),
         fromTime: A.util.makeTime(this.$('#fromTime').data('DateTimePicker').getDate()),
         date: this.$('#date').data('DateTimePicker').getDate().format('YYYY-MM-DD')
       };

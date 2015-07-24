@@ -52,7 +52,7 @@ public class ClusterQueueManager extends QueueManager {
 	/** Configuration for a priority job, includes a long socket timeout to allow for graph building */
 	private static final RequestConfig priorityConfig = RequestConfig.custom()
 			// thirty seconds - everything should complete in this amount of time
-			.setSocketTimeout(30 * 1000)
+			.setSocketTimeout(60 * 1000)
 			.setConnectTimeout(10 * 1000)
 			.build();
 

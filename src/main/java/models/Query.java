@@ -20,6 +20,7 @@ import org.opentripplanner.analyst.cluster.ResultEnvelope;
 import org.opentripplanner.analyst.scenario.RemoveTrip;
 import org.opentripplanner.common.model.GenericLocation;
 import org.opentripplanner.profile.ProfileRequest;
+import org.opentripplanner.profile.RaptorWorkerTimetable;
 import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.TraverseModeSet;
 import org.slf4j.Logger;
@@ -47,6 +48,8 @@ public class Query implements Serializable {
 	public String projectId;
 	public String name;
 
+	public RaptorWorkerTimetable.BoardingAssumption boardingAssumption;
+
 	private static final AmazonS3 s3 = new AmazonS3Client();
 
 	/** The mode. Can be left null if both graphId and profileRequest or routingRequest are set */
@@ -61,7 +64,7 @@ public class Query implements Serializable {
 	public Integer totalPoints;
 	public Integer completePoints;
 
-	/** Has this query finished computing _and_ processing? */
+	/** Has this query finished computing _and_ have the results been downloaded from S3? */
 	public boolean complete = false;
 	
 	/** the from time of this query. Can be left unset if both graphId and profileRequest or routingRequest are set */
@@ -195,6 +198,9 @@ public class Query implements Serializable {
 				if (this.isTransit()) {
 					// create a profile request
 					pr = Analyst.buildProfileRequest(this.mode, this.date, this.fromTime, this.toTime, 0, 0);
+
+					pr.boardingAssumption = this.boardingAssumption != null ? this.boardingAssumption :
+							RaptorWorkerTimetable.BoardingAssumption.WORST_CASE;
 
 					pr.scenario = new org.opentripplanner.analyst.scenario.Scenario(0);
 

@@ -451,6 +451,7 @@ var Analyst = Analyst || {};
 					bikeSafe: 1,
 					bikeSlope: 1,
 					bikeTime: 1,
+					boardingAssumption: this.$('#boardingAssumption').val(),
 					scenario: {
 						modifications: mods1
 					}
