@@ -1,0 +1,7 @@
+# Configure travis CI
+
+language: java
+
+# analyst-server requires Java 8
+jdk:
+  - openjdk8
