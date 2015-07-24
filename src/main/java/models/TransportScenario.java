@@ -3,6 +3,7 @@ package models;
 import com.conveyal.analyst.server.utils.DataStore;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
+import org.opentripplanner.analyst.scenario.Modification;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -44,6 +45,9 @@ public class TransportScenario implements Serializable {
 	
 	/** A list of banned routes */
 	public List<Bundle.RouteSummary> bannedRoutes;
+
+	/** A list of other modifications to make to the graph, for advanced users */
+	public List<Modification> modifications;
 	
 	// TODO additional types of modifications
 	

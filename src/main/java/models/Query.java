@@ -213,7 +213,11 @@ public class Query implements Serializable {
 						}).collect(Collectors.toList());
 					}
 					else {
-						pr.scenario.modifications = Collections.emptyList();
+						pr.scenario.modifications = new ArrayList<>();
+					}
+
+					if (scenario.modifications != null) {
+						pr.scenario.modifications.addAll(scenario.modifications);
 					}
 				}
 				else {
