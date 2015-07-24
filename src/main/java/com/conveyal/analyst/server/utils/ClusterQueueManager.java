@@ -16,6 +16,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.util.EntityUtils;
 import org.opentripplanner.analyst.broker.JobStatus;
 import org.opentripplanner.analyst.cluster.AnalystClusterRequest;
 import org.opentripplanner.analyst.cluster.ResultEnvelope;
@@ -259,6 +260,9 @@ public class ClusterQueueManager extends QueueManager {
 		CloseableHttpResponse res = httpClient.execute(post);
 
 		if (res.getStatusLine().getStatusCode() == 503) {
+			EntityUtils.consumeQuietly(res.getEntity());
+			res.close();
+			post.releaseConnection();
 			// tell the client to retry later
 			return null;
 		}
