@@ -3,4 +3,5 @@
 language: java
 
 jdk:
-  - openjdk8
+  # really we'd rather use OpenJDK 8 but travis does not provide it.
+  - oraclejdk8
