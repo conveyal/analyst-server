@@ -422,6 +422,11 @@ var Analyst = Analyst || {};
 
           _this.queryOverlay = L.tileLayer(tileUrl).addTo(_map);
 
+          if (_this.labelOverlay)
+            _map.removeLayer(_this.labelOverlay);
+
+          _this.labelOverlay = L.tileLayer('http://{s}.tiles.mapbox.com/v3/conveyal.hp092m0g/{z}/{x}/{y}.png').addTo(_map);
+
           _this.$("#updatingMap").hide();
 
           for (var i in data) {
