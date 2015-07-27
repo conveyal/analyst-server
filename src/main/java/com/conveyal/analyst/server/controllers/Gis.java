@@ -59,7 +59,7 @@ public class Gis extends Controller {
 
 		if(query == null || (query2 == null && compareTo != null) ||
 				!u.hasReadPermission(query.projectId) ||
-				(query2 != null && !u.hasReadPermission(query2.projectId)));
+				(query2 != null && !u.hasReadPermission(query2.projectId)))
 			halt(NOT_FOUND, "Could not find query or you do not have access to it");
 
 		String shapeName = (timeLimit / 60) + "_mins_" + which.toString().toLowerCase() + "_";
@@ -412,6 +412,9 @@ public class Gis extends Controller {
 		{
 			throw new Exception(typeName + " does not support read/write access");
 		}
+
+		res.header("Content-Type", "application/x-zip");
+		res.header("Content-Disposition", "attachment;filename=" + fileName + ".zip");
 
 		OutputStream os = res.raw().getOutputStream();
 		DirectoryZip.zip(outputDirectory, os);
