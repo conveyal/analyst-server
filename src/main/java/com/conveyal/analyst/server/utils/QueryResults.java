@@ -15,11 +15,12 @@ import java.awt.*;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class QueryResults {
 
-	public static  Map<String, QueryResults> queryResultsCache = new ConcurrentHashMap<String, QueryResults>();
+	public static Map<String, QueryResults> queryResultsCache = new WeakHashMap<>();
 	
 	/**
 	 * Keep track of IDs
