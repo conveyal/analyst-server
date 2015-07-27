@@ -345,7 +345,11 @@ public class SinglePoint extends Controller {
 
         @Override
         public void onWorkResult(WorkResult workResult) {
-            promise.success(workResult);
+			promise.success(workResult);
+			// release reference to promise, which contains workresult
+			// Really, we should be shutting down this actor as well, but all of this Akka code
+			// will be removed in the near future.
+			promise = null;
         }
     }
     
