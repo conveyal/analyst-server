@@ -422,6 +422,7 @@ var Analyst = Analyst || {};
 
           _this.queryOverlay = L.tileLayer(tileUrl).addTo(_map);
 
+          // overlay labels on top of results
           if (_this.labelOverlay)
             _map.removeLayer(_this.labelOverlay);
 

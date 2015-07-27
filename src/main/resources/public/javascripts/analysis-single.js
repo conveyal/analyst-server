@@ -808,6 +808,12 @@ var Analyst = Analyst || {};
 
 				}
 			}
+
+			// overlay labels on top of results
+			if (_this.labelOverlay)
+				A.map.removeLayer(_this.labelOverlay);
+
+			_this.labelOverlay = L.tileLayer('http://{s}.tiles.mapbox.com/v3/conveyal.hp092m0g/{z}/{x}/{y}.png').addTo(A.map);
 		},
 
 		/** get the current position of the time limit slider */
