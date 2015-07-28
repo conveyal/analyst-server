@@ -337,7 +337,7 @@ This modification allows adjusting the headway of frequency-based trips (it will
 ```
 
 Parameters are the same as for removing trips, with the addition of the `headway` parameter, which is the new headway
-in seconds.
+in seconds. As before, setting `routeId` or `tripId` to `null` is a wildcard.
 
 ### Adjusting dwell times
 
