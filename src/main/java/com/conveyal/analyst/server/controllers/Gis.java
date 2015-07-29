@@ -413,7 +413,6 @@ public class Gis extends Controller {
 		}
 
 		res.header("Content-Type", "application/x-zip");
-		res.header("Content-Disposition", "attachment;filename=" + fileName + ".zip");
 
 		// buffer to a file
 		File temp = File.createTempFile("shapefile", "zip");
