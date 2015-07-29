@@ -74,6 +74,7 @@ var Analyst = Analyst || {};
 		    // transit request and we're doing profile routing
 		    inps.find('[value="WORST_CASE"]').prop('disabled', false).parent().removeClass('hidden');
 		    inps.find('[value="BEST_CASE"]').prop('disabled', false).parent().removeClass('hidden');
+				inps.find('[value="AVERAGE"]').prop('disabled', false).parent().removeClass('hidden');
 		    inps.find('[value="SPREAD"]').prop('disabled', true).parent().addClass('hidden');
 		    inps.find('[value="POINT_ESTIMATE"]').prop('disabled', true).parent().addClass('hidden');
 
