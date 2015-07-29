@@ -39,6 +39,7 @@
           <select id="boardingAssumption">
             <option value="WORST_CASE">Worst case (full headway)</option>
             <option value="HALF_HEADWAY">Expectation (half headway)</option>
+            <option value="RANDOM">Monte Carlo</option>
             <option value="BEST_CASE">Best case (no wait time)</option>
           </select>
         </div>
@@ -81,6 +82,11 @@
 
            <label class="btn btn-default">
              <input type="radio" name="which" value="POINT_ESTIMATE" />
+             {{ I18n "analysis.point-estimate-option" }}
+           </label>
+
+           <label class="btn btn-default">
+             <input type="radio" name="which" value="AVERAGE" />
              {{ I18n "analysis.point-estimate-option" }}
            </label>
 
