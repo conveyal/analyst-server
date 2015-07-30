@@ -20,6 +20,7 @@ var Analyst = Analyst || {};
 		  'click #showIso': 'updateMap',
 		  'click #showPoints': 'updateMap',
 		  'click #showTransit': 'updateMap',
+			'change #boardingAssumption': 'updateResults',
 		  'change .mode-selector' : 'updateMode',
 			'change .profile': 'updateResults',
 			'click #showSettings' : 'showSettings',
