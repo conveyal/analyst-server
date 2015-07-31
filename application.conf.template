@@ -1,15 +1,23 @@
 # This is the main configuration file for the application.
 
+
+
 # The path to your stormpath apiKey.properties, and the name of your stormpath application
 auth.stormpath-config=<path/to/apiKey.properties>
 # The Stormpath app name is also used as a prefix for custom data stored with users and groups in stormpath
 auth.stormpath-name=<STORMPATH NAME>
+
+# Should the Stormpath ID site be used?
+auth.use-stormpath-id-site=false
 
 # Port to use, optional, default 9090
 #application.port=9090
 
 # IP address, default all interfaces
 #application.ip=127.0.0.1
+
+# Site URL with no trailing slash
+application.site-url=http://localhost:9090
 
 api.allow-unauthenticated-access=true
 
@@ -39,4 +47,3 @@ application.vex=<Java Vex server URL>
 
 # default language
 application.lang=en
-
