@@ -31,7 +31,7 @@ public class Routes {
         // if Stormpath ID site is enabled, redirect to it. Otherwise render login chrome.
         get("/login", Authentication::redirectToLoginSite);
         // handle login through ID site
-        get("/handleLogin", Authentication::handleLoginLogout);
+        get("/handleLogin", Authentication::handleLogin);
         // do login through chrome
         post("/doLogin", Authentication::doLogin);
         get("/logout", Authentication::logout);

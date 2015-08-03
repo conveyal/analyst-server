@@ -76,12 +76,14 @@ public class Authentication extends Controller {
         return "welcome " + username;
     }
 
-    public static Object handleLoginLogout (Request req, Response res) {
+    public static Object handleLogin (Request req, Response res) {
         AccountResult ar = stormpathApp.newIdSiteCallbackHandler(req.raw()).getAccountResult();
         Account a = ar.getAccount();
 
         if (a == null) {
+            req.session().removeAttribute("username");
             res.redirect("/login", MOVED_TEMPORARILY);
+            return "";
         }
 
         clearCache(a);
@@ -165,7 +167,7 @@ public class Authentication extends Controller {
             // log out of ID site
             String url = stormpathApp.newIdSiteUrlBuilder()
                     .forLogout()
-                    .setCallbackUri(AnalystMain.config.getProperty("application.site-url") + "/handleLogin")
+                    .setCallbackUri(AnalystMain.config.getProperty("application.site-url") + "/login")
                     .build();
 
             response.redirect(url, MOVED_TEMPORARILY);
@@ -173,7 +175,7 @@ public class Authentication extends Controller {
         else {
             response.redirect("/login", MOVED_TEMPORARILY);
         }
-        return null;
+        return "";
     }
 
     /** A before filter for routes to ensure users are authenticated */
