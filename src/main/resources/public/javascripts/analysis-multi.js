@@ -9,7 +9,8 @@ var Analyst = Analyst || {};
     events: {
       'click #createQuery': 'createQuery',
       'click #cancelQuery': 'cancelQuery',
-      'click #newQuery': 'newQuery'
+      'click #newQuery': 'newQuery',
+      'change #shapefile': 'updateQuota'
     },
 
     regions: {
@@ -39,6 +40,8 @@ var Analyst = Analyst || {};
       this.queryCreateQuotaUsage.listenTo(A.app.user, 'change', function () {
         _this.queryCreateQuotaUsage.set('remainingQuota', A.app.user.get('quota') - A.app.user.get('remainingQuota'));
       });
+
+      this.quotaWarning.show(new A.analysis.QuotaWarning({model: this.queryCreateQuotaUsage}));
 
       // pick a reasonable default date
       $.get('api/project/' + A.app.selectedProject + '/exemplarDay')
@@ -97,6 +100,8 @@ var Analyst = Analyst || {};
               .attr('value', shp.id)
               .text(shp.get('name'))
               .appendTo(this.$('#shapefile'));
+
+          _this.updateQuota();
         });
       });
 
@@ -130,6 +135,16 @@ var Analyst = Analyst || {};
       });
 
       this.main.show(queryListLayout);
+    },
+
+    /** Update the quota display */
+    updateQuota: function () {
+      this.queryCreateQuotaUsage.set({
+        querySize: this.shapefiles.get(this.$('#shapefile').val()).get('featureCount'),
+        remainingQuota: Math.max(A.app.user.get('quota') - A.app.user.get('quotaUsage'), 0),
+        quotaUsage: A.app.user.get('quotaUsage'),
+        quota: A.app.user.get('quota')
+      });
     },
 
     createQuery: function(evt) {
@@ -597,6 +612,23 @@ var Analyst = Analyst || {};
       return parts.join(".");
     }
 
+  });
+
+  A.analysis.QuotaWarning = Backbone.Marionette.ItemView.extend({
+    template: Handlebars.getTemplate('analysis', 'analysis-multi-point-quota-warning'),
+
+    onShow: function () {
+      var _this = this;
+      this.listenTo(this.model, 'change', function () {
+        _this.render();
+      });
+    },
+
+    serializeData: function () {
+      var data = this.model.toJSON();
+      data.showWarning = (this.model.get('quotaUsage') + this.model.get('querySize')) / this.model.get('quota') > 0.75;
+      return data;
+    }
   });
 
   A.analysis.QueryList = Backbone.Marionette.CompositeView.extend({
