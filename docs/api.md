@@ -51,6 +51,7 @@ object to `/api/single`. The JSON you post looks like so:
           "type": "remove-trip",
           "agencyId": "1",
           "routeId": ["Red"],
+          "routeType": [1],
           "tripId": null
         }
       ]
@@ -313,14 +314,18 @@ This modification has the same effect as the former `bannedRoutes` parameter---i
   "type": "remove-trip",
   "agencyId": "AGENCY ID",
   "routeId": ["Route ID 1", "Route ID 2"],
-  "tripId": ["Trip ID 1", "Trip ID 2"]
+  "tripId": ["Trip ID 1", "Trip ID 2"],
+  "routeType": [1]
 }
 ```
 
-The `agencyId` parameter specifies the agency ID of trips to remove. `routeId` and `tripId` are lists of IDs which are used
-to select routes and trips. They are combines with a logical `and`, meaning that a trip must be referenced both by trip ID
-and route ID to be removed. If either trip ID or route ID is left `null`, it is treated as a wildcard matching all trip
-or route IDs.
+The `agencyId` parameter specifies the agency ID of trips to remove,
+and must be specified. `routeId`, `routeType`, and `tripId` are lists
+of IDs which are used to select routes and trips. They are combined
+with a logical `and`, meaning that a trip must be referenced both by
+trip ID and route ID and route type to be removed. If either trip ID, route type or route ID is
+left `null`, it is treated as a wildcard matching all trip IDs, route types, or route
+IDs.
 
 ### Adjusting frequencies
 
@@ -337,7 +342,7 @@ This modification allows adjusting the headway of frequency-based trips (it will
 ```
 
 Parameters are the same as for removing trips, with the addition of the `headway` parameter, which is the new headway
-in seconds. As before, setting `routeId` or `tripId` to `null` is a wildcard.
+in seconds. As before, setting `routeId`, `routeType`, or `tripId` to `null` is a wildcard.
 
 ### Adjusting dwell times
 
