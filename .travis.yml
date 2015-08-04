@@ -12,6 +12,7 @@ install:
   - cd OpenTripPlanner
   # no need to run OTP's tests here
   - mvn package install -DskipTests
+  - cd ..
 
 # run on new, faster infrastructure
 sudo: false
