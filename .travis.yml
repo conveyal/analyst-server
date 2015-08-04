@@ -5,3 +5,13 @@ language: java
 jdk:
   # really we'd rather use OpenJDK 8 but travis does not provide it.
   - oraclejdk8
+
+# Install correct branch of OTP
+install:
+  - git clone --depth 1 --branch bootstrap https://github.com/opentripplanner/OpenTripPlanner.git
+  - cd OpenTripPlanner
+  # no need to run OTP's tests here
+  - mvn package install -DskipTests
+
+# run on new, faster infrastructure
+sudo: false
