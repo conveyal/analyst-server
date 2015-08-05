@@ -17,6 +17,8 @@ sudo: false
 # Deploy just the shaded jar, put it in a folder by itself with an appropriate name
 before_deploy:
   - mkdir shaded
+  # tests have already been run
+  - mvn package -DskipTests
   - mv target/analyst-server.jar "shaded/analyst-server-${TRAVIS_BRANCH}.jar"
 
 # Deploy artifacts to S3
