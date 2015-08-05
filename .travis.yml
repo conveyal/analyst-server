@@ -1,18 +1,50 @@
-# Configure travis CI
-
 language: java
 
+# Analyst Server requires Java 8 and Travis doesn't (yet) support OpenJDK 8
 jdk:
-  # really we'd rather use OpenJDK 8 but travis does not provide it.
   - oraclejdk8
 
-# Install correct branch of OTP
+# We need to build OTP off a specific branch
 install:
   - git clone --depth 1 --branch bootstrap https://github.com/opentripplanner/OpenTripPlanner.git
   - cd OpenTripPlanner
-  # no need to run OTP's tests here
   - mvn package install -DskipTests
   - cd ..
 
-# run on new, faster infrastructure
+# Run on container based infrastructure (allows caching &c.)
 sudo: false
+
+# Deploy just the shaded jar, put it in a folder by itself with an appropriate name
+before_deploy:
+  - mkdir shaded
+  - mv target/analyst-server.jar "shaded/analyst-server-${TRAVIS_BRANCH}.jar"
+
+# Deploy artifacts to S3
+deploy:
+  provider: s3
+  bucket: analyst-server
+  skip_cleanup: true
+
+  # anyone can read, this is an open-source project
+  acl: public_read
+
+  # upload from the specialized directory we just made
+  local_dir: shaded
+
+  # deploy all branches . . .
+  all_branches: true
+  # . . . but don't deploy pull requests
+  on:
+    condition: "$TRAVIS_PULL_REQUEST -eq false"
+
+  # Encrypted AWS access info
+  # Travis generates a private key per repository. You can then encrypt values with the public key so only Travis can decrypt them
+  access_key_id:
+    secure: O4gTlHPCU8kjEl1MrvYRMsX94mC9H5mSUks6AmnY6vJTc/kYWsCUOdQSo2zjlilM6p20duEiuuLN7uEEq+1Mc99SMR8rN59T/tiobYxJPnRWmUObcgMSznEmxWxXzCkTh7kTVdA0cewLKMpun04+ekvy6CeTeqUo2PPa9eorrbU=
+  secret_access_key:
+    secure: bRDOfGvi6DcQZ6BuAIAK/TgVEl4RHltrw8q+bkcExe9PA+eQh809a3LYokIk4DHKLoiYbIKiCvss7argZZEVLIwb55kL5VoL/LPhf5P8Yns63XByiqr7XJJFehJdPaYiMmdPLUOrtgbv9nzD0J/W/NI/E1qfGvegwdEWtm4hSoQ=
+
+# Save the maven cache to speed up builds (without this they take ~20 minutes while Maven downloads all the dependencies for OTP)
+cache:
+  directories:
+    - "$HOME/.m2/repository"
