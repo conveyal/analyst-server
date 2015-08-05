@@ -17,6 +17,8 @@ sudo: false
 # Deploy just the shaded jar, put it in a folder by itself with an appropriate name
 before_deploy:
   - mkdir shaded
+  # tests have already been run
+  - mvn package -DskipTests
   - mv target/analyst-server.jar "shaded/analyst-server-${TRAVIS_BRANCH}.jar"
 
 # Deploy artifacts to S3
@@ -35,7 +37,7 @@ deploy:
   all_branches: true
   # . . . but don't deploy pull requests
   on:
-    condition: "$TRAVIS_PULL_REQUEST -eq false"
+    condition: "$TRAVIS_PULL_REQUEST = false"
 
   # Encrypted AWS access info
   # Travis generates a private key per repository. You can then encrypt values with the public key so only Travis can decrypt them
