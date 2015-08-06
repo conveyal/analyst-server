@@ -24,7 +24,13 @@ public class AnalystMain {
 		LOG.info("Welcome to Transport Analyst by conveyal");
 		LOG.info("Reading properties . . .");
 		// TODO don't hardwire
-		FileInputStream in = new FileInputStream(new File("application.conf"));
+		FileInputStream in;
+
+		if (args.length == 0)
+			in = new FileInputStream(new File("application.conf"));
+		else
+			in = new FileInputStream(new File(args[0]));
+
 		config.load(in);
 		in.close();
 
