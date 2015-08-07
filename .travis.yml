@@ -39,7 +39,7 @@ before_deploy:
 
   - mv ../target/analyst-server.jar .
   # assemble all the parts together
-  - zip ../deploy/analyst-server-${TRAVIS_BRANCH}.zip *
+  - zip -r ../deploy/analyst-server-${TRAVIS_BRANCH}.zip *
 
 # Deploy artifacts to S3
 deploy:
