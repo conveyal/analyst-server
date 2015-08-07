@@ -10,6 +10,12 @@ env:
     - secure: "Kn7TpT3qlTlTgVH3H6VyAl4KmFVSmgQ6sx26NT2hrHyX2YmXexCGFQzg5rLIu/LQ9PY0Mi9Kvjv44a7r+wyA6/ochnETRcVwSRi6znLttTODlIgp389wgFAvRdsx1/rD9MqhcsONack57I4vorX/2kWSchOOxGcYViGUYnNyeHA="
     - secure: "CQ6izYCP3pPZUTpSycD33OQKH8OEwijaXjTJ/pN3N3Q11Er7bNLIxPgoksNDAr4DzciPDCcftKr2PRIP4qD/QKcSX/zSNRbJcx7uuY10Y+zZ0NJieK/S1Ao/sW3HozuldBmNFrfsnFbzm/92Xqa3x5ZBaDaWsoxwxyUY3ah6M8s="
 
+# We need the AWS CLI to get the codedeploy files
+# see https://github.com/travis-ci/travis-ci/issues/3139
+before_install:
+  - pip install --user awscli
+  - export PATH=$PATH:$HOME/.local/bin
+
 # We need to build OTP off a specific branch
 install:
   - git clone --depth 1 --branch bootstrap https://github.com/opentripplanner/OpenTripPlanner.git
