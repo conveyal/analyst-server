@@ -34,7 +34,7 @@ before_deploy:
   - cd shaded
   # get the CodeDeploy appspec and start/stop scripts from S3
   # They are stored outside the repo
-  - aws s3 sync s3://analyst-codedeploy/analyst-server/ .
+  - aws s3 sync s3://analyst-codedeploy-eu/analyst-server/ .
 
   - mv ../target/analyst-server.jar .
   # don't confuse travis
@@ -43,7 +43,7 @@ before_deploy:
 # Deploy artifacts to AWS CodeDeploy from master
 deploy:
   - provider: codedeploy
-    bucket: analyst-server
+    bucket: analyst-codedeploy-eu
     key: analyst-server-master.zip
     skip_cleanup: true
     application: analyst-server-master
