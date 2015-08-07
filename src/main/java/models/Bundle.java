@@ -300,21 +300,11 @@ public class Bundle implements Serializable {
 					// if it has a shape, use that
 					Coordinate[] coords;
 					if (trip.shape_id != null) {
-						Map<Tuple2<String, Integer>, Shape> shape = feed.shapePoints.subMap(new Tuple2(trip.shape_id, null), new Tuple2(trip.shape_id, Fun.HI));
+						Map<?, Shape> shape = feed.shapePoints.subMap(new Tuple2(trip.shape_id, null), new Tuple2(trip.shape_id, Fun.HI));
 						
-						coords = new Coordinate[shape.size()];
-						
-						int i = 0;
-						
-						int lastKey = Integer.MIN_VALUE;
-						for (Map.Entry<Tuple2<String, Integer>, Shape> e : shape.entrySet()) {
-							if (e.getKey().b < lastKey)
-								throw new IllegalStateException("Non-sequential shape keys.");
-							
-							lastKey = e.getKey().b;
-							
-							coords[i++] = new Coordinate(e.getValue().shape_pt_lon, e.getValue().shape_pt_lat);
-						}
+						coords = shape.values().stream()
+								.map(s -> new Coordinate(s.shape_pt_lon, s.shape_pt_lon))
+								.toArray(size -> new Coordinate[size]);
 					}
 					else {
 						Collection<StopTime> stopTimes = feed.stop_times.subMap(new Tuple2(trip.trip_id, null), new Tuple2(trip.trip_id, Fun.HI)).values();
