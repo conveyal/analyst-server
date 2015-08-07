@@ -48,6 +48,7 @@ deploy:
     skip_cleanup: true
     application: analyst-server-master
     deployment_group: analyst-dev
+    region: eu-west-1
 
     # upload from the specialized directory we just made
     local_dir: shaded
