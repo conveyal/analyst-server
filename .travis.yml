@@ -4,6 +4,12 @@ language: java
 jdk:
   - oraclejdk8
 
+# AWS access keys to download codedeploy templates
+env:
+  global:
+    - secure: "Kn7TpT3qlTlTgVH3H6VyAl4KmFVSmgQ6sx26NT2hrHyX2YmXexCGFQzg5rLIu/LQ9PY0Mi9Kvjv44a7r+wyA6/ochnETRcVwSRi6znLttTODlIgp389wgFAvRdsx1/rD9MqhcsONack57I4vorX/2kWSchOOxGcYViGUYnNyeHA="
+    - secure: "CQ6izYCP3pPZUTpSycD33OQKH8OEwijaXjTJ/pN3N3Q11Er7bNLIxPgoksNDAr4DzciPDCcftKr2PRIP4qD/QKcSX/zSNRbJcx7uuY10Y+zZ0NJieK/S1Ao/sW3HozuldBmNFrfsnFbzm/92Xqa3x5ZBaDaWsoxwxyUY3ah6M8s="
+
 # We need to build OTP off a specific branch
 install:
   - git clone --depth 1 --branch bootstrap https://github.com/opentripplanner/OpenTripPlanner.git
@@ -14,12 +20,20 @@ install:
 # Run on container based infrastructure (allows caching &c.)
 sudo: false
 
-# Deploy just the shaded jar, put it in a folder by itself with an appropriate name
+# Make a CodeDeploy deployment object
 before_deploy:
-  - mkdir shaded
-  # tests have already been run
+  # build the package, but no need to run tests again
   - mvn package -DskipTests
-  - mv target/analyst-server.jar "shaded/analyst-server-${TRAVIS_BRANCH}.jar"
+  - mkdir shaded
+  - mkdir deploy
+  - cd shaded
+  # get the CodeDeploy appspec and start/stop scripts from S3
+  # They are stored outside the repo
+  - aws s3 sync s3://analyst-codedeploy/analyst-server/ .
+
+  - mv ../target/analyst-server.jar .
+  # assemble all the parts together
+  - zip ../deploy/analyst-server-${TRAVIS_BRANCH}.zip *
 
 # Deploy artifacts to S3
 deploy:
@@ -27,17 +41,12 @@ deploy:
   bucket: analyst-server
   skip_cleanup: true
 
-  # anyone can read, this is an open-source project
-  acl: public_read
-
   # upload from the specialized directory we just made
-  local_dir: shaded
+  local_dir: deploy
 
   # deploy all branches . . .
   all_branches: true
   # . . . but don't deploy pull requests
-  on:
-    condition: "$TRAVIS_PULL_REQUEST = false"
 
   # Encrypted AWS access info
   # Travis generates a private key per repository. You can then encrypt values with the public key so only Travis can decrypt them
