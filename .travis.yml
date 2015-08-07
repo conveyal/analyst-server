@@ -31,37 +31,36 @@ before_deploy:
   # build the package, but no need to run tests again
   - mvn package -DskipTests
   - mkdir shaded
-  - mkdir deploy
   - cd shaded
   # get the CodeDeploy appspec and start/stop scripts from S3
   # They are stored outside the repo
   - aws s3 sync s3://analyst-codedeploy/analyst-server/ .
 
   - mv ../target/analyst-server.jar .
-  # assemble all the parts together
-  - zip -r ../deploy/analyst-server-${TRAVIS_BRANCH}.zip *
   # don't confuse travis
   - cd ..
 
-# Deploy artifacts to S3
+# Deploy artifacts to AWS CodeDeploy from master
 deploy:
-  provider: s3
-  bucket: analyst-server
-  skip_cleanup: true
+  - provider: codedeploy
+    bucket: analyst-server
+    key: analyst-server-master.zip
+    skip_cleanup: true
+    application: analyst-server-master
+    deployment_group: analyst-dev
 
-  # upload from the specialized directory we just made
-  local_dir: deploy
+    # upload from the specialized directory we just made
+    local_dir: shaded
 
-  # deploy all branches . . .
-  all_branches: true
-  # . . . but don't deploy pull requests
+    on:
+      branch: master
 
-  # Encrypted AWS access info
-  # Travis generates a private key per repository. You can then encrypt values with the public key so only Travis can decrypt them
-  access_key_id:
-    secure: O4gTlHPCU8kjEl1MrvYRMsX94mC9H5mSUks6AmnY6vJTc/kYWsCUOdQSo2zjlilM6p20duEiuuLN7uEEq+1Mc99SMR8rN59T/tiobYxJPnRWmUObcgMSznEmxWxXzCkTh7kTVdA0cewLKMpun04+ekvy6CeTeqUo2PPa9eorrbU=
-  secret_access_key:
-    secure: bRDOfGvi6DcQZ6BuAIAK/TgVEl4RHltrw8q+bkcExe9PA+eQh809a3LYokIk4DHKLoiYbIKiCvss7argZZEVLIwb55kL5VoL/LPhf5P8Yns63XByiqr7XJJFehJdPaYiMmdPLUOrtgbv9nzD0J/W/NI/E1qfGvegwdEWtm4hSoQ=
+    # Encrypted AWS access info
+    # Travis generates a private key per repository. You can then encrypt values with the public key so only Travis can decrypt them
+    access_key_id:
+      secure: O4gTlHPCU8kjEl1MrvYRMsX94mC9H5mSUks6AmnY6vJTc/kYWsCUOdQSo2zjlilM6p20duEiuuLN7uEEq+1Mc99SMR8rN59T/tiobYxJPnRWmUObcgMSznEmxWxXzCkTh7kTVdA0cewLKMpun04+ekvy6CeTeqUo2PPa9eorrbU=
+    secret_access_key:
+      secure: bRDOfGvi6DcQZ6BuAIAK/TgVEl4RHltrw8q+bkcExe9PA+eQh809a3LYokIk4DHKLoiYbIKiCvss7argZZEVLIwb55kL5VoL/LPhf5P8Yns63XByiqr7XJJFehJdPaYiMmdPLUOrtgbv9nzD0J/W/NI/E1qfGvegwdEWtm4hSoQ=
 
 # Save the maven cache to speed up builds (without this they take ~20 minutes while Maven downloads all the dependencies for OTP)
 cache:
