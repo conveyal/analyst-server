@@ -55,13 +55,27 @@ deploy:
 
     on:
       branch: master
+      repo: conveyal/analyst-server
 
     # Encrypted AWS access info
     # Travis generates a private key per repository. You can then encrypt values with the public key so only Travis can decrypt them
-    access_key_id:
+    access_key_id: &1
       secure: O4gTlHPCU8kjEl1MrvYRMsX94mC9H5mSUks6AmnY6vJTc/kYWsCUOdQSo2zjlilM6p20duEiuuLN7uEEq+1Mc99SMR8rN59T/tiobYxJPnRWmUObcgMSznEmxWxXzCkTh7kTVdA0cewLKMpun04+ekvy6CeTeqUo2PPa9eorrbU=
-    secret_access_key:
+    secret_access_key: &2
       secure: bRDOfGvi6DcQZ6BuAIAK/TgVEl4RHltrw8q+bkcExe9PA+eQh809a3LYokIk4DHKLoiYbIKiCvss7argZZEVLIwb55kL5VoL/LPhf5P8Yns63XByiqr7XJJFehJdPaYiMmdPLUOrtgbv9nzD0J/W/NI/E1qfGvegwdEWtm4hSoQ=
+
+  - provider: s3
+    bucket: analyst-codedeploy-eu
+    local_dir: dpl_cd_upload
+
+    on:
+      branch: master
+      repo: conveyal/analyst-server
+
+    access_key_id: *1
+    secret_access_key: *2
+
+    region: eu-west-1
 
 # Save the maven cache to speed up builds (without this they take ~20 minutes while Maven downloads all the dependencies for OTP)
 cache:
