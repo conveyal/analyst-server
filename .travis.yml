@@ -35,7 +35,7 @@ before_deploy:
   - cd shaded
   # get the CodeDeploy appspec and start/stop scripts from S3
   # They are stored outside the repo
-  - aws s3 sync s3://analyst-codedeploy/analyst-server/ .
+  - aws s3 sync s3://analyst-codedeploy-eu/analyst-server/ .
 
   - mv ../target/analyst-server.jar .
   # assemble all the parts together
