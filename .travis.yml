@@ -27,7 +27,7 @@ install:
 sudo: false
 
 # Make a CodeDeploy deployment object
-before_deploy:
+after_success:
   # build the package, but no need to run tests again
   - mvn package -DskipTests
   - mkdir shaded
