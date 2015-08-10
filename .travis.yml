@@ -27,55 +27,41 @@ install:
 sudo: false
 
 # Make a CodeDeploy deployment object
-after_success:
+before_deploy:
   # build the package, but no need to run tests again
   - mvn package -DskipTests
   - mkdir shaded
+  - mkdir deploy
   - cd shaded
   # get the CodeDeploy appspec and start/stop scripts from S3
   # They are stored outside the repo
-  - aws s3 sync s3://analyst-codedeploy-eu/analyst-server/ .
+  - aws s3 sync s3://analyst-codedeploy/analyst-server/ .
 
   - mv ../target/analyst-server.jar .
+  # assemble all the parts together
+  - zip -r ../deploy/analyst-server-${TRAVIS_BRANCH}.zip *
   # don't confuse travis
   - cd ..
 
-# Deploy artifacts to AWS CodeDeploy from master
+# Deploy artifacts to S3
 deploy:
-  - provider: codedeploy
-    bucket: analyst-codedeploy-eu
-    key: analyst-server-master.zip
-    skip_cleanup: true
-    application: analyst-server-master
-    deployment_group: analyst-dev
-    region: eu-west-1
+  provider: s3
+  bucket: analyst-codedeploy-eu
+  skip_cleanup: true
 
-    # upload from the specialized directory we just made
-    local_dir: shaded
+  # upload from the specialized directory we just made
+  local_dir: deploy
 
-    on:
-      branch: master
-      repo: conveyal/analyst-server
+  # deploy all branches . . .
+  all_branches: true
+  # . . . but don't deploy pull requests
 
-    # Encrypted AWS access info
-    # Travis generates a private key per repository. You can then encrypt values with the public key so only Travis can decrypt them
-    access_key_id: &1
-      secure: O4gTlHPCU8kjEl1MrvYRMsX94mC9H5mSUks6AmnY6vJTc/kYWsCUOdQSo2zjlilM6p20duEiuuLN7uEEq+1Mc99SMR8rN59T/tiobYxJPnRWmUObcgMSznEmxWxXzCkTh7kTVdA0cewLKMpun04+ekvy6CeTeqUo2PPa9eorrbU=
-    secret_access_key: &2
-      secure: bRDOfGvi6DcQZ6BuAIAK/TgVEl4RHltrw8q+bkcExe9PA+eQh809a3LYokIk4DHKLoiYbIKiCvss7argZZEVLIwb55kL5VoL/LPhf5P8Yns63XByiqr7XJJFehJdPaYiMmdPLUOrtgbv9nzD0J/W/NI/E1qfGvegwdEWtm4hSoQ=
-
-  - provider: s3
-    bucket: analyst-codedeploy-eu
-    local_dir: dpl_cd_upload
-
-    on:
-      branch: master
-      repo: conveyal/analyst-server
-
-    access_key_id: *1
-    secret_access_key: *2
-
-    region: eu-west-1
+  # Encrypted AWS access info
+  # Travis generates a private key per repository. You can then encrypt values with the public key so only Travis can decrypt them
+  access_key_id:
+    secure: O4gTlHPCU8kjEl1MrvYRMsX94mC9H5mSUks6AmnY6vJTc/kYWsCUOdQSo2zjlilM6p20duEiuuLN7uEEq+1Mc99SMR8rN59T/tiobYxJPnRWmUObcgMSznEmxWxXzCkTh7kTVdA0cewLKMpun04+ekvy6CeTeqUo2PPa9eorrbU=
+  secret_access_key:
+    secure: bRDOfGvi6DcQZ6BuAIAK/TgVEl4RHltrw8q+bkcExe9PA+eQh809a3LYokIk4DHKLoiYbIKiCvss7argZZEVLIwb55kL5VoL/LPhf5P8Yns63XByiqr7XJJFehJdPaYiMmdPLUOrtgbv9nzD0J/W/NI/E1qfGvegwdEWtm4hSoQ=
 
 # Save the maven cache to speed up builds (without this they take ~20 minutes while Maven downloads all the dependencies for OTP)
 cache:
