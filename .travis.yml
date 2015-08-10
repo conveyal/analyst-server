@@ -48,6 +48,7 @@ deploy:
   provider: s3
   bucket: analyst-codedeploy-eu
   skip_cleanup: true
+  region: eu-west-1
 
   # upload from the specialized directory we just made
   local_dir: deploy
