@@ -2,8 +2,6 @@ package models;
 
 import com.conveyal.analyst.server.AnalystMain;
 import com.conveyal.analyst.server.jobs.ProcessTransitBundleJob;
-import utils.Bounds;
-import utils.ClassLoaderSerializer;
 import com.conveyal.analyst.server.utils.DataStore;
 import com.conveyal.analyst.server.utils.HashUtils;
 import com.conveyal.gtfs.GTFSFeed;
@@ -23,6 +21,8 @@ import org.mapdb.Fun.Tuple2;
 import org.opentripplanner.analyst.cluster.ClusterGraphService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import utils.Bounds;
+import utils.ClassLoaderSerializer;
 
 import java.io.File;
 import java.io.IOException;
@@ -109,16 +109,18 @@ public class Bundle implements Serializable {
 	
 	/** build the spatial index */
 	private synchronized void buildSpatialIndexIfNeeded () {
-		if (spIdx != null)
+		if (this.spIdx != null)
 			return;
 		
 		Collection<TransitSegment> shapes = getSegments();
 		
-		spIdx = new STRtree(Math.max(shapes.size(), 2));
+		STRtree spIdx = new STRtree(Math.max(shapes.size(), 2));
 		
 		for (TransitSegment seg : shapes) {
 			spIdx.insert(seg.geom.getEnvelopeInternal(), seg);
 		}
+
+		this.spIdx = spIdx;
 	}
 	
 	public Bundle() {}
