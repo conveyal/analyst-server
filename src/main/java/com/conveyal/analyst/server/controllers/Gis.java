@@ -3,6 +3,7 @@ package com.conveyal.analyst.server.controllers;
 import com.conveyal.analyst.server.utils.DirectoryZip;
 import com.conveyal.analyst.server.utils.HashUtils;
 import com.conveyal.analyst.server.utils.QueryResults;
+import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.MultiPolygon;
@@ -32,9 +33,7 @@ import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
 
-import java.io.File;
-import java.io.OutputStream;
-import java.io.Serializable;
+import java.io.*;
 import java.util.*;
 
 import static spark.Spark.halt;
@@ -59,7 +58,7 @@ public class Gis extends Controller {
 
 		if(query == null || (query2 == null && compareTo != null) ||
 				!u.hasReadPermission(query.projectId) ||
-				(query2 != null && !u.hasReadPermission(query2.projectId)));
+				(query2 != null && !u.hasReadPermission(query2.projectId)))
 			halt(NOT_FOUND, "Could not find query or you do not have access to it");
 
 		String shapeName = (timeLimit / 60) + "_mins_" + which.toString().toLowerCase() + "_";
@@ -413,12 +412,20 @@ public class Gis extends Controller {
 			throw new Exception(typeName + " does not support read/write access");
 		}
 
+		res.header("Content-Type", "application/x-zip");
+
+		// buffer to a file
+		File temp = File.createTempFile("shapefile", "zip");
+		FileOutputStream fos = new FileOutputStream(temp);
+		DirectoryZip.zip(outputDirectory, fos);
+		fos.close();
+
+		FileInputStream fis = new FileInputStream(temp);
 		OutputStream os = res.raw().getOutputStream();
-		DirectoryZip.zip(outputDirectory, os);
+		ByteStreams.copy(fis, os);
 		os.close();
+		fis.close();
+		temp.delete();
 		outputDirectory.delete();
 	}
-	
-	  
-	
 }

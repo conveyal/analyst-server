@@ -15,11 +15,12 @@ import java.awt.*;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class QueryResults {
 
-	public static  Map<String, QueryResults> queryResultsCache = new ConcurrentHashMap<String, QueryResults>();
+	public static Map<String, QueryResults> queryResultsCache = new WeakHashMap<>();
 	
 	/**
 	 * Keep track of IDs
@@ -326,7 +327,7 @@ public class QueryResults {
 			// a percentage of total possible still, not a percent change.
 			ret.maxPossible = this.maxPossible;
 			
-			if (this.minValue < 0 && this.maxValue > 0)
+			if (ret.minValue < 0 && ret.maxValue > 0)
 				ret.classifier = new BimodalNaturalBreaksClassifier(ret, nClasses, 0d,
 						new Color(.9f, .9f, .1f, .5f), new Color(.5f, .5f, .5f, .5f), new Color(0f, 0f, 1f, .5f));
 			else 

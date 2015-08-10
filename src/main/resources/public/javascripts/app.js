@@ -22,7 +22,7 @@ var Analyst = Analyst || {};
 		A.app.user.fetch()
 		.fail(function (err) {
 			if (err.status == 401)
-				window.location.href='/login.html';
+				window.location.href='/login';
 		})
 		.always(function () {
 			A.app.controller =  new A.app.AppController();
@@ -39,7 +39,7 @@ var Analyst = Analyst || {};
 		// any time we get a 401, redirect to the login page
 		$(document).ajaxError(function (ev, err) {
 			if (err.status == 401) {
-				window.location.href = '/login.html';
+				window.location.href = '/login';
 			}
 		});
 

@@ -20,6 +20,7 @@ var Analyst = Analyst || {};
 		  'click #showIso': 'updateMap',
 		  'click #showPoints': 'updateMap',
 		  'click #showTransit': 'updateMap',
+			'change #boardingAssumption': 'updateResults',
 		  'change .mode-selector' : 'updateMode',
 			'change .profile': 'updateResults',
 			'click #showSettings' : 'showSettings',
@@ -74,6 +75,7 @@ var Analyst = Analyst || {};
 		    // transit request and we're doing profile routing
 		    inps.find('[value="WORST_CASE"]').prop('disabled', false).parent().removeClass('hidden');
 		    inps.find('[value="BEST_CASE"]').prop('disabled', false).parent().removeClass('hidden');
+				inps.find('[value="AVERAGE"]').prop('disabled', false).parent().removeClass('hidden');
 		    inps.find('[value="SPREAD"]').prop('disabled', true).parent().addClass('hidden');
 		    inps.find('[value="POINT_ESTIMATE"]').prop('disabled', true).parent().addClass('hidden');
 
@@ -419,6 +421,9 @@ var Analyst = Analyst || {};
 				};
 			});
 
+			if (this.scenario1.get('modifications'))
+				mods1 = mods1.concat(this.scenario1.get('modifications'));
+
 			if (window.modifications1)
 				mods1 = mods1.concat(window.modifications1);
 
@@ -451,6 +456,7 @@ var Analyst = Analyst || {};
 					bikeSafe: 1,
 					bikeSlope: 1,
 					bikeTime: 1,
+					boardingAssumption: this.$('#boardingAssumption').val(),
 					scenario: {
 						modifications: mods1
 					}
@@ -509,6 +515,9 @@ var Analyst = Analyst || {};
 								routeId: [route.id],
 							};
 						});
+
+						if (this.scenario2.get('modifications'))
+							mods2 = mods2.concat(this.scenario2.get('modifications'));
 
 						if (window.modifications2)
 							mods2 = mods2.concat(window.modifications2);
@@ -801,6 +810,12 @@ var Analyst = Analyst || {};
 
 				}
 			}
+
+			// overlay labels on top of results
+			if (_this.labelOverlay)
+				A.map.removeLayer(_this.labelOverlay);
+
+			_this.labelOverlay = L.tileLayer('http://{s}.tiles.mapbox.com/v3/conveyal.hp092m0g/{z}/{x}/{y}.png').addTo(A.map);
 		},
 
 		/** get the current position of the time limit slider */
