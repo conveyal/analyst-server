@@ -4,18 +4,6 @@ language: java
 jdk:
   - oraclejdk8
 
-# AWS access keys to download codedeploy templates
-env:
-  global:
-    - secure: "Kn7TpT3qlTlTgVH3H6VyAl4KmFVSmgQ6sx26NT2hrHyX2YmXexCGFQzg5rLIu/LQ9PY0Mi9Kvjv44a7r+wyA6/ochnETRcVwSRi6znLttTODlIgp389wgFAvRdsx1/rD9MqhcsONack57I4vorX/2kWSchOOxGcYViGUYnNyeHA="
-    - secure: "CQ6izYCP3pPZUTpSycD33OQKH8OEwijaXjTJ/pN3N3Q11Er7bNLIxPgoksNDAr4DzciPDCcftKr2PRIP4qD/QKcSX/zSNRbJcx7uuY10Y+zZ0NJieK/S1Ao/sW3HozuldBmNFrfsnFbzm/92Xqa3x5ZBaDaWsoxwxyUY3ah6M8s="
-
-# We need the AWS CLI to get the codedeploy files
-# see https://github.com/travis-ci/travis-ci/issues/3139
-before_install:
-  - pip install --user awscli
-  - export PATH=$PATH:$HOME/.local/bin
-
 # We need to build OTP off a specific branch
 install:
   - git clone --depth 1 --branch bootstrap https://github.com/opentripplanner/OpenTripPlanner.git
@@ -33,10 +21,9 @@ before_deploy:
   - mkdir shaded
   - mkdir deploy
   - cd shaded
-  # get the CodeDeploy appspec and start/stop scripts from S3
-  # They are stored outside the repo
-  - aws s3 sync s3://analyst-codedeploy-eu/analyst-server/ .
-
+  # get the CodeDeploy appspec and start/stop scripts
+  - cp -r ../appspec.yml ../scripts .
+  # and the jar
   - mv ../target/analyst-server.jar .
   # assemble all the parts together
   - zip -r ../deploy/analyst-server-${TRAVIS_BRANCH}.zip *

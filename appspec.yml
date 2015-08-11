@@ -1,0 +1,21 @@
+os: linux
+# amazon requires this be specified and set to 0.0 or the whole Enterprise comes apart, which makes Captain Kirk unhappy
+version: 0.0
+
+# Serve the analyst server jar over HTTP so the workers can get it.
+files:
+  - source: analyst-server.jar
+    destination: /usr/share/nginx/html/
+  - source: analyst-server.jar
+    destination: /opt/otp/
+
+hooks:
+  ApplicationStart:
+    - location: scripts/start.sh
+      runas: ubuntu
+      timeout: 60
+
+  ApplicationStop:
+    - location: scripts/stop.sh
+      runas: ubuntu
+      timeout: 60
