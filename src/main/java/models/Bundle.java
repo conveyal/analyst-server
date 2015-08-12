@@ -22,7 +22,6 @@ import org.opentripplanner.analyst.cluster.ClusterGraphService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import utils.Bounds;
-import utils.ClassLoaderSerializer;
 
 import java.io.File;
 import java.io.IOException;
@@ -65,7 +64,7 @@ public class Bundle implements Serializable {
 				.make();
 	
 	// the long is just to differentiate entries . . . this should really be a multimap
-	static BTreeMap<Tuple2<String, Long>, TransitSegment> segments = segmentsDb.createTreeMap("segments").valueSerializer(new ClassLoaderSerializer()).makeOrGet();
+	static BTreeMap<Tuple2<String, Long>, TransitSegment> segments = segmentsDb.createTreeMap("segments").valueSerializer(Serializer.JAVA).makeOrGet();
 	static Atomic.Long nextSegmentId = segmentsDb.getAtomicLong("segmentId");
 
 	public String id;

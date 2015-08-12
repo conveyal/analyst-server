@@ -8,6 +8,7 @@ import java.io.*;
 /**
  * Deserialize using the thread's class loader, not the root class loader.
  */
+@Deprecated
 public class ClassLoaderSerializer implements Serializer<Object>, Serializable {
 	
 	@Override

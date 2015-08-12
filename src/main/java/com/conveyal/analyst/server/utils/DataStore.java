@@ -6,7 +6,6 @@ import org.mapdb.DB.BTreeMapMaker;
 import org.mapdb.Fun.Tuple2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import utils.ClassLoaderSerializer;
 
 import java.io.File;
 import java.io.IOException;
@@ -78,7 +77,7 @@ public class DataStore<T> {
 	    
 	    // this probably ought to cache the serializer.
 	    if (useJavaSerialization)
-	    	maker = maker.valueSerializer(new ClassLoaderSerializer());
+	    	maker = maker.valueSerializer(Serializer.JAVA);
 	    
 		map = maker.makeOrGet();
 	}
@@ -124,7 +123,7 @@ public class DataStore<T> {
         	.pumpSource(iter)
         	.pumpPresort(100000) 
         	.keySerializer(keySerializer)
-			.valueSerializer(new ClassLoaderSerializer())
+			.valueSerializer(Serializer.JAVA)
         	.make();
 		
 		// close/flush db 
@@ -167,6 +166,11 @@ public class DataStore<T> {
 	
 	public Collection<Entry<String, T>> getEntries () {
 		return map.entrySet();
+	}
+
+	public void addAll(DataStore<T> source) {
+		map.putAll(source.map);
+		db.commit();
 	}
 	
 	public Integer size() {
