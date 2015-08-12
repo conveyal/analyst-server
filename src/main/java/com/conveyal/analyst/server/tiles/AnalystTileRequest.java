@@ -99,7 +99,7 @@ public abstract class AnalystTileRequest {
     			color = new Color(0.6f,0.6f,1.0f,0.25f);
 
     			try {
-					tile.renderLineString(seg.geom, color, null);
+					tile.renderLineString(seg.geom, color, 3);
 				} catch (MismatchedDimensionException | TransformException e) {
 					LOG.error("Error rendering line string to tile", e);
 				}

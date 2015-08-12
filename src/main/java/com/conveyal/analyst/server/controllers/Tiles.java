@@ -7,6 +7,7 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import gnu.trove.map.TIntIntMap;
 import gnu.trove.map.hash.TIntIntHashMap;
+import models.TransportScenario;
 import org.opentripplanner.analyst.cluster.ResultEnvelope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -157,24 +158,38 @@ public class Tiles extends Controller {
     }
 
     public static Object transit (Request req, Response res) {
-        String scenarioId = req.queryParams("bundleId");
+        String bundleId = req.queryParams("bundleId");
+
+        if (bundleId == null) {
+            String scenarioId = req.queryParams("scenarioId");
+            TransportScenario s = TransportScenario.getScenario(scenarioId);
+            bundleId = s.bundleId;
+        }
+
+
         int x = Integer.parseInt(req.queryParams("x"));
         int y = Integer.parseInt(req.queryParams("y"));
         int z = Integer.parseInt(req.queryParams("z"));
 
-        AnalystTileRequest tileRequest = new AnalystTileRequest.TransitTile(scenarioId, x, y, z);
+        AnalystTileRequest tileRequest = new AnalystTileRequest.TransitTile(bundleId, x, y, z);
         return tileBuilder(req, res, tileRequest);
 
     }
 
     public static Object transitComparison (Request req, Response res) {
-        String scenarioId1 = req.queryParams("bundleId1");
-        String scenarioId2 = req.queryParams("bundleId2");
+        String bundleId1 = req.queryParams("bundleId1");
+        String bundleId2 = req.queryParams("bundleId2");
+
+        if (bundleId1 == null || bundleId2 == null) {
+            bundleId1 = TransportScenario.getScenario(req.queryParams("scenarioId1")).bundleId;
+            bundleId2 = TransportScenario.getScenario(req.queryParams("scenarioId2")).bundleId;
+        }
+
         int x = Integer.parseInt(req.queryParams("x"));
         int y = Integer.parseInt(req.queryParams("y"));
         int z = Integer.parseInt(req.queryParams("z"));
 
-        AnalystTileRequest tileRequest = new AnalystTileRequest.TransitComparisonTile(scenarioId1, scenarioId2, x, y,
+        AnalystTileRequest tileRequest = new AnalystTileRequest.TransitComparisonTile(bundleId1, bundleId2, x, y,
                 z);
         return tileBuilder(req, res, tileRequest);
     }

@@ -182,8 +182,10 @@ public class Tile {
         
 		gr.setColor(c);
 		
-		if(strokeWidth != null)
+		if(strokeWidth == null)
 			gr.setStroke(new BasicStroke(5));
+		else
+			gr.setStroke(new BasicStroke(strokeWidth));
 		
 		Path2D path = new Path2D.Double();
 		

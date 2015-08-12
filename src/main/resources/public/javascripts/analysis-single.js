@@ -309,7 +309,6 @@ var Analyst = Analyst || {};
 		  	if(A.map.isochronesLayer  && A.map.hasLayer(A.map.isochronesLayer))
 		  		A.map.removeLayer(A.map.isochronesLayer);
 
-
 			for(var id in this.transitOverlays){
 				if(this.transitOverlays[id] && A.map.hasLayer(this.transitOverlays[id]))
 					A.map.removeLayer(this.transitOverlays[id]);
@@ -626,46 +625,6 @@ var Analyst = Analyst || {};
 
 			this.comparisonType = this.$('.scenario-comparison').val();
 
-			if(showTransit) {
-				if(this.comparisonType == 'compare') {
-
-					var scenarioId1 = this.$('#scenario1').val();
-
-					if(A.map.hasLayer(this.transitOverlays[scenarioId1]))
-			 			A.map.removeLayer(this.transitOverlays[scenarioId1]);
-
-					this.transitOverlays[scenarioId1] = L.tileLayer('/tile/transit?z={z}&x={x}&y={y}&scenarioId=' + scenarioId1).addTo(A.map);
-
-					var scenarioId2 = this.$('#scenario2').val();
-
-					var compareKey = scenarioId1 + "_ " + scenarioId2;
-
-					if(A.map.hasLayer(this.transitOverlays[compareKey]))
-			 			A.map.removeLayer(this.transitOverlays[compareKey]);
-
-					this.transitOverlays[compareKey] = L.tileLayer('/tile/transitComparison?z={z}&x={x}&y={y}&scenarioId1=' + scenarioId1 + '&scenarioId2=' + scenarioId2).addTo(A.map);
-
-				}
-				else {
-
-					var scenarioId = this.$('#scenario1').val();
-
-					if(A.map.hasLayer(this.transitOverlays[scenarioId]))
-			 			A.map.removeLayer(this.transitOverlays[scenarioId]);
-
-					this.transitOverlays[scenarioId] = L.tileLayer('/tile/transit?z={z}&x={x}&y={y}&scenarioId=' + scenarioId).addTo(A.map);
-
-				}
-			}
-			else {
-
-				for(var id in this.transitOverlays){
-					if(this.transitOverlays[id] && A.map.hasLayer(this.transitOverlays[id]))
-						A.map.removeLayer(this.transitOverlays[id]);
-				}
-
-			}
-
 			if(!(this.scenario1Data && (this.scenario2Data || this.comparisonType != 'compare')))
 				return;
 
@@ -816,6 +775,50 @@ var Analyst = Analyst || {};
 				A.map.removeLayer(_this.labelOverlay);
 
 			_this.labelOverlay = L.tileLayer('http://{s}.tiles.mapbox.com/v3/conveyal.hp092m0g/{z}/{x}/{y}.png').addTo(A.map);
+
+			if(showTransit) {
+				if(this.comparisonType == 'compare') {
+
+					var scenarioId1 = this.$('#scenario1').val();
+
+					if(A.map.hasLayer(this.transitOverlays[scenarioId1]))
+						A.map.removeLayer(this.transitOverlays[scenarioId1]);
+
+					// manual setting of z-indices to get layer ordering right: http://stackoverflow.com/questions/12848812
+					this.transitOverlays[scenarioId1] = L.tileLayer('/tile/transit?z={z}&x={x}&y={y}&scenarioId=' + scenarioId1)
+						.setZIndex(7)
+						.addTo(A.map);
+
+					var scenarioId2 = this.$('#scenario2').val();
+
+					var compareKey = scenarioId1 + "_ " + scenarioId2;
+
+					if(A.map.hasLayer(this.transitOverlays[compareKey]))
+						A.map.removeLayer(this.transitOverlays[compareKey]);
+
+					this.transitOverlays[compareKey] = L.tileLayer('/tile/transitComparison?z={z}&x={x}&y={y}&scenarioId1=' + scenarioId1 + '&scenarioId2=' + scenarioId2)
+						.setZIndex(8).addTo(A.map);
+
+				}
+				else {
+
+					var scenarioId = this.$('#scenario1').val();
+
+					if(A.map.hasLayer(this.transitOverlays[scenarioId]))
+						A.map.removeLayer(this.transitOverlays[scenarioId]);
+
+					this.transitOverlays[scenarioId] = L.tileLayer('/tile/transit?z={z}&x={x}&y={y}&scenarioId=' + scenarioId).setZIndex(7).addTo(A.map);
+
+				}
+			}
+			else {
+
+				for(var id in this.transitOverlays){
+					if(this.transitOverlays[id] && A.map.hasLayer(this.transitOverlays[id]))
+						A.map.removeLayer(this.transitOverlays[id]);
+				}
+
+			}
 		},
 
 		/** get the current position of the time limit slider */
