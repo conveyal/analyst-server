@@ -27,6 +27,9 @@ API key(s) and secret(s) which you can use to connect applications to it. Authen
 
   It can be used by adding an `Authorization: Bearer <access_token>` header to all requests. It is good for one hour.
 
+The recommended way to use this would be to keep your API keys on your server and make a server-side request to get client
+credentials, which could then be used in JavaScript directly.
+
 ## Single-point analysis
 
 Currently the API only supports performing single point analysis. To perform a single point analysis, you POST a JSON
