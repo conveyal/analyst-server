@@ -265,7 +265,8 @@ var Analyst = Analyst || {};
 		regions : {
 			projectDropdown: "#projectDropdown",
 			userDropdown: "#userDropdown",
-			userQuotaWarning: "#userQuotaWarning"
+			userQuotaWarning: "#userQuotaWarning",
+			customLogo: "#customLogo"
 		},
 
 		events : {
@@ -304,10 +305,12 @@ var Analyst = Analyst || {};
 
 			var userDropdownView = new A.app.UserMenuView({model: A.app.user});
 			var userQuotaWarningView = new A.app.UserQuotaWarningView({model: A.app.user});
+			var customLogoView = new A.app.CustomLogoView({model: A.app.user});
 
 			this.projectDropdown.show(projectDropdownView);
 			this.userDropdown.show(userDropdownView);
 			this.userQuotaWarning.show(userQuotaWarningView);
+			this.customLogo.show(customLogoView);
 		},
 
 		clickTransportData : function(evt) {
@@ -406,6 +409,16 @@ var Analyst = Analyst || {};
 	A.app.UserQuotaWarningView = Backbone.Marionette.ItemView.extend({
 		template: Handlebars.getTemplate('app', 'app-user-quota-warning'),
 		tagName: 'li',
+
+		initialize: function () {
+			this.model.on('change', this.render);
+		}
+	});
+
+	/** Show the custom logo if present */
+	A.app.CustomLogoView = Backbone.Marionette.ItemView.extend({
+		template: Handlebars.getTemplate('app', 'app-custom-logo-view'),
+		tagName: 'span',
 
 		initialize: function () {
 			this.model.on('change', this.render);

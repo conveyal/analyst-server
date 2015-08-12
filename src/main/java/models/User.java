@@ -35,6 +35,9 @@ public class User implements Serializable {
 
 	public final String groupName;
 
+	/** A custom logo for this group */
+	public final String logo;
+
 	/** the maximum number of origin points this user's group is allowed to calculate */
 	public final long quota;
 
@@ -63,6 +66,7 @@ public class User implements Serializable {
 			LOG.warn("User {} has no groups, computation will be forbidden", username);
 			this.quota = 0;
 			this.groupName = null;
+			this.logo = null;
 		}
 		else {
 			Group group = groups.single();
@@ -76,6 +80,8 @@ public class User implements Serializable {
 			}
 
 			this.groupName = group.getName();
+
+			this.logo = (String) group.getCustomData().get(AnalystMain.config.getProperty("auth.stormpath-name") + "_logo");
 		}
 
 		this.account = account;
