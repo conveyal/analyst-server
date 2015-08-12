@@ -13,7 +13,6 @@ import org.mapdb.Fun;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
-import java.util.stream.Stream;
 
 /**
  * Merge the database specified as the first argument into the database specified as the second.
@@ -85,7 +84,6 @@ public class MergeDatabases implements Runnable {
                 .make();
 
         DB shpDest = DBMaker.newFileDB(new File(into, "bundle_shapes.db"))
-                .transactionDisable()
                 .asyncWriteEnable()
                 .asyncWriteFlushDelay(10000)
                 .make();
@@ -120,50 +118,57 @@ public class MergeDatabases implements Runnable {
             this.mergeFiles("flat_results");
         }
         else if (srcMapdbResults.exists()) {
-            Stream.of(srcMapdbResults.listFiles()).filter(f -> f.getName().endsWith(".db"))
-                    .forEach(f -> {
-                        String id = f.getName().substring(0, -3);
+            DataStore<Query> queryDataStore = new DataStore<Query>(from, "queries");
 
-                        DB db = DBMaker.newFileDB(f)
-                                .mmapFileEnable()
-                                .readOnly()
-                                .make();
 
-                        QueryResultStore dest = new QueryResultStore(id, false, destResults);
+            for (Query q : queryDataStore.getAll()) {
+                // if there are no results we're not going to find them
+                if (q.completePoints == null || q.completePoints == 0)
+                    continue;
 
-                        for (Object o : db.getAll().values()) {
-                            if (o instanceof BTreeMap) {
-                                Map<String, utils.ResultEnvelope> map = (Map<String, utils.ResultEnvelope>) o;
+                String id = q.id;
 
-                                map.values().stream()
-                                        // convert to OTP result envelopes
-                                        .map(re -> {
-                                            org.opentripplanner.analyst.cluster.ResultEnvelope out = new org.opentripplanner.analyst.cluster.ResultEnvelope();
-                                            out.id = re.id;
-                                            out.avgCase = re.avgCase;
-                                            out.bestCase = re.bestCase;
-                                            out.destinationPointsetId = re.shapefile;
-                                            out.jobId = re.id;
-                                            out.pointEstimate = re.pointEstimate;
-                                            out.profile = re.profile;
-                                            out.spread = re.spread;
-                                            out.worstCase = re.worstCase;
-                                            return out;
-                                            // NB: there is a result envelope per variable in the original store, so we're saving results multiple times
-                                            // for each feature. This is OK though because the queryresultstore is just splitting them up again.
-                                        }).forEach(dest::store);
-                            }
-                        }
-                        db.close();
-                        dest.close();
-                    });
+                DB db = DBMaker.newFileDB(new File(srcMapdbResults, id + ".db"))
+                        .mmapFileEnable()
+                        .transactionDisable()
+                        .readOnly()
+                        .make();
+
+                QueryResultStore dest = new QueryResultStore(id, false, destResults);
+
+                for (Object o : db.getAll().values()) {
+                    if (o instanceof BTreeMap) {
+                        Map<String, utils.ResultEnvelope> map = (Map<String, utils.ResultEnvelope>) o;
+
+                        map.values().stream()
+                                // convert to OTP result envelopes
+                                .map(re -> {
+                                    org.opentripplanner.analyst.cluster.ResultEnvelope out = new org.opentripplanner.analyst.cluster.ResultEnvelope();
+                                    out.id = re.id;
+                                    out.avgCase = re.avgCase;
+                                    out.bestCase = re.bestCase;
+                                    out.destinationPointsetId = re.shapefile;
+                                    out.jobId = re.id;
+                                    out.pointEstimate = re.pointEstimate;
+                                    out.profile = re.profile;
+                                    out.spread = re.spread;
+                                    out.worstCase = re.worstCase;
+                                    return out;
+                                    // NB: there is a result envelope per variable in the original store, so we're saving results multiple times
+                                    // for each feature. This is OK though because the queryresultstore is just splitting them up again.
+                                }).forEach(dest::store);
+                    }
+                }
+                db.close();
+                dest.close();
+            }
+            queryDataStore.close();
         }
     }
 
     public void mergeShapefiles () throws IOException {
         this.<Shapefile>merge("shapes");
         this.mergeFiles("shape_data");
-        this.mergeFiles("shape_features");
     }
 
     /** generic merge function */

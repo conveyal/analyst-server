@@ -55,6 +55,14 @@ public class Controller {
 
     /** Get the current user */
     protected static User currentUser(Request request) {
-        return Authentication.getUser(request.session().attribute("username"));
+        // prefer username local to request from OAuth if present
+        String username = (String) request.attribute("username");
+        if (username == null)
+            username = request.session().attribute("username");
+
+        if (username == null)
+            return null;
+
+        return Authentication.getUser(username);
     }
 }

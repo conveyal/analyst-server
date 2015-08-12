@@ -9,6 +9,24 @@ For the time being, the Analyst Server API only allows one to perform analysis o
 created, so a first step is to create scenarios and upload shapefiles to Analyst Server through the default user
 interface and ensure that analysis can be performed and that results are satisfactory.
 
+## Authentication
+
+The APIs described here (with the exception of the tile APIs) require authentication using OAuth2. Your account has
+API key(s) and secret(s) which you can use to connect applications to it. Authenticating via OAuth is a two-stage process:
+
+1. Make a POST request to /oauth/token with an HTTP Basic Authorization header, using your key and secret as the username and
+   password (which are concatenated with a : and then base64-encoded, and then placed in a header `Authorization: Basic <base64-encoded-value>`).
+   Put in the body `grant_type=client_credentials`, and send it with content type application/x-www-form-urlencoded.
+2. The response from that is a JSON object like so:
+
+    {
+        "access_token": "many-random-letters-and-numbers",
+        "token_type": "Bearer",
+        "expires_in": 3600
+    }
+
+  It can be used by adding an `Authorization: Bearer <access_token>` header to all requests. It is good for one hour.
+
 ## Single-point analysis
 
 Currently the API only supports performing single point analysis. To perform a single point analysis, you POST a JSON

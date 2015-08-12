@@ -19,6 +19,8 @@ import com.stormpath.sdk.group.Group;
 import com.stormpath.sdk.group.GroupList;
 import com.stormpath.sdk.idsite.AccountResult;
 import com.stormpath.sdk.idsite.IdSiteUrlBuilder;
+import com.stormpath.sdk.oauth.AccessTokenResult;
+import com.stormpath.sdk.oauth.OauthAuthenticationResult;
 import com.stormpath.sdk.resource.ResourceException;
 import com.stormpath.sdk.tenant.Tenant;
 import models.User;
@@ -30,7 +32,7 @@ import spark.Response;
 import java.io.File;
 import java.io.IOException;
 
-import static spark.Spark.*;
+import static spark.Spark.halt;
 
 /** handle authentication */
 public class Authentication extends Controller {
@@ -194,15 +196,41 @@ public class Authentication extends Controller {
         }
     }
 
-    /** Ensure users are authenticated or CORS is enabled */
+    /** Ensure users are authenticated, enabling CORS on OAuth requests is enabled */
     public static void authenticatedOrCors (Request req, Response res) {
-        if (!Boolean.parseBoolean(AnalystMain.config.getProperty("api.allow-unauthenticated-access", "false"))) {
-            if (currentUser(req) == null) {
-                halt(UNAUTHORIZED, "you must log in to access this page");
+        // first check for an authorization header
+        if (req.headers("Authorization") != null) {
+            OauthAuthenticationResult oauth;
+            try {
+                oauth = stormpathApp.authenticateOauthRequest(req.raw())
+                        .execute();
+            } catch (ResourceException rex) {
+                halt(UNAUTHORIZED, "unable to authenticate provided OAuth tokens");
+                // unreachable, but the java compiler doesn't know that.
+                return;
             }
-        }
-        else {
+
+            req.attribute("username", oauth.getAccount().getUsername());
             res.header("Access-Control-Allow-Origin", "*");
+            return;
         }
+
+        // fall back to username/password auth
+        authenticated(req, res);
+    }
+
+    /** Exchange OAuth access key, secret for temporary bearer authorization */
+    public static String getBearerToken (Request req, Response res) {
+        AccessTokenResult tkr;
+
+        try {
+            tkr = (AccessTokenResult) stormpathApp.authenticateOauthRequest(req.raw()).execute();
+        } catch (ResourceException rex) {
+            halt(UNAUTHORIZED);
+            return null;
+        }
+
+        res.type("application/json");
+        return tkr.getTokenResponse().toJson();
     }
 }

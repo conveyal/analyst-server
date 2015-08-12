@@ -36,6 +36,7 @@ public class Routes {
         post("/doLogin", Authentication::doLogin);
         get("/logout", Authentication::logout);
         get("/api/user/self", Authentication::getCurrentUser, json);
+        post("/oauth/token", Authentication::getBearerToken);
 
         // authentication for API excludes two resources
         before("/api/*", (req, res) -> {
@@ -112,14 +113,23 @@ public class Routes {
         get("/gis/single", Gis::single);
         get("/gis/singleComparison", Gis::singleComparison);
 
-        // all tiles are accessible by the world if unauthenticated API access is enabled.
-        before("/tile/*", Authentication::authenticatedOrCors);
+        before("/tile/spatial", Authentication::authenticated);
         get("/tile/spatial", Tiles::spatial);
+
+        before("/tile/shapefile", Authentication::authenticated);
         get("/tile/shapefile", Tiles::shape);
+
+        before("/tile/transit", Authentication::authenticated);
+        get("/tile/transit", Tiles::transit);
+
+        before("/tile/transitComparison", Authentication::authenticated);
+        get("/tile/transitComparison", Tiles::transitComparison);
+
+        // single point and query tiles don't require authentication, so that they can be used
+        // with analyst.js apps. Of course they do nothing if you don't have the query IDs/keys,
+        // which are pretty secret
         get("/tile/query/:queryId/:compareTo/:z/:x/:yformat", Tiles::query);
         get("/tile/query/:queryId/:z/:x/:yformat", Tiles::query);
-        get("/tile/transit", Tiles::transit);
-        get("/tile/transitComparison", Tiles::transitComparison);
         get("/tile/single/:key/:z/:x/:yformat", SinglePointTiles::single);
         get("/tile/single/:key1/:key2/:z/:x/:yformat", SinglePointTiles::compare);
 

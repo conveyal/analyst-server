@@ -246,5 +246,11 @@
       <version>1.0.RC4.5</version>
       <scope>runtime</scope>
     </dependency>
+
+    <dependency>
+      <groupId>com.stormpath.sdk</groupId>
+      <artifactId>stormpath-sdk-oauth</artifactId>
+      <version>1.0.RC4.5</version>
+    </dependency>
   </dependencies>
 </project>
