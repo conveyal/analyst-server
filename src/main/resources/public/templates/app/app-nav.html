@@ -18,23 +18,22 @@
 
           <ul class="nav navbar-nav">
              <li id="spatialDataTab" class="dropdown {{#if spatialDataActive}}active{{/if}}">
-               <a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-th-list"></span> Data <span class="caret"></span></a>
+               <a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-th-list"></span> {{I18n "app.data"}} <span class="caret"></span></a>
                <ul class="dropdown-menu" role="menu">
-                 <li id="transportDataTab" class="{{#if transportDataActive}}active{{/if}}"><a  href="#"><span class="glyphicon glyphicon-road"></span> Transport Bundles</a></li>
-                 <li id="transportScenarioTab" class="{{#if transportScenariosActive}}active{{/if}}"><a  href="#"><span class="glyphicon glyphicon-road"></span> Transport Scenarios</a></li>
-                 <li id="spatialDataTabShapefilesListItem"><a href="#"><span class="glyphicon glyphicon-globe"></span> Shapefiles</a></li>
+                 <li id="transportDataTab" class="{{#if transportDataActive}}active{{/if}}"><a  href="#"><span class="glyphicon glyphicon-road"></span> {{I18n "app.data.transport-bundles"}}</a></li>
+                 <li id="transportScenarioTab" class="{{#if transportScenariosActive}}active{{/if}}"><a  href="#"><span class="glyphicon glyphicon-road"></span> {{I18n "app.data.transport-scenarios"}} </a></li>
+                 <li id="spatialDataTabShapefilesListItem"><a href="#"><span class="glyphicon glyphicon-globe"></span> {{I18n "app.data.shapefiles"}} </a></li>
                </ul>
              </li>
              <li id="analysisTab" class="dropdown {{#if analysisActive}}active{{/if}}">
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-cog Analysis"></span> Analysis <span class="caret"></span></a>
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-cog Analysis"></span> {{I18n "app.analysis"}} <span class="caret"></span></a>
                     <ul class="dropdown-menu" role="menu">
-                         <li id="analysisTabSinglePoint"><a href="#">Single-point Analysis</a></li>
-                         <li id="analysisTabRegional"><a href="#">Regional & Aggregate Analysis</a></li>
+                         <li id="analysisTabSinglePoint"><a href="#">{{I18n "analysis.single-point"}}</a></li>
+                         <li id="analysisTabRegional"><a href="#">{{I18n "analysis.multi-point"}}</a></li>
                     </ul>
              </li>
-             {{#writeAllowed}}<li id="projectSettingsTab" class="{{#if settingsActive}}active{{/if}}"><a href="#"><span class="glyphicon glyphicon-wrench"></span> Project Settings</a></li>{{/writeAllowed}}
+             {{#writeAllowed}}<li id="projectSettingsTab" class="{{#if settingsActive}}active{{/if}}"><a href="#"><span class="glyphicon glyphicon-wrench"></span> {{I18n "app.project-settings"}} </a></li>{{/writeAllowed}}
            </ul>
-
       {{/if}}
 
      <ul class="nav navbar-nav navbar-right">

@@ -20,10 +20,15 @@ app.account.logout=Logout
 app.account.change-password=Change Password
 app.manage-users=Manage Users
 
-app.transport-data=Transport Data
-app.spatial-data=Spatial Data
+app.data = Data
+app.data.shapefiles=Shapefiles
+app.data.transport-scenarios=Transport Scenarios
+app.data.transport-bundles=Transport Bundles
+
 app.analysis=Analysis
-app.project-settings=Settings
+app.project-settings=Project Settings
+
+app.project-settings.description=To create a project enter a name and description, then navigate the map to the area of the world where the analysis will be based and press ‘set location’.  This will mean each time you select this project the map will zoom to the correct area of the world.
 
 project-settings.project-location=Project Location
 project-settings.set-project-location=Set Location
@@ -89,14 +94,28 @@ analysis.single-point-description=Click anywhere on the map to perform a calcula
 analysis.analysis-type=Analysis Type
 
 analysis.single-point=Single-point Analysis
-analysis.multi-point=Multi-point Analysis
+analysis.multi-point=Regional & Aggregate Analysis
+
+analysis.query-settings=Query Settings
+analysis.query-results=Query Results
+
+analysis.run-new-query=Run new query
+analysis.create-query=Create Query
 
 analysis.primary-indicator=Primary Indicator
+
+analysis.multi-point.description=Click "run new query" to calculate accessibily for all origins with the study area. Regional analysis allows aggregation and weighting of accessibility measures to measure.
 
 analysis.scenario-comparison=Scenario Comparison
 
 analysis.scenario.no-comparison=No comparison
 analysis.scenario.compare=Compare
+
+analysis.boarding-assumption=Boarding assumption
+analysis.boarding-assumption.worst-case=Worst case (full headway)
+analysis.boarding-assumption.expectation=Expectation (half headway)
+analysis.boarding-assumption.monte-carlo=Monte Carlo
+analysis.boarding-assumption.best-case=Best case (no wait time)
 
 analysis.date=Date
 analysis.earliest-departure-time=Earliest departure time
@@ -106,6 +125,13 @@ analysis.scenario=Scenario
 analysis.scenario-1=Scenario 1
 analysis.scenario-2=Scenario 2
 analysis.minutes=Minutes
+
+analysis.scenario-2.no-change=Scenario 2 No Change
+analysis.scenario-2.new-coverage=Scenario 2 New Coverage
+analysis.scenario-2.faster=Scenario 2 Faster
+analysis.not-in-range=Not in range
+analysis.travel-time=Travel Time
+
 
 analysis.processing=Processing query...
 analysis.initializing-cluster=Initializing cluster (may take several minutes)...
@@ -126,7 +152,9 @@ analysis.percent-accessible=Percent Accessible
 analysis.create-new-query-name=Query Name
 analysis.run-query=Run Query
 
-analysis.shapefile=Shapefile
+analysis.shapefile=Download GIS
+analysis.csv=Download CSV
+
 analysis.shapefile-field=Field
 
 analysis.exact-time=Exact departure time

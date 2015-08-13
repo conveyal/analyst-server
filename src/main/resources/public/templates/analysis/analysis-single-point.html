@@ -1,6 +1,6 @@
 <div class="pannel-header">
 
-     <span class="glyphicon glyphicon-cog"></span> Single-point Analysis
+     <span class="glyphicon glyphicon-cog"></span> {{I18n "app.analysis"}}
 </div>
 
 <div id="detail" style="padding: 10px;">
@@ -12,7 +12,7 @@
       <div class="panel-heading">
         <h5 class="panel-title">
           <button id="showSettings" type="button" class="btn btn-default btn-xs pull-right"> Show Settings</button>
-          Query Settings
+          {{I18n "analysis.query-settings"}}
         </h5>
       </div>
       <div id="querySettings" class="panel-body" style="padding: 5px;">
@@ -35,12 +35,12 @@
          </div>
 
         <div class="form-group">
-          <label for="boardingAssumption">Boarding assumption</label>
+          <label for="boardingAssumption">{{I18n "analysis.boarding-assumption"}}</label>
           <select id="boardingAssumption">
-            <option value="WORST_CASE">Worst case (full headway)</option>
-            <option value="HALF_HEADWAY">Expectation (half headway)</option>
-            <option value="RANDOM">Monte Carlo</option>
-            <option value="BEST_CASE">Best case (no wait time)</option>
+            <option value="WORST_CASE">{{I18n "analysis.boarding-assumption.worst-case"}}</option>
+            <option value="HALF_HEADWAY">{{I18n "analysis.boarding-assumption.expectation"}}</option>
+            <option value="RANDOM">{{I18n "analysis.boarding-assumption.monte-carlo"}}</option>
+            <option value="BEST_CASE">{{I18n "analysis.boarding-assumption.best-case"}}</option>
           </select>
         </div>
 
@@ -167,7 +167,7 @@
   <div class="panel panel-default">
     <div class="panel-heading">
       <h5 class="panel-title">
-        Query Results
+        {{I18n "analysis.query-results"}}
       </h5>
     </div>
     <div class="panel-body" style="padding: 10px;">
@@ -214,22 +214,22 @@
 
               <div class="legend-item">
                 <div class="colorbox" style="background-color:#e5b234;"></div>
-                <div class="legend-item-text">Scenario 2 No Change</div>
+                <div class="legend-item-text">{{I18n "analysis.scenario-2.no-change"}}</div>
               </div>
               <br clear="all"/>
               <div class="legend-item">
                 <div class="colorbox" style="background-color:#cc00cc;"></div>
-                <div class="legend-item-text">Scenario 2 New Coverage</div>
+                <div class="legend-item-text">{{I18n "analysis.scenario-2.new-coverage"}}</div>
               </div>
               <br clear="all"/>
               <div class="legend-item">
                 <div class="colorbox" style="background-color:#0000cc;"></div>
-                <div class="legend-item-text">Scenario 2 Faster</div>
+                <div class="legend-item-text">{{I18n "analysis.scenario-2.faster"}}</div>
               </div>
               <br clear="all"/>
               <div class="legend-item">
                 <div class="colorbox" style="background-color:#cacaca;"></div>
-                <div class="legend-item-text">Not in range</div>
+                <div class="legend-item-text">{{I18n "analysis.not-in-range"}}</div>
               </div>
 
             </div>
@@ -238,12 +238,12 @@
 
               <div class="legend-item">
                 <div class="colorbox" style="background-color:#e5b234;"></div>
-                <div class="legend-item-text">Travel Time</div>
+                <div class="legend-item-text">{{I18n "analysis.travel-time"}}</div>
               </div>
               <br clear="all"/>
               <div class="legend-item">
                 <div class="colorbox" style="background-color:#cacaca;"></div>
-                <div class="legend-item-text">Not in range</div>
+                <div class="legend-item-text">{{I18n "analysis.not-in-range"}}</div>
               </div>
 
             </div>
@@ -252,12 +252,12 @@
 
               <div class="legend-item">
                 <div class="colorbox" style="background-color:#e5b234;"></div>
-                <div class="legend-item-text">Scenario 1</div>
+                <div class="legend-item-text">{{I18n "analysis.scenario-1"}}</div>
               </div>
               <br clear="all"/>
               <div class="legend-item">
                 <div class="colorbox" style="background-color:#00c;"></div>
-                <div class="legend-item-text">Scenario 2</div>
+                <div class="legend-item-text">{{I18n "analysis.scenario-2"}}</div>
               </div>
 
           </div>
@@ -266,7 +266,7 @@
 
             <div class="legend-item">
               <div class="colorbox" style="background-color:#e5b234;"></div>
-              <div class="legend-item-text">Scenario 1</div>
+              <div class="legend-item-text">{{I18n "analysis.scenario-1"}}</div>
             </div>
 
           </div>
@@ -283,8 +283,8 @@
           </div>
 
 
-          <button id="downloadGis" type="button" class="btn btn-default btn-xs pull-right"> <span class="glyphicon glyphicon-download"></span> Download GIS</button>
-          <button id="downloadCsv" type="button" class="btn btn-default btn-xs pull-right"> <span class="glyphicon glyphicon-download"></span> Download CSV</button>
+          <button id="downloadGis" type="button" class="btn btn-default btn-xs pull-right"> <span class="glyphicon glyphicon-download"></span> {{I18n "analysis.shapefile"}}</button>
+          <button id="downloadCsv" type="button" class="btn btn-default btn-xs pull-right"> <span class="glyphicon glyphicon-download"></span> {{I18n "analysis.csv"}}</button>
 
 
         </div>
