@@ -317,9 +317,7 @@ var Analyst = Analyst || {};
 		selectLang : function(evt) {
 			var lang = $(evt.target).data("lang");
 			$.post("/setLang", {lang: lang}, function() {
-
-				alert("SetLang to " + lang);
-
+				window.location.reload();
 			});
 		},
 
