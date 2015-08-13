@@ -52,7 +52,6 @@ public class Authentication extends Controller {
         Tenant tenant = stormpathClient.getCurrentTenant();
         ApplicationList apps = tenant.getApplications(Applications.where(Applications.name().eqIgnoreCase(AnalystMain.config.getProperty("auth.stormpath-name"))));
         stormpathApp = apps.iterator().next();
-
     }
 
     /** used when the stormpath ID site is turned off */

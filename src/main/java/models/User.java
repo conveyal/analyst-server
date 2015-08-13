@@ -57,11 +57,14 @@ public class User implements Serializable {
 		this.lang = (String) account.getCustomData().get(AnalystMain.config.getProperty("auth.stormpath-name") + "_lang");
 
 		List<Object> projectPermissions = (List<Object>) account.getCustomData().get(AnalystMain.config.getProperty("auth.stormpath-name") + "_projectPermissions");
-
-		this.projectPermissions = projectPermissions.stream().map(o -> {
-			if (o instanceof ProjectPermissions) return (ProjectPermissions) o;
-			else return new ProjectPermissions((Map<String, Object>) o);
-		}).collect(Collectors.toList());
+		
+		if (projectPermissions != null)
+			this.projectPermissions = projectPermissions.stream().map(o -> {
+				if (o instanceof ProjectPermissions) return (ProjectPermissions) o;
+				else return new ProjectPermissions((Map<String, Object>) o);
+			}).collect(Collectors.toList());
+		else
+			this.projectPermissions = new ArrayList<>();
 
 		// get the quota from the group
 		GroupList groups = account.getGroups();
