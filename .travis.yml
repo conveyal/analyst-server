@@ -25,11 +25,12 @@ before_deploy:
   - cp -r ../appspec.yml ../scripts .
   # and the jar
   - mv ../target/analyst-server.jar .
-  # assemble all the parts together
-  - zip -r ../deploy/analyst-server-${TRAVIS_BRANCH}.zip *
 
   # deploy tags as well
-  - if [ -z $TRAVIS_TAG ]; then cp ../deploy/analyst-server-*.zip ../deploy/analyst-server-${TRAVIS_TAG}.zip; fi
+  - if [ ! -z $TRAVIS_TAG ]; then RELEASE=$TRAVIS_TAG; else RELEASE=$TRAVIS_BRANCH; fi
+
+  # assemble all the parts together
+  - zip -r ../deploy/analyst-server-${RELEASE}.zip *
 
   # don't confuse travis
   - cd ..
@@ -45,8 +46,10 @@ deploy:
   local_dir: deploy
 
   # deploy all branches . . .
-  all_branches: true
-  # . . . but don't deploy pull requests
+  on:
+    all_branches: true
+    # . . . but don't deploy pull requests
+    condition: $TRAVIS_PULL_REQUEST = false
 
   # Encrypted AWS access info
   # Travis generates a private key per repository. You can then encrypt values with the public key so only Travis can decrypt them
