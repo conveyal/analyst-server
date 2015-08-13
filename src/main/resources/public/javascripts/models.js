@@ -149,6 +149,7 @@ var Analyst = Analyst || {};
       id: null,
       name: null,
       email: null,
+      lang: null,
       projectPermissions: null
     },
 

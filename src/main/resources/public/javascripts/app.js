@@ -276,7 +276,8 @@ var Analyst = Analyst || {};
 			'click #spatialDataTabPointSetsListItem' : 'clickSpatialDataTabPointSetsListItem',
 			'click #analysisTabSinglePoint' : 'clickAnalysisTabSinglePoint',
 			'click #analysisTabRegional' : 'clickAnalysisTabRegional',
-			'click #projectSettingsTab' : 'clickProjectSettings'
+			'click #projectSettingsTab' : 'clickProjectSettings',
+			'click .selectLang': 'selectLang'
 		},
 
 		initialize : function() {
@@ -311,6 +312,15 @@ var Analyst = Analyst || {};
 			this.userDropdown.show(userDropdownView);
 			this.userQuotaWarning.show(userQuotaWarningView);
 			this.customLogo.show(customLogoView);
+		},
+
+		selectLang : function(evt) {
+			var lang = $(evt.target).data("lang");
+			$.post("/setLang", {lang: lang}, function() {
+
+				alert("SetLang to " + lang);
+
+			});
 		},
 
 		clickTransportData : function(evt) {

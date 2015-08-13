@@ -27,6 +27,9 @@ public class Routes {
         // messages are dynamically generated
         get("/messages", MessagesController::messages);
 
+        // set the language for message strings
+        post("/setLang", MessagesController::setLang);
+
         // login/logout
         // if Stormpath ID site is enabled, redirect to it. Otherwise render login chrome.
         get("/login", Authentication::redirectToLoginSite);

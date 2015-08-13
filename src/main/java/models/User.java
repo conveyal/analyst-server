@@ -43,6 +43,8 @@ public class User implements Serializable {
 
 	private final Account account;
 
+	private String lang;
+
 	public List<ProjectPermissions> projectPermissions = new ArrayList<ProjectPermissions>();
 
 	public User (Account account) {
@@ -52,6 +54,7 @@ public class User implements Serializable {
 
 		this.active = account.getStatus() == AccountStatus.ENABLED;
 		this.admin = Boolean.parseBoolean((String) account.getCustomData().get("analyst_admin"));
+		this.lang = (String) account.getCustomData().get(AnalystMain.config.getProperty("auth.stormpath-name") + "_lang");
 
 		List<Object> projectPermissions = (List<Object>) account.getCustomData().get(AnalystMain.config.getProperty("auth.stormpath-name") + "_projectPermissions");
 
@@ -89,9 +92,22 @@ public class User implements Serializable {
 
 	public void save () {
 		account.getCustomData().put(AnalystMain.config.getProperty("auth.stormpath-name") + "_projectPermissions", projectPermissions);
+		account.getCustomData().put(AnalystMain.config.getProperty("auth.stormpath-name") + "_lang", this.lang);
 		account.save();
 	}
 
+	public String getLang() {
+		if(this.lang != null && !this.lang.isEmpty())
+			return this.lang;
+		else
+			return AnalystMain.config.getProperty("application.lang");
+
+	}
+
+	public void setLang(String lang) {
+		this.lang = lang;
+		this.save();
+	}
 
 	/** the number of origins that have been computed so far */
 	public long getQuotaUsage () {

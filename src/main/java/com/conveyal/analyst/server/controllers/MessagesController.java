@@ -4,6 +4,7 @@ import com.conveyal.analyst.server.AnalystMain;
 import com.conveyal.analyst.server.utils.JsonUtil;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
+import models.User;
 import spark.Request;
 import spark.Response;
 
@@ -23,12 +24,28 @@ public class MessagesController extends Controller {
     // map from language to messages for language
     private static Map<String, Properties> langs = new HashMap<>();
 
+    public static String setLang (Request req, Response res) throws IOException {
+        String lang = req.queryParams("lang");
+        User user = currentUser(req);
+
+        user.setLang(lang);
+
+        res.status(200);
+
+        return "";
+    }
+
     public static String messages (Request req, Response res) throws IOException {
         String lang = req.queryParams("lang");
-        if (lang == null)
-            lang = AnalystMain.config.getProperty("application.lang");
 
-        lang = lang.toLowerCase();
+        User user = currentUser(req);
+
+        if (lang == null) {
+            if(user != null)
+                lang = user.getLang();
+            else
+                lang = AnalystMain.config.getProperty("application.lang");
+        }
 
         if (!lang.matches("[a-z\\-]+"))
             halt(BAD_REQUEST, "invalid language");
