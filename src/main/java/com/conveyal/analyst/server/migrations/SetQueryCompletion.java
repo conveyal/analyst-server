@@ -27,5 +27,7 @@ public class SetQueryCompletion {
                     q.complete = true;
                     q.save();
                 });
+
+        queryStore.close();
     }
 }
