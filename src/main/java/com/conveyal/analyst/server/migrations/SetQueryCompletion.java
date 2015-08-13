@@ -25,7 +25,7 @@ public class SetQueryCompletion {
         queryStore.getAll().stream().filter(q -> q.totalPoints != null && q.totalPoints.equals(q.completePoints))
                 .forEach(q -> {
                     q.complete = true;
-                    q.save();
+                    queryStore.save(q.id, q);
                 });
 
         queryStore.close();
