@@ -29,9 +29,7 @@ before_deploy:
   - zip -r ../deploy/analyst-server-${TRAVIS_BRANCH}.zip *
 
   # deploy tags as well
-  - if [ -z $TRAVIS_TAG ]; then
-  -   cp ../deploy/analyst-server-*.zip ../deploy/analyst-server-${TRAVIS_TAG}.zip
-  - fi
+  - if [ -z $TRAVIS_TAG ]; then cp ../deploy/analyst-server-*.zip ../deploy/analyst-server-${TRAVIS_TAG}.zip; fi
 
   # don't confuse travis
   - cd ..
