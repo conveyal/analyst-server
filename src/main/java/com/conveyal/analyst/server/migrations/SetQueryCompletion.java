@@ -1,6 +1,7 @@
 package com.conveyal.analyst.server.migrations;
 
 import com.conveyal.analyst.server.utils.DataStore;
+import com.google.common.io.Files;
 import models.Query;
 
 import java.io.File;
@@ -10,6 +11,8 @@ import java.io.File;
  */
 public class SetQueryCompletion {
     public static void main (String... args) {
+        DataStore.dataPath = Files.createTempDir().getAbsolutePath();
+
         File input = new File(args[0]);
 
         if (!input.exists() || !input.isDirectory()) {
