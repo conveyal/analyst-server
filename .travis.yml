@@ -45,8 +45,10 @@ deploy:
   local_dir: deploy
 
   # deploy all branches . . .
-  all_branches: true
-  # . . . but don't deploy pull requests
+  on:
+    all_branches: true
+    # . . . but don't deploy pull requests
+    condition: -z $TRAVIS_PULL_REQUEST
 
   # Encrypted AWS access info
   # Travis generates a private key per repository. You can then encrypt values with the public key so only Travis can decrypt them
