@@ -17,6 +17,12 @@ API key(s) and secret(s) which you can use to connect applications to it. Authen
 1. Make a POST request to /oauth/token with an HTTP Basic Authorization header, using your key and secret as the username and
    password (which are concatenated with a : and then base64-encoded, and then placed in a header `Authorization: Basic <base64-encoded-value>`).
    Put in the body `grant_type=client_credentials`, and send it with content type application/x-www-form-urlencoded.
+
+   If you're using a browser to do cross-origin requests, and thus cannot use an Authorization header, you can also put
+   the key and secret in the POST body, as parameters `key` and `secret`, along with the `grant_type`, in standard form-encoded
+   format. Note that it's recommended to retrieve tokens on the server side, because otherwise you have to expose your API
+   key to the client.
+
 2. The response from that is a JSON object like so:
 
     {
@@ -25,7 +31,9 @@ API key(s) and secret(s) which you can use to connect applications to it. Authen
         "expires_in": 3600
     }
 
-  It can be used by adding an `Authorization: Bearer <access_token>` header to all requests. It is good for one hour.
+  It can be used by adding an `Authorization: Bearer <access_token>` header to all requests described herein. It is good for one hour.
+  If you're doing cross-origin requests, you can instead include it as a query parameter, i.e. `?accessToken=...`. (Include it in the URL,
+    even with POST requests).
 
 The recommended way to use this would be to keep your API keys on your server and make a server-side request to get client
 credentials, which could then be used in JavaScript directly.

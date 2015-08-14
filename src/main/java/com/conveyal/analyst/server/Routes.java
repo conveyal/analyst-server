@@ -39,7 +39,9 @@ public class Routes {
         post("/doLogin", Authentication::doLogin);
         get("/logout", Authentication::logout);
         get("/api/user/self", Authentication::getCurrentUser, json);
+
         post("/oauth/token", Authentication::getBearerToken);
+        options("/oauth/token", Authentication::corsHeaders);
 
         // authentication for API excludes two resources
         before("/api/*", (req, res) -> {

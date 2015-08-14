@@ -17,6 +17,8 @@ import com.stormpath.sdk.client.Client;
 import com.stormpath.sdk.client.Clients;
 import com.stormpath.sdk.group.Group;
 import com.stormpath.sdk.group.GroupList;
+import com.stormpath.sdk.http.HttpMethod;
+import com.stormpath.sdk.http.HttpRequests;
 import com.stormpath.sdk.idsite.AccountResult;
 import com.stormpath.sdk.idsite.IdSiteUrlBuilder;
 import com.stormpath.sdk.oauth.AccessTokenResult;
@@ -31,6 +33,9 @@ import spark.Response;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Base64;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static spark.Spark.halt;
 
@@ -197,11 +202,33 @@ public class Authentication extends Controller {
 
     /** Ensure users are authenticated, enabling CORS on OAuth requests is enabled */
     public static void authenticatedOrCors (Request req, Response res) {
-        // first check for an authorization header
-        if (req.headers("Authorization") != null) {
+        // first check for an authorization header/query param
+        Object request = null;
+        if (req.queryParams("accessToken") != null) {
+            // build a fake request with the authorization header added
+            // Stormpath only supports auth through authorization headers, not through
+            // query parameters, but you can't use an authorization header in a CORS request.
+            // Ergo, we "translate" the query parameters into a fake Authorization header.
+            Map<String, String[]> headers = req.headers().stream()
+                    .collect(Collectors.toMap(h -> h, h -> new String [] { req.headers(h) }));
+
+            headers.put("Authorization", new String[] { "Bearer " + req.queryParams("accessToken") });
+
+            request = HttpRequests
+                    .method(HttpMethod.fromName(req.requestMethod()))
+                    .headers(headers)
+                    .build();
+
+        }
+        else if (req.headers("Authorization") != null) {
+            request = req.raw();
+        }
+
+        if (request != null) {
+            // oauth is present
             OauthAuthenticationResult oauth;
             try {
-                oauth = stormpathApp.authenticateOauthRequest(req.raw())
+                oauth = stormpathApp.authenticateOauthRequest(request)
                         .execute();
             } catch (ResourceException rex) {
                 halt(UNAUTHORIZED, "unable to authenticate provided OAuth tokens");
@@ -211,25 +238,57 @@ public class Authentication extends Controller {
 
             req.attribute("username", oauth.getAccount().getUsername());
             res.header("Access-Control-Allow-Origin", "*");
+            res.header("Access-Control-Allow-Headers", "Content-Type");
             return;
         }
 
         // fall back to username/password auth
-        authenticated(req, res);
+        else
+            authenticated(req, res);
     }
 
     /** Exchange OAuth access key, secret for temporary bearer authorization */
     public static String getBearerToken (Request req, Response res) {
         AccessTokenResult tkr;
 
+        Object request;
+
+        // Stormpath only supports client credentials in Authorization headers, which cannot be used
+        // cross-origin. We thus also support keys in the url which we inject into a fake request.
+        // This is safe if used over HTTPS.
+        if (req.queryParams("key") != null && req.queryParams("secret") != null) {
+            // build a fake request with the header added
+            Map<String, String[]> headers = req.headers().stream()
+                    .collect(Collectors.toMap(h -> h, h -> new String [] { req.headers(h) }));
+
+
+            String basic = req.queryParams("key") + ":" + req.queryParams("secret");
+
+            headers.put("Authorization", new String[] { "Basic " + Base64.getEncoder().encodeToString(basic.getBytes()) });
+
+            request = HttpRequests
+                    .method(HttpMethod.fromName(req.requestMethod()))
+                    .headers(headers).parameters(req.queryMap().toMap())
+                    .build();
+        }
+        else
+            request = req.raw();
+
         try {
-            tkr = (AccessTokenResult) stormpathApp.authenticateOauthRequest(req.raw()).execute();
+            tkr = (AccessTokenResult) stormpathApp.authenticateOauthRequest(request).execute();
         } catch (ResourceException rex) {
             halt(UNAUTHORIZED);
             return null;
         }
 
         res.type("application/json");
+        res.header("Access-Control-Allow-Origin", "*");
         return tkr.getTokenResponse().toJson();
+    }
+
+    /** Add cors headers to a response */
+    public static Object corsHeaders(Request request, Response response) {
+        response.header("Access-Control-Allow-Origin", "*");
+        return "";
     }
 }
