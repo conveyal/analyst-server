@@ -19,6 +19,9 @@ public class QuotaStore {
     }
 
     public long getQuotaUsage(String username) {
+        if (!db.exists(username))
+            db.createAtomicLong(username, 0);
+
         return db.getAtomicLong(username).get();
     }
 
