@@ -315,6 +315,7 @@ var Analyst = Analyst || {};
 		},
 
 		selectLang : function(evt) {
+			evt.preventDefault();
 			var lang = $(evt.target).data("lang");
 			$.post("/setLang", {lang: lang}, function() {
 				window.location.reload();
