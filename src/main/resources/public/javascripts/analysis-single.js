@@ -20,9 +20,7 @@ var Analyst = Analyst || {};
 		  'click #showIso': 'updateMap',
 		  'click #showPoints': 'updateMap',
 		  'click #showTransit': 'updateMap',
-			'change #boardingAssumption': 'updateResults',
-		  'change .mode-selector' : 'updateMode',
-			'change .profile': 'updateResults',
+		  'change .mode-selector' : 'updateResults',
 			'click #showSettings' : 'showSettings',
 			'click #downloadGis' : 'downloadGis',
 			'click #downloadCsv' : 'downloadCsv'
@@ -33,7 +31,7 @@ var Analyst = Analyst || {};
 		},
 
 		initialize: function(options){
-			_.bindAll(this, 'updateResults', 'updateMap', 'onMapClick', 'updateEnvelope', 'updateAttributes', 'updateCharts');
+			_.bindAll(this, 'updateResults', 'updateMap', 'onMapClick', 'updateAttributes', 'updateCharts');
 
 			this.transitOverlays = {};
 		},
@@ -54,95 +52,6 @@ var Analyst = Analyst || {};
 		      style.weight = 1.5;
 		    }
 		    return style;
-		},
-
-		/**
-		 * Update the best case, worst case, etc. that the user can choose
-		 * based on the modes. For example, for on-street modes, there is no
-		 * best or worst case; for transit modes, there is currently no point estimate.
-		 *
-		 * This function also turns on or off the latest departure time option.
-		 */
-		updateAvailableEnvelopeParameters: function() {
-		  // we use this variable so that the map is not automatically redrawn when
-		  // we check checkboxes programatically
-		  this.envelopeParametersChangingProgramatically = true;
-
-		  var mode = this.mode;
-		  var inps = this.$('.which');
-
-		  if (A.util.isTransit(mode) && this.$('input.profile:checked').val() === "true") {
-		    // transit request and we're doing profile routing
-		    inps.find('[value="WORST_CASE"]').prop('disabled', false).parent().removeClass('hidden');
-		    inps.find('[value="BEST_CASE"]').prop('disabled', false).parent().removeClass('hidden');
-				inps.find('[value="AVERAGE"]').prop('disabled', false).parent().removeClass('hidden');
-		    inps.find('[value="SPREAD"]').prop('disabled', true).parent().addClass('hidden');
-		    inps.find('[value="POINT_ESTIMATE"]').prop('disabled', true).parent().addClass('hidden');
-
-		    if (inps.find(':checked:disabled').length > 0 || inps.find(':checked').length == 0) {
-		      // we have disabled the currently selected envelope parameter, choose a reasonable default
-		      inps.find('input').prop('checked', false).parent().removeClass('active');
-		      inps.find('[value="WORST_CASE"]').prop('checked', true).parent().addClass('active');
-		    }
-
-				this.$('#toTimeControls').removeClass('hidden');
-		  } else {
-		    // non-transit request or earliest-arrival transit request, we're doing vanilla routing with point estimates only
-		    inps.find('[value="WORST_CASE"]').prop('disabled', true).parent().addClass('hidden');
-		    inps.find('[value="BEST_CASE"]').prop('disabled', true).parent().addClass('hidden');
-		    inps.find('[value="SPREAD"]').prop('disabled', true).parent().addClass('hidden');
-
-		    // since there is only one option, we may as well go ahead and check it
-		    inps.find('[value="POINT_ESTIMATE"]')
-		      .prop('disabled', false)
-		      .prop('checked', true)
-		      .parent()
-		      .removeClass('hidden')
-		      .addClass('active');
-
-				this.$('#toTimeControls').addClass('hidden');
-		  }
-
-		  this.envelopeParametersChangingProgramatically = false;
-		},
-
-		// the user has changed the mode
-		updateMode: function (e) {
-			if (!e.target.checked) return;
-
-			this.mode = e.target.value;
-			this.updateAvailableEnvelopeParameters();
-
-			if (A.util.isTransit(this.mode)) {
-				// deselect profile routing
-				this.$('input.profile[value="true"]').prop('checked', true)
-				.parent().addClass('active')
-				.parent().hide();
-
-				this.$('input.profile[value="false"]').prop('checked', false)
-				.parent().removeClass('active');
-			} else {
-				// deselect profile routing
-				this.$('input.profile[value="false"]').prop('checked', true)
-				.parent().addClass('active')
-				.parent().hide();
-
-				this.$('input.profile[value="true"]').prop('checked', false)
-				.parent().removeClass('active');
-			}
-
-			this.updateResults();
-		},
-
-
-		/**
-		 * Event handler to update the envelope parameters
-		 */
-		updateEnvelope : function (e) {
-			// prevent it from being run twice: once for uncheck and once for check
-			if (e.target.checked && this.envelopeParametersChangingProgramatically !== true) {
-				this.updateResults();
-			}
 		},
 
 		onShow : function() {
@@ -221,8 +130,6 @@ var Analyst = Analyst || {};
 			}).data('slider');
 
 			this.mode = 'TRANSIT,WALK';
-
-			this.updateAvailableEnvelopeParameters();
 
 			this.shapefiles.fetch({reset: true, data : {projectId: A.app.selectedProject}})
 				.done(function () {
@@ -321,9 +228,6 @@ var Analyst = Analyst || {};
 		 },
 
 		updateResults : function() {
-			// TODO: this could be confusing, if someone changes the mode and the envelope updates automatically
-			this.updateAvailableEnvelopeParameters();
-
 			if(!A.map.marker)
 				return;
 
@@ -388,6 +292,9 @@ var Analyst = Analyst || {};
 			this.$('#queryProcessing').show();
 			this.$('#insufficientQuota').hide();
 			this.$('#initializingCluster').hide();
+
+			this.mode = this.$('input[name="mode"]:checked').val();
+			console.log(this.mode);
 
 			var date = this.$('#date').data('DateTimePicker').getDate().format('YYYY-MM-DD');
 			var fromTime = A.util.makeTime(this.$('#fromTime').data('DateTimePicker').getDate());
@@ -456,7 +363,8 @@ var Analyst = Analyst || {};
 				bikeSafe: 1,
 				bikeSlope: 1,
 				bikeTime: 1,
-				boardingAssumption: this.$('#boardingAssumption').val(),
+				// use monte carlo at all times; it also produces true best/worst case numbers.
+				boardingAssumption: 'RANDOM',
 				scenario: {
 					modifications: mods1
 				}

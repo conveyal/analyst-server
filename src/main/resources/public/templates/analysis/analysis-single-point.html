@@ -34,22 +34,12 @@
            <select id="shapefileColumn" class="primary-indicator form-control"></select>
          </div>
 
-        <div class="form-group">
-          <label for="boardingAssumption">{{I18n "analysis.boarding-assumption"}}</label>
-          <select id="boardingAssumption">
-            <option value="WORST_CASE">{{I18n "analysis.boarding-assumption.worst-case"}}</option>
-            <option value="HALF_HEADWAY">{{I18n "analysis.boarding-assumption.expectation"}}</option>
-            <option value="RANDOM">{{I18n "analysis.boarding-assumption.monte-carlo"}}</option>
-            <option value="BEST_CASE">{{I18n "analysis.boarding-assumption.best-case"}}</option>
-          </select>
-        </div>
-
          <div style="margin-top: 10px;" class="btn-group mode-selector" data-toggle="buttons">
            <label class="btn btn-default">
              <input type="radio" name="mode" id="modeCar" value="CAR"><span class="icon icon-car"></span>
            </label>
            <label class="btn btn-default active">
-             <input type="radio" name="mode" id="modeBus" value="WALK,TRANSIT"><span class="icon icon-pedestrian"></span> + <span class="icon icon-bus"></span>
+             <input type="radio" name="mode" id="modeBus" value="WALK,TRANSIT" checked><span class="icon icon-pedestrian"></span> + <span class="icon icon-bus"></span>
            </label>
            <label class="btn btn-default">
              <input type="radio" name="mode" id="modeBus" value="BICYCLE,TRANSIT"><span class="icon icon-bike"></span> + <span class="icon icon-bus"></span>
@@ -62,17 +52,6 @@
            </label>
          </div>
 
-         <div style="margin-top: 10px;" class="btn-group profile-selector" data-toggle="buttons">
-           <label class="btn btn-default active">
-             <input type="radio" class="profile" name="profile" value="true" checked />
-             {{ I18n 'analysis.profile' }}
-           </label>
-           <label class="btn btn-default">
-             <input type="radio" class="profile" name="profile" value="false" />
-             {{ I18n 'analysis.exact-time' }}
-           </label>
-         </div>
-
        <div style="margin-top: 10px" class="form-group">
          <div class="btn-group which-selector which" data-toggle="buttons">
            <label class="btn btn-default">
@@ -80,24 +59,14 @@
              {{ I18n "analysis.worst-case-option" }}
            </label>
 
-           <label class="btn btn-default">
-             <input type="radio" name="which" value="POINT_ESTIMATE" />
-             {{ I18n "analysis.point-estimate-option" }}
-           </label>
-
-           <label class="btn btn-default">
-             <input type="radio" name="which" value="AVERAGE" />
+           <label class="btn btn-default active">
+             <input type="radio" name="which" value="AVERAGE" checked />
              {{ I18n "analysis.point-estimate-option" }}
            </label>
 
            <label class="btn btn-default">
              <input type="radio" name="which" value="BEST_CASE" />
              {{ I18n "analysis.best-case-option" }}
-           </label>
-
-           <label class="btn btn-default">
-             <input type="radio" name="which" value="SPREAD" />
-             {{ I18n "analysis.spread-option" }}
            </label>
          </div>
 
