@@ -388,7 +388,7 @@ var Analyst = Analyst || {};
         legendTitle += window.Messages('analysis.best-case-suffix');
 
       else if (this.which == 'AVERAGE')
-          legendTitle += window.Messages('analysis.spread-suffix');
+          legendTitle += window.Messages('analysis.average-suffix');
 
       else if (this.which == 'SPREAD')
         legendTitle += window.Messages('analysis.spread-suffix');
@@ -524,19 +524,6 @@ var Analyst = Analyst || {};
       });
 
       if (this.model.get('complete')) {
-        if (this.model.get('profile')) {
-          // profile request
-          this.$('.whichMulti input[value="POINT_ESTIMATE"]').parent().remove();
-          this.$('.whichMulti input[value="SPREAD"]').parent().remove();
-          this.$('.whichMulti input[value="AVERAGE"]').prop('checked', true).parent().addClass('active');
-        } else {
-          // it's a stock/vanilla request
-          this.$('.whichMulti input[value="WORST_CASE"]').parent().remove();
-          this.$('.whichMulti input[value="BEST_CASE"]').parent().remove();
-          this.$('.whichMulti input[value="SPREAD"]').parent().remove();
-          this.$('.whichMulti input[value="POINT_ESTIMATE"]').prop('checked', true).parent().addClass('active');
-        }
-
         // Set up weight and group by select boxes
         // we weight and group by shapefiles. for weighting we also specify an attribute.
         this.shapefiles = new A.models.Shapefiles();
