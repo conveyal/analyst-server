@@ -82,18 +82,10 @@ public class Query implements Serializable {
 	/**
 	 * Profile request to use for this query. If set, graphId must not be null. If set, mode, fromTime, toTime,
 	 * scenarioId, and date will be ignored.
-	 *
-	 * Takes precedence over routingRequest; if both are set, a profile request will be performed.
 	 */
 	public ProfileRequest profileRequest;
 
-	/**
-	 * Routing request to use for this query. If set, graphId must not be null. If set, mode, fromTime, toTime,
-	 * scenarioId, and date will be ignored.
-	 */
-	public RoutingRequest routingRequest;
-	
-	@JsonIgnore 
+	@JsonIgnore
 	transient private QueryResultStore results;
 
 	public Query() {
@@ -128,26 +120,12 @@ public class Query implements Serializable {
 	 * Does this query use transit?
 	 */
 	public boolean isTransit () {
-		if (this.routingRequest == null && this.profileRequest == null)
+		if (this.profileRequest == null) {
 			return new TraverseModeSet(this.mode).isTransit();
-
-		else if (this.profileRequest != null)
-			return true;
-
-		else
-			return this.routingRequest.modes.isTransit();
+		}
+		return (this.profileRequest.transitModes != null && this.profileRequest.transitModes.isTransit());
 	}
 
-	/**
-	 * Is this a profile request?
-	 */
-	public boolean isProfile () {
-		if (this.routingRequest == null && this.profileRequest == null)
-			return isTransit();
-		else
-			return this.profileRequest != null;
-	}
-	
 	public void save() {
 		
 		// assign id at save
@@ -163,6 +141,7 @@ public class Query implements Serializable {
 	}
 	
 	public void run() {
+
 		QueueManager qm = ClusterQueueManager.getManager();
 
 		// enqueue all the requests
@@ -173,75 +152,62 @@ public class Query implements Serializable {
 		completePoints = 0;
 		this.save();
 
-		List<AnalystClusterRequest> requests = Lists.newArrayList();
+		// If the user has not defined all search parameters by directly supplying a ProfileRequest object,
+		// define those parameters indirectly through a scenario ID, etc.
+		if (profileRequest == null) {
+
+			// TODO it is not necessary to build a full request for every origin, most information could be recycled.
+			TransportScenario scenario = TransportScenario.getScenario(this.scenarioId);
+			graphId = scenario.bundleId;
+
+			// create a profile request
+			profileRequest = Analyst.buildProfileRequest(this.mode, this.date, this.fromTime, this.toTime, 0, 0);
+
+			// If no transit is in use, speed up calculation by making the departure time window zero-width.
+			if (this.isTransit()) {
+				profileRequest.toTime = profileRequest.fromTime;
+			}
+
+			// If no boarding assumption is provided, default to worst-case (full-headway waits)
+			profileRequest.boardingAssumption = this.boardingAssumption != null ? this.boardingAssumption :
+					RaptorWorkerTimetable.BoardingAssumption.WORST_CASE;
+
+			profileRequest.scenario = new org.opentripplanner.analyst.scenario.Scenario(0);
+
+			if (scenario.bannedRoutes != null) {
+				profileRequest.scenario.modifications = scenario.bannedRoutes.stream().map(rs -> {
+					RemoveTrip ret = new RemoveTrip();
+					ret.agencyId = rs.agencyId;
+					ret.routeId = Arrays.asList(rs.id);
+					return ret;
+				}).collect(Collectors.toList());
+			}
+			else {
+				profileRequest.scenario.modifications = new ArrayList<>();
+			}
+
+			if (scenario.modifications != null) {
+				profileRequest.scenario.modifications.addAll(scenario.modifications);
+			}
+
+		}
+		// At this point PR is known not to be null, it was either supplied by the caller or has been created above.
 
 		// TODO batch?
 		long now = System.currentTimeMillis();
+		List<AnalystClusterRequest> requests = Lists.newArrayList();
 		for (int i = 0; i < ps.capacity; i++) {
-			PointFeature pf = ps.getFeature(i);
 
-			AnalystClusterRequest req;
+			PointFeature pointFeature = ps.getFeature(i);
+			profileRequest.fromLat = profileRequest.toLat = pointFeature.getLat();
+			profileRequest.fromLon = profileRequest.toLon = pointFeature.getLon();
 
-			ProfileRequest pr = this.profileRequest;
-			RoutingRequest rr = this.routingRequest;
-
-			String graphId = this.graphId;
-
-			// users can define params either through scenario IDs, etc., or by specifying a profile request
-			// directly.
-			if (pr == null && rr == null) {
-				// build the requests
-				// TODO not necessary to do this for every feature
-				TransportScenario scenario = TransportScenario.getScenario(this.scenarioId);
-				graphId = scenario.bundleId;
-
-				if (this.isTransit()) {
-					// create a profile request
-					pr = Analyst.buildProfileRequest(this.mode, this.date, this.fromTime, this.toTime, 0, 0);
-
-					pr.boardingAssumption = this.boardingAssumption != null ? this.boardingAssumption :
-							RaptorWorkerTimetable.BoardingAssumption.WORST_CASE;
-
-					pr.scenario = new org.opentripplanner.analyst.scenario.Scenario(0);
-
-					if (scenario.bannedRoutes != null) {
-						pr.scenario.modifications = scenario.bannedRoutes.stream().map(rs -> {
-							RemoveTrip ret = new RemoveTrip();
-							ret.agencyId = rs.agencyId;
-							ret.routeId = Arrays.asList(rs.id);
-							return ret;
-						}).collect(Collectors.toList());
-					}
-					else {
-						pr.scenario.modifications = new ArrayList<>();
-					}
-
-					if (scenario.modifications != null) {
-						pr.scenario.modifications.addAll(scenario.modifications);
-					}
-				}
-				else {
-					// this is not a transit request, no need for computationally-intensive profile routing
-					graphId = this.scenarioId;
-					Bundle s = Bundle.getBundle(graphId);
-					rr = Analyst.buildRequest(this.scenarioId, this.date, this.fromTime, null, this.mode, 120, DateTimeZone.forID(s.timeZone));
-				}
-			}
-
-			if (pr != null) {
-				pr.fromLat = pr.toLat = pf.getLat();
-				pr.fromLon = pr.toLon = pf.getLon();
-				req = new AnalystClusterRequest(this.shapefileId, graphId, pr);
-			}
-			else {
-				rr.from = rr.to = new GenericLocation(pf.getLat(), pf.getLon());
-				req = new AnalystClusterRequest(this.shapefileId, graphId, rr);
-			}
-
+			// FIXME constructor performs a protective copy.
+			// We should really do that in the caller to avoid continually rewriting the profileRequest object.
+			AnalystClusterRequest req = new AnalystClusterRequest(this.shapefileId, graphId, profileRequest);
 			req.jobId = this.id;
-			req.id = pf.getId();
+			req.id = pointFeature.getId();
 			req.includeTimes = false;
-
 			requests.add(req);
 		}
 
