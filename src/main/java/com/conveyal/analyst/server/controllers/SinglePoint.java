@@ -3,6 +3,7 @@ package com.conveyal.analyst.server.controllers;
 import com.conveyal.analyst.server.utils.IdUtils;
 import com.conveyal.analyst.server.utils.JsonUtil;
 import com.conveyal.analyst.server.utils.QueueManager;
+import com.conveyal.analyst.server.utils.QuotaLedger;
 import com.csvreader.CsvWriter;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -111,7 +112,7 @@ public class SinglePoint extends Controller {
 			String json = resultSetToJson(re);
 
 			// increment the quota at the last possible moment so that we don't charge them if something went wrong
-			u.incrementQuotaUsage(1);
+			u.incrementQuotaUsage(1, QuotaLedger.LedgerReason.SINGLE_POINT, u);
 			return json;
 		} catch (Exception e) {
 			// don't halt if we've already halted

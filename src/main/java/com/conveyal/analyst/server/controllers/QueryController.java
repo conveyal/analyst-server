@@ -1,9 +1,6 @@
 package com.conveyal.analyst.server.controllers;
 
-import com.conveyal.analyst.server.utils.Bin;
-import com.conveyal.analyst.server.utils.JsonUtil;
-import com.conveyal.analyst.server.utils.QueryResults;
-import com.conveyal.analyst.server.utils.QueueManager;
+import com.conveyal.analyst.server.utils.*;
 import models.Project;
 import models.Query;
 import models.Shapefile;
@@ -89,7 +86,7 @@ public class QueryController extends Controller {
 
         q.run();
 
-        u.incrementQuotaUsage(shapefile.getFeatureCount());
+        u.incrementQuotaUsage(shapefile.getFeatureCount(), QuotaLedger.LedgerReason.QUERY_CREATED, u);
 
         return q;
 
@@ -140,7 +137,8 @@ public class QueryController extends Controller {
         q.delete();
 
         // any points they didn't use go back on their quota
-        u.incrementQuotaUsage(-1 * (q.totalPoints - q.completePoints));
+        // TODO: this might possible increment the wrong users' quota if projects are shared across groups
+        u.incrementQuotaUsage(-1 * (q.totalPoints - q.completePoints), QuotaLedger.LedgerReason.QUERY_PARTIAL_REFUND, u);
 
         return q;
     }

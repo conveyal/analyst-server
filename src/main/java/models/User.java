@@ -1,7 +1,7 @@
 package models;
 
 import com.conveyal.analyst.server.AnalystMain;
-import com.conveyal.analyst.server.utils.QuotaStore;
+import com.conveyal.analyst.server.utils.QuotaLedger;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.stormpath.sdk.account.Account;
 import com.stormpath.sdk.account.AccountStatus;
@@ -24,7 +24,7 @@ public class User implements Serializable {
 
 	private static final Logger LOG = LoggerFactory.getLogger(User.class);
 
-	private static final QuotaStore quotaStore = new QuotaStore("quota.db");
+	private static final QuotaLedger ledger = new QuotaLedger("ledger.db");
 
 	public final String username;
 	public final String email;
@@ -53,7 +53,7 @@ public class User implements Serializable {
 		this.name = account.getFullName();
 
 		this.active = account.getStatus() == AccountStatus.ENABLED;
-		this.admin = Boolean.parseBoolean((String) account.getCustomData().get("analyst_admin"));
+		this.admin = (Boolean) account.getCustomData().get(AnalystMain.config.getProperty("auth.stormpath-name") + "_admin");
 		this.lang = (String) account.getCustomData().get(AnalystMain.config.getProperty("auth.stormpath-name") + "_lang");
 
 		List<Object> projectPermissions = (List<Object>) account.getCustomData().get(AnalystMain.config.getProperty("auth.stormpath-name") + "_projectPermissions");
@@ -114,10 +114,7 @@ public class User implements Serializable {
 
 	/** the number of origins that have been computed so far */
 	public long getQuotaUsage () {
-		// it is possible for the usage to go slightly over the quota when there are concurrent users
-		// don't display confusing things in the UI
-		// TODO: synchronize to prevent this from happening?
-		return Math.min(quota, quotaStore.getQuotaUsage(groupName));
+		return ledger.getValue(groupName);
 	}
 
 	public void addProjectPermission(String projectId) {
@@ -201,9 +198,18 @@ public class User implements Serializable {
 		return false;
 	}
 
-	/** increment the quota usage of this user */
-	public void incrementQuotaUsage (int increment) {
-		quotaStore.incrementQuotaUsage(groupName, increment);
+	/** increment the quota usage of this user, for the given reason, with action undertaken by user user */
+	public void incrementQuotaUsage (int increment, QuotaLedger.LedgerReason reason, User user) {
+		QuotaLedger.LedgerEntry entry = new QuotaLedger.LedgerEntry();
+		entry.groupId = groupName;
+		entry.delta = increment;
+		entry.userId = user.username;
+		entry.reason = reason;
+		ledger.add(entry);
+	}
+
+	public static List<QuotaLedger.LedgerEntry> getLedgerEntries(String groupId) {
+		return ledger.getLedgerEntries(groupId);
 	}
 
 	public static class ProjectPermissions implements Serializable {
