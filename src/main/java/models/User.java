@@ -53,7 +53,8 @@ public class User implements Serializable {
 		this.name = account.getFullName();
 
 		this.active = account.getStatus() == AccountStatus.ENABLED;
-		this.admin = (Boolean) account.getCustomData().get(AnalystMain.config.getProperty("auth.stormpath-name") + "_admin");
+		Boolean admin = (Boolean) account.getCustomData().get(AnalystMain.config.getProperty("auth.stormpath-name") + "_admin");
+		this.admin = admin != null ? admin : false;
 		this.lang = (String) account.getCustomData().get(AnalystMain.config.getProperty("auth.stormpath-name") + "_lang");
 
 		List<Object> projectPermissions = (List<Object>) account.getCustomData().get(AnalystMain.config.getProperty("auth.stormpath-name") + "_projectPermissions");
