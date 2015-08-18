@@ -295,7 +295,6 @@ var Analyst = Analyst || {};
 			this.$('#initializingCluster').hide();
 
 			this.mode = this.$('input[name="mode"]:checked').val();
-			console.log(this.mode);
 
 			var date = this.$('#date').data('DateTimePicker').getDate().format('YYYY-MM-DD');
 			var fromTime = A.util.makeTime(this.$('#fromTime').data('DateTimePicker').getDate());
