@@ -159,7 +159,7 @@ var Analyst = Analyst || {};
         shapefileId: this.$('#shapefile').val(),
         scenarioId: this.$('#scenario1').val(),
         projectId: A.app.selectedProject,
-        boardingAssumption: this.$('#boardingAssumption').val(),
+        boardingAssumption: 'RANDOM',
         fromTime: A.util.makeTime(this.$('#fromTime').data('DateTimePicker').getDate()),
         date: this.$('#date').data('DateTimePicker').getDate().format('YYYY-MM-DD')
       };
