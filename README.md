@@ -25,7 +25,7 @@ port other than 9090 by specifying the port number in the configuration file. Al
 
 ## Setting up computation
 
-[TODO]
+[TODO] Describe running broker and worker instances and their config files, including offline debug mode.
 
 ## Setting up custom logging
 
