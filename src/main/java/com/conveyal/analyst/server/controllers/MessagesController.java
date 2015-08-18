@@ -11,6 +11,7 @@ import spark.Response;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -54,9 +55,9 @@ public class MessagesController extends Controller {
             synchronized (langs) {
                 if (!langs.containsKey(lang)) {
                     Properties tr = new Properties();
-                    InputStream is = ClassLoader.getSystemClassLoader()
-                            .getResourceAsStream("messages/messages." + lang);
-                    tr.load(is);
+                    InputStream is = ClassLoader.getSystemClassLoader().getResourceAsStream("messages/messages." + lang);
+                    InputStreamReader reader = new InputStreamReader(is, "UTF-8");
+                    tr.load(reader);
                     is.close();
                     langs.put(lang, tr);
                 }
