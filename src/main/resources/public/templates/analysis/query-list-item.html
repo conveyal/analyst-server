@@ -10,14 +10,14 @@
 	{{/unless}}
 
 	{{#if starting}}
-		<small>queued for calculation&nbsp;.&nbsp;.&nbsp;.</small>
+		<small>{{ I18n "analysis.queued" }}</small>
 	{{else}}
 		{{#unless complete}}
 			<small>
 				{{#if assemblingResults}}
-					assembling results&nbsp;.&nbsp;.&nbsp;.
+					{{ I18n "analysis.assembling-results" }}
 				{{else}}
-				 {{completePoints}} of {{totalPoints}} complete
+				 {{ I18n "analysis.number-complete" completePoints totalPoints }}
 				{{/if}}
 			<small>
 		{{/unless}}
@@ -42,8 +42,8 @@
 					<div class="timeScale"></div>
 
 					<div class="timeScaleLabels">
-						<span class="note pull-right">120 mins</span>
-						<span class="note">0 mins</span>
+						<span class="note pull-right">{{ I18n "analysis.minutes" 120}}</span>
+						<span class="note">{{ I18n "analysis.minutes" 0 }}</span>
 					</div>
 				</div>
 
@@ -107,10 +107,10 @@
 					</div>
 
 					<div id="updatingMap" style="margin-left: 15px; display: none;">
-						<img src="/images/ajax-loader.gif"/> Calculating...
+						<img src="/images/ajax-loader.gif"/> {{ I18n "analysis.calculating" }}
 					</div>
 				</div>
-				<button id="updateMap" type="button" class="btn btn-primary">Update Map</button> <button id="exportShape" type="button" class="btn btn-default">Export Shapefile</button>
+				<button id="updateMap" type="button" class="btn btn-primary">{{ I18n "analysis.update-map"}}</button> <button id="exportShape" type="button" class="btn btn-default">{{ I18n "analysis.shapefile" }}</button>
 			</form>
 		</div>
 	{{/if}}
