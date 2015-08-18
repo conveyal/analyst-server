@@ -175,7 +175,7 @@ public class MergeDatabases implements Runnable {
     public <T> void merge (String name) {
         // simple. since they're using UUIDs, just add them directly
         DataStore<T> src = new DataStore<>(from, name);
-        DataStore<T> dest = new DataStore<>(into, name);
+        DataStore<T> dest = new DataStore<>(into, name, true, false, true);
         dest.addAll(src);
         dest.close();
         src.close();
