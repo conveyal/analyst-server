@@ -33,3 +33,7 @@ It is possible to log messages to Logentries. To do this, copy `logentries.xml.t
 location, edit the file to add you logentries key, and start the server with `-Dlogback.configurationFile=path/to/logentries.xml`.
 If it's in the working directory you must refer to it as `./logentries.xml` or Logback will attempt
 to find it on the classpath.
+
+## Internationalization
+
+In order to add a new interface language to Transport Analyst, first duplicate one of the existing language files in `src/main/resources/messages`, changing the file name suffix to the new language's two-letter code. After translating all the strings in the file, edit `src/main/resources/public/templates/app/app-nav.html`. Duplicate one of the selectLang list entries, changing the data-lang code to match the two-letter code of your new translation file and filling in the localized name of the language (the autoglottonym).
