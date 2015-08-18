@@ -430,55 +430,35 @@ var Analyst = Analyst || {};
 				// this can happen when the shapefiles have not yet loaded
 				return;
 
-			if (profile) {
-				params.profileRequest = {
-					fromLat:  A.map.marker.getLatLng().lat,
-					fromLon: A.map.marker.getLatLng().lng,
-					toLat:  A.map.marker.getLatLng().lat,
-					toLon: A.map.marker.getLatLng().lng,
-					date: date,
-					fromTime:  A.util.makeTime(this.$('#fromTime').data('DateTimePicker').getDate()),
-					toTime: A.util.makeTime(this.$('#toTime').data('DateTimePicker').getDate()),
-					accessModes: A.util.removeTransit(this.mode),
-					egressModes: 'WALK',
-					walkSpeed: 4 / 3,
-					bikeSpeed: 4.1,
-					carSpeed: 20,
-					streetTime: 90,
-					maxWalkTime: 20,
-					maxBikeTime: 45,
-					maxCarTime: 45,
-					minBikeTime: 10,
-					minCarTime: 10,
-					suboptimalMinutes: 5,
-					analyst: true,
-					bikeSafe: 1,
-					bikeSlope: 1,
-					bikeTime: 1,
-					boardingAssumption: this.$('#boardingAssumption').val(),
-					scenario: {
-						modifications: mods1
-					}
-				}
-			} else {
-				var date = this.$('#date').data('DateTimePicker').getDate();
-				date = date.add(Number(fromTime), 'seconds');
-
-				params.routingRequest = {
-					// TODO flesh this out, or better yet set server-side defaults
-					// however defaults in routingrequest will be applied
-					from: {
-						lat: A.map.marker.getLatLng().lat,
-						lng: A.map.marker.getLatLng().lng
-					},
-					to: {
-						lat: A.map.marker.getLatLng().lat,
-						lng: A.map.marker.getLatLng().lng
-					},
-					// milliseconds since 1 January 1970
-					// TODO this is using the client time zone not graph time zone!
-					dateTime: date.unix() * 1000,
-					modes: this.mode
+			// We always send a profile request, but if we're not using transit the window will be treated as zero-width.
+			params.profileRequest = {
+				fromLat:  A.map.marker.getLatLng().lat,
+				fromLon: A.map.marker.getLatLng().lng,
+				toLat:  A.map.marker.getLatLng().lat,
+				toLon: A.map.marker.getLatLng().lng,
+				date: date,
+				fromTime:  A.util.makeTime(this.$('#fromTime').data('DateTimePicker').getDate()),
+				toTime: A.util.makeTime(this.$('#toTime').data('DateTimePicker').getDate()),
+				accessModes: A.util.removeTransit(this.mode),
+				egressModes: 'WALK',
+				transitModes: this.mode,
+				walkSpeed: 4 / 3,
+				bikeSpeed: 4.1,
+				carSpeed: 20,
+				streetTime: 90,
+				maxWalkTime: 20,
+				maxBikeTime: 45,
+				maxCarTime: 45,
+				minBikeTime: 10,
+				minCarTime: 10,
+				suboptimalMinutes: 5,
+				analyst: true,
+				bikeSafe: 1,
+				bikeSlope: 1,
+				bikeTime: 1,
+				boardingAssumption: this.$('#boardingAssumption').val(),
+				scenario: {
+					modifications: mods1
 				}
 			}
 
