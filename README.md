@@ -25,6 +25,14 @@ port other than 9090 by specifying the port number in the configuration file. Al
 
 ## Setting up computation
 
+The Analyst server distributes tasks to a cluster of worker instances, and work is coordinated by a broker component. The broker automatically starts up worker instances as needed on AWS EC2, and workers will shut down the machine they are running on after a period of inactivity. The broker and workers are started up as separate processes, usually on separate virtual machines.
+
+The broker and worker code is entirely within the OpenTripPlanner repository, but because analyst-server includes OpenTripPlanner as a Maven dependency, all the necessary runnable main classes are present in a build of analyst-server.
+
+For debugging purposes we can tell the broker not to start up any EC2 instances, then run one worker process manually.
+
+The broker main class is `org.opentripplanner.analyst.broker.BrokerMain`. The worker main class is `org.opentripplanner.analyst.cluster.AnalystWorker`.
+
 [TODO] Describe running broker and worker instances and their config files, including offline debug mode.
 
 ## Setting up custom logging
