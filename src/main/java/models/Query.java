@@ -164,8 +164,9 @@ public class Query implements Serializable {
 			profileRequest = Analyst.buildProfileRequest(this.mode, this.date, this.fromTime, this.toTime, 0, 0);
 
 			// If no transit is in use, speed up calculation by making the departure time window zero-width.
-			if (this.isTransit()) {
-				profileRequest.toTime = profileRequest.fromTime;
+			if (!this.isTransit()) {
+				// FIXME the backward loop in RRAPTOR requires a nonzero time range at least one minute wide
+				profileRequest.toTime = profileRequest.fromTime + 60;
 			}
 
 			// If no boarding assumption is provided, default to worst-case (full-headway waits)
