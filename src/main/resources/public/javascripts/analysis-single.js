@@ -21,6 +21,7 @@ var Analyst = Analyst || {};
 		  'click #showPoints': 'updateMap',
 		  'click #showTransit': 'updateMap',
 		  'change .mode-selector' : 'updateResults',
+			'change .which-selector': 'updateResults',
 			'click #showSettings' : 'showSettings',
 			'click #downloadGis' : 'downloadGis',
 			'click #downloadCsv' : 'downloadCsv'
