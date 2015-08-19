@@ -123,6 +123,12 @@ public class ProcessTransitBundleJob implements Runnable {
 
 			bundle.processGtfs();
 			bundle.processingGtfs = false;
+
+			if (bundle.failed) {
+				bundle.save();
+				return;
+			}
+
 			bundle.processingOsm = true;
 			bundle.save();
 

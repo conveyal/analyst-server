@@ -83,6 +83,7 @@ public class Bundle implements Serializable {
 	public Boolean processingGtfs = false;
 	public Boolean processingOsm = false;
 	public Boolean failed = false;
+	public Boolean tooBig = false;
 	
 	public Bounds bounds;
 	
@@ -125,13 +126,15 @@ public class Bundle implements Serializable {
 	public Bundle() {}
 		
 	public String getStatus() {
-		
-		if (failed)
+
+		if (tooBig)
+			return "EXTENT_TOO_LARGE";
+		else if (failed)
 			return "ERROR";
 		else if(processingGtfs)
-			return "PROCESSSING_GTFS";
+			return "PROCESSING_GTFS";
 		else if(processingOsm) 
-			return "PROCESSSING_OSM";
+			return "PROCESSING_OSM";
 		else 
 			return "BUILT";
 		
@@ -239,10 +242,26 @@ public class Bundle implements Serializable {
 				if (feed.agency.isEmpty())
 					continue;
 
-				for(Stop s : feed.stops.values()) {
+				// loop over stop times not stops to build the bounds, so that unused stops are ignored.
+				for(StopTime st : feed.stop_times.values()) {
+					Stop s = feed.stops.get(st.stop_id);
+
+					// few agencies provide submarine service in the gulf of guinea, so these stops are almost
+					// certainly errors.
+					if (Math.abs(s.stop_lon) < 1 && Math.abs(s.stop_lat) < 1) {
+						LOG.warn("Ignoring stop {}, it is in the Gulf of Guinea", s.stop_name);
+						continue;
+					}
+
 					envelope.include(s.stop_lon, s.stop_lat);
 				}
 
+				if (envelope.getWidth() > 5 || envelope.getHeight() > 5) {
+					LOG.warn("Envelope size for bundle {} is excessive, refusing to build. Check your GTFS?");
+					this.failed = true;
+					this.tooBig = true;
+					return;
+				}
 
 				// figure out the service range
 				LocalDate start = null, end = null;
