@@ -62,9 +62,10 @@ public class BundleController extends Controller {
 
         if (file != null) {
 
-            String projectId = files.get("projectId").get(0).getString();
-            String bundleType = files.get("bundleType").get(0).getString();
-            String augmentBundleId = files.containsKey("augmentBundleId") ? files.get("augmentBundleId").get(0).getString() : null;
+            // http://stackoverflow.com/questions/546365
+            String projectId = files.get("projectId").get(0).getString("UTF-8");
+            String bundleType = files.get("bundleType").get(0).getString("UTF-8");
+            String augmentBundleId = files.containsKey("augmentBundleId") ? files.get("augmentBundleId").get(0).getString("UTF-8") : null;
 
             // make sure the project exists
             if (Project.getProject(projectId) == null || !currentUser(req).hasWritePermission(projectId))
@@ -77,8 +78,8 @@ public class BundleController extends Controller {
 
             Bundle s = Bundle.create(tempFile, bundleType, augmentBundleId);
 
-            s.name = files.get("name").get(0).getString();
-            s.description = files.get("description").get(0).getString();
+            s.name = files.get("name").get(0).getString("UTF-8");
+            s.description = files.get("description").get(0).getString("UTF-8");
             s.projectId = projectId;
 
             s.save();

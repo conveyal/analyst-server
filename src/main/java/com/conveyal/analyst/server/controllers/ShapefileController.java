@@ -73,7 +73,8 @@ public class ShapefileController extends Controller {
             if (Project.getProject(projectId) == null || !currentUser(req).hasWritePermission(projectId))
                 halt(NOT_FOUND, "Project not found or you do not have access to it");
 
-            String name = files.get("name").get(0).getString();
+            // grab as utf8, http://stackoverflow.com/questions/546365
+            String name = files.get("name").get(0).getString("UTF-8");
 
             // copy it to a temporary file
             File tempFile = File.createTempFile("shape", ".zip");
@@ -82,7 +83,7 @@ public class ShapefileController extends Controller {
             Shapefile s = Shapefile.create(tempFile, projectId, name);
             tempFile.delete();
 
-            s.description = req.queryParams("description");
+            s.description = files.get("description").get(0).getString("UTF-8");
 
             s.save();
 
