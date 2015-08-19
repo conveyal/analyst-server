@@ -70,7 +70,6 @@ public class User implements Serializable {
 		// get the quota from the group
 		GroupList groups = account.getGroups();
 		if (groups.getSize() == 0) {
-			LOG.warn("User {} has no groups, computation will be forbidden", username);
 			this.quota = 0;
 			this.groupName = null;
 			this.logo = null;
@@ -79,7 +78,6 @@ public class User implements Serializable {
 			Group group = groups.single();
 			Number quota = (Number) group.getCustomData().get(AnalystMain.config.getProperty("auth.stormpath-name") + "_quota");
 			if (quota == null) {
-				LOG.warn("Quota not specified for group {}, computation will be unavailable for user {}", group.getName(), username);
 				this.quota = 0;
 			}
 			else {
