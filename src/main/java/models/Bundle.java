@@ -127,7 +127,7 @@ public class Bundle implements Serializable {
 		
 	public String getStatus() {
 
-		if (tooBig)
+		if (tooBig != null && tooBig)
 			return "EXTENT_TOO_LARGE";
 		else if (failed)
 			return "ERROR";
