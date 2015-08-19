@@ -11,7 +11,7 @@
     <div class="panel panel-default">
       <div class="panel-heading">
         <h5 class="panel-title">
-          <button id="showSettings" type="button" class="btn btn-default btn-xs pull-right"> Show Settings</button>
+          <button id="showSettings" type="button" class="btn btn-default btn-xs pull-right">{{ I18n "analysis.show-settings" }}</button>
           {{I18n "analysis.query-settings"}}
         </h5>
       </div>
@@ -121,12 +121,12 @@
       	</div>
 
       	<div class="form-group">
-           	<label>Average Walk Speed: <span class="notes" id="walkSpeedValue"></span></label>
+           	<label><span class="notes" id="walkSpeedValue"></span></label>
       		<input id="walkSpeedSlider" data-slider-id="walkSpeedSlider" style="width: 250px;" type="text" data-slider-min="1" data-slider-max="40" data-slider-step="1" data-slider-value="5"/>
       	</div>
 
       	<div class="form-group">
-           	<label>Average Bike Speed: <span class="notes" id="bikeSpeedValue"></span></label>
+           	<label> <span class="notes" id="bikeSpeedValue"></span></label>
       		<input id="bikeSpeedSlider" data-slider-id="bikeSpeedSlider" style="width: 250px;" type="text" data-slider-min="1" data-slider-max="40" data-slider-step="1" data-slider-value="15"/>
       	</div>
       </div>
@@ -162,7 +162,7 @@
           <div id="chartLegend"></div>
 
           <div class="form-group">
-            <label>Travel Time Range: <span class="notes" id="minTimeValue"></span>-<span class="notes" id="timeLimitValue"></span></label>
+            <label><span class="notes" id="timeRangeValue"></span></label>
 
             <input id="timeSlider1" data-slider-id="timeSlider" style="width: 380px;" type="text" data-slider-min="0" data-slider-max="120" data-slider-step="5" data-slider-value="[0,60]"/>
 

@@ -98,22 +98,20 @@ var Analyst = Analyst || {};
 
 			this.timeSlider = this.$('#timeSlider1').slider({
 					formater: function(value) {
-						return value + " minutes";
+						return window.Messages("analysis.n-minutes", value);
 					}
 				}).on('slideStop', function(evt) {
 
-					_this.$('#minTimeValue').html(evt.value[0] + "");
-					_this.$('#timeLimitValue').html(evt.value[1] + " mins");
+					_this.$('#timeRangeValue').html(window.Messages("analysis.travel-time-range", evt.value[0], evt.value[1]));
   				_this.updateMap();
 			}).data('slider');
 
-			this.$('#minTimeValue').html("0");
-			this.$('#timeLimitValue').html("60 mins");
+			_this.$('#timeRangeValue').html(window.Messages("analysis.travel-time-range", 0, 60));
 
 			this.walkSpeedSlider = this.$('#walkSpeedSlider').slider({
 					formater: function(value) {
-						_this.$('#walkSpeedValue').html(value + " km/h");
-						return value + " km/h";
+						_this.$('#walkSpeedValue').html(window.Messages("analysis.average-walk-speed", value));
+						return window.Messages("analysis.km-per-hour", value)
 					}
 				}).on('slideStop', function(value) {
 
@@ -122,8 +120,8 @@ var Analyst = Analyst || {};
 
 			this.bikeSpeedSlider = this.$('#bikeSpeedSlider').slider({
 					formater: function(value) {
-						_this.$('#bikeSpeedValue').html(value + " km/h");
-						return value + " km/h";
+						_this.$('#bikeSpeedValue').html(window.Messages("analysis.average-bike-speed", value));
+						return window.Messages("analysis.km-per-hour", value)
 					}
 				}).on('slideStop', function(value) {
 

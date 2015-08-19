@@ -219,3 +219,16 @@ analysis.group=Grouper
 analysis.dont-group=Ne pas grouper
 
 analysis.change-in-time=Changement du temps de trajet {0} minutes
+analysis.queued=queued for calculation
+analysis.assembling-results=assembling results
+analysis.number-complete={0} of {1} complete
+analysis.minutes={0} minutes
+analysis.calculating=Calculating&nbsp;.&nbsp;.&nbsp;.
+analysis.update-map=Update map
+analysis.choose-shapefile=Shapefile
+analysis.average-walk-speed=Average walk speed: {0} km/h
+analysis.average-bike-speed=Average bike speed: {0} km/h
+analysis.km-per-hour={0} km/h
+analysis.show-settings=Show Settings
+analysis.n-minutes={0} minutes
+analysis.travel-time-range=Travel Time Range: {0}&ndash;{1} minutes
