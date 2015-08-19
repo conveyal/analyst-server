@@ -115,7 +115,9 @@ public class User implements Serializable {
 
 	/** the number of origins that have been computed so far */
 	public long getQuotaUsage () {
-		return ledger.getValue(groupName);
+		// we currently don't store purchases of quota in the ledger; we will change this eventually.
+		// for the time being then ledger value is always -1 * used points, so flip the sign for display
+		return -1 * ledger.getValue(groupName);
 	}
 
 	public void addProjectPermission(String projectId) {

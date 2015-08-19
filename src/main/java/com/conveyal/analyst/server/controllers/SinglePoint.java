@@ -112,7 +112,7 @@ public class SinglePoint extends Controller {
 			String json = resultSetToJson(re);
 
 			// increment the quota at the last possible moment so that we don't charge them if something went wrong
-			u.incrementQuotaUsage(1, QuotaLedger.LedgerReason.SINGLE_POINT, u);
+			u.incrementQuotaUsage(-1, QuotaLedger.LedgerReason.SINGLE_POINT, u);
 			return json;
 		} catch (Exception e) {
 			// don't halt if we've already halted
