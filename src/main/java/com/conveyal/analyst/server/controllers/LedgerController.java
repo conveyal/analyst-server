@@ -52,6 +52,7 @@ public class LedgerController extends Controller {
 
         // enforce
         entry.userId = u.username;
+        entry.time = System.currentTimeMillis();
 
         User.addLedgerEntry(entry);
 

@@ -11,10 +11,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * A ledger of quotas.
@@ -28,18 +25,71 @@ public class QuotaLedger {
 
     private BTreeMap<String, Long> credits;
 
+    private NavigableSet<Fun.Tuple2<String, Fun.Tuple3<String, Long, String>>> entriesByQuery;
+
     public QuotaLedger(String dataFile) {
         db = DBMaker
                 .newFileDB(new File(AnalystMain.config.getProperty("application.data"), dataFile))
                 .make();
 
-        entries = db.createTreeMap("entries")
+        // called entriesWithTime because we originally had an entries map which didn't include the times in the index
+        entries = db.createTreeMap("entriesWithTime")
                 .valueSerializer(Serializer.JAVA)
                 .makeOrGet();
 
         credits = db.createTreeMap("credits")
                 .valueSerializer(Serializer.LONG)
                 .makeOrGet();
+
+        entriesByQuery = db.createTreeSet("queries")
+                .makeOrGet();
+
+        // track ledger entries by query
+        Bind.secondaryKeys(entries, entriesByQuery, new Fun.Function2<String[], Fun.Tuple3<String, Long, String>, LedgerEntry>() {
+            @Override public String[] run(Fun.Tuple3<String, Long, String> stringLongStringTuple3,
+                    LedgerEntry entry) {
+                if (entry.query != null)
+                    return new String[] { entry.query };
+                else
+                    return new String[0];
+            }
+        });
+
+        // import old entries, before we indexed by time.
+        // TODO at some point in the future this code should be removed, once all databases have been upgraded.
+        // NB we do this after the previous bind, so that it will be indexed, but before we bind the
+        // credits, b/c we are constructing the credits manually
+        if (db.exists("entries")) {
+            LOG.info("Importing legacy ledger entries");
+            BTreeMap<?, LedgerEntry> oldEntries = db.getTreeMap("entries");
+            oldEntries.values().stream().map(le -> {
+                 // original implementation had signs backwards; correct this
+                if (le.reason == LedgerReason.SINGLE_POINT || le.reason == LedgerReason.QUERY_CREATED)
+                    le.delta = -1 * Math.abs(le.delta);
+
+                else
+                    le.delta = Math.abs(le.delta);
+                return le;
+                })
+                .forEach(this::add);
+
+            // credits may be counted wrong due to sign error above
+            credits.clear();
+
+            for (LedgerEntry e : entries.values()) {
+                Long total = credits.get(e.groupId);
+
+                if (total == null)
+                    total = 0l;
+
+                credits.put(e.groupId, total + e.delta);
+            }
+
+            // don't need to import again
+            db.delete("entries");
+
+            db.commit();
+        }
 
         entries.modificationListenerAdd((key, oldVal, newVal) -> {
             // make sure we don't get into concurrency situations
@@ -122,6 +172,9 @@ public class QuotaLedger {
 
         /** The query this is associated with, if any */
         public String query;
+
+        /** The name of this query, duplicated here in case the query is deleted */
+        public String queryName;
 
         /** The epoch time this action was taken */
         public long time = System.currentTimeMillis();

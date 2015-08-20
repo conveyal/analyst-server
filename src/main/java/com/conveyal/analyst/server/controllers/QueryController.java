@@ -86,7 +86,14 @@ public class QueryController extends Controller {
 
         q.run();
 
-        u.incrementQuotaUsage(-1 * shapefile.getFeatureCount(), QuotaLedger.LedgerReason.QUERY_CREATED, u, q);
+        QuotaLedger.LedgerEntry entry = new QuotaLedger.LedgerEntry();
+        entry.delta = -shapefile.getFeatureCount();
+        entry.userId = u.username;
+        entry.groupId = u.groupName;
+        entry.query = q.id;
+        entry.queryName = q.name;
+        entry.reason = QuotaLedger.LedgerReason.QUERY_CREATED;
+        u.addLedgerEntry(entry);
 
         return q;
 
@@ -138,7 +145,14 @@ public class QueryController extends Controller {
 
         // any points they didn't use go back on their quota
         // TODO: this might possible increment the wrong users' quota if projects are shared across groups
-        u.incrementQuotaUsage(q.totalPoints - q.completePoints, QuotaLedger.LedgerReason.QUERY_PARTIAL_REFUND, u, q);
+        QuotaLedger.LedgerEntry entry = new QuotaLedger.LedgerEntry();
+        entry.delta = q.totalPoints - q.completePoints;
+        entry.userId = u.username;
+        entry.groupId = u.groupName;
+        entry.query = q.id;
+        entry.queryName = q.name;
+        entry.reason = QuotaLedger.LedgerReason.QUERY_PARTIAL_REFUND;
+        u.addLedgerEntry(entry);
 
         return q;
     }
