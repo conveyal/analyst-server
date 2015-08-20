@@ -7,6 +7,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.Serializable;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -20,7 +24,7 @@ public class QuotaLedger {
 
     private DB db;
 
-    private BTreeMap<Fun.Tuple2<String, String>, LedgerEntry> entries;
+    private BTreeMap<Fun.Tuple3<String, Long, String>, LedgerEntry> entries;
 
     private BTreeMap<String, Long> credits;
 
@@ -62,8 +66,8 @@ public class QuotaLedger {
     }
 
     /** Get all of the ledger entries for a given group, in chronological order */
-    public List<LedgerEntry> getLedgerEntries (String groupId) {
-        Map<?, LedgerEntry> values = entries.subMap(new Fun.Tuple2(groupId, null), new Fun.Tuple2(groupId, Fun.HI));
+    public List<LedgerEntry> getLedgerEntries (String groupId, long fromTime, long toTime) {
+        Map<?, LedgerEntry> values = entries.subMap(new Fun.Tuple3(groupId, fromTime, null), new Fun.Tuple3(groupId, toTime, Fun.HI));
         List<LedgerEntry> ret = new ArrayList<>(values.values());
 
         ret.sort((l1, l2) -> Long.compare(l1.time, l2.time));
@@ -85,7 +89,7 @@ public class QuotaLedger {
         if (entry.groupId == null)
             throw new NullPointerException("Group ID must not be null");
 
-        this.entries.put(new Fun.Tuple2<>(entry.groupId, entry.id), entry);
+        this.entries.put(new Fun.Tuple3<>(entry.groupId, entry.time, entry.id), entry);
         db.commit();
     }
 
@@ -109,11 +113,21 @@ public class QuotaLedger {
         /** The epoch time this action was taken */
         public long time = System.currentTimeMillis();
 
+        /** Format the time in ISO format */
+        public String getTime () {
+            // Users are all over the world, so charge in UTC
+            ZonedDateTime ztd = Instant.ofEpochMilli(time).atZone(ZoneId.of("Etc/UTC"));
+            return ztd.format(DateTimeFormatter.ISO_DATE_TIME);
+        }
+
         /** The ID of the parent ledger entry (group ID assumed to be same) */
         public String parentId;
 
         /** why was this action taken */
         public LedgerReason reason;
+
+        /** comments on this action */
+        public String note;
     }
 
     public static enum LedgerReason {
@@ -130,6 +144,9 @@ public class QuotaLedger {
         QUERY_FAILED_REFUND,
 
         /** user purchased more credits (future use) */
-        PURCHASE
+        PURCHASE,
+
+        /** A refund for another reason */
+        OTHER_REFUND
     }
 }

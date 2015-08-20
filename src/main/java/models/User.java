@@ -209,8 +209,12 @@ public class User implements Serializable {
 		ledger.add(entry);
 	}
 
-	public static List<QuotaLedger.LedgerEntry> getLedgerEntries(String groupId) {
-		return ledger.getLedgerEntries(groupId);
+	public static List<QuotaLedger.LedgerEntry> getLedgerEntries(String groupId, long fromTime, long toTime) {
+		return ledger.getLedgerEntries(groupId, fromTime, toTime);
+	}
+
+	public static void addLedgerEntry (QuotaLedger.LedgerEntry entry) {
+		ledger.add(entry);
 	}
 
 	public static class ProjectPermissions implements Serializable {

@@ -94,7 +94,8 @@ public class Routes {
         after("/api/scenario*", json::type);
 
         // invoice/ledger routes
-        get("/api/ledger", LedgerController::getLedger, json);
+        get("/api/ledger/:groupId", LedgerController::getLedger, json);
+        post("/api/ledger", LedgerController::createLedgerEntry, json);
 
         // query routes
         // note: auth is handled by each individual controller as some allow unauthenticated access
