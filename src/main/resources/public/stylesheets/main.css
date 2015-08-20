@@ -154,3 +154,12 @@ div.legend-item {
 .gray-icon {
   color: #ccc;
 }
+
+.ledger-indicators div {
+  padding: 10px;
+}
+
+.ledger-indicators div h3 {
+  width: 100%;
+  text-align: center
+}

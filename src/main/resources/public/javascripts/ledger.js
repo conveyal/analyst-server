@@ -5,7 +5,12 @@ var Analyst = Analyst || {};
 
   A.ledger.LedgerItemView = Backbone.Marionette.ItemView.extend({
     template: Handlebars.getTemplate('ledger', 'ledger-item'),
-    tagName: 'tr'
+    tagName: 'tr',
+    serializeData: function () {
+      var ret = this.model.toJSON();
+      ret.time = ret.time.replace(/^([0-9]{4}-[0-9]{2}-[0-9]{2})T([0-9]{2}:[0-9]{2}).*$/, '$1 $2');
+      return ret;
+    }
   });
 
   A.ledger.LedgerView = Backbone.Marionette.CompositeView.extend({
@@ -64,7 +69,12 @@ var Analyst = Analyst || {};
     },
 
     serializeData: function () {
-      var single = 0, query = 0, refund = 0, purchase = 0, total = 0;
+      var single = 0, query = 0, refund = 0, purchase = 0, total = 0, starting, ending;
+
+      if (this.collection.length > 0) {
+        starting = this.collection.at(0).get('balance') - this.collection.at(0).get('delta');
+        ending = this.collection.at(this.collection.length - 1).get('balance');
+      }
 
       this.collection.each(function (entry) {
         var reason = entry.get('reason');
@@ -93,6 +103,8 @@ var Analyst = Analyst || {};
         refund: refund,
         purchase: purchase,
         total: total,
+        starting: starting,
+        ending: ending,
         groups: this.groups
       };
     },

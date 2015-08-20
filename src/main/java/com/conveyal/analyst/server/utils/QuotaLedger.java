@@ -67,8 +67,21 @@ public class QuotaLedger {
 
     /** Get all of the ledger entries for a given group, in chronological order */
     public List<LedgerEntry> getLedgerEntries (String groupId, long fromTime, long toTime) {
-        Map<?, LedgerEntry> values = entries.subMap(new Fun.Tuple3(groupId, fromTime, null), new Fun.Tuple3(groupId, toTime, Fun.HI));
-        List<LedgerEntry> ret = new ArrayList<>(values.values());
+        // Loop over all entries up to the toTime so that we can compute running totals
+        Map<?, LedgerEntry> values = entries.subMap(new Fun.Tuple3(groupId, null, null), new Fun.Tuple3(groupId, toTime, Fun.HI));
+
+        List<LedgerEntry> ret = new ArrayList<>();
+
+        int balance = 0;
+        for (LedgerEntry e : values.values()) {
+            balance += e.delta;
+
+            // no need to check toTime as it is taken care of by the subMap
+            if (e.time > fromTime) {
+                e.balance = balance;
+                ret.add(e);
+            }
+        }
 
         ret.sort((l1, l2) -> Long.compare(l1.time, l2.time));
         return ret;
@@ -128,6 +141,14 @@ public class QuotaLedger {
 
         /** comments on this action */
         public String note;
+
+        /** Balance after this action took place */
+        public transient int balance;
+
+        /** getter so Jackson will include balance */
+        public int getBalance () {
+            return balance;
+        }
     }
 
     public static enum LedgerReason {
