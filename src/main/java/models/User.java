@@ -201,11 +201,21 @@ public class User implements Serializable {
 
 	/** increment the quota usage of this user, for the given reason, with action undertaken by user user */
 	public void incrementQuotaUsage (int increment, QuotaLedger.LedgerReason reason, User user) {
+		incrementQuotaUsage(increment, reason, user, null);
+	}
+
+	/** increment the quota usage for this query */
+	public void incrementQuotaUsage (int increment, QuotaLedger.LedgerReason reason, User user, Query query) {
 		QuotaLedger.LedgerEntry entry = new QuotaLedger.LedgerEntry();
 		entry.groupId = groupName;
 		entry.delta = increment;
 		entry.userId = user.username;
 		entry.reason = reason;
+
+		if (query != null) {
+			entry.query = query.id;
+		}
+
 		ledger.add(entry);
 	}
 

@@ -299,4 +299,9 @@ public class Authentication extends Controller {
         response.header("Access-Control-Allow-Origin", "*");
         return "";
     }
+
+    /** Get all the groups for this application */
+    static GroupList getAllGroups () {
+        return stormpathApp.getGroups();
+    }
 }

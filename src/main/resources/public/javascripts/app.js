@@ -50,6 +50,7 @@ var Analyst = Analyst || {};
     			':project/:x/:y/:z(/:namespace/*subroute)': 'invokeSubRoute',
 					'create-project': 'invokeSubRoute',
 					'home': 'index',
+					'ledger': 'ledger',
 					'': 'index'
 		}
 	});
@@ -61,6 +62,10 @@ var Analyst = Analyst || {};
 
 			A.app.instance.appRegion.show(A.app.main);
 			A.app.main.showWelcome();
+		},
+
+		ledger: function (options) {
+			A.app.instance.appRegion.show(new A.ledger.LedgerView());
 		},
 
 		invokeSubRoute: function(project, x, y, z, namespace, subroute) {

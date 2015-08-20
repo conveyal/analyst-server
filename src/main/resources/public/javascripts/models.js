@@ -167,4 +167,26 @@ var Analyst = Analyst || {};
     url: '/api/user'
   });
 
+  A.models.LedgerEntry = Backbone.Model.extend({
+    urlRoot: '/api/ledger',
+
+    defaults: {
+      id: null,
+      userId: null,
+      groupId: null,
+      delta: 0,
+      query: null,
+      time: 0,
+      parentId: null,
+      reason: null,
+      note: null
+    }
+  });
+
+  A.models.Ledger = Backbone.Collection.extend({
+    type: 'Ledger',
+    url: '/api/ledger',
+    model: A.models.LedgerEntry
+  });
+
 })(Analyst, jQuery);

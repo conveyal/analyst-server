@@ -2,6 +2,7 @@ package com.conveyal.analyst.server.controllers;
 
 import com.conveyal.analyst.server.utils.JsonUtil;
 import com.conveyal.analyst.server.utils.QuotaLedger;
+import com.stormpath.sdk.group.Group;
 import models.User;
 import spark.Request;
 import spark.Response;
@@ -10,6 +11,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.Month;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.List;
 
 import static spark.Spark.halt;
@@ -22,7 +24,7 @@ public class LedgerController extends Controller {
         if (!u.admin)
             halt(UNAUTHORIZED, "Must be an admin to view ledgers");
 
-        String groupId = req.params("groupId");
+        String groupId = req.queryParams("group");
 
         // TODO: if you're looking at this at midnight UTC on Dec 31, this may get the wrong year depending on where the server is.
         int year = req.queryParams("year") != null ? Integer.parseInt(req.queryParams("year")) : LocalDateTime.now().getYear();
@@ -54,5 +56,20 @@ public class LedgerController extends Controller {
         User.addLedgerEntry(entry);
 
         return entry;
+    }
+
+    /** Get a list of all group names */
+    public static List<String> getGroups (Request req, Response res) {
+        User u = currentUser(req);
+
+        if (!u.admin)
+            halt(UNAUTHORIZED, "Must be an admin to view groups");
+
+        List<String> ret = new ArrayList<>();
+        for (Group g : Authentication.getAllGroups()) {
+            ret.add(g.getName());
+        }
+
+        return ret;
     }
 }
