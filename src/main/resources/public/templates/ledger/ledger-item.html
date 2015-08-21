@@ -1,5 +1,10 @@
-<td>{{ time }}</td>
+<td>
+  <a name="{{id}}"></a>
+  {{ time }}
+</td>
 <td>{{ delta }}</td>
 <td>{{ reason }}</td>
+<td>{{ queryName }}</td>
 <td>{{ userId }}</td>
 <td>{{ note }}</td>
+<td>{{#if showRefund}}<a href="#" class="refund">{{ I18n "ledger.issue-refund" }}</a>{{/if}}</td>

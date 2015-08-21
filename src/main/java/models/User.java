@@ -24,7 +24,7 @@ public class User implements Serializable {
 
 	private static final Logger LOG = LoggerFactory.getLogger(User.class);
 
-	private static final QuotaLedger ledger = new QuotaLedger("ledger.db");
+	public static final QuotaLedger ledger = new QuotaLedger("ledger.db");
 
 	public final String username;
 	public final String email;

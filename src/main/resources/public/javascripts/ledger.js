@@ -6,10 +6,36 @@ var Analyst = Analyst || {};
   A.ledger.LedgerItemView = Backbone.Marionette.ItemView.extend({
     template: Handlebars.getTemplate('ledger', 'ledger-item'),
     tagName: 'tr',
+
+    events: {
+      'click .refund': 'refund'
+    },
+
     serializeData: function () {
       var ret = this.model.toJSON();
       ret.time = ret.time.replace(/^([0-9]{4}-[0-9]{2}-[0-9]{2})T([0-9]{2}:[0-9]{2}).*$/, '$1 $2');
+      ret.showRefund = (ret.reason == 'QUERY_CREATED' || ret.reason == 'SINGLE_POINT') && !ret.refunded;
       return ret;
+    },
+
+    onRender: function () {
+      if (this.model.get('refunded'))
+        this.$el.addClass('ledger-refunded');
+    },
+
+    /** Issue a full refund for this item */
+    refund: function (e) {
+      e.preventDefault();
+      $.ajax({
+        url: '/api/ledger/refund',
+        type: 'POST',
+        data: JSON.stringify(this.model.toJSON()),
+        contentType: 'json',
+        success: function (data) {
+          // re render the view
+          A.ledger.LedgerView.instance.fetch();
+        }
+      });
     }
   });
 
@@ -22,13 +48,16 @@ var Analyst = Analyst || {};
     itemViewContainer: 'tbody',
 
     events: {
-      'change #group, #year, #month': 'fetch'
+      'change #group, #year, #month': 'fetch',
+      'submit form': 'create'
     },
 
     initialize: function () {
       this.collection = new A.models.Ledger();
 
-      _.bindAll(this, 'render');
+      A.ledger.LedgerView.instance = this;
+
+      _.bindAll(this, 'render', 'fetch');
       this.listenTo(this.collection, 'change sync ', this.render);
 
       var instance = this;
@@ -120,6 +149,20 @@ var Analyst = Analyst || {};
         this.$('#month option[value="' + this.month + '"]').prop('selected', true);
         this.$('#group option[value="' + this.group + '"]').prop('selected', true);
       }
+    },
+
+    /** Create a new ledger entry */
+    create: function (e) {
+      e.preventDefault();
+
+      new A.models.LedgerEntry({
+        delta: this.$('#credit').val(),
+        reason: this.$('#reason').val(),
+        note: this.$('#note').val(),
+        groupId: this.group
+      })
+      .save()
+      .done(this.fetch);
     }
   });
 

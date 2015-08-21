@@ -98,6 +98,7 @@ public class Routes {
         after("/api/groups", json::type);
         get("/api/ledger", LedgerController::getLedger, json);
         post("/api/ledger", LedgerController::createLedgerEntry, json);
+        post("/api/ledger/refund", LedgerController::refund, json);
         after("/api/ledger*", json::type);
 
         // query routes

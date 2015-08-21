@@ -12,6 +12,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * A ledger of quotas.
@@ -26,6 +27,8 @@ public class QuotaLedger {
     private BTreeMap<String, Long> credits;
 
     private NavigableSet<Fun.Tuple2<String, Fun.Tuple3<String, Long, String>>> entriesByQuery;
+
+    private Map<String, Fun.Tuple3<String, Long, String>> entriesById;
 
     public QuotaLedger(String dataFile) {
         db = DBMaker
@@ -54,6 +57,16 @@ public class QuotaLedger {
                     return new String[0];
             }
         });
+
+        entriesById = db.getTreeMap("entriesById");
+
+        Bind.secondaryKey(entries, entriesById,
+                new Fun.Function2<String, Fun.Tuple3<String, Long, String>, LedgerEntry>() {
+                    @Override public String run(Fun.Tuple3<String, Long, String> stringLongStringTuple3,
+                            LedgerEntry entry) {
+                        return entry.id;
+                    }
+                });
 
         // import old entries, before we indexed by time.
         // TODO at some point in the future this code should be removed, once all databases have been upgraded.
@@ -152,14 +165,33 @@ public class QuotaLedger {
         if (entry.groupId == null)
             throw new NullPointerException("Group ID must not be null");
 
+        if (entry.id == null)
+            entry.id = UUID.randomUUID().toString();
+
         this.entries.put(new Fun.Tuple3<>(entry.groupId, entry.time, entry.id), entry);
         db.commit();
+    }
+
+    /**
+     * Get the entries for a particular query.
+     */
+    public Collection<LedgerEntry> getEntriesForQuery(String id) {
+        // one might thing that you don't need the intermediate variable, but if you leave it out
+        // the compiler refuses to figure out the types correctly.
+        Set<Fun.Tuple2<String, Fun.Tuple3<String, Long, String>>> sel = entriesByQuery.subSet(new Fun.Tuple2(id, null), new Fun.Tuple2(id, Fun.HI));
+        return sel.stream()
+            .map(t2 -> entries.get(t2.b))
+            .collect(Collectors.toList());
+    }
+
+    public LedgerEntry getEntry(String id) {
+        return entries.get(entriesById.get(id));
     }
 
     public static final class LedgerEntry implements Serializable {
         private static final long serialVersionUID = 1;
 
-        public final String id = UUID.randomUUID().toString();
+        public String id = UUID.randomUUID().toString();
 
         /** The user who initiated this action */
         public String userId;
@@ -186,11 +218,18 @@ public class QuotaLedger {
             return ztd.format(DateTimeFormatter.ISO_DATE_TIME);
         }
 
+        public void setTime (String time) {
+            ZonedDateTime.parse(time, DateTimeFormatter.ISO_DATE_TIME).toInstant().toEpochMilli();
+        }
+
         /** The ID of the parent ledger entry (group ID assumed to be same) */
         public String parentId;
 
         /** why was this action taken */
         public LedgerReason reason;
+
+        /** has this been refunded? */
+        public boolean refunded = false;
 
         /** comments on this action */
         public String note;

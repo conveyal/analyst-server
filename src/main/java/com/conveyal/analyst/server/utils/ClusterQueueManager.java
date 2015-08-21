@@ -273,7 +273,7 @@ public class ClusterQueueManager extends QueueManager {
 
 		// read the response
 		InputStream is = res.getEntity().getContent();
-		ResultEnvelope re = objectMapper.readValue(is, ResultEnvelope.class);
+			ResultEnvelope re = objectMapper.readValue(is, ResultEnvelope.class);
 		is.close();
 
 		res.close();

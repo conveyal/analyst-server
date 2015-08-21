@@ -10,7 +10,6 @@ import com.conveyal.analyst.server.utils.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.Lists;
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.opentripplanner.analyst.PointFeature;
 import org.opentripplanner.analyst.PointSet;
@@ -18,10 +17,8 @@ import org.opentripplanner.analyst.broker.JobStatus;
 import org.opentripplanner.analyst.cluster.AnalystClusterRequest;
 import org.opentripplanner.analyst.cluster.ResultEnvelope;
 import org.opentripplanner.analyst.scenario.RemoveTrip;
-import org.opentripplanner.common.model.GenericLocation;
 import org.opentripplanner.profile.ProfileRequest;
 import org.opentripplanner.profile.RaptorWorkerTimetable;
-import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.TraverseModeSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -254,8 +251,7 @@ public class Query implements Serializable {
 						ResultEnvelope env;
 						try {
 							InputStream is = new GZIPInputStream(new BufferedInputStream(obj.getObjectContent()));
-							env = JsonUtil.getObjectMapper()
-									.readValue(is, ResultEnvelope.class);
+							env = JsonUtil.getObjectMapper().readValue(is, ResultEnvelope.class);
 							is.close();
 						} catch (IOException e) {
 							throw new S3IOException(e);
@@ -325,6 +321,92 @@ public class Query implements Serializable {
 			return Math.round((float)((float)this.completePoints / (float)this.totalPoints) * 100);
 		else
 			return 0;
+	}
+
+	/** issue a partial refund for the unused portion of this query (used when a user cancels a query in progress) */
+	public QuotaLedger.LedgerEntry refundPartial (User user) {
+		Collection<QuotaLedger.LedgerEntry> entries = User.ledger.getEntriesForQuery(this.id);
+
+		synchronized (User.ledger) {
+			// find the initial charge
+			QuotaLedger.LedgerEntry original = entries.stream().filter(e -> e.reason == QuotaLedger.LedgerReason.QUERY_CREATED)
+					.findFirst().orElse(null);
+			// find any previous refund
+			QuotaLedger.LedgerEntry refund = entries.stream()
+					.filter(e -> e.reason == QuotaLedger.LedgerReason.QUERY_PARTIAL_REFUND
+							|| e.reason == QuotaLedger.LedgerReason.QUERY_FAILED_REFUND
+							|| e.reason == QuotaLedger.LedgerReason.OTHER_REFUND)
+					.findFirst().orElse(null);
+
+			if (refund != null) {
+				LOG.warn("Attempt to partially refund query that has already been refunded");
+				return null;
+			}
+
+			QuotaLedger.LedgerEntry e = new QuotaLedger.LedgerEntry();
+			e.query = this.id;
+			e.queryName = this.name;
+			e.reason = QuotaLedger.LedgerReason.QUERY_PARTIAL_REFUND;
+			e.delta = this.totalPoints - this.completePoints;
+			// refund to the correct group
+			e.groupId = original.groupId;
+			e.parentId = original.id;
+			// this is the account that took the action to initiate the refund, not the account that originally was charged
+			e.userId = user.username;
+			User.ledger.add(e);
+			return e;
+		}
+	}
+
+	public QuotaLedger.LedgerEntry refundFull (User u) {
+		return refundFull(this.id, u);
+	}
+
+	/** issue a full refund for an arbitrary query, which may have already been deleted (used when a query fails or otherwise produces unsatisfactory results) */
+	public static QuotaLedger.LedgerEntry refundFull (String queryId, User user) {
+		Collection<QuotaLedger.LedgerEntry> entries = User.ledger.getEntriesForQuery(queryId);
+
+		synchronized (User.ledger) {
+			// find the initial charge
+			QuotaLedger.LedgerEntry original = entries.stream().filter(e -> e.reason == QuotaLedger.LedgerReason.QUERY_CREATED)
+					.findFirst().orElse(null);
+			// find any partial refund
+			QuotaLedger.LedgerEntry partial = entries.stream()
+					.filter(e -> e.reason == QuotaLedger.LedgerReason.QUERY_PARTIAL_REFUND)
+					.findFirst().orElse(null);
+
+			// find any previous refund on this query
+			// find any previous refund
+			QuotaLedger.LedgerEntry refund = entries.stream()
+					.filter(e -> e.reason == QuotaLedger.LedgerReason.QUERY_FAILED_REFUND
+							|| e.reason == QuotaLedger.LedgerReason.OTHER_REFUND)
+					.findFirst().orElse(null);
+
+
+			if (refund != null) {
+				LOG.warn("Attempt to fully refund query that has already been fully refunded");
+				return null;
+			}
+
+			QuotaLedger.LedgerEntry e = new QuotaLedger.LedgerEntry();
+			e.query = queryId;
+			e.queryName = original.queryName;
+			e.reason = QuotaLedger.LedgerReason.QUERY_FAILED_REFUND;
+			e.delta = -1 * original.delta;
+
+			// if this query has been partially refunded, only refund the remaining portion
+			if (partial != null) {
+				e.delta -= partial.delta;
+			}
+
+			// refund to the correct group
+			e.groupId = original.groupId;
+			e.parentId = original.id;
+			// this is the account that took the action to initiate the refund, not the account that originally was charged
+			e.userId = user.username;
+			User.ledger.add(e);
+			return e;
+		}
 	}
 
 	static public Query getQuery(String id) {

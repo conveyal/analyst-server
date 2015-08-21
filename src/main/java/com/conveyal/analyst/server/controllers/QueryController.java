@@ -144,15 +144,7 @@ public class QueryController extends Controller {
         q.delete();
 
         // any points they didn't use go back on their quota
-        // TODO: this might possible increment the wrong users' quota if projects are shared across groups
-        QuotaLedger.LedgerEntry entry = new QuotaLedger.LedgerEntry();
-        entry.delta = q.totalPoints - q.completePoints;
-        entry.userId = u.username;
-        entry.groupId = u.groupName;
-        entry.query = q.id;
-        entry.queryName = q.name;
-        entry.reason = QuotaLedger.LedgerReason.QUERY_PARTIAL_REFUND;
-        u.addLedgerEntry(entry);
+        q.refundPartial(u);
 
         return q;
     }

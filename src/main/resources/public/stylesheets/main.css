@@ -1,4 +1,4 @@
-body.analyst, #app, #app-map,#app-body {
+html.analyst, body.analyst, #app, #app-map,#app-body {
   height: 100%;
   width: 100%;
   overflow: hidden;
@@ -162,4 +162,9 @@ div.legend-item {
 .ledger-indicators div h3 {
   width: 100%;
   text-align: center
+}
+
+.ledger-refunded {
+  text-decoration: line-through;
+  font-style: italic
 }

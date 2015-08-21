@@ -245,6 +245,8 @@ ledger.delta=Charge
 ledger.reason=Reason
 ledger.username=Username
 ledger.note=Note
+ledger.credit=Credit amount
+ledger.issue-credit=Issue credit
 
 shared.january=January
 shared.february=February

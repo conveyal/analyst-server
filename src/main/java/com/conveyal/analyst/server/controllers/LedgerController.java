@@ -3,6 +3,7 @@ package com.conveyal.analyst.server.controllers;
 import com.conveyal.analyst.server.utils.JsonUtil;
 import com.conveyal.analyst.server.utils.QuotaLedger;
 import com.stormpath.sdk.group.Group;
+import models.Query;
 import models.User;
 import spark.Request;
 import spark.Response;
@@ -72,5 +73,41 @@ public class LedgerController extends Controller {
         }
 
         return ret;
+    }
+
+    /** Refund a ledger entry (POST the JSON of the ledger entry that you wish to refund to this method) */
+    public static QuotaLedger.LedgerEntry refund (Request req, Response res) throws IOException {
+        User u = currentUser(req);
+
+        if (!u.admin)
+            halt(UNAUTHORIZED, "Must be an admin to view groups");
+
+        // parse out the ledger entry
+        QuotaLedger.LedgerEntry entry = JsonUtil.getObjectMapper().readValue(req.body(),
+                QuotaLedger.LedgerEntry.class);
+
+        // get our own, local copy of this ledger entry
+        entry = User.ledger.getEntry(entry.id);
+
+        if (entry == null)
+            halt(BAD_REQUEST);
+
+        entry.refunded = true;
+        // will overwrite
+        User.ledger.add(entry);
+
+        // is this associated with a query?
+        if (entry.query != null)
+            return Query.refundFull(entry.query, u);
+        else {
+            QuotaLedger.LedgerEntry refund = new QuotaLedger.LedgerEntry();
+            refund.parentId = entry.id;
+            refund.delta = -1 * entry.delta;
+            refund.groupId = entry.groupId;
+            refund.reason = QuotaLedger.LedgerReason.OTHER_REFUND;
+            refund.userId = u.username;
+            User.ledger.add(refund);
+            return refund;
+        }
     }
 }
