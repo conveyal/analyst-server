@@ -3,6 +3,7 @@ package models;
 import com.conveyal.analyst.server.AnalystMain;
 import com.conveyal.analyst.server.utils.QuotaLedger;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.common.annotations.VisibleForTesting;
 import com.stormpath.sdk.account.Account;
 import com.stormpath.sdk.account.AccountStatus;
 import com.stormpath.sdk.group.Group;
@@ -90,6 +91,21 @@ public class User implements Serializable {
 		}
 
 		this.account = account;
+	}
+
+	/** dummy constructor for use in tests */
+	@VisibleForTesting
+	public User (String username, String groupName) {
+		this.username = username;
+		this.groupName = groupName;
+
+		email = null;
+		name = null;
+		active = false;
+		admin = false;
+		logo = null;
+		quota = 0;
+		account = null;
 	}
 
 	public void save () {
