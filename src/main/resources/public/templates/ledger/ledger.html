@@ -26,7 +26,7 @@
     {{/years}}
   </select>
 
-  <div class="pull-right"><a href="/"><span class="glyphicon glyphicon-chevron-left"></span> {{ I18n "ledger.return-to-app" }}</a></div>
+  <div class="pull-right no-print"><a href="/"><span class="glyphicon glyphicon-chevron-left"></span> {{ I18n "ledger.return-to-app" }}</a></div>
 </div>
 
 
@@ -76,12 +76,12 @@
     <th>{{ I18n "ledger.query-name" }}</th>
     <th>{{ I18n "ledger.username"}}</th>
     <th>{{ I18n "ledger.note" }}</th>
-    <th>{{ I18n "ledger.issue-refund" }}</th>
+    <th class="no-print">{{ I18n "ledger.issue-refund" }}</th>
   </thead>
   <tbody></tbody>
 </table>
 
-<div style="position: fixed; bottom: 0px; width: 100%; background: #fff; border-top: 1px solid #777; padding: 3px">
+<div class="no-print" style="position: fixed; bottom: 0px; width: 100%; background: #fff; border-top: 1px solid #777; padding: 3px">
   <form>
     <label for="credit">{{ I18n "ledger.credit" }}</label>
     <input id="credit" type="number" />

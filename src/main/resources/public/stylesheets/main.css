@@ -168,3 +168,9 @@ div.legend-item {
   text-decoration: line-through;
   font-style: italic
 }
+
+@media print {
+  .no-print {
+    display: none;
+  }
+}
