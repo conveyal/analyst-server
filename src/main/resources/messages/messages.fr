@@ -247,6 +247,12 @@ ledger.username=Username
 ledger.note=Note
 ledger.credit=Credit amount
 ledger.issue-credit=Issue credit
+ledger.return-to-app=Return to Analyst
+ledger.issue-refund=Issue refund
+ledger.query-name=Query name
+ledger.confirm-refund-text=refund?
+ledger.cancel-refund=no
+ledger.confirm-refund=yes
 
 shared.january=January
 shared.february=February

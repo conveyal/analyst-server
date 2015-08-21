@@ -7,4 +7,11 @@
 <td>{{ queryName }}</td>
 <td>{{ userId }}</td>
 <td>{{ note }}</td>
-<td>{{#if showRefund}}<a href="#" class="refund">{{ I18n "ledger.issue-refund" }}</a>{{/if}}</td>
+<td>
+  <span class="refund-button">
+    {{#if showRefund}}<a href="#" class="show-refund">{{ I18n "ledger.issue-refund" }}</a>{{/if}}
+  </span>
+  <span class="refund-dialog" style="display: none">
+    {{ I18n "ledger.confirm-refund-text" }} <a href="#" class="cancel-refund">{{ I18n "ledger.cancel-refund" }}</a>  <a href="#" class="refund">{{ I18n "ledger.confirm-refund" }}</a>
+  </span>
+</td>

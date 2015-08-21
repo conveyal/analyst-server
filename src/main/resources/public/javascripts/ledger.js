@@ -8,7 +8,9 @@ var Analyst = Analyst || {};
     tagName: 'tr',
 
     events: {
-      'click .refund': 'refund'
+      'click .show-refund': 'showRefund',
+      'click .refund': 'refund',
+      'click .cancel-refund': 'hideRefund'
     },
 
     serializeData: function () {
@@ -23,9 +25,29 @@ var Analyst = Analyst || {};
         this.$el.addClass('ledger-refunded');
     },
 
+    showRefund: function (e) {
+      e.preventDefault();
+      var instance = this;
+      this.$('.refund-button').fadeOut(200, function () {
+        instance.$('.refund-dialog').fadeIn();
+      });
+
+    },
+
+    hideRefund: function (e) {
+      e.preventDefault();
+      var instance = this;
+      this.$('.refund-dialog').fadeOut(200, function () {
+        instance.$('.refund-button').fadeIn();
+      });
+    },
+
     /** Issue a full refund for this item */
     refund: function (e) {
       e.preventDefault();
+
+      this.$('.refund-dialog').slideUp();
+
       $.ajax({
         url: '/api/ledger/refund',
         type: 'POST',

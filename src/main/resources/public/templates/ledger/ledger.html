@@ -1,29 +1,33 @@
-<select id="group">
-  {{#groups}}
-    <option value="{{this}}">{{this}}</option>
-  {{/groups}}
-</select>
+<div class="clearfix">
+  <select id="group">
+    {{#groups}}
+      <option value="{{this}}">{{this}}</option>
+    {{/groups}}
+  </select>
 
-<select id="month">
-  <option value="january">{{ I18n "shared.january" }}</option>
-  <option value="february">{{ I18n "shared.february" }}</option>
-  <option value="march">{{ I18n "shared.march" }}</option>
-  <option value="april">{{ I18n "shared.april" }}</option>
-  <option value="may">{{ I18n "shared.may" }}</option>
-  <option value="june">{{ I18n "shared.june" }}</option>
-  <option value="july">{{ I18n "shared.july" }}</option>
-  <option value="august">{{ I18n "shared.august" }}</option>
-  <option value="september">{{ I18n "shared.september" }}</option>
-  <option value="october">{{ I18n "shared.october" }}</option>
-  <option value="november">{{ I18n "shared.november" }}</option>
-  <option value="december">{{ I18n "shared.december" }}</option>
-</select>
+  <select id="month">
+    <option value="january">{{ I18n "shared.january" }}</option>
+    <option value="february">{{ I18n "shared.february" }}</option>
+    <option value="march">{{ I18n "shared.march" }}</option>
+    <option value="april">{{ I18n "shared.april" }}</option>
+    <option value="may">{{ I18n "shared.may" }}</option>
+    <option value="june">{{ I18n "shared.june" }}</option>
+    <option value="july">{{ I18n "shared.july" }}</option>
+    <option value="august">{{ I18n "shared.august" }}</option>
+    <option value="september">{{ I18n "shared.september" }}</option>
+    <option value="october">{{ I18n "shared.october" }}</option>
+    <option value="november">{{ I18n "shared.november" }}</option>
+    <option value="december">{{ I18n "shared.december" }}</option>
+  </select>
 
-<select id="year">
-  {{#years}}
-    <option value="{{this}}">{{this}}</option>
-  {{/years}}
-</select>
+  <select id="year">
+    {{#years}}
+      <option value="{{this}}">{{this}}</option>
+    {{/years}}
+  </select>
+
+  <div class="pull-right"><a href="/"><span class="glyphicon glyphicon-chevron-left"></span> {{ I18n "ledger.return-to-app" }}</a></div>
+</div>
 
 
 <div class="clearfix ledger-indicators">
@@ -69,6 +73,7 @@
     <th>{{ I18n "ledger.date" }}</th>
     <th>{{ I18n "ledger.delta" }}</th>
     <th>{{ I18n "ledger.reason" }}</th>
+    <th>{{ I18n "ledger.query-name" }}</th>
     <th>{{ I18n "ledger.username"}}</th>
     <th>{{ I18n "ledger.note" }}</th>
     <th>{{ I18n "ledger.issue-refund" }}</th>
