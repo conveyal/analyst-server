@@ -1,6 +1,8 @@
 package com.conveyal.analyst.server.utils;
 
 import com.conveyal.analyst.server.AnalystMain;
+import models.Query;
+import models.User;
 import org.mapdb.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -186,6 +188,118 @@ public class QuotaLedger {
 
     public LedgerEntry getEntry(String id) {
         return entries.get(entriesById.get(id));
+    }
+
+    /** issue a full refund for an arbitrary query, which may have already been deleted (used when a query fails or otherwise produces unsatisfactory results) */
+    public synchronized QuotaLedger.LedgerEntry refundQuery (String queryId, User user) {
+        Collection<QuotaLedger.LedgerEntry> entries = this.getEntriesForQuery(queryId);
+
+        // find the initial charge
+        QuotaLedger.LedgerEntry original = entries.stream().filter(e -> e.reason == QuotaLedger.LedgerReason.QUERY_CREATED)
+                .findFirst().orElse(null);
+
+        if (original.refunded) {
+            LOG.warn("Attempt to fully refund query that has already been fully refunded");
+            return null;
+        }
+
+        // find any partial refund
+        QuotaLedger.LedgerEntry partial = entries.stream()
+                .filter(e -> e.reason == QuotaLedger.LedgerReason.QUERY_PARTIAL_REFUND)
+                .findFirst().orElse(null);
+
+        QuotaLedger.LedgerEntry e = new QuotaLedger.LedgerEntry();
+        e.query = queryId;
+        e.queryName = original.queryName;
+        e.reason = QuotaLedger.LedgerReason.QUERY_FAILED_REFUND;
+        e.delta = -1 * original.delta;
+
+        // if this query has been partially refunded, only refund the remaining portion
+        if (partial != null) {
+            e.delta -= partial.delta;
+        }
+
+        // refund to the correct group
+        e.groupId = original.groupId;
+        e.parentId = original.id;
+        // this is the account that took the action to initiate the refund, not the account that originally was charged
+        e.userId = user.username;
+        this.add(e);
+
+        original.refunded = true;
+        this.add(original);
+
+        return e;
+    }
+
+    /** Issue a refund for the unused portion of a query */
+    public synchronized LedgerEntry refundQueryPartial(Query q, User user) {
+        Collection<QuotaLedger.LedgerEntry> entries = this.getEntriesForQuery(q.id);
+
+        // find the initial charge
+        QuotaLedger.LedgerEntry original = entries.stream().filter(e -> e.reason == QuotaLedger.LedgerReason.QUERY_CREATED)
+                .findFirst().orElse(null);
+        // find any previous refund
+        QuotaLedger.LedgerEntry refund = entries.stream()
+                .filter(e -> e.reason == QuotaLedger.LedgerReason.QUERY_PARTIAL_REFUND
+                        || e.reason == QuotaLedger.LedgerReason.QUERY_FAILED_REFUND
+                        || e.reason == QuotaLedger.LedgerReason.OTHER_REFUND)
+                .findFirst().orElse(null);
+
+        if (refund != null) {
+            LOG.warn("Attempt to partially refund query that has already been refunded");
+            return null;
+        }
+
+        QuotaLedger.LedgerEntry e = new QuotaLedger.LedgerEntry();
+        e.query = q.id;
+        e.queryName = original.queryName;
+        e.reason = QuotaLedger.LedgerReason.QUERY_PARTIAL_REFUND;
+        // reads of ints are atomic even though there is another thread updating complete points
+        // total points does not change, and we don't care what value we get of complete points as long
+        // as it is a value that is correct at the approximate point in time that this method is called.
+        e.delta = q.totalPoints - q.completePoints;
+        // refund to the correct group
+        e.groupId = original.groupId;
+        e.parentId = original.id;
+        // this is the account that took the action to initiate the refund, not the account that originally was charged
+        e.userId = user.username;
+        this.add(e);
+
+        // We don't mark the original value as refunded, because it's only partially refunded
+
+        return e;
+    }
+
+    /** refund an arbitrary ledger entry */
+    public synchronized LedgerEntry refund (LedgerEntry e, User u) {
+        if (e.refunded) {
+            LOG.warn("Attempt to refund ledger entry that has already been refunded", e);
+            return null;
+        }
+
+        if (e.query != null)
+            return refundQuery(e.query, u);
+        else if (e.reason == LedgerReason.SINGLE_POINT) {
+            QuotaLedger.LedgerEntry refund = new QuotaLedger.LedgerEntry();
+            refund.parentId = e.id;
+            refund.delta = -1 * e.delta;
+            refund.groupId = e.groupId;
+            refund.reason = QuotaLedger.LedgerReason.OTHER_REFUND;
+            refund.userId = u.username;
+            this.add(refund);
+
+            e.refunded = true;
+            // will overwrite
+            this.add(e);
+
+            return refund;
+        }
+        else {
+            // we don't "refund" purchases, refunds, etc.
+            LOG.warn("Unable to refund ledger entry with reason {}", e.reason);
+            return null;
+        }
     }
 
     public static final class LedgerEntry implements Serializable {

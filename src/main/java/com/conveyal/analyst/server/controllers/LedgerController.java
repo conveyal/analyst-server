@@ -3,7 +3,6 @@ package com.conveyal.analyst.server.controllers;
 import com.conveyal.analyst.server.utils.JsonUtil;
 import com.conveyal.analyst.server.utils.QuotaLedger;
 import com.stormpath.sdk.group.Group;
-import models.Query;
 import models.User;
 import spark.Request;
 import spark.Response;
@@ -92,22 +91,6 @@ public class LedgerController extends Controller {
         if (entry == null)
             halt(BAD_REQUEST);
 
-        entry.refunded = true;
-        // will overwrite
-        User.ledger.add(entry);
-
-        // is this associated with a query?
-        if (entry.query != null)
-            return Query.refundFull(entry.query, u);
-        else {
-            QuotaLedger.LedgerEntry refund = new QuotaLedger.LedgerEntry();
-            refund.parentId = entry.id;
-            refund.delta = -1 * entry.delta;
-            refund.groupId = entry.groupId;
-            refund.reason = QuotaLedger.LedgerReason.OTHER_REFUND;
-            refund.userId = u.username;
-            User.ledger.add(refund);
-            return refund;
-        }
+        return User.ledger.refund(entry, u);
     }
 }
