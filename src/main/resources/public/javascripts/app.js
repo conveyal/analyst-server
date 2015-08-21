@@ -10,7 +10,6 @@ var Analyst = Analyst || {};
 		appRegion: "#app"
 	});
 
-
 	A.app.instance.addInitializer(function(options){
 		A.app.allProjects = new A.models.Projects();
 		A.app.allProjects.fetch();
@@ -50,7 +49,6 @@ var Analyst = Analyst || {};
     			':project/:x/:y/:z(/:namespace/*subroute)': 'invokeSubRoute',
 					'create-project': 'invokeSubRoute',
 					'home': 'index',
-					'ledger': 'ledger',
 					'': 'index'
 		}
 	});
@@ -64,12 +62,7 @@ var Analyst = Analyst || {};
 			A.app.main.showWelcome();
 		},
 
-		ledger: function (options) {
-			A.app.instance.appRegion.show(new A.ledger.LedgerView());
-		},
-
 		invokeSubRoute: function(project, x, y, z, namespace, subroute) {
-
 		  this.setProject(project);
 
 			if(!A.app.main) {
@@ -364,37 +357,25 @@ var Analyst = Analyst || {};
 
 		templateHelpers: {
 			selectedProject : function () {
-				if(A.app.selectedProject != null)
-					return true;
-				else
-					return false;
+				return A.app.selectedProject != null;
 			},
 			transportDataActive : function () {
-					if(this.activeTab == "transport-data")
-						return true;
-					else
-						return false;
+				return this.activeTab == "transport-data"
 			},
 			transportScenariosActive: function () {
 				return this.activeTab == "transport-scenarios";
 			},
 			spatialDataActive : function () {
-					if(this.activeTab == "spatial-data-shapefiles" || this.activeTab == "spatial-data-pointsets")
-						return true;
-					else
-						return false;
+				return this.activeTab == "spatial-data-shapefiles" || this.activeTab == "spatial-data-pointsets";
 			},
 			analysisActive : function () {
-					if(this.activeTab == "analysis-single" ||  this.activeTab == "analysis-regional")
-						return true;
-					else
-						return false;
+				return this.activeTab == "analysis-single" ||  this.activeTab == "analysis-regional";
 			},
 			settingsActive : function () {
-					if(this.activeTab == "project-settings")
-						return true;
-					else
-						return false;
+				return this.activeTab == "project-settings";
+			},
+			admin: function () {
+				return A.app.user.get('admin') === true;
 			}
 		}
 	});

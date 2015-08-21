@@ -14,6 +14,8 @@ var Analyst = Analyst || {};
   });
 
   A.ledger.LedgerView = Backbone.Marionette.CompositeView.extend({
+    // this is a full page view
+    el: 'body',
     template: Handlebars.getTemplate('ledger', 'ledger'),
 
     itemView: A.ledger.LedgerItemView,
@@ -119,5 +121,11 @@ var Analyst = Analyst || {};
         this.$('#group option[value="' + this.group + '"]').prop('selected', true);
       }
     }
+  });
+
+  // this runs on its own page, so if this script is getting loaded we should be starting up the ledger.
+  // so go ahead and spin it up.
+  $(document).ready(function () {
+    var lv = new A.ledger.LedgerView();
   });
 })(Analyst, jQuery);

@@ -14,27 +14,34 @@
 
     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
 
+    <ul class="nav navbar-nav">
       {{#if selectedProject}}
 
-          <ul class="nav navbar-nav">
-             <li id="spatialDataTab" class="dropdown {{#if spatialDataActive}}active{{/if}}">
-               <a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-th-list"></span> {{I18n "app.data"}} <span class="caret"></span></a>
-               <ul class="dropdown-menu" role="menu">
-                 <li id="transportDataTab" class="{{#if transportDataActive}}active{{/if}}"><a  href="#"><span class="glyphicon glyphicon-road"></span> {{I18n "app.data.transport-bundles"}}</a></li>
-                 <li id="transportScenarioTab" class="{{#if transportScenariosActive}}active{{/if}}"><a  href="#"><span class="glyphicon glyphicon-road"></span> {{I18n "app.data.transport-scenarios"}} </a></li>
-                 <li id="spatialDataTabShapefilesListItem"><a href="#"><span class="glyphicon glyphicon-globe"></span> {{I18n "app.data.shapefiles"}} </a></li>
-               </ul>
-             </li>
-             <li id="analysisTab" class="dropdown {{#if analysisActive}}active{{/if}}">
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-cog Analysis"></span> {{I18n "app.analysis"}} <span class="caret"></span></a>
-                    <ul class="dropdown-menu" role="menu">
-                         <li id="analysisTabSinglePoint"><a href="#">{{I18n "analysis.single-point"}}</a></li>
-                         <li id="analysisTabRegional"><a href="#">{{I18n "analysis.multi-point"}}</a></li>
-                    </ul>
-             </li>
-             {{#writeAllowed}}<li id="projectSettingsTab" class="{{#if settingsActive}}active{{/if}}"><a href="#"><span class="glyphicon glyphicon-wrench"></span> {{I18n "app.project-settings"}} </a></li>{{/writeAllowed}}
+         <li id="spatialDataTab" class="dropdown {{#if spatialDataActive}}active{{/if}}">
+           <a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-th-list"></span> {{I18n "app.data"}} <span class="caret"></span></a>
+           <ul class="dropdown-menu" role="menu">
+             <li id="transportDataTab" class="{{#if transportDataActive}}active{{/if}}"><a  href="#"><span class="glyphicon glyphicon-road"></span> {{I18n "app.data.transport-bundles"}}</a></li>
+             <li id="transportScenarioTab" class="{{#if transportScenariosActive}}active{{/if}}"><a  href="#"><span class="glyphicon glyphicon-road"></span> {{I18n "app.data.transport-scenarios"}} </a></li>
+             <li id="spatialDataTabShapefilesListItem"><a href="#"><span class="glyphicon glyphicon-globe"></span> {{I18n "app.data.shapefiles"}} </a></li>
            </ul>
-      {{/if}}
+         </li>
+         <li id="analysisTab" class="dropdown {{#if analysisActive}}active{{/if}}">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-cog Analysis"></span> {{I18n "app.analysis"}} <span class="caret"></span></a>
+                <ul class="dropdown-menu" role="menu">
+                     <li id="analysisTabSinglePoint"><a href="#">{{I18n "analysis.single-point"}}</a></li>
+                     <li id="analysisTabRegional"><a href="#">{{I18n "analysis.multi-point"}}</a></li>
+                </ul>
+         </li>
+         {{#writeAllowed}}<li id="projectSettingsTab" class="{{#if settingsActive}}active{{/if}}"><a href="#"><span class="glyphicon glyphicon-wrench"></span> {{I18n "app.project-settings"}} </a></li>{{/writeAllowed}}
+       {{/if}}
+
+       {{#if admin}}
+         <li>
+           <a href="/ledger.html"><span class="glyphicon glyphicon-euro"></span> {{ I18n "ledger.ledger" }}</a>
+         </li>
+       {{/if}}
+
+     </ul>
 
      <ul class="nav navbar-nav navbar-right">
           <div id="userQuotaWarning" class="nav navbar-nav">
