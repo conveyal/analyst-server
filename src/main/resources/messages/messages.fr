@@ -71,8 +71,8 @@ data-manager.bundle-gtfs-file=Fichier GTFS
 data-manager.bundle-name=Nom du jeu de données transports
 data-manager.bundle-description=Description du jeu de données
 
-data-manager.transport-scenarios=Scenarios transports
-data-manager.scenarios-description=Les scenarios transports représentent des états potentiels d'un réseau de transports. Chaque scénario renvoie à un jeu de données transports, et peut y apporter des modifications de lignes, d'horaires etc.
+data-manager.transport-scenarios=Scénarios transports
+data-manager.scenarios-description=Les scénarios transports représentent des états potentiels d'un réseau de transports. Chaque scénario renvoie à un jeu de données transports, et peut y apporter des modifications de lignes, d'horaires etc.
 data-manager.no-scenarios=Aucun scénario
 data-manager.scenario-name=Nom du scénario
 data-manager.scenario-description=Description du scénario
@@ -91,7 +91,7 @@ analysis.single-point-description=Cliquez sur la carte pour lancer un calcul d'a
 analysis.analysis-type=Type d'analyse
 
 analysis.single-point=Analyse origine simple
-analysis.multi-point=Analyse régionale & agrégé
+analysis.multi-point=Analyse régionale & agrégée
 
 analysis.query-settings=Configuration de requête
 analysis.query-results=Résultats de la requête
@@ -118,14 +118,14 @@ analysis.date=Date
 analysis.earliest-departure-time=Départ (début de fenêtre)
 analysis.latest-departure-time=Fin de fenêtre
 
-analysis.scenario=Scenario
-analysis.scenario-1=Scenario 1
-analysis.scenario-2=Scenario 2
+analysis.scenario=Scénario
+analysis.scenario-1=Scénario 1
+analysis.scenario-2=Scénario 2
 analysis.minutes=Minutes
 
-analysis.scenario-2.no-change=Scenario 2 aucun changement
-analysis.scenario-2.new-coverage=Scenario 2 accès nouveau
-analysis.scenario-2.faster=Scenario 2 plus rapide
+analysis.scenario-2.no-change=Scénario 2 aucun changement
+analysis.scenario-2.new-coverage=Scénario 2 accès nouveau
+analysis.scenario-2.faster=Scénario 2 plus rapide
 analysis.not-in-range=Hors zone accessible
 analysis.travel-time=Temps de trajet
 
@@ -157,7 +157,7 @@ analysis.exact-time=Heure de départ exact
 analysis.profile=Plage horaire
 
 analysis.credit-usage=Utilisation du crédit de calcul
-analysis.credit-count={0} crédits sur {1} utilisés.
+analysis.credit-count={0} crédits utilisés sur {1}.
 analysis.nearing-quota={0} crédits de calcul restent.
 analysis.insufficient-quota=Vous n'avez pas suffisamment de crédit de calcul pour effectuer cette opération.
 analysis.query-quota-consumption=Cette requête consommera {0} des {1} crédits de calcul qui vous restent.
