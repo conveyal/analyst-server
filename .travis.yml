@@ -4,12 +4,8 @@ language: java
 jdk:
   - oraclejdk8
 
-# We need to build OTP off a specific branch
-install:
-  - git clone --depth 1 --branch bootstrap https://github.com/opentripplanner/OpenTripPlanner.git
-  - cd OpenTripPlanner
-  - mvn package install -DskipTests
-  - cd ..
+# Skip install phase. analyst-server now depends on master OTP.
+install: true
 
 # Run on container based infrastructure (allows caching &c.)
 sudo: false
