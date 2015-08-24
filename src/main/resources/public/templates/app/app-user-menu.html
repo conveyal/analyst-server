@@ -2,8 +2,6 @@
   <a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-user" ></span> {{name}} <span class="caret"></span></a>
   <ul class="dropdown-menu" role="menu" style="width: 300px">
     <li style="width: 260px; margin-left: 20px">
-      {{I18n "analysis.credit-usage" }}
-      </div>
       {{ I18n "analysis.nearing-quota" (humanNumber quota) }}
     </li>
     <li id="userDropdownLoggout"><a href="/logout">{{I18n "app.account.logout"}}</a>
