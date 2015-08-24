@@ -5,7 +5,6 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import models.Shapefile;
 import org.opentripplanner.analyst.PointSet;
-import org.opentripplanner.analyst.ResultSet;
 import org.opentripplanner.analyst.SampleSet;
 import org.opentripplanner.analyst.broker.JobStatus;
 import org.opentripplanner.analyst.cluster.AnalystClusterRequest;
@@ -84,13 +83,7 @@ public class LocalQueueManager extends QueueManager {
         SampleSet ss = new SampleSet(ps, router.graph.getSampleFactory());
 
         RepeatedRaptorProfileRouter rrpr = new RepeatedRaptorProfileRouter(router.graph, req.profileRequest, ss);
-        rrpr.route();
-
-        ResultSet.RangeSet rsrs = rrpr.makeResults(req.includeTimes, !isochrone, isochrone);
-        ResultEnvelope re = new ResultEnvelope();
-        re.worstCase = rsrs.max;
-        re.avgCase = rsrs.avg;
-        re.bestCase = rsrs.min;
+        ResultEnvelope re = rrpr.route();
         re.destinationPointsetId = req.destinationPointsetId;
         re.jobId = req.jobId;
         re.profile = true;

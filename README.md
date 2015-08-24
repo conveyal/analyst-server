@@ -27,7 +27,7 @@ port other than 9090 by specifying the port number in the configuration file. Al
 
 The Analyst server distributes tasks to a cluster of worker instances, and work is coordinated by a broker component. The broker automatically starts up worker instances as needed on AWS EC2, and workers will shut down the machine they are running on after a period of inactivity. The broker and workers are started up as separate processes, usually on separate virtual machines.
 
-The broker and worker code is entirely within the OpenTripPlanner repository, but because analyst-server includes OpenTripPlanner as a Maven dependency, all the necessary runnable main classes are present in a build of analyst-server.
+The broker and worker code is entirely within the OpenTripPlanner repository, but because analyst-server includes OpenTripPlanner as a Maven dependency, all the necessary runnable main classes are present in a build of analyst-server. However, when doing development work it's best to run the worker and broker processes from an OTP project in your IDE. This way you can change the worker code on the fly without deploying an OTP Maven artifact and rebuilding the Transport Analyst server.
 
 For debugging purposes we can tell the broker not to start up any EC2 instances, then run one worker process manually.
 

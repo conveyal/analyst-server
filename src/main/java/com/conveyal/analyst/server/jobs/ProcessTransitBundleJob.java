@@ -158,16 +158,15 @@ public class ProcessTransitBundleJob implements Runnable {
 			}
 
 			// download the file
+			LOG.info("Beginning to download OSM data...");
 			InputStream is = conn.getInputStream();
 			OutputStream os = new FileOutputStream(osmPbfFile);
 			ByteStreams.copy(is, os);
 			is.close();
 			os.close();
-			
 			graphFiles.add(osmPbfFile);
+			LOG.info("OSM PBF retrieved.");
 
-			LOG.info("osm pbf retrieved");
-			
 		} catch (IOException e) {
 			LOG.error("Failed to process GTFS", e);
 
