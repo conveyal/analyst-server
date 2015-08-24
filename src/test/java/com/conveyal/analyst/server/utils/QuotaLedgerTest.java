@@ -7,7 +7,6 @@ import models.User;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.File;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -22,10 +21,12 @@ public class QuotaLedgerTest extends TestCase {
 
     @Before
     public void setUp () throws Exception {
-        ledger = new QuotaLedger(File.createTempFile("ledger", ".db").getAbsolutePath());
+        DataStore.dataPath = Files.createTempDir().getAbsolutePath();
+        
+        // stored in temporary directory created above
+        ledger = new QuotaLedger("ledger");
 
         user = new User("TEST", "TEST");
-        DataStore.dataPath = Files.createTempDir().getAbsolutePath();
     }
 
     /** Make sure that single point jobs are recorded and charged correctly */
