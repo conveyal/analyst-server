@@ -82,7 +82,7 @@ data-manager.create-scenario=Créer scénario
 data-manager.upload-shapefile-file=Shapefile (zippé)
 data-manager.upload-shapefile-name=Nom du shapefile
 data-manager.upload-shapefile-description=Description du shapefile
-data-manager.upload-shapefile=Envoyer le shapefile
+data-manager.upload-shapefile=Envoyer shapefile
 
 data-manager.upload-shapefile-uploading=Envoi et traitement du shapefile...
 
