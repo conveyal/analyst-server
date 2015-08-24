@@ -77,7 +77,7 @@ public class QueryController extends Controller {
 
         // ensure they have quota available
         Shapefile shapefile = Shapefile.getShapefile(q.shapefileId);
-        if (u.quota - u.getQuotaUsage() < shapefile.getFeatureCount()) {
+        if (u.getQuota() < shapefile.getFeatureCount()) {
             LOG.warn("User {} was unable to add query of size {} because their quota has been met", u.username, shapefile.getFeatureCount());
             halt(FORBIDDEN, INSUFFICIENT_QUOTA);
         }

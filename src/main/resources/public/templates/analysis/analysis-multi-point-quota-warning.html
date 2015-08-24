@@ -1,7 +1,12 @@
 {{!-- the warning if this query will use up most of the available quota --}}
 
 {{#if showWarning}}
-  <div class="alert alert-{{ colorByPercent querySize remainingQuota }}">
-    {{ I18n "analysis.query-quota-consumption" (humanNumber querySize) (humanNumber remainingQuota) }}
+  <div class="alert alert-{{ colorByPercent querySize quota }}">
+    {{ I18n "analysis.query-quota-consumption" (humanNumber querySize) (humanNumber quota) }}
+  </div>
+{{/if}}
+{{#if showError}}
+  <div class="alert alert-danger">
+    {{ I18n "analysis.insufficient-quota"}}
   </div>
 {{/if}}

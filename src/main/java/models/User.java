@@ -39,9 +39,6 @@ public class User implements Serializable {
 	/** A custom logo for this group */
 	public final String logo;
 
-	/** the maximum number of origin points this user's group is allowed to calculate */
-	public final long quota;
-
 	private final Account account;
 
 	private String lang;
@@ -71,22 +68,12 @@ public class User implements Serializable {
 		// get the quota from the group
 		GroupList groups = account.getGroups();
 		if (groups.getSize() == 0) {
-			this.quota = 0;
 			this.groupName = null;
 			this.logo = null;
 		}
 		else {
 			Group group = groups.single();
-			Number quota = (Number) group.getCustomData().get(AnalystMain.config.getProperty("auth.stormpath-name") + "_quota");
-			if (quota == null) {
-				this.quota = 0;
-			}
-			else {
-				this.quota = quota.longValue();
-			}
-
 			this.groupName = group.getName();
-
 			this.logo = (String) group.getCustomData().get(AnalystMain.config.getProperty("auth.stormpath-name") + "_logo");
 		}
 
@@ -104,7 +91,6 @@ public class User implements Serializable {
 		active = false;
 		admin = false;
 		logo = null;
-		quota = 0;
 		account = null;
 	}
 
@@ -127,11 +113,9 @@ public class User implements Serializable {
 		this.save();
 	}
 
-	/** the number of origins that have been computed so far */
-	public long getQuotaUsage () {
-		// we currently don't store purchases of quota in the ledger; we will change this eventually.
-		// for the time being then ledger value is always -1 * used points, so flip the sign for display
-		return -1 * ledger.getValue(groupName);
+	/** Get the remaining quota for this user */
+	public long getQuota () {
+		return ledger.getValue(this.groupName);
 	}
 
 	public void addProjectPermission(String projectId) {

@@ -155,8 +155,7 @@ var Analyst = Analyst || {};
 
     toJSON: function() {
       return _.extend({
-        nearingQuota: this.get('quotaUsage') / this.get('quota') > 0.9,
-				quotaRemaining: this.get('quota') - this.get('quotaUsage')
+        nearingQuota: this.get('quota') < 100000
       }, this.attributes);
     }
   });

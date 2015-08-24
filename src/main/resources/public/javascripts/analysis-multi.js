@@ -141,8 +141,6 @@ var Analyst = Analyst || {};
     updateQuota: function () {
       this.queryCreateQuotaUsage.set({
         querySize: this.shapefiles.get(this.$('#shapefile').val()).get('featureCount'),
-        remainingQuota: Math.max(A.app.user.get('quota') - A.app.user.get('quotaUsage'), 0),
-        quotaUsage: A.app.user.get('quotaUsage'),
         quota: A.app.user.get('quota')
       });
     },
@@ -613,7 +611,10 @@ var Analyst = Analyst || {};
 
     serializeData: function () {
       var data = this.model.toJSON();
-      data.showWarning = (this.model.get('quotaUsage') + this.model.get('querySize')) / this.model.get('quota') > 0.75;
+      if (this.model.get('querySize') > this.model.get('quota'))
+        data.showError = true;
+      else
+        data.showWarning = this.model.get('querySize') / this.model.get('quota') > 0.75;
       return data;
     }
   });

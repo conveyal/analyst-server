@@ -91,7 +91,7 @@ public class SinglePoint extends Controller {
 			halt(NOT_FOUND, "No such bundle or pointset, or you do not have permission to access them");
 
 		// TODO enforce quota for users who are not logged on, or remove unauthenticated access
-		if (u.quota - u.getQuotaUsage() < 1)
+		if (u.getQuota() < 1)
 			halt(FORBIDDEN, INSUFFICIENT_QUOTA);
 
 		try {

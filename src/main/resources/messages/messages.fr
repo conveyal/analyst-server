@@ -157,7 +157,6 @@ analysis.exact-time=Heure de départ exact
 analysis.profile=Plage horaire
 
 analysis.credit-usage=Utilisation du crédit de calcul
-analysis.credit-count={0} crédits utilisés sur {1}.
 analysis.nearing-quota={0} crédits de calcul restent.
 analysis.insufficient-quota=Vous n'avez pas suffisamment de crédit de calcul pour effectuer cette opération.
 analysis.query-quota-consumption=Cette requête consommera {0} des {1} crédits de calcul qui vous restent.
@@ -252,6 +251,7 @@ ledger.query-name=Nom de requête
 ledger.confirm-refund-text=Rembourser?
 ledger.cancel-refund=non
 ledger.confirm-refund=oui
+ledger.ledger=Registre des ventes et achats
 
 shared.january=janvier
 shared.february=février

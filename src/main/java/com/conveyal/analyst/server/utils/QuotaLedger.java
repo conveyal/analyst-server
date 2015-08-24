@@ -33,8 +33,9 @@ public class QuotaLedger {
     private Map<String, Fun.Tuple3<String, Long, String>> entriesById;
 
     public QuotaLedger(String dataFile) {
+        String dataPath = DataStore.dataPath != null ? DataStore.dataPath : AnalystMain.config.getProperty("application.data");
         db = DBMaker
-                .newFileDB(new File(AnalystMain.config.getProperty("application.data"), dataFile))
+                .newFileDB(new File(dataPath, dataFile))
                 .make();
 
         // called entriesWithTime because we originally had an entries map which didn't include the times in the index
@@ -333,7 +334,8 @@ public class QuotaLedger {
         }
 
         public void setTime (String time) {
-            ZonedDateTime.parse(time, DateTimeFormatter.ISO_DATE_TIME).toInstant().toEpochMilli();
+            if (time != null && !"0".equals(time))
+                this.time = ZonedDateTime.parse(time, DateTimeFormatter.ISO_DATE_TIME).toInstant().toEpochMilli();
         }
 
         /** The ID of the parent ledger entry (group ID assumed to be same) */

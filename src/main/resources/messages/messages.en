@@ -161,7 +161,6 @@ analysis.exact-time=Exact departure time
 analysis.profile=Range of departure times
 
 analysis.credit-usage=Origin credit usage
-analysis.credit-count={0} credits of {1} credits used.
 analysis.nearing-quota={0} origin credits remain
 analysis.insufficient-quota=You do not have enough origin credits to complete this operation.
 analysis.query-quota-consumption=This query will use {0} of {1} remaining origin credits.
@@ -256,6 +255,7 @@ ledger.query-name=Query name
 ledger.confirm-refund-text=refund?
 ledger.cancel-refund=no
 ledger.confirm-refund=yes
+ledger.ledger=Ledger
 
 shared.january=January
 shared.february=February

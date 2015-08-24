@@ -166,9 +166,6 @@ public class Authentication extends Controller {
             User u = new User(accounts.iterator().next());
             if (u.groupName == null)
                 LOG.warn("No group specified for user {}", u);
-            else if (u.quota == 0) {
-                LOG.warn("No quota specified for group {}, computation will be forbidden", u);
-            }
 
             return u;
         }
