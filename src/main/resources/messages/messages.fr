@@ -5,7 +5,7 @@ app.shared.add=Ajouter
 app.shared.save=Sauvegarder
 app.shared.cancel=Annuler
 app.shared.name=Nom
-app.shared.description=Déscription
+app.shared.description=Description
 app.shared.loading=Chargement...
 app.shared.username=Nom d'utilisateur
 app.shared.password=Mot de passe
@@ -13,7 +13,7 @@ app.shared.login=Connexion
 app.shared.delete=Supprimer
 
 app.projects=Projets
-app.no-project-selected=Aucun projet selectionné
+app.no-project-selected=Aucun projet sélectionné
 app.create-new-project=Créer nouveau projet
 
 app.account.logout=Déconnexion
@@ -26,12 +26,12 @@ app.data.transport-scenarios=Scénarios transports
 app.data.transport-bundles=Données transports
 
 app.analysis=Analyse
-app.project-settings=Configuration projet
+app.project-settings=Configuration du projet
 
-app.project-settings.description=Pour créer un projet; tapez un nom et une déscription, puis déplacer la carte à la zone du monde où l'analyse sera centré et cliquez sur ‘*’. A chaque fois que vous sélectionnez ce projet, la carte sera centrée sur l'endroit choisi.
+app.project-settings.description=Pour créer un projet, tapez un nom et une description, puis déplacer la carte à la zone du monde où l'analyse sera centrée et cliquez sur ‘fixer localisation’. À chaque fois que vous sélectionnez ce projet, la carte sera centrée sur l'endroit choisi.
 
-project-settings.project-location=Project Location
-project-settings.set-project-location=Set Location
+project-settings.project-location=Localisation du projet
+project-settings.set-project-location=Fixer localisation
 
 data-manager.spaitial-data-sets=Jeux de données spatiales
 data-manager.transport-bundles=Données transports
@@ -39,33 +39,33 @@ data-manager.transport-bundles=Données transports
 data-manager.no-data=Aucune donnée
 
 data-manager.no-pointsets=Aucun jeu de données spatiales pour ce projet.
-data-manager.pointset-description=Les jeux de données spatiales permettent l'analyse de l'accessibilité aux "opportunités" distribués spatialement, comme la population ou les emplois. Créez-en un en cliquant "ajouter" ci-dessus pour télécharger un Shapefile vers Ttransport Analyst.
+data-manager.pointset-description=Les jeux de données spatiales permettent l'analyse de l'accessibilité aux "opportunités" distribués dans l’espect, comme la population ou les emplois. Créez-en un en cliquant "ajouter" ci-dessus pour télécharger un Shapefile vers Transport Analyst.
 
-data-manager.shapefile-description=Shapefile data sets are used to measure accessibility to spatially distributed characteristics like population or jobs.
+data-manager.shapefile-description=Les jeux de données spatiales permettent l'analyse de l'accessibilité aux "opportunités" distribués dans l’espect, comme la population ou les emplois. Créez-en un en cliquant "ajouter" ci-dessus pour télécharger un Shapefile vers Transport Analyst.
 data-manager.shapefile-upload-description=Les fichiers Shapefile doivent être zippés et dans une projection courante.
 
-data-manager.no-bundles=Qucun jeu de données transports pour ce projet.
+data-manager.no-bundles=Aucun jeu de données transports pour ce projet.
 data-manager.bundles-description-a=Créez un jeu de données transports en cliquant "ajouter" ci-dessus pour télécharger un GTFS vers Transport Analyst.
-data-manager.bundles-description=Les jeux de données transports sont obligatoires pour effectuer une analyse d'accessibilité. L'ajout de plusieurs permet les comparaisons.
+data-manager.bundles-description=Au moins un jeu de données transports est nécessaire pour effectuer une analyse d'accessibilité. Si vous ajoutez plusieurs, vous pouvez les comparer.
 
 data-manager.no-shapefiles=Aucun shapefile
-data-manager.shapefiles-upload-description=Pour créer un jeu de données spatialisé, d'abord envoyez un fichier shapefile qui contient les géométries et les attributs que vous souhaitez mésurer.
+data-manager.shapefiles-upload-description=Pour créer un jeu de données spatiales, d'abord envoyez un fichier shapefile qui contient les géométries et les attributs que vous souhaitez mesurer.
 
-data-manager.create-new-spatial-data=Créez nouveau jeu de données spatiale
-data-manager.select-shapefile=Choisir shapefile
+data-manager.create-new-spatial-data=Créez nouveau jeu de données spatiales
+data-manager.select-shapefile=Choisir un shapefile
 data-manager.select-shapefile-field=Choisir un champ du shapefile
 
 data-manager.create-new-category-name=Nom du jeu de données
-data-manager.create-new-category-description=Déscription du jeu de données
+data-manager.create-new-category-description=Description du jeu de données
 
-data-manager.create-new-attribute=Create New Attribute
-data-manager.create-new-attribute-name=Attribute Name
-data-manager.create-new-attribute-description=Attribute Description
-data-manager.create-new-attribute-color=Attribute Color
+data-manager.create-new-attribute=Créez nouveau attribut
+data-manager.create-new-attribute-name=Nom de l’attribut
+data-manager.create-new-attribute-description=Description de l’attribut
+data-manager.create-new-attribute-color=Couleur de l’attribut
 
-data-manager.create-bundle=Créer jeu de données
+data-manager.create-bundle=Créer un jeu de données
 data-manager.new-bundle=Nouveau jeu de données
-data-manager.augment-bundle=Complementer jeu de données existant
+data-manager.augment-bundle=Complémenter un jeu de données existant
 
 data-manager.bundle-gtfs-file=Fichier GTFS
 data-manager.bundle-name=Nom du jeu de données transports
@@ -91,17 +91,17 @@ analysis.single-point-description=Cliquez sur la carte pour lancer un calcul d'a
 analysis.analysis-type=Type d'analyse
 
 analysis.single-point=Analyse origine simple
-analysis.multi-point=Analyse régionale & aggregé
+analysis.multi-point=Analyse régionale & agrégé
 
 analysis.query-settings=Configuration de requête
-analysis.query-results=Resultats de la requête
+analysis.query-results=Résultats de la requête
 
 analysis.run-new-query=Lancer une nouvelle requête
 analysis.create-query=Créer une requête
 
 analysis.primary-indicator=Indicateur primaire
 
-analysis.multi-point.description=Cliquez sur "lancez nouvelle requête" pour calculer l'accessibilité pour toutes les points d'origine dans la zone d'étude. L'analyse régionale permet l'aggrégation et weighting.
+analysis.multi-point.description=Cliquez sur "lancez nouvelle requête" pour calculer l'accessibilité pour tous les points d'origine dans la zone d'étude. L'analyse régionale permet l’agrégation et la pondération des indicateurs.
 
 analysis.scenario-comparison=Comparaison de scénarios
 
@@ -116,7 +116,7 @@ analysis.boarding-assumption.best-case=Optimiste (pas d'attente)
 
 analysis.date=Date
 analysis.earliest-departure-time=Départ (début de fenêtre)
-analysis.latest-departure-time=Départ (fin de fenêtre)
+analysis.latest-departure-time=Fin de fenêtre
 
 analysis.scenario=Scenario
 analysis.scenario-1=Scenario 1
@@ -140,7 +140,7 @@ analysis.show-isochrones=Afficher isochrones
 analysis.show-points=Afficher points
 analysis.show-transit=Afficher lignes de transports
 
-analysis.results=Resultats
+analysis.results=Résultats
 
 analysis.number-accessible=Accessible
 analysis.percent-accessible=Accessible (pourcentage)
@@ -154,9 +154,9 @@ analysis.csv=Export CSV
 analysis.shapefile-field=Champ
 
 analysis.exact-time=Heure de départ exact
-analysis.profile=Heure de départ dans une plage
+analysis.profile=Plage horaire
 
-analysis.credit-usage=Utilisation de crédit de calcul
+analysis.credit-usage=Utilisation du crédit de calcul
 analysis.credit-count={0} crédits sur {1} utilisés.
 analysis.nearing-quota={0} crédits de calcul restent.
 analysis.insufficient-quota=Vous n'avez pas suffisamment de crédit de calcul pour effectuer cette opération.
@@ -168,29 +168,28 @@ analysis.attribute-name={0} ({1})
 # {0} is the name of the shapefile and {1} is the name of the attribute
 analysis.point-set-name={1} ({0})
 
-analysis.aggregate=Aggregé
-analysis.aggregate-summary=Résumer les résultats à un niveau spatial supérieur. \
-  eighting by another indicator. For example, you might summarize job access to municipalities and weight by population, to generate an estimate of job access for the average person in each municipality.
+analysis.aggregate=Agrégé
+analysis.aggregate-summary=Résumer les résultats à un niveau spatial supérieur, pondérés par un autre variable. Par exemple vous pouvez résumer l’accès aux emplois au niveau communal, puis pondérer par la population de chaque commune. Ainsi vous obtiendrez l’accessibilité moyenne par personne pour chaque commune.
 analysis.aggregate-to=Aggreger à
 analysis.weight-by-shapefile=Pondéré par shapefile
 analysis.weight-by-attribute=Pondéré par attribut
 # {0} is replaced with the name of an indicator
-analysis.accessibility-to=Accessibilité à {0}
-analysis.aggregated-title=Accessibilité à {0} aggregé à {1} ponderé par {2}
+analysis.accessibility-to=Accessibilité à ‘{0}’
+analysis.aggregated-title=Accessibilité à ‘{0}’ aggregé à ‘{1}’ et ponderé par ‘{2}’
 
 # 0 is lower bound, 1 is upper bound
-analysis.bin-range={0} - {1}
+analysis.bin-range=de {0} à {1}
 # 0 is lower percentage bound, 1 is upper percentage bound, 2 is point set name
-analysis.bin-percent-range=de {0}% à {1}% de l'ensemble des {2}
+analysis.bin-percent-range=de {0}% à {1}% de l'ensemble des ‘{2}’
 
-analysis.graph-mouseover=Minute {0}: Certaine: {1}, moyenne: {2}, pic: {3}
+analysis.graph-mouseover=Minute {0}: certaine {1}, moyenne {2}, maximum {3}
 
 # the same for a single-value class
 # 0 is the value
 analysis.bin-single={0}
 
 # 0 is the percent value, 1 is point set name
-analysis.bin-percent-single={0}% de l'ensemble des {1}
+analysis.bin-percent-single={0}% de l'ensemble des ‘{1}’
 
 # Terms for the different numbers generated by a profile run
 
@@ -199,8 +198,8 @@ analysis.statistic=Statistique
 
 # the -option versions are displayed in the dropsown
 # the -suffix versions are displayed in the legend title
-analysis.worst-case-option=pessimiste
-analysis.best-case-option=optimiste
+analysis.worst-case-option=pire
+analysis.best-case-option=meilleure
 analysis.average-option=moyenne
 analysis.point-estimate-option=accessibilité estimée
 
@@ -210,7 +209,7 @@ analysis.spread-option=dispersion
 analysis.worst-case-suffix=(pire)
 analysis.best-case-suffix=(meilleure)
 analysis.average-suffix=(moyenne)
-analysis.point-estimate-suffix=
+analysis.point-estimate-suffix=(estimé)
 analysis.spread-suffix=(dispersion)
 analysis.compare=Comparer
 analysis.compare-to=Comparer à
@@ -219,50 +218,50 @@ analysis.group=Grouper
 analysis.dont-group=Ne pas grouper
 
 analysis.change-in-time=Changement du temps de trajet {0} minutes
-analysis.queued=queued for calculation
-analysis.assembling-results=assembling results
-analysis.number-complete={0} of {1} complete
+analysis.queued=en attente de traitement
+analysis.assembling-results=assemblage des résultats
+analysis.number-complete={0} de {1} traités
 analysis.minutes={0} minutes
-analysis.calculating=Calculating&nbsp;.&nbsp;.&nbsp;.
-analysis.update-map=Update map
+analysis.calculating=Traitement&nbsp;.&nbsp;.&nbsp;.
+analysis.update-map=Mettre la carte à jour
 analysis.choose-shapefile=Shapefile
-analysis.average-walk-speed=Average walk speed: {0} km/h
-analysis.average-bike-speed=Average bike speed: {0} km/h
+analysis.average-walk-speed=Vitesse de marche à pier: {0} km/h
+analysis.average-bike-speed=Vitesse en vélo: {0} km/h
 analysis.km-per-hour={0} km/h
-analysis.show-settings=Show Settings
+analysis.show-settings=Parametres
 analysis.n-minutes={0} minutes
-analysis.travel-time-range=Travel Time Range: {0}&ndash;{1} minutes
+analysis.travel-time-range=Fourchette de temps de trajet: de {0} à {1} minutes
 
-ledger.starting=Starting balance
-ledger.ending=Ending balance
-ledger.total=Total activity
-ledger.single-point=Single point analysis
-ledger.multi-point=Regional analysis
-ledger.purchases=Purchases
-ledger.refunds=Refunds
+ledger.starting=Solde en début de période
+ledger.ending=Solde en fin de période
+ledger.total=Activité totale
+ledger.single-point=Analyse interactive
+ledger.multi-point=Analyse régionale
+ledger.purchases=Achats
+ledger.refunds=Remboursements
 ledger.date=Date
-ledger.delta=Charge
-ledger.reason=Reason
-ledger.username=Username
+ledger.delta=Montant
+ledger.reason=Commentaires
+ledger.username=Nom d’utilisateur
 ledger.note=Note
-ledger.credit=Credit amount
-ledger.issue-credit=Issue credit
-ledger.return-to-app=Return to Analyst
-ledger.issue-refund=Issue refund
-ledger.query-name=Query name
-ledger.confirm-refund-text=refund?
-ledger.cancel-refund=no
-ledger.confirm-refund=yes
+ledger.credit=Montant du credit
+ledger.issue-credit=Crédit incident
+ledger.return-to-app=Retour à Transport Analyst
+ledger.issue-refund=Remboursement incident
+ledger.query-name=Nom de requête
+ledger.confirm-refund-text=Rembourser?
+ledger.cancel-refund=non
+ledger.confirm-refund=oui
 
-shared.january=January
-shared.february=February
-shared.march=March
-shared.april=April
-shared.may=May
-shared.june=June
-shared.july=July
-shared.august=August
-shared.september=September
-shared.october=October
-shared.november=November
-shared.december=December
+shared.january=janvier
+shared.february=février
+shared.march=mars
+shared.april=avril
+shared.may=mai
+shared.june=juin
+shared.july=juillet
+shared.august=août
+shared.september=septembre
+shared.october=octobre
+shared.november=novembre
+shared.december=décembre
