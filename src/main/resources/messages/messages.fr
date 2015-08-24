@@ -251,7 +251,7 @@ ledger.query-name=Nom de requête
 ledger.confirm-refund-text=Rembourser?
 ledger.cancel-refund=non
 ledger.confirm-refund=oui
-ledger.ledger=Registre des ventes et achats
+ledger.ledger=Registre des ventes et des achats
 
 shared.january=janvier
 shared.february=février
