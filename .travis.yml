@@ -55,6 +55,6 @@ deploy:
     secure: bRDOfGvi6DcQZ6BuAIAK/TgVEl4RHltrw8q+bkcExe9PA+eQh809a3LYokIk4DHKLoiYbIKiCvss7argZZEVLIwb55kL5VoL/LPhf5P8Yns63XByiqr7XJJFehJdPaYiMmdPLUOrtgbv9nzD0J/W/NI/E1qfGvegwdEWtm4hSoQ=
 
 # Save the maven cache to speed up builds (without this they take ~20 minutes while Maven downloads all the dependencies for OTP)
-cache:
-  directories:
-    - "$HOME/.m2/repository"
+#cache:
+#  directories:
+#    - "$HOME/.m2/repository"
