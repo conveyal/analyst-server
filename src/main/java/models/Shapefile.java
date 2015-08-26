@@ -1,7 +1,12 @@
 package models;
 
 import com.conveyal.analyst.server.AnalystMain;
-import com.conveyal.analyst.server.utils.*;
+import com.conveyal.analyst.server.utils.DataStore;
+import com.conveyal.analyst.server.utils.HaltonPoints;
+import com.conveyal.analyst.server.utils.HashUtils;
+import com.conveyal.analyst.server.utils.PointSetDatastore;
+import com.conveyal.data.geobuf.GeobufDecoder;
+import com.conveyal.data.geobuf.GeobufFeature;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.vividsolutions.jts.geom.Envelope;
@@ -170,7 +175,7 @@ public class Shapefile implements Serializable {
 		@JsonIgnore
 		public Integer getAttribute(String attributeId) {
 			if(attributes.containsKey(attributeId))
-				return (Integer)attributes.get(attributeId);
+				return ((Number) attributes.get(attributeId)).intValue();
 			else
 				return 0;
 		}
@@ -450,6 +455,43 @@ public class Shapefile implements Serializable {
 
 		return shapefile;
 	}
+
+	/** Create shapefile from a Geobuf file */
+	public static Shapefile createFromGeobuf (File geobuf, String projectId, String name) throws IOException {
+		Shapefile shapefile = new Shapefile();
+		shapefile.id = UUID.randomUUID().toString().replaceFirst("-", "");
+		shapefile.projectId = projectId;
+		shapefile.name = name;
+
+		DataStore<ShapeFeature> featureStore = shapefile.getShapeFeatureStore();
+		// load the features
+		shapefile.name = name;
+		shapefile.categoryId = Attribute.convertNameToId(name);
+
+		// save file
+		shapefile.file = new File(Shapefile.getShapeDataPath(),  shapefile.id + ".pbf");
+		FileUtils.copyFile(geobuf, shapefile.file);
+
+		FileInputStream fis = new FileInputStream(geobuf);
+		GeobufDecoder decoder = new GeobufDecoder(fis);
+
+		while (decoder.hasNext()) {
+			GeobufFeature feature = decoder.next();
+			ShapeFeature sf = new ShapeFeature();
+			sf.attributes = feature.properties;
+			sf.id = "" + feature.numericId;
+			sf.geom = feature.geometry;
+			featureStore.saveWithoutCommit(sf.id, sf);
+
+			for (Map.Entry<String, Object> prop : feature.properties.entrySet()) {
+				shapefile.updateAttributeStats(prop.getKey(), prop.getValue());
+			}
+		}
+
+ 		featureStore.commit();
+		shapefile.save();
+		return shapefile;
+	}
 	
 	
 	public void updateAttributeStats(String name, Object value) {
@@ -460,6 +502,7 @@ public class Shapefile implements Serializable {
 			attribute = new Attribute();
 			attribute.name = name;
 			attribute.fieldName = name;
+			attribute.numeric = (value instanceof Number);
 			
 			
 			attributes.put(name, attribute);
@@ -467,8 +510,10 @@ public class Shapefile implements Serializable {
 		else
 			attribute = attributes.get(name);
 		
-		if(value != null && value instanceof Number )
-			attribute.numeric = true;
+		if (value instanceof Number && !attribute.numeric
+				|| attribute.numeric && !(value instanceof Number)) {
+			throw new IllegalArgumentException("Attribute " + name + " has mixed numeric and non-numeric values");
+		}
 		
 		attribute.updateStats(value);
 		 

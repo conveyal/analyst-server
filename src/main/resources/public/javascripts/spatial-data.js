@@ -190,7 +190,7 @@ A.spatialData = {};
 			var descriptionField = "description";
 
 			_.each(this.model.getNumericAttributes(), function(shapeAttribute) {
-						_this.$el.find('#attributeName[data-id='+ shapeAttribute.fieldName +']').editable({
+						_this.$el.find('#attributeName[data-id="'+ shapeAttribute.fieldName +'"]').editable({
 							type        : 'text',
 							name        : descriptionField,
 							mode				: "inline",
@@ -207,7 +207,7 @@ A.spatialData = {};
 			});
 
 			_.each(this.model.getNumericAttributes(), function(shapeAttribute) {
-					_this.$el.find('#attributeDescription[data-id='+ shapeAttribute.fieldName +']').editable({
+					_this.$el.find('#attributeDescription[data-id="'+ shapeAttribute.fieldName +'"]').editable({
 						type        : 'text',
 						name        : descriptionField,
 						mode				: "inline",

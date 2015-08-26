@@ -80,7 +80,12 @@ public class ShapefileController extends Controller {
             File tempFile = File.createTempFile("shape", ".zip");
             file.write(tempFile);
 
-            Shapefile s = Shapefile.create(tempFile, projectId, name);
+            Shapefile s;
+            if (file.getName().endsWith(".pbf"))
+                s = Shapefile.createFromGeobuf(tempFile, projectId, name);
+            else
+                s = Shapefile.create(tempFile, projectId, name);
+
             tempFile.delete();
 
             s.description = files.get("description").get(0).getString("UTF-8");

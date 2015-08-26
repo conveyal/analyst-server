@@ -188,6 +188,14 @@
       <groupId>org.opentripplanner</groupId>
       <artifactId>otp</artifactId>
       <version>0.19.0-SNAPSHOT</version>
+
+      <!-- OTP depends on an old protobuf library. exclude it from the build -->
+      <exclusions>
+        <exclusion>
+          <groupId>com.google.protobuf</groupId>
+          <artifactId>protobuf-java</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>
@@ -251,6 +259,11 @@
       <groupId>com.stormpath.sdk</groupId>
       <artifactId>stormpath-sdk-oauth</artifactId>
       <version>1.0.RC4.5</version>
+    </dependency>
+    <dependency>
+      <groupId>com.conveyal</groupId>
+      <artifactId>geobuf-java</artifactId>
+      <version>1.0-SNAPSHOT</version>
     </dependency>
   </dependencies>
 </project>
