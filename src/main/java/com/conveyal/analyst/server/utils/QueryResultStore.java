@@ -47,7 +47,7 @@ public class QueryResultStore {
 	private static File scenarioDir = new File(AnalystMain.config.getProperty("application.data"), "flat_results");
 
 	public QueryResultStore (Query q) {
-		this(q.id, q.completePoints == q.totalPoints, new File(scenarioDir, q.id));
+		this(q.id, q.complete, new File(scenarioDir, q.id));
 	}
 
 	public QueryResultStore(String queryId, boolean readOnly, File outDir) {
