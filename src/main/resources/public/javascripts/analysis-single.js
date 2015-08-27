@@ -391,24 +391,20 @@ var Analyst = Analyst || {};
 					// ok to be destructive - we've already stringified the request
 					params.graphId = this.scenario2.get('bundleId');
 
-					// TODO banned routes only supported in profile mode
-					if (profile) {
-						var mods2 = _.map(this.scenario2.get('bannedRoutes'), function (route) {
-							return {
-								type: 'remove-trip',
-								agencyId: route.agencyId,
-								routeId: [route.id],
-							};
-						});
+					var mods2 = _.map(this.scenario2.get('bannedRoutes'), function (route) {
+						return {
+							type: 'remove-trip',
+							agencyId: route.agencyId,
+							routeId: [route.id],
+						}});
 
-						if (this.scenario2.get('modifications'))
-							mods2 = mods2.concat(this.scenario2.get('modifications'));
+					if (this.scenario2.get('modifications'))
+						mods2 = mods2.concat(this.scenario2.get('modifications'));
 
-						if (window.modifications2)
-							mods2 = mods2.concat(window.modifications2);
+					if (window.modifications2)
+						mods2 = mods2.concat(window.modifications2);
 
-						params.profileRequest.scenario = { modifications : mods2 };
-					}
+					params.profileRequest.scenario = { modifications : mods2 };
 
 					var p2 = $.ajax({
 						url: '/api/single',
