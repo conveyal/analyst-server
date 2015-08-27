@@ -1,4 +1,4 @@
-language: java
+language: java 
 
 # Analyst Server requires Java 8 and Travis doesn't (yet) support OpenJDK 8
 jdk:
