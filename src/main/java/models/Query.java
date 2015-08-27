@@ -105,6 +105,11 @@ public class Query implements Serializable {
 	 * Get the shapefile name. This is used in the UI so that we can display the name of the shapefile.
 	 */
 	public String getShapefileName () {
+		if (shapefileId == null) {
+			LOG.warn("Query {} has null shapefile ID", id);
+			return null;
+		}
+
 		Shapefile l = Shapefile.getShapefile(shapefileId);
 		
 		if (l == null)
