@@ -502,17 +502,22 @@ public class Shapefile implements Serializable {
 			attribute = new Attribute();
 			attribute.name = name;
 			attribute.fieldName = name;
-			attribute.numeric = (value instanceof Number);
+
+			if (value != null)
+				attribute.numeric = (value instanceof Number);
 			
 			
 			attributes.put(name, attribute);
 		}
 		else
 			attribute = attributes.get(name);
-		
-		if (value instanceof Number && !attribute.numeric
-				|| attribute.numeric && !(value instanceof Number)) {
-			throw new IllegalArgumentException("Attribute " + name + " has mixed numeric and non-numeric values");
+
+		if (value != null) {
+			if (attribute.numeric == null)
+				attribute.numeric = (value instanceof Number);
+			else if (value instanceof Number && !attribute.numeric || attribute.numeric && !(value instanceof Number)) {
+				throw new IllegalArgumentException("Attribute " + name + " has mixed numeric and non-numeric values");
+			}
 		}
 		
 		attribute.updateStats(value);
