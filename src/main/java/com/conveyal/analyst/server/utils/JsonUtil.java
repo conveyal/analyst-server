@@ -1,6 +1,7 @@
 package com.conveyal.analyst.server.utils;
 
 import com.conveyal.geojson.GeoJsonModule;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -31,6 +32,7 @@ public class JsonUtil {
         objectMapper.registerModule(JodaLocalDateSerializer.makeModule());
         objectMapper.registerModule(new GeoJsonModule());
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        objectMapper.setSerializationInclusion(JsonInclude.Include.ALWAYS);
     }
 
     public static ObjectMapper getObjectMapper() {
