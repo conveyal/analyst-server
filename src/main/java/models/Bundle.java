@@ -367,7 +367,11 @@ public class Bundle implements Serializable {
 	
 	static public void writeAllToClusterCache () throws IOException {
 		for (Bundle s : bundleData.getAll()) {
-			s.writeToClusterCache();
+			try {
+				s.writeToClusterCache();
+			} catch (Exception e) {
+				LOG.error("Failed to write bundle {} to cluster cache", s, e);
+			}
 		}
 	}
 
