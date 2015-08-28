@@ -4,15 +4,13 @@ import com.conveyal.analyst.server.utils.GeoUtils;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.MultiPolygon;
-import com.vividsolutions.jts.io.ParseException;
-import com.vividsolutions.jts.io.WKTReader;
 import junit.framework.TestCase;
 import org.geotools.geometry.jts.JTS;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.junit.Test;
 import org.opengis.referencing.operation.MathTransform;
+
 
 /**
  * Tests for the geographic math utilities.
@@ -77,56 +75,6 @@ public class GeoUtilsTest extends TestCase {
     	assertTrue(Math.abs(GeoUtils.getArea(southern(sbGeom)) - 100) < 1);
     	
     }
-
-	/** Test cleaning of a figure-8 geometry */
-	@Test
-	public void testFigure8 () throws ParseException {
-		WKTReader reader = new WKTReader(gf);
-		Geometry figure8 = reader.read("POLYGON((-1 0, -1 1, 1 -1, 1 0, -1 0))");
-		Geometry valid = GeoUtils.makeValid(figure8);
-
-		assertFalse(figure8.isValid());
-		assertTrue(valid instanceof MultiPolygon);
-		assertTrue(valid.isValid());
-		assertEquals(1d, valid.getArea(), 1e-6);
-		assertEquals(2, valid.getNumGeometries());
-	}
-
-	/** Test duplicated points */
-	@Test
-	public void testDuplicatedEdges () throws Exception {
-		WKTReader reader = new WKTReader(gf);
-		Geometry dupl = reader.read("POLYGON((0 0, 0 1, 0.5 1, 0.5 0.5, 0.5 1, 1 1, 1 0, 0 0))");
-		Geometry valid = GeoUtils.makeValid(dupl);
-
-		assertFalse(dupl.isValid());
-		assertEquals(1d, valid.getArea(), 1e-6);
-		assertTrue(valid.isValid());
-	}
-
-	/** test polygon with invalid hole */
-	@Test
-	public void testInvalidHole () throws Exception {
-		WKTReader reader = new WKTReader(gf);
-		Geometry dupl = reader.read("POLYGON((0 0, 0 1, 1 1, 1 0, 0 0), (0.25 0.25, 0.75 0.25, 0.75 -1, 0.25 -1, 0.25 0.25))");
-		Geometry valid = GeoUtils.makeValid(dupl);
-
-		assertFalse(dupl.isValid());
-		assertEquals(7/8d, valid.getArea(), 1e-6);
-		assertTrue(valid.isValid());
-	}
-
-	/** test multipolygons with overlapping components */
-	@Test
-	public void testOverlappingMultipoly () throws Exception {
-		WKTReader reader = new WKTReader(gf);
-		Geometry dupl = reader.read("MULTIPOLYGON(((0 0, 0 1, 1 1, 1 0, 0 0)), ((0.25 0.25, 0.75 0.25, 0.75 -1, 0.25 -1, 0.25 0.25)))");
-		Geometry valid = GeoUtils.makeValid(dupl);
-
-		assertFalse(dupl.isValid());
-		assertEquals(1.5d, valid.getArea(), 1e-6);
-		assertTrue(valid.isValid());
-	}
 
     /** mirror a polygonal geometry about the equator */
     private Geometry southern (Geometry northern) {
