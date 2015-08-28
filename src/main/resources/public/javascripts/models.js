@@ -48,10 +48,18 @@ var Analyst = Analyst || {};
      * Get the columns that are numeric and thus can be used for analysis.
      */
     getNumericAttributes: function() {
-      return _.filter(this.get('shapeAttributes'), function(a) {
+      var attrs = _.filter(this.get('shapeAttributes'), function(a) {
         return a.numeric;
       })
-    }
+
+      attrs.sort(function (a1, a2) {
+        if (a1.name < a2.name) return -1;
+        if (a1.name > a2.name) return 1;
+        return 0;
+      });
+
+      return attrs;
+    }    
   });
 
   /** static function to get the human-readable, localized name of an attribute */
