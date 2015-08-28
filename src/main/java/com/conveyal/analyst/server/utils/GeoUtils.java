@@ -168,6 +168,8 @@ public class GeoUtils {
         if (p.isValid())
             return p;
 
+        LOG.info("Cleaning invalid polygon {}", p);
+
         // Make the outer ring valid
         Geometry ret = makeRingValid(p.getExteriorRing());
 
