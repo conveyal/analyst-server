@@ -3,7 +3,6 @@ package models;
 import com.conveyal.analyst.server.AnalystMain;
 import com.conveyal.analyst.server.utils.DataStore;
 import com.conveyal.analyst.server.utils.HaltonPoints;
-import com.conveyal.analyst.server.utils.HashUtils;
 import com.conveyal.analyst.server.utils.PointSetDatastore;
 import com.conveyal.data.geobuf.GeobufDecoder;
 import com.conveyal.data.geobuf.GeobufFeature;
@@ -385,17 +384,7 @@ public class Shapefile implements Serializable {
 	 */
 	public static Shapefile create(File originalShapefileZip, String projectId, String name) throws ZipException, IOException {
 
-		String shapefileHash = HashUtils.hashFile(originalShapefileZip);
-
-		String shapefileId = projectId + "_" + shapefileHash;
-
-		if(shapefilesData.getById(shapefileId) != null) {
-
-			LOG.info("loading shapefile " + shapefileId);
-
-			originalShapefileZip.delete();
-			return shapefilesData.getById(shapefileId);
-		}
+		String shapefileId = UUID.randomUUID().toString();
 
 		LOG.info("creating shapefile " + shapefileId);
 
