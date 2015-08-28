@@ -291,7 +291,7 @@ var Analyst = Analyst || {};
       if (this.weightByShapefile)
         url = url + "&weightByShapefile=" + this.weightByShapefile + '&weightByAttribute=' + this.weightByAttribute;
 
-      url += '&which=' + this.which;
+      url += '&which=' + this.$('.whichMulti input:checked').val();
 
       if (this.compareToId)
         url += '&compareTo=' + this.compareToId;
