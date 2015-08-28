@@ -119,6 +119,8 @@ public class Gis extends Controller {
 			shapeName += "access_" + shp.name.replaceAll("\\W+", "").toLowerCase() +
 					(query2 != null ? "_compare_" + query2.name : "");
 
+			res.header("Content-Disposition", "attachment; filename=" + shapeName + ".zip");
+
 			generateZippedShapefile(shapeName, fields, gisFeatures, false, res);
 			return "";
 		}
@@ -163,6 +165,7 @@ public class Gis extends Controller {
 				shapeName += "_" + shp.name.replaceAll("\\W+", "") + "_norm_" + shpNorm.name.replaceAll("\\W+", "") + "_group_" +
 						aggregateToSf.name.replaceAll("\\W+", "").toLowerCase() + (query2 != null ? "_compare_" + query2.name : "");
 
+				res.header("Content-Disposition", "attachment; filename=" + shapeName + ".zip");
 				generateZippedShapefile(shapeName, fields, gisFeatures, false, res);
 				return "";
 			}
