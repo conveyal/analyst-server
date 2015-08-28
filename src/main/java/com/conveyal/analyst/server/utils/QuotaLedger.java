@@ -240,6 +240,13 @@ public class QuotaLedger {
         // find the initial charge
         QuotaLedger.LedgerEntry original = entries.stream().filter(e -> e.reason == QuotaLedger.LedgerReason.QUERY_CREATED)
                 .findFirst().orElse(null);
+
+        if (original == null) {
+            LOG.warn("Could not find ledger entry to partially refund for query {}", q.id);
+            return null;
+        }
+
+
         // find any previous refund
         QuotaLedger.LedgerEntry refund = entries.stream()
                 .filter(e -> e.reason == QuotaLedger.LedgerReason.QUERY_PARTIAL_REFUND
