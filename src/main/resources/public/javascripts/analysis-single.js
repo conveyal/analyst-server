@@ -215,6 +215,14 @@ var Analyst = Analyst || {};
 		  	if(A.map.isochronesLayer  && A.map.hasLayer(A.map.isochronesLayer))
 		  		A.map.removeLayer(A.map.isochronesLayer);
 
+				if (A.map.utfOverlay && A.map.hasLayer(A.map.utfOverlay))
+					A.map.removeLayer(A.map.utfOverlay);
+
+				if (A.map.valueReadout) {
+					A.map.removeControl(A.map.valueReadout);
+					A.map.valueReadout = false;
+				}
+
 			for(var id in this.transitOverlays){
 				if(this.transitOverlays[id] && A.map.hasLayer(this.transitOverlays[id]))
 					A.map.removeLayer(this.transitOverlays[id]);
@@ -602,8 +610,10 @@ var Analyst = Analyst || {};
 					if(A.map.utfOverlay && A.map.hasLayer(A.map.utfOverlay))
 							A.map.removeLayer(A.map.utfOverlay);
 
-					if (A.map.valueReadout)
+					if (A.map.valueReadout) {
 						A.map.removeControl(A.map.valueReadout);
+						A.map.valueReadout = false;
+					}
 
 					// readout control: see http://leafletjs.com/examples/choropleth.html
 					A.map.valueReadout = L.control({
@@ -644,6 +654,14 @@ var Analyst = Analyst || {};
 
 					if(A.map.tileOverlay && A.map.hasLayer(A.map.tileOverlay))
 			  			A.map.removeLayer(A.map.tileOverlay);
+
+					if (A.map.utfOverlay && A.map.hasLayer(A.map.utfOverlay))
+						A.map.removeLayer(A.map.utfOverlay);
+
+					if (A.map.valueReadout) {
+						A.map.removeControl(A.map.valueReadout);
+						A.map.valueReadout = false;
+					}
 
 					A.map.tileOverlay = L.tileLayer('/tile/single/' + this.scenario1Data.key + '/{z}/{x}/{y}.png?showIso=' + showIso +
 						'&showPoints=' +  showPoints + '&timeLimit=' + timeLimit + '&which=' + which, {})
