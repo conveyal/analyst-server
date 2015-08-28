@@ -1,9 +1,7 @@
 package com.conveyal.analyst.server.utils;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.PrecisionModel;
+import com.vividsolutions.jts.geom.*;
+import com.vividsolutions.jts.operation.union.UnaryUnionOp;
 import org.geotools.geometry.jts.JTS;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
@@ -15,6 +13,9 @@ import org.opengis.referencing.crs.GeographicCRS;
 import org.opengis.referencing.operation.MathTransform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class GeoUtils {
     private static final Logger LOG = LoggerFactory.getLogger(GeoUtils.class);
@@ -127,4 +128,47 @@ public class GeoUtils {
 		   throw new RuntimeException(e);
 	   }
    }
+
+    /**
+     * Make a polygonal geometry valid, iff it is invalid. Returns non-polygonal geometries
+     * and valid geometries untouched.
+     */
+    public static Geometry makeValid (Geometry in) {
+        if (in instanceof Polygon) {
+            if (in.isValid())
+                return in;
+
+            LOG.warn("Cleaning invalid polygon {}", in);
+
+            List<Polygon> polys = JTS.makeValid((Polygon) in, false);
+            return geometryFactory.createMultiPolygon(polys.toArray(new Polygon[polys.size()]));
+        }
+        else if (in instanceof MultiPolygon) {
+            if (in.isValid())
+                return in;
+
+            LOG.warn("Cleaning invalid multipolygon {}", in);
+
+            MultiPolygon mp = (MultiPolygon) in;
+            List<Polygon> cleanedComponents = new ArrayList<>();
+
+            for (int i = 0; i < mp.getNumGeometries(); i++) {
+                Polygon p = (Polygon) mp.getGeometryN(i);
+
+                if (p.isValid())
+                    cleanedComponents.add(p);
+
+                else
+                    cleanedComponents.addAll(JTS.makeValid(p, false));
+            }
+
+            // we can't just build a multipolygon from the components, because the union of
+            // many polygons is not necessarily a valid multipolygon (remember that components of
+            // multipolygons cannot overlap). So we use a unary union.
+            return UnaryUnionOp.union(cleanedComponents);
+        }
+        else {
+            return in;
+        }
+    }
  }
