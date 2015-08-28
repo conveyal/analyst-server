@@ -121,7 +121,7 @@ public class Gis extends Controller {
 
 			res.header("Content-Disposition", "attachment; filename=" + shapeName + ".zip");
 
-			generateZippedShapefile(shapeName, fields, gisFeatures, false, res);
+			generateZippedShapefile(shapeName, fields, gisFeatures, false, false, res);
 			return "";
 		}
 		else {
@@ -166,7 +166,7 @@ public class Gis extends Controller {
 						aggregateToSf.name.replaceAll("\\W+", "").toLowerCase() + (query2 != null ? "_compare_" + query2.name : "");
 
 				res.header("Content-Disposition", "attachment; filename=" + shapeName + ".zip");
-				generateZippedShapefile(shapeName, fields, gisFeatures, false, res);
+				generateZippedShapefile(shapeName, fields, gisFeatures, false, false, res);
 				return "";
 			}
 		}
@@ -224,7 +224,7 @@ public class Gis extends Controller {
 
 		String shapeName = shp.name.toLowerCase().replaceAll("\\W", "") + "_time";
 
-		generateZippedShapefile(shapeName, fields, gisFeatures, false, res);
+		generateZippedShapefile(shapeName, fields, gisFeatures, false, true, res);
 		return "";
     }
     
@@ -295,7 +295,7 @@ public class Gis extends Controller {
 
 		String shapeName = shp.name.toLowerCase().replaceAll("\\W", "") + "_time_diff";
 
-		generateZippedShapefile(shapeName, fields, gisFeatures, true, res);
+		generateZippedShapefile(shapeName, fields, gisFeatures, true, true, res);
 		return "";
 	}
 	
@@ -310,7 +310,7 @@ public class Gis extends Controller {
 		
 	}
 	
-	static void generateZippedShapefile(String fileName, ArrayList<String> fieldNames, List<GisShapeFeature> features, boolean difference, Response res)
+	static void generateZippedShapefile(String fileName, ArrayList<String> fieldNames, List<GisShapeFeature> features, boolean difference, boolean includeTimeFields, Response res)
 			throws Exception {
 			
 		String shapeFileId = HashUtils.hashString("shapefile_" + (new Date()).toString()).substring(0, 6) + "_" + fileName;
@@ -338,9 +338,12 @@ public class Gis extends Controller {
 		if(features.size() > 0 && features.get(0).geom instanceof Point)
 			featureDefinition = "the_geom:Point:srid=4326,id:String,time:Integer";
 		else
-			featureDefinition = "the_geom:MultiPolygon:srid=4326,id:String,time:Integer";
+			featureDefinition = "the_geom:MultiPolygon:srid=4326,id:String";
 
-		if (difference)
+		if (includeTimeFields)
+			featureDefinition += ",time:Integer";
+
+		if (difference && includeTimeFields)
 			featureDefinition += ",time2:Integer,difference:Integer";
 
 		int fieldPosition = 0;
@@ -376,9 +379,10 @@ public class Gis extends Controller {
 				featureBuilder.add((MultiPolygon)feature.geom);
 			featureBuilder.add(feature.id);
 
+			if (includeTimeFields)
 			featureBuilder.add(feature.time);
 
-			if (difference) {
+			if (difference && includeTimeFields) {
 				featureBuilder.add(feature.time2);
 				featureBuilder.add(feature.difference);
 			}
