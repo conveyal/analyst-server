@@ -652,12 +652,6 @@ var Analyst = Analyst || {};
 				}
 			}
 
-			// overlay labels on top of results
-			if (_this.labelOverlay)
-				A.map.removeLayer(_this.labelOverlay);
-
-			_this.labelOverlay = L.tileLayer('//{s}.tiles.mapbox.com/v3/conveyal.hp092m0g/{z}/{x}/{y}.png').addTo(A.map);
-
 			if(showTransit) {
 				if(this.comparisonType == 'compare') {
 
