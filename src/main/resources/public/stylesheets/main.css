@@ -24,9 +24,9 @@ html.analyst, body.analyst, #app, #app-map,#app-body {
 
 .login-body{
      position: fixed;
-     top: 250px;
-     left: 100px;
-     width: 300px;
+     top: 100px;
+     left: 120px;
+     width: 350px;
 }
 
 .list-group {
