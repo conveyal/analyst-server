@@ -2,7 +2,6 @@ package com.conveyal.analyst.server.controllers;
 
 import com.conveyal.analyst.server.utils.JsonUtil;
 import com.conveyal.analyst.server.utils.QuotaLedger;
-import com.stormpath.sdk.group.Group;
 import models.User;
 import spark.Request;
 import spark.Response;
@@ -11,7 +10,6 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.Month;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
 import java.util.List;
 
 import static spark.Spark.halt;
@@ -66,12 +64,7 @@ public class LedgerController extends Controller {
         if (!u.admin)
             halt(UNAUTHORIZED, "Must be an admin to view groups");
 
-        List<String> ret = new ArrayList<>();
-        for (Group g : Authentication.getAllGroups()) {
-            ret.add(g.getName());
-        }
-
-        return ret;
+        return Authentication.getAllGroups();
     }
 
     /** Refund a ledger entry (POST the JSON of the ledger entry that you wish to refund to this method) */

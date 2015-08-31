@@ -28,17 +28,17 @@ public class User implements Serializable {
 
 	public static final QuotaLedger ledger = new QuotaLedger("ledger.db");
 
-	public final String username;
-	public final String email;
+	public String username;
+	public String email;
 
-	public final String name;
-	public final boolean active;
-	public final boolean admin;
+	public String name;
+	public boolean active;
+	public boolean admin;
 
-	public final String groupName;
+	public String groupName;
 
 	/** A custom logo for this group */
-	public final String logo;
+	public String logo;
 
 	private final Account account;
 

@@ -25,6 +25,7 @@ import com.stormpath.sdk.oauth.AccessTokenResult;
 import com.stormpath.sdk.oauth.OauthAuthenticationResult;
 import com.stormpath.sdk.resource.ResourceException;
 import com.stormpath.sdk.tenant.Tenant;
+import models.DummyUser;
 import models.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +34,9 @@ import spark.Response;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -43,20 +46,30 @@ import static spark.Spark.halt;
 public class Authentication extends Controller {
     private static final Logger LOG = LoggerFactory.getLogger(Authentication.class);
 
+    public static final boolean authEnabled = Boolean.parseBoolean(AnalystMain.config.getProperty("auth.enabled", "true"));
+
     private static Application stormpathApp;
     private static Client stormpathClient;
 
     static {
-        File stormpathConfig = new File(AnalystMain.config.getProperty("auth.stormpath-config"));
+        if (authEnabled) {
+            LOG.info("Authentication is enabled, connecting to stormpath");
+            File stormpathConfig = new File(AnalystMain.config.getProperty("auth.stormpath-config"));
 
-        if (!stormpathConfig.exists())
-            LOG.error("Stormpath configuration does not exist");
+            if (!stormpathConfig.exists())
+                LOG.error("Stormpath configuration does not exist");
 
-        ApiKey key = ApiKeys.builder().setFileLocation(stormpathConfig.getAbsolutePath()).build();
-        stormpathClient = Clients.builder().setApiKey(key).build();
-        Tenant tenant = stormpathClient.getCurrentTenant();
-        ApplicationList apps = tenant.getApplications(Applications.where(Applications.name().eqIgnoreCase(AnalystMain.config.getProperty("auth.stormpath-name"))));
-        stormpathApp = apps.iterator().next();
+            ApiKey key = ApiKeys.builder().setFileLocation(stormpathConfig.getAbsolutePath())
+                    .build();
+            stormpathClient = Clients.builder().setApiKey(key).build();
+            Tenant tenant = stormpathClient.getCurrentTenant();
+            ApplicationList apps = tenant.getApplications(Applications.where(Applications.name()
+                    .eqIgnoreCase(AnalystMain.config.getProperty("auth.stormpath-name"))));
+            stormpathApp = apps.iterator().next();
+        }
+        else {
+            LOG.info("Authentication is disabled");
+        }
     }
 
     /** used when the stormpath ID site is turned off */
@@ -148,6 +161,9 @@ public class Authentication extends Controller {
 
     /** get the user object from Stormpath for a particular username */
     public static User getUser(String username) {
+        if (!authEnabled)
+            return new DummyUser();
+
         if (username == null)
             return null;
 
@@ -172,6 +188,9 @@ public class Authentication extends Controller {
     }
 
     public static String logout(Request request, Response response)  {
+        if (!authEnabled)
+            return "";
+
         request.session().removeAttribute("username");
 
         if (Boolean.parseBoolean(AnalystMain.config.getProperty("auth.use-stormpath-id-site"))) {
@@ -191,6 +210,9 @@ public class Authentication extends Controller {
 
     /** A before filter for routes to ensure users are authenticated */
     public static void authenticated (Request request, Response response) {
+        if (!authEnabled)
+            return;
+
         String username = (String) request.session().attribute("username");
         if (currentUser(request) == null) {
             halt(UNAUTHORIZED, "you must log in to access this page");
@@ -199,6 +221,9 @@ public class Authentication extends Controller {
 
     /** same as above but generates a redirect instead of a 401 Unauthorized */
     public static void uiAuthenticated (Request req, Response res) {
+        if (!authEnabled)
+            return;
+
         String username = (String) req.session().attribute("username");
         if (currentUser(req) == null) {
             res.redirect("/login", MOVED_TEMPORARILY);
@@ -207,6 +232,9 @@ public class Authentication extends Controller {
 
     /** Ensure users are authenticated, enabling CORS on OAuth requests is enabled */
     public static void authenticatedOrCors (Request req, Response res) {
+        if (!authEnabled)
+            return;
+
         // first check for an authorization header/query param
         Object request = null;
         if (req.queryParams("accessToken") != null) {
@@ -298,7 +326,14 @@ public class Authentication extends Controller {
     }
 
     /** Get all the groups for this application */
-    static GroupList getAllGroups () {
-        return stormpathApp.getGroups();
+    static List<String> getAllGroups () {
+        ArrayList<String> ret = new ArrayList<>();
+
+        if (authEnabled)
+            stormpathApp.getGroups().forEach(g -> ret.add(g.getName()));
+        else
+            ret.add("dev");
+
+        return ret;
     }
 }

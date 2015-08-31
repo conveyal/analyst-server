@@ -10,6 +10,8 @@ First, clone the repository locally. Analyst Server is built using [Maven](https
 
 Copy the configuration file `application.conf.template` to `application.conf` and edit it to reflect your configuration. Comments in the configuration file explain the purpose of each line. Transport Analyst uses [Stormpath](https://www.stormpath.com) to manage authentication, so you'll need to create an account there and supply your Stormpath API key file and application ID in `application.conf`.
 
+If you'd rather not use Stormpath, you can disable authentication entirely by adding the line `auth.enabled=false` in your `application.conf`.
+
 ## AWS credentials
 
 Transport Analyst stores GTFS/OSM data and analysis results on Amazon S3 to allow persistence and easy transfer between worker and UI components. There are several ways to make your AWS IAM credentials known to Transport Analyst server, broker, and workers. Two common ways are the environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY or a Java properties file containing credentials at `~/.aws/credentials`. Both methods are described on the page  http://docs.aws.amazon.com/AWSSdkDocsJava/latest/DeveloperGuide/credentials.html.

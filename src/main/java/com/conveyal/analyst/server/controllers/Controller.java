@@ -1,6 +1,7 @@
 package com.conveyal.analyst.server.controllers;
 
 import com.google.common.io.Files;
+import models.DummyUser;
 import models.User;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import spark.Request;
@@ -55,6 +56,9 @@ public class Controller {
 
     /** Get the current user */
     protected static User currentUser(Request request) {
+        if (!Authentication.authEnabled)
+            return new DummyUser();
+
         // prefer username local to request from OAuth if present
         String username = (String) request.attribute("username");
         if (username == null)
