@@ -8,7 +8,6 @@ import com.conveyal.gtfs.GTFSFeed;
 import com.conveyal.gtfs.model.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.google.common.collect.Collections2;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LineString;
@@ -61,6 +60,8 @@ public class Bundle implements Serializable {
 	// a db to hold the shapes. uses tuple indexing, so we can't use datastore
 	static DB segmentsDb = DBMaker.newFileDB(new File(AnalystMain.config.getProperty("application.data"), "bundle_shapes.db"))
 				.cacheSize(2000)
+				.asyncWriteEnable()
+				.asyncWriteFlushDelay(1000)
 				.make();
 	
 	// the long is just to differentiate entries . . . this should really be a multimap
@@ -311,11 +312,12 @@ public class Bundle implements Serializable {
 				}
 				
 				// build the spatial index for the map view
-				Collection<Trip> exemplarTrips =
-						Collections2.transform(feed.findPatterns().values(), tripIds -> feed.trips.get(tripIds.get(0)));
+				Collection<Trip> exemplarTrips = feed.findPatterns().values().stream()
+						.map(tripIds -> feed.trips.get(tripIds.get(0)))
+						.collect(Collectors.toList());
 				
 				GeometryFactory gf = new GeometryFactory();
-				
+
 				for (Trip trip : exemplarTrips) {
 					// if it has a shape, use that
 					Coordinate[] coords;
@@ -335,7 +337,7 @@ public class Bundle implements Serializable {
 							coords[i++] = new Coordinate(stop.stop_lon, stop.stop_lat);
 						}
 					}
-					
+
 					if (coords.length < 2)
 						continue;
 					
