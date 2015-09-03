@@ -17,9 +17,9 @@
       </div>
       <div id="querySettings" class="panel-body" style="padding: 5px;">
 
-        <div style="margin-top: 10px;" class="btn-group isochrone" data-toggle="buttons">
+        <div style="margin-top: 10px;" class="btn-group isochrone hidden" data-toggle="buttons">
           <label class="btn btn-default active">
-            <input type="radio" name="isochrone" value="false" checked>{{I18n "analysis.accessibility"}}</input>
+            <input type="hidden" name="isochrone" value="false" checked />
           </label>
           <label class="btn btn-default">
             <input type="radio" name="isochrone" value="true">{{I18n "analysis.isochrone"}}</input>
@@ -34,7 +34,7 @@
            <select id="shapefileColumn" class="primary-indicator form-control"></select>
          </div>
 
-         <div style="margin-top: 10px;" class="btn-group mode-selector" data-toggle="buttons">
+         <div style="margin-top: 10px;" class="btn-group mode-selector hidden" data-toggle="buttons">
            <label class="btn btn-default">
              <input type="radio" name="mode" id="modeCar" value="CAR"><span class="icon icon-car"></span>
            </label>
