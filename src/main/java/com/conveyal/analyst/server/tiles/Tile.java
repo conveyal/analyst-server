@@ -120,7 +120,7 @@ public class Tile {
 			else
 				coords = gTr.getCoordinates();
 			
-			gr.setColor(Color.RED);
+			gr.setColor(c);
 			
 			if(coords.length > 1) {
 				// even-odd winding rule, then we don't have to worry about directionality of holes
