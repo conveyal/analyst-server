@@ -1,9 +1,7 @@
 package com.conveyal.analyst.server.tiles;
 
 import com.conveyal.analyst.server.utils.HaltonPoints;
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Envelope;
-import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.*;
 import org.apache.commons.imaging.ImageFormats;
 import org.apache.commons.imaging.ImageWriteException;
 import org.apache.commons.imaging.Imaging;
@@ -122,47 +120,48 @@ public class Tile {
 			else
 				coords = gTr.getCoordinates();
 			
-			gr.setColor(c);
+			gr.setColor(Color.RED);
 			
 			if(coords.length > 1) {
-				
-				Polygon p = new Polygon();
-		    	for(Coordinate coord : coords)
-		    		p.addPoint((int)coord.x, (int)coord.y);
-		    	
-		    	gr.fillPolygon(p);     
+				// even-odd winding rule, then we don't have to worry about directionality of holes
+				// fine to use coords.length as initial value, most polygons don't have holes
+				Path2D p = new Path2D.Double(Path2D.WIND_EVEN_ODD, coords.length);
+				p.moveTo(coords[0].x, coords[0].y);
+
+				for (int i = 1; i < coords.length; i++)	{
+					p.lineTo(coords[i].x, coords[i].y);
+				}
+
+				// punch holes
+				if(gTr instanceof com.vividsolutions.jts.geom.Polygon) {
+					com.vividsolutions.jts.geom.Polygon pTr = (com.vividsolutions.jts.geom.Polygon) gTr;
+
+					// punch holes
+					for (int nIr = 0; nIr < pTr.getNumInteriorRing(); nIr++) {
+						LineString ring = pTr.getInteriorRingN(nIr);
+
+						int ncoord = ring.getNumPoints();
+						if (ncoord <= 1)
+							continue;
+
+						Coordinate start = ring.getCoordinateN(0);
+						// start new ring
+						p.moveTo(start.x, start.y);
+
+						for (int i = 1; i < ncoord; i++) {
+							Coordinate next = ring.getCoordinateN(i);
+							p.lineTo(next.x, next.y);
+						}
+					}
+				}
+
+		    	gr.fill(p);
 		    	
 		    	if(stroke != null) {
 		    		gr.setColor(stroke);
 		    		gr.setStroke(new BasicStroke(2));
-		    		gr.drawPolygon(p);
+		    		gr.draw(p);
 		    	}
-		    	
-		    	if(gTr instanceof com.vividsolutions.jts.geom.Polygon) {
-					com.vividsolutions.jts.geom.Polygon pTr = (com.vividsolutions.jts.geom.Polygon)gTr;
-					
-					Color hColor = new Color(1.0f,1.0f,1.0f,0.0f);
-					
-					for(int nIr = 0; nIr < pTr.getNumInteriorRing(); nIr++) {
-						coords = pTr.getInteriorRingN(nIr).getCoordinates();
-						
-						
-						p = new Polygon();
-				    	for(Coordinate coord : coords)
-				    		p.addPoint((int)coord.x, (int)coord.y);
-				    	gr.setComposite(AlphaComposite.Clear);
-				    	gr.setColor(hColor);
-				    	gr.fillPolygon(p);     
-				    	
-				    	gr.setComposite(AlphaComposite.SrcOver);
-				    	
-				    	if(stroke != null) {
-				    		gr.setColor(stroke);
-				    		gr.setStroke(new BasicStroke(2));
-				    		gr.drawPolygon(p);
-				    	}
-					}
-				}
 			}
 			else {
 				gr.fillOval((int)coords[0].x, (int)coords[0].y, 5, 5);
