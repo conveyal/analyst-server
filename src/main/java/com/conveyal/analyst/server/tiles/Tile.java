@@ -133,6 +133,9 @@ public class Tile {
 				}
 
 				// punch holes
+				// we do this by creating additional rings in the path2d. It is important that we do this rather than
+				// filling the exterior ring and then unfilling the holes, which is how we used to do it - if there are
+				// polygons in the holes they will be erased when we unfill the holes.
 				if(gTr instanceof com.vividsolutions.jts.geom.Polygon) {
 					com.vividsolutions.jts.geom.Polygon pTr = (com.vividsolutions.jts.geom.Polygon) gTr;
 
