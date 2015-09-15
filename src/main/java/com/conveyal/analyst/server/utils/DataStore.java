@@ -113,15 +113,15 @@ public class DataStore<T> {
 		Iterator<Fun.Tuple2<String,T>> iter = Pump.sort(inputData.iterator(),
                 true, 100000,
                 Collections.reverseOrder(comparator), //reverse  order comparator
-                db.getDefaultSerializer()
+                db.getDefaultSerializer() // no need for this to be the same serializer we use for the map, it's just used in temp files.
                 );
 		
-		
-		BTreeKeySerializer<String> keySerializer = BTreeKeySerializer.STRING;
+
+		// temporarily disabling string serializer as it throws NPE on some datasets, see mapdb issue 582.
+		BTreeKeySerializer<String> keySerializer = BTreeKeySerializer.BASIC;//STRING;
 		
 		map = db.createTreeMap(dataFile)
         	.pumpSource(iter)
-        	.pumpPresort(100000) 
         	.keySerializer(keySerializer)
 			.valueSerializer(Serializer.JAVA)
         	.make();
