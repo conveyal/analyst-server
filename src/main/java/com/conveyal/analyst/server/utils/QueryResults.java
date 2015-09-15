@@ -194,7 +194,7 @@ public class QueryResults {
 				
 				for (QueryResultItem match : potentialMatches) {
 					// clean the geometry
-					Geometry matchGeom = GeoUtils.makeValid(match.feature.geom);
+					Geometry matchGeom = match.feature.geom;
 
 					// calculate the weight of this geography in the aggregate geography
 					double weight;
@@ -211,7 +211,7 @@ public class QueryResults {
 						
 						for (ShapeFeature weightFeature : potentialWeights) {
 							// calculate the weight of the entire item geometry that we are weighting by
-							Geometry weightGeom = GeoUtils.makeValid(weightFeature.geom);
+							Geometry weightGeom = weightFeature.geom;
 
 							double totalWeight = weightFeature.getAttribute(weightByAttribute);
 
@@ -241,7 +241,7 @@ public class QueryResults {
 					if (matchArea < 0.0000000001)
 						continue;
 
-					Geometry overlap = matchGeom.intersection(GeoUtils.makeValid(aggregateFeature.geom));
+					Geometry overlap = matchGeom.intersection(aggregateFeature.geom);
 					
 					if (overlap.isEmpty())
 						continue;

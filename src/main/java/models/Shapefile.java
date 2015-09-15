@@ -2,6 +2,7 @@ package models;
 
 import com.conveyal.analyst.server.AnalystMain;
 import com.conveyal.analyst.server.utils.DataStore;
+import com.conveyal.analyst.server.utils.GeoUtils;
 import com.conveyal.analyst.server.utils.HaltonPoints;
 import com.conveyal.analyst.server.utils.PointSetDatastore;
 import com.conveyal.data.geobuf.GeobufDecoder;
@@ -469,7 +470,9 @@ public class Shapefile implements Serializable {
 			ShapeFeature sf = new ShapeFeature();
 			sf.attributes = feature.properties;
 			sf.id = "" + feature.numericId;
-			sf.geom = feature.geometry;
+			// GeoBuf files generally come from the Census, so one would hope they are already valid. But it won't hurt to
+			// double-check.
+			sf.geom = GeoUtils.makeValid(feature.geometry);
 			featureStore.saveWithoutCommit(sf.id, sf);
 
 			for (Map.Entry<String, Object> prop : feature.properties.entrySet()) {
@@ -550,6 +553,10 @@ public class Shapefile implements Serializable {
 					feature.id = (String)sFeature.getID();
 			    	feature.geom = JTS
 							.transform((Geometry) sFeature.getDefaultGeometry(), transform);
+
+					// make sure the geometry is valid
+					// This correctly handles figure-8 polygons, overlapping holes, etc.
+					feature.geom = GeoUtils.makeValid(feature.geom);
 
 			    	envelope.expandToInclude(feature.geom.getEnvelopeInternal());
 			    	
