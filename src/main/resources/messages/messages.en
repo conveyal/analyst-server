@@ -224,6 +224,7 @@ analysis.change-in-time=Change in travel time {0} minutes
 analysis.queued=queued for calculation
 analysis.assembling-results=assembling results
 analysis.number-complete={0} of {1} complete
+analysis.number-complete-time-remaining={0} of {1} complete ({2}h {3}m remain)
 analysis.n-minutes={0} minutes
 analysis.calculating=Calculating . . .
 analysis.update-map=Update map

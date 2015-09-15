@@ -256,6 +256,15 @@ var Analyst = Analyst || {};
 
       data['pointSetName'] = this.model.pointSetName();
 
+      if (data.secondsRemaining != null) {
+        var totalMinutes = Math.round(data.secondsRemaining / 60);
+        data.minutes = totalMinutes % 60;
+        data.hours = (totalMinutes - data.minutes) / 60;
+
+        if (data.minutes < 10)
+          data.minutes = '0' + data.minutes;
+      }
+
       return data;
 
     },

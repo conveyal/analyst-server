@@ -17,7 +17,11 @@
 				{{#if assemblingResults}}
 					{{ I18n "analysis.assembling-results" }}
 				{{else}}
-				 {{ I18n "analysis.number-complete" completePoints totalPoints }}
+				  {{#if secondsRemaining}}
+			 	    {{ I18n "analysis.number-complete-time-remaining" completePoints totalPoints hours minutes }}
+					{{else}}
+					  {{ I18n "analysis.number-complete" completePoints totalPoints }}
+					{{/if}}
 				{{/if}}
 			<small>
 		{{/unless}}

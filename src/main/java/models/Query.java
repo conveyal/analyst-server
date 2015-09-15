@@ -39,6 +39,12 @@ public class Query implements Serializable {
 	
 	private static final long serialVersionUID = 1L;
 
+	/**
+	 * How sensitive the time remaining display is to changes in processing speed. Between 0 and 1; larger is more sensitive.
+	 * https://xkcd.com/612/
+	 */
+	public static final double TIME_REMAINING_SENSITIVITY = 0.1;
+
 	static DataStore<Query> queryData = new DataStore<Query>("queries", true);
 
 	public String id;
@@ -53,6 +59,9 @@ public class Query implements Serializable {
 	public String mode;
 	
 	public String shapefileId;
+
+	public transient double resultsPerSecond;
+	public transient long lastResultUpdateTime;
 
 	/** The scenario. Can be left null if both graphId and either profileRequest or routingRequest are set */
 	public String scenarioId;
@@ -99,6 +108,16 @@ public class Query implements Serializable {
 
 	public static Collection<Query> getAll() {
 		return queryData.getAll();
+	}
+
+	/** Estimate how much longer this query will take to compute */
+	public Integer getSecondsRemaining() {
+		int remainingPoints = this.totalPoints - this.completePoints;
+
+		if (complete || remainingPoints == 0 || completePoints == 0 || this.resultsPerSecond < 1e-3)
+			return null;
+
+		return (int) (remainingPoints / resultsPerSecond);
 	}
 
 	/**
@@ -234,6 +253,23 @@ public class Query implements Serializable {
 		if (this.complete)
 			// query should not have a callback clearly
 			return false;
+
+		// keep track of how fast the jobs are coming in
+		long now = System.currentTimeMillis();
+
+		if (lastResultUpdateTime == 0)
+			lastResultUpdateTime = now;
+		else {
+			double currentResultsPerSecond = (jobStatus.complete - this.completePoints) / ((now - lastResultUpdateTime) / 1000d);
+			if (this.completePoints != 0)
+				// don't completely throw away what we already know, but weight current results more heavily
+				// this result is weighted at sensitivity, the previous at (sensitivity)(1 - sensitivity) (because it has already been weighted once)
+				// and so on.
+				resultsPerSecond = TIME_REMAINING_SENSITIVITY * currentResultsPerSecond + (1 - TIME_REMAINING_SENSITIVITY) * resultsPerSecond;
+			else
+				resultsPerSecond = currentResultsPerSecond;
+			lastResultUpdateTime = now;
+		}
 
 		this.completePoints = jobStatus.complete;
 		this.save();
