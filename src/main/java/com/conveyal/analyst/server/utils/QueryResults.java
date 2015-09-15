@@ -366,7 +366,7 @@ public class QueryResults {
 		return spIdx;
 	}
 
-	public class QueryResultItem {
+	public static class QueryResultItem {
 		public ShapeFeature feature;
 		public Double value = 0.0;
 		public Double normalizedTotal = 0.0;

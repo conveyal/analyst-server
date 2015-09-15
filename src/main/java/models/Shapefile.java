@@ -9,6 +9,7 @@ import com.conveyal.data.geobuf.GeobufDecoder;
 import com.conveyal.data.geobuf.GeobufFeature;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.common.annotations.VisibleForTesting;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.MultiPolygon;
@@ -194,7 +195,7 @@ public class Shapefile implements Serializable {
 
 		}
 
-		Map<String,Object> attributes = new HashMap<String,Object>();
+		public Map<String,Object> attributes = new HashMap<String,Object>();
 
 		@Override
 		public int compareTo(ShapeFeature o) {
