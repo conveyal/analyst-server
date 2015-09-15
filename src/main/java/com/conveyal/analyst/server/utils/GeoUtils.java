@@ -1,9 +1,11 @@
 package com.conveyal.analyst.server.utils;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.PrecisionModel;
+import com.vividsolutions.jts.geom.*;
+import com.vividsolutions.jts.noding.IteratedNoder;
+import com.vividsolutions.jts.noding.NodedSegmentString;
+import com.vividsolutions.jts.noding.SegmentString;
+import com.vividsolutions.jts.operation.polygonize.Polygonizer;
+import com.vividsolutions.jts.operation.union.UnaryUnionOp;
 import org.geotools.geometry.jts.JTS;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
@@ -15,6 +17,12 @@ import org.opengis.referencing.crs.GeographicCRS;
 import org.opengis.referencing.operation.MathTransform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class GeoUtils {
     private static final Logger LOG = LoggerFactory.getLogger(GeoUtils.class);
@@ -127,4 +135,91 @@ public class GeoUtils {
 		   throw new RuntimeException(e);
 	   }
    }
+
+    /**
+     * Make a polygonal geometry valid, iff it is invalid. Returns non-polygonal geometries
+     * and valid geometries untouched.
+     */
+    public static Geometry makeValid (Geometry in) {
+        if (in instanceof Polygon) {
+            return makePolygonValid((Polygon) in);
+        }
+        else if (in instanceof MultiPolygon) {
+            if (in.isValid())
+                return in;
+
+            LOG.warn("Cleaning invalid multipolygon {}", in);
+
+            List<Geometry> components = IntStream.range(0, in.getNumGeometries())
+                    .mapToObj(i -> (Polygon) in.getGeometryN(i))
+                    .map(GeoUtils::makePolygonValid)
+                    .collect(Collectors.toList());
+
+            // the components may overlap, etc. handle this.
+            return UnaryUnionOp.union(components);
+        }
+        else {
+            return in;
+        }
+    }
+
+    /** Make a polygon valid */
+    public static Geometry makePolygonValid (Polygon p) {
+        if (p.isValid())
+            return p;
+
+        LOG.info("Cleaning invalid polygon {}", p);
+
+        // Make the outer ring valid
+        Geometry ret = makeRingValid(p.getExteriorRing());
+
+        // punch holes. note that this correctly handles the case when a hole overlaps the boundary
+        for (int hole = 0; hole < p.getNumInteriorRing(); hole++) {
+            LineString ring = p.getInteriorRingN(hole);
+            ret = ret.difference(makeRingValid(ring));
+        }
+
+        return ret;
+    }
+
+    public static Geometry makeRingValid (LineString string) {
+        if (string.getNumPoints() < 2)
+            // FIXME
+            return string;
+
+        // close the ring if it isn't closed
+        Coordinate[] coords;
+        if (!string.isClosed()) {
+            coords = new Coordinate[string.getNumPoints() + 1];
+
+            for (int i = 0; i < string.getNumPoints(); i++) {
+                coords[i] = string.getCoordinateN(i);
+            }
+
+            // close it
+            coords[coords.length - 1] = coords[0];
+        }
+        else
+            coords = string.getCoordinates();
+
+        SegmentString ss = new NodedSegmentString(coords, null);
+
+        IteratedNoder noder = new IteratedNoder(geometryFactory.getPrecisionModel());
+
+        noder.computeNodes(Arrays.asList(ss));
+
+        Polygonizer p = new Polygonizer();
+
+        for (Object noded : noder.getNodedSubstrings()) {
+            p.add(geometryFactory.createLineString(((SegmentString) noded).getCoordinates()));
+        }
+
+        Collection<Polygon> polys = p.getPolygons();
+        Geometry clean = geometryFactory.createMultiPolygon(polys.toArray(new Polygon[polys.size()]));
+
+        // for good measure, handle duplicated edges etc.
+        // this should be safe, we have now removed the figure-8 case polygon, which can be problematic
+        // because buffer will throw away the negative space.
+        return clean.buffer(0);
+    }
  }

@@ -193,11 +193,13 @@ public class QueryResults {
 				double sumOfWeights = 0.0;
 				
 				for (QueryResultItem match : potentialMatches) {
+					// clean the geometry
+					Geometry matchGeom = GeoUtils.makeValid(match.feature.geom);
+
 					// calculate the weight of this geography in the aggregate geography
 					double weight;
 					
 					if (sameShapefile) {
-						// FIXME hard-wiring first attribute sum while rebuilding UI -- this won't work 
 						weight = weightStore.getById(match.feature.id).getAttribute(weightByAttribute);
 					}
 					else {
@@ -205,22 +207,22 @@ public class QueryResults {
 						
 						// query the spatial index
 						List<ShapeFeature> potentialWeights =
-								weightIdx.query(match.feature.geom.getEnvelopeInternal());
+								weightIdx.query(matchGeom.getEnvelopeInternal());
 						
 						for (ShapeFeature weightFeature : potentialWeights) {
 							// calculate the weight of the entire item geometry that we are weighting by
-							
-							// FIXME hard-wiring first attribute sum while rebuilding UI -- this won't work 
-							double totalWeight = weightFeature.getAttribute(weightByAttribute); 
-						
+							Geometry weightGeom = GeoUtils.makeValid(weightFeature.geom);
+
+							double totalWeight = weightFeature.getAttribute(weightByAttribute);
+
 							// figure out how much of this weight should be assigned to the original geometry
-							double weightArea = GeoUtils.getArea(weightFeature.geom);
+							double weightArea = GeoUtils.getArea(weightGeom);
 							
 							// don't divide by zeroish
 							if (weightArea < 0.0000000001)
 								continue;
-							
-							Geometry overlap = weightFeature.geom.intersection(match.feature.geom);
+
+							Geometry overlap = weightGeom.intersection(matchGeom);
 							if (overlap.isEmpty())
 								continue;
 							
@@ -234,12 +236,12 @@ public class QueryResults {
 					// this aggregate geography may not completely contain the original geography.
 					// discount weight to account for that.
 					
-					double matchArea = GeoUtils.getArea(match.feature.geom);
+					double matchArea = GeoUtils.getArea(matchGeom);
 					
 					if (matchArea < 0.0000000001)
 						continue;
-					
-					Geometry overlap = match.feature.geom.intersection(aggregateFeature.geom);
+
+					Geometry overlap = matchGeom.intersection(GeoUtils.makeValid(aggregateFeature.geom));
 					
 					if (overlap.isEmpty())
 						continue;
