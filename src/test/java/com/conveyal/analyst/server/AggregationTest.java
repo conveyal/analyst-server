@@ -105,7 +105,7 @@ public class AggregationTest extends TestCase {
         Shapefile shp = getGrid(0, 45, 2e-6, 1e-6, 100, 100, i -> {
            Map<String, Object> map = new HashMap<>();
            map.put("value", i % 100);
-           map.put("weight", 1);
+           map.put("weight", 1e6 -i);
            return map;
         });
 
