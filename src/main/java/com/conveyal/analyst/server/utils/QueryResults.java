@@ -10,6 +10,8 @@ import models.Shapefile.ShapeFeature;
 import org.mapdb.Fun.Tuple3;
 import org.opentripplanner.analyst.ResultSet;
 import org.opentripplanner.analyst.cluster.ResultEnvelope;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.util.Iterator;
@@ -19,6 +21,7 @@ import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class QueryResults {
+	private static final Logger LOG = LoggerFactory.getLogger(QueryResults.class);
 
 	public static Map<String, QueryResults> queryResultsCache = new WeakHashMap<>();
 	
@@ -77,16 +80,17 @@ public class QueryResults {
 	}
 	
 	public QueryResults(Query q, Integer timeLimit, ResultEnvelope.Which which, String attributeId) {
-		Shapefile sd = Shapefile.getShapefile(q.shapefileId);
+		Shapefile origin = Shapefile.getShapefile(q.originShapefileId);
+		Shapefile dest = Shapefile.getShapefile(q.destinationShapefileId);
 		
 		this.which = which;
 
        double value;
 
-       for (Iterator<ResultSet> it = q.getResults().getAll(sd.categoryId + "." + attributeId, which); it.hasNext();) {
+       for (Iterator<ResultSet> it = q.getResults().getAll(dest.categoryId + "." + attributeId, which); it.hasNext();) {
     	   ResultSet feature = it.next();
 
-           value = (double) feature.sum(timeLimit, sd.categoryId + "." + attributeId);
+           value = (double) feature.sum(timeLimit, dest.categoryId + "." + attributeId);
         	
         	if(maxValue == null || value > maxValue)
         		maxValue = value;
@@ -97,16 +101,16 @@ public class QueryResults {
         	
         	item.value = value;
         	        	
-        	item.feature = sd.getShapeFeatureStore().getById(feature.id);
+        	item.feature = origin.getShapeFeatureStore().getById(feature.id);
         	
         	items.put(feature.id, item);
        }
        
-       shapeFileId = sd.id;
+       shapeFileId = origin.id;
        
        this.attributeId = attributeId;
        
-       this.maxPossible = sd.attributes.get(attributeId).sum;
+       this.maxPossible = dest.attributes.get(attributeId).sum;
        
        // assign a unique ID
        synchronized (nextId) {
@@ -336,7 +340,7 @@ public class QueryResults {
 				ret.classifier = new NaturalBreaksClassifier(ret, nClasses, new Color(1.0f, 1.0f, 1.0f, 0.5f), new Color(0.0f, 0.0f, 1.0f, 0.5f));
 			
 			subtracted.put(otherQr.id, ret);
-			
+
 			return ret;
 		}
 	}
