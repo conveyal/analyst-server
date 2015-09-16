@@ -63,6 +63,20 @@ public class AnalystMain {
 
 		// accumulate results from running queries
 		for (Query q : Query.getAll()) {
+			// migration: queries used to have the same origin and destination shapefile, by definition.
+			// if a query doesn't have an explicit origin shapefile, set the origin shapefile to the same as the
+			// destination shapefile.
+
+			boolean modified = (q.originShapefileId == null || q.destinationShapefileId == null) && q.shapefileId != null;
+			if (q.originShapefileId == null && q.shapefileId != null)
+				q.originShapefileId = q.shapefileId;
+
+			if (q.destinationShapefileId == null && q.shapefileId != null)
+				q.destinationShapefileId = q.shapefileId;
+
+			if (modified)
+				q.save();
+
 			if (!q.complete) {
 				QueueManager.getManager().addCallback(q.id, q::updateStatus);
 			}

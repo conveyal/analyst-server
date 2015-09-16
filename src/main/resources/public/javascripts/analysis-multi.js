@@ -10,7 +10,7 @@ var Analyst = Analyst || {};
       'click #createQuery': 'createQuery',
       'click #cancelQuery': 'cancelQuery',
       'click #newQuery': 'newQuery',
-      'change #shapefile': 'updateQuota'
+      'change #origin-shapefile': 'updateQuota'
     },
 
     regions: {
@@ -99,7 +99,12 @@ var Analyst = Analyst || {};
             $('<option>')
               .attr('value', shp.id)
               .text(shp.get('name'))
-              .appendTo(this.$('#shapefile'));
+              .appendTo(this.$('#origin-shapefile'));
+
+              $('<option>')
+                .attr('value', shp.id)
+                .text(shp.get('name'))
+                .appendTo(this.$('#destination-shapefile'));
 
           _this.updateQuota();
         });
@@ -140,7 +145,7 @@ var Analyst = Analyst || {};
     /** Update the quota display */
     updateQuota: function () {
       this.queryCreateQuotaUsage.set({
-        querySize: this.shapefiles.get(this.$('#shapefile').val()).get('featureCount'),
+        querySize: this.shapefiles.get(this.$('#origin-shapefile').val()).get('featureCount'),
         quota: A.app.user.get('quota')
       });
     },
@@ -154,7 +159,8 @@ var Analyst = Analyst || {};
       var data = {
         name: this.$("#name").val(),
         mode: this.mode,
-        shapefileId: this.$('#shapefile').val(),
+        originShapefileId: this.$('#origin-shapefile').val(),
+        destinationShapefileId: this.$('#destination-shapefile').val(),
         scenarioId: this.$('#scenario1').val(),
         projectId: A.app.selectedProject,
         boardingAssumption: 'RANDOM',
@@ -548,8 +554,8 @@ var Analyst = Analyst || {};
                 .appendTo(_this.$('#groupBy'));
             });
 
-            // append attribute names for the shapefile for this query
-            _this.shapefiles.get(_this.model.get('shapefileId')).getNumericAttributes().forEach(function (attr) {
+            // append attribute names for the destination shapefile for this query
+            _this.shapefiles.get(_this.model.get('destinationShapefileId')).getNumericAttributes().forEach(function (attr) {
               var atName = A.models.Shapefile.attributeName(attr);
 
               if(!attr.hide) {

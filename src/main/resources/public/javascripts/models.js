@@ -59,7 +59,7 @@ var Analyst = Analyst || {};
       });
 
       return attrs;
-    }    
+    }
   });
 
   /** static function to get the human-readable, localized name of an attribute */
@@ -120,7 +120,8 @@ var Analyst = Analyst || {};
       id: null,
       name: null,
       mode: null,
-      shapefileId: null,
+      originShapefileId: null,
+      destinationShapefileId: null,
       attributeName: null,
       scenarioId: null,
       status: null,

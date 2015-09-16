@@ -375,18 +375,17 @@ public abstract class AnalystTileRequest {
 					qr = QueryResults.queryResultsCache.get(queryKey);
 			}
 			
-			return doRender(qr, query.shapefileId);
+			return doRender(qr, query.originShapefileId);
 		}
 		
 		/**
 		 * Actually perform the rendering. This is abstracted into a separate function so it can also be used in
 		 * QueryComparisonTile.
 		 */
-		protected byte[] doRender(QueryResults qr, String shapefileId) {
+		protected byte[] doRender(QueryResults qr, String originShapefileId) {
 			Tile tile = new Tile(this);
 			
-			Shapefile shp = Shapefile.getShapefile(shapefileId);
-
+			Shapefile shp = Shapefile.getShapefile(originShapefileId);
 
 		    List<ShapeFeature> features = shp.query(tile.envelope);
 
@@ -479,7 +478,7 @@ public abstract class AnalystTileRequest {
 			Query q1 = Query.getQuery(queryId);
 			Query q2 = Query.getQuery(compareTo);
 			
-			if (q1 == null || q2 == null || !q1.shapefileId.equals(q2.shapefileId))
+			if (q1 == null || q2 == null || !q1.originShapefileId.equals(q2.originShapefileId))
 				return null;
 			
 			String q1key = queryId + "_" + timeLimit + "_" + which + "_" + attributeName;
@@ -504,7 +503,7 @@ public abstract class AnalystTileRequest {
 			}
 			
 			
-			return doRender(qr1.subtract(qr2), q1.shapefileId);
+			return doRender(qr1.subtract(qr2), q1.originShapefileId);
 		}
 	}
  

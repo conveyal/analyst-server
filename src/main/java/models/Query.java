@@ -57,8 +57,25 @@ public class Query implements Serializable {
 
 	/** The mode. Can be left null if both graphId and profileRequest or routingRequest are set */
 	public String mode;
-	
+
+	/**
+	 * The ID of the shapefile.
+	 *
+	 * Historically, queries had but a single shapefile, used for both origins and destinations. They now have separate
+	 * origin and destination shapefiles. To avoid confusion, the original shapefile ID has been deprecated so that IDEs
+	 * will show old code that still uses it, and new originShapefileId and destinationShapefileId features have been created.
+	 *
+	 * When loading a legacy database, originShapefileId and destinationShapefileId will be populated from shapefileId
+	 * if they are null.
+	 */
+	@Deprecated
 	public String shapefileId;
+
+	/** The ID of the origin shapefile */
+	public String originShapefileId;
+
+	/** The ID of the destination shapefile. Accessibility is calculated to all variables in the destination file */
+	public String destinationShapefileId;
 
 	public transient double resultsPerSecond;
 	public transient long lastResultUpdateTime;
@@ -123,17 +140,34 @@ public class Query implements Serializable {
 	/**
 	 * Get the shapefile name. This is used in the UI so that we can display the name of the shapefile.
 	 */
-	public String getShapefileName () {
-		if (shapefileId == null) {
+	public String getDestinationShapefileName () {
+		if (destinationShapefileId == null) {
 			LOG.warn("Query {} has null shapefile ID", id);
 			return null;
 		}
 
-		Shapefile l = Shapefile.getShapefile(shapefileId);
+		Shapefile l = Shapefile.getShapefile(destinationShapefileId);
 		
 		if (l == null)
 			return null;
 		
+		return l.name;
+	}
+
+	/**
+	 * Get the shapefile name. This is used in the UI so that we can display the name of the shapefile.
+	 */
+	public String getOriginShapefileName () {
+		if (originShapefileId == null) {
+			LOG.warn("Query {} has null shapefile ID", id);
+			return null;
+		}
+
+		Shapefile l = Shapefile.getShapefile(originShapefileId);
+
+		if (l == null)
+			return null;
+
 		return l.name;
 	}
 	
@@ -166,7 +200,7 @@ public class Query implements Serializable {
 		QueueManager qm = ClusterQueueManager.getManager();
 
 		// enqueue all the requests
-		Shapefile shp = Shapefile.getShapefile(this.shapefileId);
+		Shapefile shp = Shapefile.getShapefile(this.originShapefileId);
 		PointSet ps = shp.getPointSet();
 
 		totalPoints = ps.capacity;
@@ -226,7 +260,7 @@ public class Query implements Serializable {
 
 			// FIXME constructor performs a protective copy.
 			// We should really do that in the caller to avoid continually rewriting the profileRequest object.
-			AnalystClusterRequest req = new AnalystClusterRequest(this.shapefileId, graphId, profileRequest);
+			AnalystClusterRequest req = new AnalystClusterRequest(this.destinationShapefileId, graphId, profileRequest);
 			req.jobId = this.id;
 			req.id = pointFeature.getId();
 			req.includeTimes = false;

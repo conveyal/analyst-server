@@ -90,7 +90,7 @@ public class Gis extends Controller {
 			}
 		}
 
-		Shapefile shp = Shapefile.getShapefile(query.shapefileId);
+		Shapefile shp = Shapefile.getShapefile(query.originShapefileId);
 
 
 		Collection<ShapeFeature> features = shp.getShapeFeatureStore().getAll();

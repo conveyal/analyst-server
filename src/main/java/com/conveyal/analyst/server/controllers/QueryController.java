@@ -76,7 +76,7 @@ public class QueryController extends Controller {
             halt(UNAUTHORIZED, "You do not have write access to this project");
 
         // ensure they have quota available
-        Shapefile shapefile = Shapefile.getShapefile(q.shapefileId);
+        Shapefile shapefile = Shapefile.getShapefile(q.originShapefileId);
         if (u.getQuota() < shapefile.getFeatureCount()) {
             LOG.warn("User {} was unable to add query of size {} because their quota has been met", u.username, shapefile.getFeatureCount());
             halt(FORBIDDEN, INSUFFICIENT_QUOTA);
