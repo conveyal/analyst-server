@@ -143,4 +143,40 @@ public class AggregationTest extends TestCase {
 
         assertEquals(expected / wsum, aggItem.value, 1e-6);
     }
+
+    /** Test weighting by a different shapefile */
+    @Test
+    public void testDifferentShapefile () {
+        Shapefile shp = getGrid(0, 45, 2e-6, 1e-6, 2, 1, i -> {
+            Map<String, Object> ret = new HashMap<>();
+            ret.put("value", i + 1);
+            return ret;
+        });
+
+        // three cells half of which overlaps above shapefile.
+        // So weight for first feature should be (1 / 2 + 2 / 2) = 1.5
+        // weight for second feature should be (2 / 2 + 3 / 2) = 2.5
+        // sum of values * weights = 6.5 / sum of weights 4
+        Shapefile weights = getGrid(-1e-6, 45, 2e-6, 1e-6, 3, 1, i -> {
+            Map<String, Object> ret = new HashMap<>();
+            ret.put("weight", i + 1);
+            return ret;
+        });
+
+        // more than includes all of above
+        Shapefile contour = getGrid(-2e-6, 45, 8e-6, 1e-6, 1, 1, i -> {
+            Map<String, Object> ret = new HashMap<>();
+            ret.put("value", 1);
+            return ret;
+        });
+
+        QueryResults qr = getQueryResultsForShapefile(shp, sf -> sf.getAttribute("value").doubleValue());
+
+        QueryResults aggregated = qr.aggregate(contour, weights, "weight");
+        QueryResults.QueryResultItem item = aggregated.items.values().stream().findFirst().orElse(null);
+
+        assertEquals(6.5 / 4, item.value, 1e-6);
+
+
+    }
 }
