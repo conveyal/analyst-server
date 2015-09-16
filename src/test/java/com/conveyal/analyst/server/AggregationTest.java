@@ -30,17 +30,23 @@ import java.util.stream.IntStream;
  */
 public class AggregationTest extends TestCase {
     static {
+        // create a temporary data directory so that the datastores aren't pointing off into space.
         AnalystMain.config.setProperty("application.data", Files.createTempDir().getAbsolutePath());
     }
 
     private static final GeometryFactory geometryFactory = new GeometryFactory();
 
+    /**
+     * Get a grid shapefile, with the given origin, resolution and size. The IntFunction will receive a single number that is
+     * the feature position in the file (rows first) and should return the attributes for that feature.
+     */
     private static Shapefile getGrid (double originX, double originY, double resolutionX, double resolutionY, int countX, int countY, IntFunction<Map<String, Object>> attributeProducer) {
         List<Polygon> ret = new ArrayList<>();
 
         for (int y = 0; y < countY; y++) {
             for (int x = 0; x < countX; x++) {
                 Coordinate[] coords = new Coordinate[] {
+                    // build the grid cell.
                     new Coordinate(originX + x * resolutionX, originY + y * resolutionY),
                     new Coordinate(originX + (x + 1) * resolutionX, originY + y * resolutionY),
                     new Coordinate(originX + (x + 1) * resolutionX, originY + (y + 1) * resolutionY),
@@ -69,6 +75,7 @@ public class AggregationTest extends TestCase {
                 .collect(Collectors.toList());
 
         Shapefile shp = new Shapefile();
+        // has to have an ID so it can be stored.
         shp.id = UUID.randomUUID().toString();
         shp.setShapeFeatureStore(features);
 
@@ -82,6 +89,7 @@ public class AggregationTest extends TestCase {
         return shp;
     }
 
+    /** Create query results from a shapefile. The function returns the value for a particular feature. */
     public QueryResults getQueryResultsForShapefile (Shapefile shp, Function<Shapefile.ShapeFeature, Double> getValue) {
         QueryResults qr = new QueryResults();
         qr.shapeFileId = shp.id;
@@ -109,8 +117,10 @@ public class AggregationTest extends TestCase {
            return map;
         });
 
+        // get a shapefile that encompasses part of the grid: in the x dimension, 50.5 cells, and in the y dimension 50.
         Shapefile contour = getGrid(0, 45, 2e-6 * 50.5, 1e-6 * 50, 1, 1, HashMap::new);
 
+        // use the precomputed value in the shapefile
         QueryResults qr = getQueryResultsForShapefile(shp, sf -> sf.getAttribute("value").doubleValue());
 
         QueryResults aggregated = qr.aggregate(contour, shp, "weight");
@@ -128,14 +138,17 @@ public class AggregationTest extends TestCase {
 
             // NB i has already been incremented
             if (i > 50 * 100)
+                // this is the 51st row, no further features are overlapped
                 break;
 
             if (x < 50) {
+                // this feature is overlapped completely
                 expected += feature.getAttribute("weight") * feature.getAttribute("value");
                 wsum += feature.getAttribute("weight");
             }
 
             if (x == 50) {
+                // this feature is overlapped 50%
                 expected += feature.getAttribute("weight") * feature.getAttribute("value") / 2D;
                 wsum += feature.getAttribute("weight") / 2D;
             }
@@ -156,7 +169,13 @@ public class AggregationTest extends TestCase {
         // three cells half of which overlaps above shapefile.
         // So weight for first feature should be (1 / 2 + 2 / 2) = 1.5
         // weight for second feature should be (2 / 2 + 3 / 2) = 2.5
-        // sum of values * weights = 6.5 / sum of weights 4
+        // value for first feature = 1
+        // value for second feature = 2
+        // weighted value for first feature = 1.5
+        // weighted value for second feature = 5
+        // sum of weighted values = 6.5
+        // sum of weights = 4
+        // weighted average = 6.5 / 4
         Shapefile weights = getGrid(-1e-6, 45, 2e-6, 1e-6, 3, 1, i -> {
             Map<String, Object> ret = new HashMap<>();
             ret.put("weight", i + 1);
@@ -175,6 +194,7 @@ public class AggregationTest extends TestCase {
         QueryResults aggregated = qr.aggregate(contour, weights, "weight");
         QueryResults.QueryResultItem item = aggregated.items.values().stream().findFirst().orElse(null);
 
+        // see comment above for why the correct answer is 6.5 / 4.
         assertEquals(6.5 / 4, item.value, 1e-6);
 
 
