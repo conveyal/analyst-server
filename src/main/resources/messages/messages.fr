@@ -269,3 +269,5 @@ shared.december=décembre
 
 analysis.origin-shapefile=Origin shapefile
 analysis.destination-shapefile=Destination shapefile
+analysis.bike-time=Bike time: {0} minutes
+analysis.walk-time=Walk time: {0} minutes

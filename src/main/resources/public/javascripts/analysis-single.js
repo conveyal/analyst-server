@@ -118,10 +118,30 @@ var Analyst = Analyst || {};
 				_this.updateResults();
 			}).data('slider');
 
+			this.walkTimeSlider = this.$('#walkTimeSlider').slider({
+					formater: function(value) {
+						_this.$('#walkTimeValue').html(window.Messages("analysis.walk-time", value));
+						return window.Messages("analysis.n-minutes", value);
+					}
+				}).on('slideStop', function(value) {
+
+				_this.updateResults();
+			}).data('slider');
+
 			this.bikeSpeedSlider = this.$('#bikeSpeedSlider').slider({
 					formater: function(value) {
 						_this.$('#bikeSpeedValue').html(window.Messages("analysis.average-bike-speed", value));
 						return window.Messages("analysis.km-per-hour", value)
+					}
+				}).on('slideStop', function(value) {
+
+				_this.updateResults();
+			}).data('slider');
+
+			this.bikeTimeSlider = this.$('#bikeTimeSlider').slider({
+					formater: function(value) {
+						_this.$('#bikeTimeValue').html(window.Messages("analysis.bike-time", value));
+						return window.Messages("analysis.n-minutes", value);
 					}
 				}).on('slideStop', function(value) {
 
@@ -286,6 +306,8 @@ var Analyst = Analyst || {};
 
 		  	var bikeSpeed = (this.bikeSpeedSlider.getValue() * 1000 / 60 / 60 );
 		  	var walkSpeed = (this.walkSpeedSlider.getValue() * 1000 / 60 / 60 );
+				var walkTime = this.walkTimeSlider.getValue();
+				var bikeTime = this.bikeTimeSlider.getValue();
 
  			this.scenario1 = this.scenarios.get(this.$('#scenario1').val());
 			this.scenario2 = this.scenarios.get(this.$('#scenario2').val());
@@ -355,12 +377,12 @@ var Analyst = Analyst || {};
 				accessModes: A.util.removeTransit(this.mode),
 				egressModes: 'WALK',
 				transitModes: this.mode,
-				walkSpeed: 4 / 3,
-				bikeSpeed: 4.1,
+				walkSpeed: walkSpeed,
+				bikeSpeed: bikeSpeed,
 				carSpeed: 20,
 				streetTime: 90,
-				maxWalkTime: 20,
-				maxBikeTime: 45,
+				maxWalkTime: walkTime,
+				maxBikeTime: bikeTime,
 				maxCarTime: 45,
 				minBikeTime: 10,
 				minCarTime: 10,
