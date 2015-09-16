@@ -219,7 +219,7 @@ analysis.dont-group=Ne pas grouper
 analysis.change-in-time=Changement du temps de trajet {0} minutes
 analysis.queued=en attente de traitement
 analysis.assembling-results=assemblage des résultats
-analysis.number-complete={0} de {1} traités 
+analysis.number-complete={0} de {1} traités
 analysis.number-complete-time-remaining={0} de {1} traités ({2}h {3}m restent)
 analysis.n-minutes={0} minutes
 analysis.calculating=Traitement . . .
@@ -266,3 +266,6 @@ shared.september=septembre
 shared.october=octobre
 shared.november=novembre
 shared.december=décembre
+
+analysis.origin-shapefile=Origin shapefile
+analysis.destination-shapefile=Destination shapefile

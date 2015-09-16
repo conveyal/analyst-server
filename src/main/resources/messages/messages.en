@@ -270,3 +270,6 @@ shared.september=September
 shared.october=October
 shared.november=November
 shared.december=December
+
+analysis.origin-shapefile=Origin shapefile
+analysis.destination-shapefile=Destination shapefile
