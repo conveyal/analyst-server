@@ -1,27 +1,18 @@
 package com.conveyal.analyst.server;
 
-import com.conveyal.analyst.server.utils.DataStore;
 import com.conveyal.analyst.server.utils.QueryResults;
 import com.google.common.io.Files;
 import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Polygon;
-import com.vividsolutions.jts.io.WKTWriter;
 import junit.framework.TestCase;
-import junit.framework.TestResult;
-import models.Attribute;
 import models.Shapefile;
 import org.junit.Test;
 import org.mapdb.Fun;
 
-import java.awt.*;
 import java.util.*;
-import java.util.List;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.IntFunction;
-import java.util.function.ObjIntConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -196,7 +187,5 @@ public class AggregationTest extends TestCase {
 
         // see comment above for why the correct answer is 6.5 / 4.
         assertEquals(6.5 / 4, item.value, 1e-6);
-
-
     }
 }
