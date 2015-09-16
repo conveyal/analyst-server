@@ -59,6 +59,45 @@ var Analyst = Analyst || {};
       this.$('#fromTime').data('DateTimePicker').setDate(new Date(2014, 11, 15, 7, 0, 0));
       this.$('#toTime')  .data('DateTimePicker').setDate(new Date(2014, 11, 15, 9, 0, 0));
 
+      this.walkSpeedSlider = this.$('#walkSpeedSlider').slider({
+					formater: function(value) {
+						_this.$('#walkSpeedValue').html(window.Messages("analysis.average-walk-speed", value));
+						return window.Messages("analysis.km-per-hour", value)
+					}
+				}).on('slideStop', function(value) {
+
+				_this.updateResults();
+			}).data('slider');
+
+			this.walkTimeSlider = this.$('#walkTimeSlider').slider({
+					formater: function(value) {
+						_this.$('#walkTimeValue').html(window.Messages("analysis.walk-time", value));
+						return window.Messages("analysis.n-minutes", value);
+					}
+				}).on('slideStop', function(value) {
+
+				_this.updateResults();
+			}).data('slider');
+
+			this.bikeSpeedSlider = this.$('#bikeSpeedSlider').slider({
+					formater: function(value) {
+						_this.$('#bikeSpeedValue').html(window.Messages("analysis.average-bike-speed", value));
+						return window.Messages("analysis.km-per-hour", value)
+					}
+				}).on('slideStop', function(value) {
+
+				_this.updateResults();
+			}).data('slider');
+
+			this.bikeTimeSlider = this.$('#bikeTimeSlider').slider({
+					formater: function(value) {
+						_this.$('#bikeTimeValue').html(window.Messages("analysis.bike-time", value));
+						return window.Messages("analysis.n-minutes", value);
+					}
+				}).on('slideStop', function(value) {
+
+				_this.updateResults();
+			}).data('slider');
 
       this.scenarios = new A.models.Scenarios();
       this.queries = new A.models.Queries();
@@ -156,6 +195,11 @@ var Analyst = Analyst || {};
       this.$('#insufficientQuota').hide();
       this.$('#requestFailed').hide();
 
+      var bikeSpeed = (this.bikeSpeedSlider.getValue() * 1000 / 60 / 60 );
+      var walkSpeed = (this.walkSpeedSlider.getValue() * 1000 / 60 / 60 );
+      var walkTime = this.walkTimeSlider.getValue();
+      var bikeTime = this.bikeTimeSlider.getValue();
+
       var data = {
         name: this.$("#name").val(),
         mode: this.mode,
@@ -165,7 +209,11 @@ var Analyst = Analyst || {};
         projectId: A.app.selectedProject,
         boardingAssumption: 'RANDOM',
         fromTime: A.util.makeTime(this.$('#fromTime').data('DateTimePicker').getDate()),
-        date: this.$('#date').data('DateTimePicker').getDate().format('YYYY-MM-DD')
+        date: this.$('#date').data('DateTimePicker').getDate().format('YYYY-MM-DD'),
+        walkSpeed: walkSpeed,
+        bikeSpeed: bikeSpeed,
+        walkTime: walkTime,
+        bikeTime: bikeTime
       };
 
       // profile routing uses a to time as well

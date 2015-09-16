@@ -102,6 +102,18 @@ public class Query implements Serializable {
 	/** The graph to use. If profileRequest and routingRequest are both null this will be ignored */
 	public String graphId;
 
+	/** walk speed in meters per second */
+	public double walkSpeed;
+
+	/** max walk time in minutes. applied separately at origin and destination. */
+	public int maxWalkTime;
+
+	/** bike speed in meters per second */
+	public double bikeSpeed;
+
+	/** max bike time in minutes. */
+	public int maxBikeTime;
+
 	/**
 	 * Profile request to use for this query. If set, graphId must not be null. If set, mode, fromTime, toTime,
 	 * scenarioId, and date will be ignored.
@@ -245,6 +257,20 @@ public class Query implements Serializable {
 			if (scenario.modifications != null) {
 				profileRequest.scenario.modifications.addAll(scenario.modifications);
 			}
+
+			// fill in speeds/times iff they were supplied and are non-zero. If they were not supplied they will
+			// be zero since java initializes primitives to zero.
+			if (maxBikeTime != 0)
+				profileRequest.maxBikeTime = maxBikeTime;
+
+			if (maxWalkTime != 0)
+				profileRequest.maxWalkTime = maxWalkTime;
+
+			if (walkSpeed > 1e-6)
+				profileRequest.walkSpeed = (float) walkSpeed;
+
+			if (bikeSpeed > 1e-6)
+				profileRequest.bikeSpeed = (float) bikeSpeed;
 
 		}
 		// At this point PR is known not to be null, it was either supplied by the caller or has been created above.
