@@ -247,6 +247,10 @@ public class Bundle implements Serializable {
 				for(StopTime st : feed.stop_times.values()) {
 					Stop s = feed.stops.get(st.stop_id);
 
+					if (s == null)
+						// GTFS reader has already printed an error
+						continue;
+
 					// few agencies provide submarine service in the gulf of guinea, so these stops are almost
 					// certainly errors.
 					if (Math.abs(s.stop_lon) < 1 && Math.abs(s.stop_lat) < 1) {
