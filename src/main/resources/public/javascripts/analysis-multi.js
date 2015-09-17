@@ -212,8 +212,8 @@ var Analyst = Analyst || {};
         date: this.$('#date').data('DateTimePicker').getDate().format('YYYY-MM-DD'),
         walkSpeed: walkSpeed,
         bikeSpeed: bikeSpeed,
-        walkTime: walkTime,
-        bikeTime: bikeTime
+        maxWalkTime: walkTime,
+        maxBikeTime: bikeTime
       };
 
       // profile routing uses a to time as well
