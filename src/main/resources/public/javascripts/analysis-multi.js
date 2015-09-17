@@ -268,7 +268,7 @@ var Analyst = Analyst || {};
 
       'click #deleteItem': 'deleteItem',
       'click #queryCheckbox': 'clickItem',
-      'click #normalizeCheckbox': 'normalizeBy',
+      'click .aggregationCheckbox': 'normalizeBy',
       'click .compareCheckbox': 'compareTo',
       'click #exportShape': 'exportShape',
       'click #updateMap': 'updateMap',
@@ -367,7 +367,7 @@ var Analyst = Analyst || {};
 
     normalizeBy: function(evt) {
 
-      if (this.$("#normalizeCheckbox").prop('checked')) {
+      if (this.$(".aggregationCheckbox").prop('checked')) {
         this.$("#weightByShapefile").prop("disabled", false);
         this.$("#weightByAttribute").prop("disabled", false);
         this.$("#groupBy").prop("disabled", false);
@@ -426,12 +426,12 @@ var Analyst = Analyst || {};
       var legendTitle;
       if (this.groupById) {
         legendTitle = Messages('analysis.aggregated-title',
-          this.model.pointSetName(),
+          this.model.get('destinationShapefileName'),
           this.groupByName,
           this.weightByName
         );
       } else {
-        legendTitle = Messages('analysis.accessibility-to', this.model.pointSetName());
+        legendTitle = Messages('analysis.accessibility-to', this.model.get('destinationShapefileName'));
       }
 
       // add the suffix, e.g. (best case)
@@ -511,13 +511,13 @@ var Analyst = Analyst || {};
               legendItem = {
                 color: data[i].hexColor,
                 label: window.Messages('analysis.bin-single', lower),
-                pctLabel: window.Messages('analysis.bin-percent-single', lowerPct, _this.model.pointSetName())
+                pctLabel: window.Messages('analysis.bin-percent-single', lowerPct, _this.model.get('destinationShapefileName'))
               }
             } else {
               legendItem = {
                 color: data[i].hexColor,
                 label: window.Messages('analysis.bin-range', lower, upper),
-                pctLabel: window.Messages('analysis.bin-percent-range', lowerPct, upperPct, _this.model.pointSetName())
+                pctLabel: window.Messages('analysis.bin-percent-range', lowerPct, upperPct, _this.model.get('destinationShapefileName'))
               };
             }
 

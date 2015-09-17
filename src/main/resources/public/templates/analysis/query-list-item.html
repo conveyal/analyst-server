@@ -71,8 +71,10 @@
 
 			<!-- bundle comparison checkbox and input dropdown -->
 			<div class="form-group">
-				<input class="compareCheckbox" type="checkbox" data-id="{{id}}">
-				<label for="compareCheckbox">{{ I18n "analysis.compare" }}</label>
+				<label>
+					<input class="compareCheckbox" type="checkbox" data-id="{{id}}">
+					{{ I18n "analysis.compare" }}
+				</label>
 			</div>
 
 			<div class="form-group hidden" id="compareControls" data-id="{{id}}">
@@ -82,9 +84,11 @@
 				</select>
 			</div>
 
-			<div class="form-group">
-					<input id="normalizeCheckbox" type="checkbox" data-id="{{id}}"/>
-					<label for="normalizeCheckbox">{{ I18n "analysis.aggregate" }}</label>
+				<div class="form-group">
+					<label>
+						<input class="aggregationCheckbox" type="checkbox" data-id="{{id}}"/>
+						{{ I18n "analysis.aggregate" }}
+			  	</label>
 				</div>
 
 				<div class="form-group" id="aggregation-controls" style="display: none">
