@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import models.Query;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -67,7 +68,7 @@ public class ClusterQueueManager extends QueueManager {
 	private ObjectMapper objectMapper = JsonUtil.getObjectMapper();
 
 	/** per-job callbacks */
-	private Multimap<String, Predicate<JobStatus>> callbacks = HashMultimap.create();
+	private Multimap<String, Predicate<JobStatus>> callbacks = Multimaps.synchronizedSetMultimap(HashMultimap.create());
 
 	private String broker;
 
