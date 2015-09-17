@@ -269,7 +269,7 @@ var Analyst = Analyst || {};
       'click #deleteItem': 'deleteItem',
       'click #queryCheckbox': 'clickItem',
       'click #normalizeCheckbox': 'normalizeBy',
-      'click #compareCheckbox': 'compareTo',
+      'click .compareCheckbox': 'compareTo',
       'click #exportShape': 'exportShape',
       'click #updateMap': 'updateMap',
       'change #weightByShapefile': 'updateAttributes'
@@ -307,8 +307,6 @@ var Analyst = Analyst || {};
       var data = this.model.toJSON();
       data.starting = this.isStarting();
       data.assemblingResults = this.isAssemblingResults();
-
-      data['pointSetName'] = this.model.pointSetName();
 
       if (data.secondsRemaining != null) {
         var totalMinutes = Math.round(data.secondsRemaining / 60);
@@ -400,7 +398,7 @@ var Analyst = Analyst || {};
     },
 
     compareTo: function () {
-      if (this.$('#compareCheckbox').is(':checked')) {
+      if (this.$('.compareCheckbox').is(':checked')) {
         this.compareToId = this.$('#compareTo').val();
         this.$('#compareControls').removeClass('hidden');
       } else {

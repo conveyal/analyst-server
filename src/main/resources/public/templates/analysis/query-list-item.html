@@ -31,7 +31,7 @@
 		<div id="settings">
 			<form>
 				<!-- preinitialize to no aggregation -->
-				<div class="legendTitle">{{ I18n "analysis.accessibility-to" pointSetName }}</div>
+				<div class="legendTitle">{{ I18n "analysis.accessibility-to" destinationShapefileName }}</div>
 
 				<div class="form-group">
 					<label for="shapefileColumn">{{I18n "analysis.shapefile-field"}}</label>
@@ -71,7 +71,7 @@
 
 			<!-- bundle comparison checkbox and input dropdown -->
 			<div class="form-group">
-				<input id="compareCheckbox" type="checkbox" data-id="{{id}}">
+				<input class="compareCheckbox" type="checkbox" data-id="{{id}}">
 				<label for="compareCheckbox">{{ I18n "analysis.compare" }}</label>
 			</div>
 

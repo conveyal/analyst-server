@@ -137,10 +137,6 @@ var Analyst = Analyst || {};
 
     getPoints: function() {
 
-    },
-
-    pointSetName: function() {
-      return this.get('shapefileName');
     }
 
   });
