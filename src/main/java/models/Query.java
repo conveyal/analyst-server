@@ -141,6 +141,9 @@ public class Query implements Serializable {
 
 	/** Estimate how much longer this query will take to compute */
 	public Integer getSecondsRemaining() {
+		if (this.totalPoints == null || this.completePoints == null)
+			return null;
+
 		int remainingPoints = this.totalPoints - this.completePoints;
 
 		if (complete || remainingPoints == 0 || completePoints == 0 || this.resultsPerSecond < 1e-3)
