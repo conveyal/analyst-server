@@ -307,6 +307,9 @@ public class QueryResults {
 			QueryResults ret = new QueryResults();
 			
 			ret.shapeFileId = this.shapeFileId;
+
+			// count how many values are above and below zero so we don't request a bimodal classifier with insufficient data
+			int gtZero = 0, ltZero = 0;
 			
 			for (String id : items.keySet()) {
 				QueryResultItem item1 = this.items.get(id);
@@ -325,17 +328,21 @@ public class QueryResults {
 	        	
 				if (ret.minValue == null || ret.minValue > newItem.value)
 	        		ret.minValue = newItem.value;
-				
+
+				if (newItem.value > 0) gtZero++;
+				if (newItem.value < 0) ltZero++;
+
 				ret.items.put(id, newItem);
 			}
 			
 			// we preserve the maxPossible from the original. This is because we want to represent percentages as
 			// a percentage of total possible still, not a percent change.
 			ret.maxPossible = this.maxPossible;
-			
-			if (ret.minValue < 0 && ret.maxValue > 0)
+
+			// don't use a bimodal classifier if there are only a few values above or below zero.
+			if (ret.minValue < 0 && ret.maxValue > 0 && ltZero > 5 && gtZero > 5)
 				ret.classifier = new BimodalNaturalBreaksClassifier(ret, nClasses, 0d,
-						new Color(.9f, .9f, .1f, .5f), new Color(.5f, .5f, .5f, .5f), new Color(0f, 0f, 1f, .5f));
+					new Color(.9f, .9f, .1f, .5f), new Color(.5f, .5f, .5f, .5f), new Color(0f, 0f, 1f, .5f));
 			else 
 				ret.classifier = new NaturalBreaksClassifier(ret, nClasses, new Color(1.0f, 1.0f, 1.0f, 0.5f), new Color(0.0f, 0.0f, 1.0f, 0.5f));
 			
