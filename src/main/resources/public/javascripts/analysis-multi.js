@@ -30,9 +30,9 @@ var Analyst = Analyst || {};
 
       var _this = this;
 
-      this.$('#date').datetimepicker({pickTime: false});
-      this.$('#fromTime').datetimepicker({pickDate: false});
-      this.$('#toTime').datetimepicker({pickDate: false});
+      this.$('#date').datetimepicker({ format: 'l', locale: moment.locale() });
+			this.$('#fromTime').datetimepicker({ format: 'LT', locale: moment.locale() });
+			this.$('#toTime').datetimepicker({ format: 'LT', locale: moment.locale() });
 
       // use a bare model to pass information about quota consumption estimates in the create query dialog
       this.queryCreateQuotaUsage = new Backbone.Model();
@@ -52,12 +52,12 @@ var Analyst = Analyst || {};
         // months are off by one in javascript
         var date = new Date(sp[0], sp[1] - 1, sp[2]);
 
-        _this.$('#date').data('DateTimePicker').setDate(date);
+        _this.$('#date').data('DateTimePicker').date(date);
       });
 
       // set default times
-      this.$('#fromTime').data('DateTimePicker').setDate(new Date(2014, 11, 15, 7, 0, 0));
-      this.$('#toTime')  .data('DateTimePicker').setDate(new Date(2014, 11, 15, 9, 0, 0));
+      this.$('#fromTime').data('DateTimePicker').date(new Date(2014, 11, 15, 7, 0, 0));
+      this.$('#toTime')  .data('DateTimePicker').date(new Date(2014, 11, 15, 9, 0, 0));
 
       this.walkSpeedSlider = this.$('#walkSpeedSlider').slider({
 					formater: function(value) {
@@ -208,8 +208,8 @@ var Analyst = Analyst || {};
         scenarioId: this.$('#scenario1').val(),
         projectId: A.app.selectedProject,
         boardingAssumption: 'RANDOM',
-        fromTime: A.util.makeTime(this.$('#fromTime').data('DateTimePicker').getDate()),
-        date: this.$('#date').data('DateTimePicker').getDate().format('YYYY-MM-DD'),
+        fromTime: A.util.makeTime(this.$('#fromTime').data('DateTimePicker').date()),
+        date: this.$('#date').data('DateTimePicker').date().format('YYYY-MM-DD'),
         walkSpeed: walkSpeed,
         bikeSpeed: bikeSpeed,
         maxWalkTime: walkTime,
@@ -218,7 +218,7 @@ var Analyst = Analyst || {};
 
       // profile routing uses a to time as well
       if (A.util.isTransit(this.mode))
-        data.toTime = A.util.makeTime(this.$('#toTime').data('DateTimePicker').getDate());
+        data.toTime = A.util.makeTime(this.$('#toTime').data('DateTimePicker').date());
       else
         data.toTime = -1;
 

@@ -26,6 +26,8 @@ var Analyst = Analyst || {};
 		.always(function () {
 			A.app.controller =  new A.app.AppController();
 
+			moment.locale(A.app.user.get('lang'));
+
 			A.app.projects  = new A.models.Projects();
 			A.app.projects.fetch({reset: true, success: A.app.controller.initProjects});
 

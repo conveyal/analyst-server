@@ -59,11 +59,11 @@ var Analyst = Analyst || {};
 
 			var _this = this;
 
-			this.$('#date').datetimepicker({pickTime: false})
+			this.$('#date').datetimepicker({ format: 'l', locale: moment.locale() })
 				.on('dp.hide', this.updateResults);
-			this.$('#fromTime').datetimepicker({pickDate: false})
+			this.$('#fromTime').datetimepicker({ format: 'LT', locale: moment.locale() })
 				.on('dp.hide', this.updateResults);
-			this.$('#toTime').datetimepicker({pickDate: false})
+			this.$('#toTime').datetimepicker({ format: 'LT', locale: moment.locale() })
 				.on('dp.hide', this.updateResults);
 
 			// pick a reasonable default date
@@ -75,12 +75,12 @@ var Analyst = Analyst || {};
 				// months are off by one in javascript
 				var date = new Date(sp[0], sp[1] - 1, sp[2]);
 
-				_this.$('#date').data('DateTimePicker').setDate(date);
+				_this.$('#date').data('DateTimePicker').date(date);
 			});
 
 			// set default times
-			this.$('#fromTime').data('DateTimePicker').setDate(new Date(2014, 11, 15, 7, 0, 0));
-			this.$('#toTime')  .data('DateTimePicker').setDate(new Date(2014, 11, 15, 9, 0, 0));
+			this.$('#fromTime').data('DateTimePicker').date(new Date(2014, 11, 15, 7, 0, 0));
+			this.$('#toTime')  .data('DateTimePicker').date(new Date(2014, 11, 15, 9, 0, 0));
 
 			this.$('#scenario2-controls').hide();
 
@@ -324,13 +324,13 @@ var Analyst = Analyst || {};
 
 			this.mode = this.$('input[name="mode"]:checked').val();
 
-			var date = this.$('#date').data('DateTimePicker').getDate().format('YYYY-MM-DD');
-			var fromTime = A.util.makeTime(this.$('#fromTime').data('DateTimePicker').getDate());
+			var date = this.$('#date').data('DateTimePicker').date().format('YYYY-MM-DD');
+			var fromTime = A.util.makeTime(this.$('#fromTime').data('DateTimePicker').date());
 
 			var dateTime = '&date=' + date + '&fromTime=' + fromTime;
 
 			if (A.util.isTransit(this.mode))
-				dateTime += '&toTime=' + A.util.makeTime(this.$('#toTime').data('DateTimePicker').getDate());
+				dateTime += '&toTime=' + A.util.makeTime(this.$('#toTime').data('DateTimePicker').date());
 
 			var params1 = 'graphId=' + this.graphId1 + '&lat=' + A.map.marker.getLatLng().lat + '&lon=' +
 				A.map.marker.getLatLng().lng + '&mode=' + this.mode + '&bikeSpeed=' + bikeSpeed + '&walkSpeed=' + walkSpeed +
@@ -372,8 +372,8 @@ var Analyst = Analyst || {};
 				toLat:  A.map.marker.getLatLng().lat,
 				toLon: A.map.marker.getLatLng().lng,
 				date: date,
-				fromTime:  A.util.makeTime(this.$('#fromTime').data('DateTimePicker').getDate()),
-				toTime: A.util.makeTime(this.$('#toTime').data('DateTimePicker').getDate()),
+				fromTime:  A.util.makeTime(this.$('#fromTime').data('DateTimePicker').date()),
+				toTime: A.util.makeTime(this.$('#toTime').data('DateTimePicker').date()),
 				accessModes: A.util.removeTransit(this.mode),
 				egressModes: 'WALK',
 				transitModes: this.mode,
