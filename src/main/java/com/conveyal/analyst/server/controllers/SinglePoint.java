@@ -211,11 +211,6 @@ public class SinglePoint extends Controller {
 		ResultSet spread= rs.get(ResultEnvelope.Which.SPREAD);
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		// TODO: are the features in the same order here (!)
-		// I think they are if the caches are cleaned regularly, because we cache the pointset on startup
-		// However, I'm not positive that every time we start the server we get a pointset in the same order
-		// I think we do, because MapDB iteration order is defined in a TreeMap, and getAll returns map.values . . .
-		// However, nothing is enforcing this . . .
 		JsonFactory jf = new JsonFactory();
 		JsonGenerator jgen = jf.createGenerator(baos);
 		jgen.setCodec(objectMapper);

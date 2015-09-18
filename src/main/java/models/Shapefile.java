@@ -10,6 +10,7 @@ import com.conveyal.data.geobuf.GeobufFeature;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.MultiPolygon;
@@ -236,14 +237,26 @@ public class Shapefile implements Serializable {
 		if (pointSet != null)
 			return pointSet;
 
-		pointSet = new PointSet(getFeatureCount());
+		pointSet = pointSetFromIterator(this.getShapeFeatureStore().getAll().iterator());
+		this.pointSet = new SoftReference<>(pointSet);
+		return pointSet;
+	}
+
+	/**
+	 * Create a pointset from an iterator. This uses MapDB when the shapefile has already been created, but
+	 * is also used on already in-memory features when loading a new shapefile. This avoids the relatively slow
+	 * deserialization of every MapDB shape feature.
+	 */
+	private PointSet pointSetFromIterator (Iterator<ShapeFeature> iterator) {
+		PointSet pointSet = new PointSet(getFeatureCount());
 
 		pointSet.id = categoryId;
 		pointSet.label = this.name;
 		pointSet.description = this.description;
 
 		int index = 0;
-		for(ShapeFeature sf :  this.getShapeFeatureStore().getAll()) {
+		while (iterator.hasNext()) {
+			ShapeFeature sf = iterator.next();
 
 			HashMap<String,Integer> propertyData = new HashMap<String,Integer>();
 
@@ -268,8 +281,6 @@ public class Shapefile implements Serializable {
 		}
 
 		pointSet.setLabel(categoryId, this.name);
-
-		this.pointSet = new SoftReference<>(pointSet);
 
 		return pointSet;
 	}
@@ -433,9 +444,19 @@ public class Shapefile implements Serializable {
 	    	List<Fun.Tuple2<String,ShapeFeature>> features = shapefile.getShapeFeatures();
 	    	LOG.info("saving " + features.size() + " features...");
 
-	    	shapefile.setShapeFeatureStore(features);
+			// we have a sorted list but it needs to be reverse-sorted for MapDB.
+	    	shapefile.setShapeFeatureStore(Lists.reverse(features));
 
 	    	shapefile.save();
+
+			// NB using forward-sorted iterator here not the reverse-sorted iterator that is used in the MapDB
+			// so that the pointset created from this iterator has features in the same order as a pointset created
+			// from MapDB.
+			Iterator<ShapeFeature> featureIterator = features.stream()
+					.map(f -> f.b)
+					.iterator();
+
+			shapefile.pointSet = new SoftReference<>(shapefile.pointSetFromIterator(featureIterator));
 	    		    	
 	    	LOG.info("done loading shapefile " + shapefileId);
 	    }
@@ -540,7 +561,7 @@ public class Shapefile implements Serializable {
 
 		Set<String> fieldnamesFound = new HashSet<String>();
 
-
+		int featureId = 0;
 
 		try {
 			Envelope envelope = new Envelope();
@@ -551,7 +572,9 @@ public class Shapefile implements Serializable {
 
 					SimpleFeature sFeature = iterator.next();
 
-					feature.id = (String)sFeature.getID();
+					// zero-pad feature ID so it is guaranteed to be ascending, so MapDB doesn't have to shuffle the
+					// features around to store them.
+					feature.id = String.format("%s_%9d", unzippedShapefile.getName().replace(".shp", ""), featureId++);
 			    	feature.geom = JTS
 							.transform((Geometry) sFeature.getDefaultGeometry(), transform);
 

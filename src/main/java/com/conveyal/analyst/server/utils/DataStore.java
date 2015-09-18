@@ -1,6 +1,7 @@
 package com.conveyal.analyst.server.utils;
 
 import com.conveyal.analyst.server.AnalystMain;
+import com.google.common.collect.Lists;
 import org.mapdb.*;
 import org.mapdb.DB.BTreeMapMaker;
 import org.mapdb.Fun.Tuple2;
@@ -82,7 +83,7 @@ public class DataStore<T> {
 		map = maker.makeOrGet();
 	}
 	
-	// TODO: add all the other arguments about what kind of serialization, transactions, etc.
+	/** create a data store from a _reverse-sorted_ list of features */
 	public DataStore(File directory, String dataFile, List<Fun.Tuple2<String,T>>inputData) {
 		
 		if(!directory.exists())
@@ -99,28 +100,15 @@ public class DataStore<T> {
 			.transactionDisable()
 			.closeOnJvmShutdown()
 	        .make();
-        
-		Comparator<Tuple2<String, T>> comparator = new Comparator<Fun.Tuple2<String,T>>(){
-
-			@Override
-			public int compare(Tuple2<String, T> o1,
-					Tuple2<String, T> o2) {
-				return o1.a.compareTo(o2.a);
-			}
-		};
-
-		// need to reverse sort list
-		Iterator<Fun.Tuple2<String,T>> iter = Pump.sort(inputData.iterator(),
-                true, 100000,
-                Collections.reverseOrder(comparator), //reverse  order comparator
-                db.getDefaultSerializer() // no need for this to be the same serializer we use for the map, it's just used in temp files.
-                );
-		
 
 		// temporarily disabling string serializer as it throws NPE on some datasets, see mapdb issue 582.
 		BTreeKeySerializer<String> keySerializer = BTreeKeySerializer.BASIC;//STRING;
+
+		// shape features already sorted in forward order, but MapDB needs them in reverse order
+		Iterator<Tuple2<String, T>> iter = inputData.iterator();
 		
 		map = db.createTreeMap(dataFile)
+			.valuesOutsideNodesEnable()
         	.pumpSource(iter)
         	.keySerializer(keySerializer)
 			.valueSerializer(Serializer.JAVA)
