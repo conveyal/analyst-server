@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Properties;
 
 import static spark.SparkBase.ipAddress;
@@ -19,6 +20,18 @@ public class AnalystMain {
 	private static final Logger LOG = LoggerFactory.getLogger(AnalystMain.class);
 
 	public static final Properties config = new Properties();
+
+	public static final Properties gitVersion = new Properties();
+
+	static {
+		try {
+			InputStream is = AnalystMain.class.getClassLoader().getResourceAsStream("git.properties");
+			gitVersion.load(is);
+			is.close();
+		} catch (IOException e) {
+			LOG.error("Error loading git commit information", e);
+		}
+	}
 
 	public static void main (String... args) throws Exception {
 		LOG.info("Welcome to Transport Analyst by conveyal");

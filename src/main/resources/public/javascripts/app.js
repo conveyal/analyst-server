@@ -28,6 +28,9 @@ var Analyst = Analyst || {};
 
 			moment.locale(A.app.user.get('lang'));
 
+			if (A.map !== undefined)
+				A.map.attributionControl.setPrefix(A.app.user.get("analystVersion"));
+
 			A.app.projects  = new A.models.Projects();
 			A.app.projects.fetch({reset: true, success: A.app.controller.initProjects});
 
@@ -241,12 +244,16 @@ var Analyst = Analyst || {};
 
 			A.map = L.map(this.$("#app-map")[0], { loadingControl: true,  zoomControl: false }).setView([0, -80.00], 4);
 
+			if (A.app.user !== undefined)
+				A.map.attributionControl.setPrefix(A.app.user.get("analystVersion"));
+
 			// this has no streets, etc. the streets are drawn on top.
 			L.tileLayer('//{s}.tiles.mapbox.com/v3/conveyal.ec7d6341/{z}/{x}/{y}{scale}.png',
 			  {
 					scale: L.Browser.retina ? '@2x' : '',
 					detectRetina: true,
-					attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery � <a href="http://mapbox.com">Mapbox</a>',
+					attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors,' +
+						'<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery &copy; <a href="http://mapbox.com">Mapbox</a>',
 					maxZoom: 18
 				}).addTo(A.map);
 

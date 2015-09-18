@@ -8,6 +8,7 @@ import com.stormpath.sdk.account.Account;
 import com.stormpath.sdk.account.AccountStatus;
 import com.stormpath.sdk.group.Group;
 import com.stormpath.sdk.group.GroupList;
+import org.opentripplanner.common.MavenVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -116,6 +117,14 @@ public class User implements Serializable {
 	/** Get the remaining quota for this user */
 	public long getQuota () {
 		return ledger.getValue(this.groupName);
+	}
+
+	/**
+	 * Get information about the running version of analyst. This is an odd place to have this but the app is already
+	 * making frequent requests to retrieve the user. This has both the analyst version and the OTP version in parens.
+	 */
+	public String getAnalystVersion () {
+		return String.format("%s (%s)", AnalystMain.gitVersion.getProperty("git.commit.id.describe"), MavenVersion.VERSION.commit.substring(0, 7));
 	}
 
 	public void addProjectPermission(String projectId) {

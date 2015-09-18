@@ -25,3 +25,4 @@ conf/application.conf
 nbproject
 logentries.xml
 application.conf
+src/main/resources/git.properties
