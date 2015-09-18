@@ -149,3 +149,8 @@ Handlebars.registerHelper('humanNumber', function (num) {
 
   return "" + human + divisors[i][1];
 });
+
+/** Create a spinner */
+Handlebars.registerHelper('spinner', function () {
+  return new Handlebars.SafeString('<i class="fa fa-spinner spinner"></i>');
+});

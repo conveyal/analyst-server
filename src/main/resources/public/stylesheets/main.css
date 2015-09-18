@@ -169,6 +169,22 @@ div.legend-item {
   font-style: italic
 }
 
+.spinner {
+  animation-name: spinner;
+  animation-duration: 1s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@keyframes spinner {
+  from {
+    transform: rotate(0turn);
+  }
+  to {
+    transform: rotate(1turn);
+  }
+}
+
 @media print {
   .no-print {
     display: none;
