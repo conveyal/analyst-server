@@ -101,7 +101,8 @@ public class Shapefile implements Serializable {
 	public HashMap<String,Attribute> attributes = new HashMap<String,Attribute>();
 
 	/** the pointset for this shapefile */
-	private transient SoftReference<PointSet> pointSet;
+	@VisibleForTesting
+	transient SoftReference<PointSet> pointSet;
 
 	@JsonIgnore
 	public File file;
