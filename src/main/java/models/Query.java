@@ -77,7 +77,7 @@ public class Query implements Serializable {
 	/** The ID of the destination shapefile. Accessibility is calculated to all variables in the destination file */
 	public String destinationShapefileId;
 
-	public transient double resultsPerSecond;
+	public transient double resultsPerSecond = Double.NaN;
 	public transient long lastResultUpdateTime;
 
 	/** The scenario. Can be left null if both graphId and either profileRequest or routingRequest are set */
@@ -141,7 +141,7 @@ public class Query implements Serializable {
 
 	/** Estimate how much longer this query will take to compute */
 	public Integer getSecondsRemaining() {
-		if (this.totalPoints == null || this.completePoints == null)
+		if (this.totalPoints == null || this.completePoints == null || Double.isNaN(this.resultsPerSecond))
 			return null;
 
 		int remainingPoints = this.totalPoints - this.completePoints;
@@ -324,7 +324,7 @@ public class Query implements Serializable {
 			lastResultUpdateTime = now;
 		else {
 			double currentResultsPerSecond = (jobStatus.complete - this.completePoints) / ((now - lastResultUpdateTime) / 1000d);
-			if (this.completePoints != 0)
+			if (this.completePoints != 0 && !Double.isNaN(this.resultsPerSecond))
 				// don't completely throw away what we already know, but weight current results more heavily
 				// this result is weighted at sensitivity, the previous at (sensitivity)(1 - sensitivity) (because it has already been weighted once)
 				// and so on.
