@@ -1,6 +1,7 @@
 package com.conveyal.analyst.server;
 
 import com.conveyal.analyst.server.utils.QueryResults;
+import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -68,7 +69,7 @@ public class AggregationTest extends TestCase {
         Shapefile shp = new Shapefile();
         // has to have an ID so it can be stored.
         shp.id = UUID.randomUUID().toString();
-        shp.setShapeFeatureStore(features);
+        shp.setShapeFeatureStore(Lists.reverse(features));
 
         // make sure the attribute stats are up to date.
         for (Fun.Tuple2<String, Shapefile.ShapeFeature> feature : features) {
