@@ -1,10 +1,15 @@
 package models;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Attribute implements Serializable {
 
 	private static final long serialVersionUID = 2L;
+
+	/** cache attribute name -> attribute ID; doing the string manipulations is a hot spot */
+	private static Map<String, String> attributeIdCache = new HashMap<>();
 
 	public String name;
 	public String description;
@@ -58,7 +63,15 @@ public class Attribute implements Serializable {
 	 * A.models.Shapefile.getCategoryName()
 	 */
 	public static String convertNameToId(String name) {
-		return name.toLowerCase().trim().replaceAll(" ", "_").replaceAll("\\W","");
+		if (attributeIdCache.containsKey(name))
+			return attributeIdCache.get(name);
+
+		else {
+			synchronized (attributeIdCache) {
+				String id = name.toLowerCase().trim().replaceAll(" ", "_").replaceAll("\\W","");
+				attributeIdCache.put(name, id);
+				return id;
+			}
+		}
 	}
-	
 }
