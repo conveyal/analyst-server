@@ -786,8 +786,7 @@ var Analyst = Analyst || {};
 				max = Math.max(max, plotData[1][119].bestCase !== undefined ? plotData[1][119].bestCase : plotData[1][119].pointEstimate);
 			}
 
-			// TODO in much of the world this should be . not ,
-			var fmt = d3.format(',');
+			var fmt = d3.format();
 
 			MG.data_graphic({
 				title: window.Messages('analysis.accessibility-to', result1.properties.schema[attribute].label),
