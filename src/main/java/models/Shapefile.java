@@ -157,7 +157,6 @@ public class Shapefile implements Serializable {
 
 		@JsonIgnore
 		public HaltonPoints getHaltonPoints(String attributeId) {
-
 			if(haltonPointMap == null)
 				haltonPointMap = new ConcurrentHashMap<String,HaltonPoints>();
 
@@ -613,6 +612,9 @@ public class Shapefile implements Serializable {
 			        			fieldnamesFound.add(name);
 
 			        		}
+							else {
+								feature.attributes.put(name, value != null ? value.toString() : null);
+							}
 			        	}
 			        }
 			    	features.add(new Fun.Tuple2<String,ShapeFeature>(feature.id, feature));
