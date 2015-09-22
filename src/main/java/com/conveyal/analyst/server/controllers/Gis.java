@@ -5,6 +5,7 @@ import com.conveyal.analyst.server.utils.HashUtils;
 import com.conveyal.analyst.server.utils.QueryResults;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
+import com.sun.javafx.geom.Shape;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Point;
@@ -35,6 +36,7 @@ import spark.Response;
 
 import java.io.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static spark.Spark.halt;
 public class Gis extends Controller {
@@ -45,13 +47,11 @@ public class Gis extends Controller {
 		int timeLimit = Integer.parseInt(req.queryParams("timeLimit"));
 		String weightByShapefile = req.queryParams("weightByShapefile");
 		String weightByAttribute = req.queryParams("weightByAttribute");
-		String attributeName = req.queryParams("attributeName");
 		String groupBy = req.queryParams("groupBy");
 		String compareTo = req.queryParams("compareTo");
-		ResultEnvelope.Which which = ResultEnvelope.Which.valueOf(req.queryParams("which"));
-		
+
 		Query query = Query.getQuery(queryId);
-		
+
 		Query query2 = compareTo != null ? Query.getQuery(compareTo) : null;
 
 		User u = currentUser(req);
@@ -61,117 +61,125 @@ public class Gis extends Controller {
 				(query2 != null && !u.hasReadPermission(query2.projectId)))
 			halt(NOT_FOUND, "Could not find query or you do not have access to it");
 
-		String shapeName = (timeLimit / 60) + "_mins_" + which.toString().toLowerCase() + "_";
+		if (compareTo != null &&
+				(!query.originShapefileId.equals(query2.originShapefileId) || !query.destinationShapefileId.equals(query2.destinationShapefileId)))
+			halt(BAD_REQUEST, "Shapefiles must match for comparison");
 
-		String queryKey = queryId + "_" + timeLimit + "_" + which + "_" + attributeName;
+		Shapefile shpNorm = weightByShapefile != null ? Shapefile.getShapefile(weightByShapefile) : null;
+		// these are not the origins of the search but the output geographies of the query
+		Shapefile outputFeatures = groupBy != null ? Shapefile.getShapefile(groupBy) : Shapefile.getShapefile(query.originShapefileId);
+		Shapefile destinations = Shapefile.getShapefile(query.destinationShapefileId);
 
-		QueryResults qr, qr2;
+		// get query results for every attribute and envelope param
+		List<QueryResults> results = new ArrayList<>();
 
-		synchronized(QueryResults.queryResultsCache) {
-			if(!QueryResults.queryResultsCache.containsKey(queryKey)) {
-				qr = new QueryResults(query, timeLimit, which, attributeName);
-				QueryResults.queryResultsCache.put(queryKey, qr);
-			}
-			else
-				qr = QueryResults.queryResultsCache.get(queryKey);
+		ResultEnvelope.Which[] params;
+		if (query.isTransit())
+			params = new ResultEnvelope.Which[] { ResultEnvelope.Which.WORST_CASE, ResultEnvelope.Which.AVERAGE, ResultEnvelope.Which.BEST_CASE };
+		else
+			params = new ResultEnvelope.Which[] { ResultEnvelope.Which.AVERAGE };
 
-			if (compareTo != null) {
-				String q2key = compareTo + "_" + timeLimit + "_" + which;
+		List<Attribute> destinationAttributes = destinations.getShapeAttributes().stream()
+				.filter(a -> a.hide == null || !a.hide)
+				.collect(Collectors.toList());
 
-				if(!QueryResults.queryResultsCache.containsKey(q2key)) {
-					qr2 = new QueryResults(query2, timeLimit, which, attributeName);
-					QueryResults.queryResultsCache.put(q2key, qr2);
-				}
-				else {
-					qr2 = QueryResults.queryResultsCache.get(q2key);
-				}
+		// NB loop over attributes is outside loop. Must retain this pattern when creating field names.
+		for (Attribute a : destinationAttributes) {
+			for (ResultEnvelope.Which which : params) {
+				String queryKey = queryId + "_" + timeLimit + "_" + which + "_" + a.fieldName;
 
-				qr = qr.subtract(qr2);
-			}
-		}
+				synchronized (QueryResults.queryResultsCache) {
+					QueryResults qr;
 
-		Shapefile shp = Shapefile.getShapefile(query.originShapefileId);
+					if (!QueryResults.queryResultsCache.containsKey(queryKey)) {
+						qr = new QueryResults(query, timeLimit, which, a.fieldName);
+						QueryResults.queryResultsCache.put(queryKey, qr);
+					} else
+						qr = QueryResults.queryResultsCache.get(queryKey);
 
+					if (compareTo != null) {
+						String q2key = compareTo + "_" + timeLimit + "_" + which + "_" + a.fieldName;
+						QueryResults qr2;
 
-		Collection<ShapeFeature> features = shp.getShapeFeatureStore().getAll();
+						if (!QueryResults.queryResultsCache.containsKey(q2key)) {
+							qr2 = new QueryResults(query2, timeLimit, which, a.fieldName);
+							QueryResults.queryResultsCache.put(q2key, qr2);
+						} else {
+							qr2 = QueryResults.queryResultsCache.get(q2key);
+						}
 
-		if(weightByShapefile == null) {
-
-			ArrayList<String> fields = new ArrayList<String>();
-
-			fields.add(shp.name.replaceAll("\\W+", ""));
-
-			ArrayList<GisShapeFeature> gisFeatures = new ArrayList<GisShapeFeature>();
-
-			for(ShapeFeature feature : features) {
-
-				if(qr.items.containsKey(feature.id)) {
-					GisShapeFeature gf = new GisShapeFeature();
-					gf.geom = feature.geom;
-					gf.id = feature.id;
-
-					gf.fields.add(qr.items.get(feature.id).value);
-
-					gisFeatures.add(gf);
-				}
-			}
-
-			shapeName += "access_" + shp.name.replaceAll("\\W+", "").toLowerCase() +
-					(query2 != null ? "_compare_" + query2.name : "");
-
-			res.header("Content-Disposition", "attachment; filename=" + shapeName + ".zip");
-
-			generateZippedShapefile(shapeName, fields, gisFeatures, false, false, res);
-			return "";
-		}
-		else {
-
-
-
-			if(groupBy == null) {
-
-				halt(BAD_REQUEST, "Must specify a weight by clause when specifying a normalize by clause!");
-
-			}
-			else {
-
-
-				Shapefile shpNorm = Shapefile.getShapefile(weightByShapefile);
-				Shapefile aggregateToSf = Shapefile.getShapefile(groupBy);
-
-				QueryResults groupedQr = qr.aggregate(aggregateToSf, shpNorm, weightByAttribute);
-
-				ArrayList<String> fields = new ArrayList<String>();
-
-				fields.add("groupval");
-
-				ArrayList<GisShapeFeature> gisFeatures = new ArrayList<GisShapeFeature>();
-
-
-				for(ShapeFeature feature : aggregateToSf.getShapeFeatureStore().getAll()) {
-
-					if(groupedQr.items.containsKey(feature.id)) {
-						GisShapeFeature gf = new GisShapeFeature();
-						gf.geom = feature.geom;
-						gf.id = feature.id;
-
-						gf.fields.add(groupedQr.items.get(feature.id).value);
-
-						gisFeatures.add(gf);
+						qr = qr.subtract(qr2);
 					}
+
+					if (weightByShapefile != null) {
+						if(groupBy == null)
+							halt(BAD_REQUEST, "Must specify a weight by clause when specifying a normalize by clause!");
+
+						qr = qr.aggregate(outputFeatures, shpNorm, weightByAttribute);
+					}
+
+					results.add(qr);
 				}
-
-
-				shapeName += "_" + shp.name.replaceAll("\\W+", "") + "_norm_" + shpNorm.name.replaceAll("\\W+", "") + "_group_" +
-						aggregateToSf.name.replaceAll("\\W+", "").toLowerCase() + (query2 != null ? "_compare_" + query2.name : "");
-
-				res.header("Content-Disposition", "attachment; filename=" + shapeName + ".zip");
-				generateZippedShapefile(shapeName, fields, gisFeatures, false, false, res);
-				return "";
 			}
 		}
 
-		return null;
+		List<Attribute> outputAttributes = outputFeatures.getShapeAttributes().stream()
+				.filter(a -> a.hide == null || !a.hide)
+				.collect(Collectors.toList());
+
+		Collection<ShapeFeature> features = outputFeatures.getShapeFeatureStore().getAll();
+
+		List<String> fields = new ArrayList<String>();
+		List<String> fieldTypes = new ArrayList<>();
+
+		// add fields from the origins as well
+		for (Attribute a : outputAttributes) {
+			fields.add("o_" + a.fieldName);
+			fieldTypes.add(a.numeric ? "Double" : "String");
+		}
+
+		// NB loop over attributes is outside loop, matches order that query results are in.
+		for (Attribute a : destinationAttributes) {
+			for (ResultEnvelope.Which which : params) {
+				fields.add(which.toString().substring(0, 1) + "_" + a.fieldName);
+				fieldTypes.add(a.numeric ? "Double" : "String");
+			}
+		}
+
+		// shapefiles can only have 255 fields
+		if (fields.size() > 255)
+			halt("Too many fields to export shapefile. Hide some fields and try again.");
+
+		ArrayList<GisShapeFeature> gisFeatures = new ArrayList<>();
+
+		for (ShapeFeature feature : features) {
+			GisShapeFeature gf = new GisShapeFeature();
+			gf.geom = feature.geom;
+			gf.id = feature.id;
+
+			for (Attribute a : outputAttributes) {
+				gf.fields.add(feature.getAttribute(a.fieldName));
+			}
+
+			// NB these come from a loop with attributes on the outside so they match field order
+			for (QueryResults qr : results) {
+				if (qr.items.containsKey(feature.id)) {
+					gf.fields.add(qr.items.get(feature.id).value);
+				}
+				else
+					// preserve positional information
+					gf.fields.add(null);
+			}
+
+			gisFeatures.add(gf);
+		}
+
+		String shapeName = query.name + (query2 != null ? "_" + query2.name : "");
+
+		res.header("Content-Disposition", "attachment; filename=" + shapeName + ".zip");
+
+		generateZippedShapefile(shapeName, fields, gisFeatures, false, false, fieldTypes, res);
+		return "";
     }
 	
 
@@ -309,8 +317,19 @@ public class Gis extends Controller {
 		ArrayList<Object> fields = new ArrayList<Object>();
 		
 	}
-	
-	static void generateZippedShapefile(String fileName, ArrayList<String> fieldNames, List<GisShapeFeature> features, boolean difference, boolean includeTimeFields, Response res)
+
+	/** generate a zipped shapefile with field types inferred automatically. Won't work with null values */
+	static void generateZippedShapefile (String fileName, List<String> fieldNames, List<GisShapeFeature> features,
+										 boolean difference, boolean includeTimeFields, Response res) throws Exception {
+		generateZippedShapefile(fileName, fieldNames, features, difference, includeTimeFields, null, res);
+	}
+
+	/**
+	 * Generate a zipped shapefile and send it to the response res. Specify field names and optionally field types
+	 * (field types are non optional if there are null values, as dynamic type inference won't work on nulls).
+	 */
+	static void generateZippedShapefile(String fileName, List<String> fieldNames, List<GisShapeFeature> features,
+										boolean difference, boolean includeTimeFields, List<String> fieldTypes, Response res)
 			throws Exception {
 			
 		String shapeFileId = HashUtils.hashString("shapefile_" + (new Date()).toString()).substring(0, 6) + "_" + fileName;
@@ -347,6 +366,9 @@ public class Gis extends Controller {
 			featureDefinition += ",time2:Integer,difference:Integer";
 
 		int fieldPosition = 0;
+
+		Set<String> usedFieldNames = new HashSet<>();
+
 		for(String fieldName : fieldNames) {
 
 			String shortFieldName = fieldName;
@@ -354,11 +376,27 @@ public class Gis extends Controller {
 			if(fieldName.length() > 10)
 				shortFieldName = fieldName.substring(0, 10);
 
+			int i = 0;
+			while (usedFieldNames.contains(shortFieldName)) {
+				shortFieldName = shortFieldName.substring(0, 8) + i++;
+			}
+
+			usedFieldNames.add(shortFieldName);
+
 			featureDefinition += "," + shortFieldName + ":";
-			if(features.get(0).fields.get(fieldPosition) instanceof String)
-				featureDefinition += "String";
-			if(features.get(0).fields.get(fieldPosition) instanceof Number)
-				featureDefinition += "Double";
+
+
+			if (fieldTypes == null) {
+				if (features.get(0).fields.get(fieldPosition) instanceof String)
+					featureDefinition += "String";
+				else if (features.get(0).fields.get(fieldPosition) instanceof Number)
+					featureDefinition += "Double";
+				else {
+					LOG.error("Cannot process field of type {}", features.get(0).fields.get(fieldPosition).getClass());
+				}
+			} else {
+				featureDefinition += fieldTypes.get(fieldPosition);
+			}
 			fieldPosition++;
 		}
 
