@@ -177,6 +177,7 @@ public class Shapefile implements Serializable {
 
 		@JsonIgnore
 		public Integer getAttribute(String attributeId) {
+			// TODO: don't assume everything is numeric, and don't cast everything to int (bad for e.g. synthetic populations with fractional people)
 			if(attributes.containsKey(attributeId))
 				return ((Number) attributes.get(attributeId)).intValue();
 			else
