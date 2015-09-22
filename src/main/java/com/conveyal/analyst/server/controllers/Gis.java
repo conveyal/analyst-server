@@ -160,8 +160,10 @@ public class Gis extends Controller {
 			for (Attribute a : outputAttributes) {
 				if (a.numeric)
 					gf.fields.add(((Number) feature.attributes.get(a.fieldName)).doubleValue());
-				else
-					gf.fields.add(feature.attributes.get(a.fieldName).toString());
+				else {
+					Object feat = feature.attributes.get(a.fieldName);
+					gf.fields.add(feat != null ? feat.toString() : feat);
+				}
 			}
 
 			// NB these come from a loop with attributes on the outside so they match field order
