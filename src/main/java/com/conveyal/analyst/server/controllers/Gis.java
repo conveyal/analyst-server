@@ -49,6 +49,9 @@ public class Gis extends Controller {
 		String weightByAttribute = req.queryParams("weightByAttribute");
 		String groupBy = req.queryParams("groupBy");
 		String compareTo = req.queryParams("compareTo");
+		// The attribute to export. Of course it would be preferable to export all attributes but that is currently
+		// too slow to be used in production. We can optimize it later and make that change.
+		String attributeName = req.queryParams("attributeName");
 
 		Query query = Query.getQuery(queryId);
 
@@ -79,9 +82,22 @@ public class Gis extends Controller {
 		else
 			params = new ResultEnvelope.Which[] { ResultEnvelope.Which.AVERAGE };
 
-		List<Attribute> destinationAttributes = destinations.getShapeAttributes().stream()
+		// Uncomment to get accessibility to all attributes which would of course be better. However it's too slow.
+		// The code below is written to include all destination attributes, that's just turned off right now due to speed
+		// constraints.
+		/*List<Attribute> destinationAttributes = destinations.getShapeAttributes().stream()
 				.filter(a -> a.hide == null || !a.hide)
-				.collect(Collectors.toList());
+				.collect(Collectors.toList());*/
+
+		List<Attribute> destinationAttributes = Arrays.asList(
+				destinations.getShapeAttributes().stream()
+						.filter(a -> a.fieldName.equals(attributeName))
+						.findFirst()
+						.orElse(null)
+		);
+
+		if (destinationAttributes.get(0) == null)
+			halt(BAD_REQUEST, "No such column");
 
 		// NB loop over attributes is outside loop. Must retain this pattern when creating field names.
 		for (Attribute a : destinationAttributes) {
