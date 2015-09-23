@@ -53,6 +53,13 @@ public class Gis extends Controller {
 		// too slow to be used in production. We can optimize it later and make that change.
 		String attributeName = req.queryParams("attributeName");
 
+		// the envelope parameter to export. Again it would be preferable to export all of them but that is too slow.
+		ResultEnvelope.Which param = ResultEnvelope.Which.valueOf(req.queryParams("which"));
+
+		if (param == null) {
+			halt (BAD_REQUEST, "unknown envelope parameter")
+		}
+
 		Query query = Query.getQuery(queryId);
 
 		Query query2 = compareTo != null ? Query.getQuery(compareTo) : null;
@@ -76,11 +83,12 @@ public class Gis extends Controller {
 		// get query results for every attribute and envelope param
 		List<QueryResults> results = new ArrayList<>();
 
-		ResultEnvelope.Which[] params;
-		if (query.isTransit())
+		// uncomment conditionals to get results for all parameters
+		ResultEnvelope.Which[] params = new ResultEnvelope.Which[] { param };
+		/*if (query.isTransit())
 			params = new ResultEnvelope.Which[] { ResultEnvelope.Which.WORST_CASE, ResultEnvelope.Which.AVERAGE, ResultEnvelope.Which.BEST_CASE };
 		else
-			params = new ResultEnvelope.Which[] { ResultEnvelope.Which.AVERAGE };
+			params = new ResultEnvelope.Which[] { ResultEnvelope.Which.AVERAGE }; */
 
 		// Uncomment to get accessibility to all attributes which would of course be better. However it's too slow.
 		// The code below is written to include all destination attributes, that's just turned off right now due to speed
@@ -195,7 +203,7 @@ public class Gis extends Controller {
 			gisFeatures.add(gf);
 		}
 
-		String shapeName = query.name + (query2 != null ? "_" + query2.name : "");
+		String shapeName = query.name + (query2 != null ? "_" + query2.name : "") + "_" + attributeName + "_" + (timeLimit / 60) + "mins";
 
 		res.header("Content-Disposition", "attachment; filename=" + shapeName + ".zip");
 
