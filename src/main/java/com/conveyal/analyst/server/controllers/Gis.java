@@ -182,11 +182,13 @@ public class Gis extends Controller {
 			gf.id = feature.id;
 
 			for (Attribute a : outputAttributes) {
-				if (a.numeric)
+				Object feat = feature.attributes.get(a.fieldName);
+				if (feat == null)
+					gf.fields.add(feat);
+				else if (a.numeric)
 					gf.fields.add(((Number) feature.attributes.get(a.fieldName)).doubleValue());
 				else {
-					Object feat = feature.attributes.get(a.fieldName);
-					gf.fields.add(feat != null ? feat.toString() : feat);
+					gf.fields.add(feat.toString());
 				}
 			}
 
