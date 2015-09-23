@@ -2,7 +2,6 @@ package com.conveyal.analyst.server.utils;
 
 import com.conveyal.analyst.server.AnalystMain;
 import com.google.common.collect.Lists;
-import models.Shapefile;
 import org.mapdb.*;
 import org.mapdb.DB.BTreeMapMaker;
 import org.mapdb.Fun.Tuple2;
@@ -22,11 +21,6 @@ public class DataStore<T> {
 	Map<String,T> map;
 	
 	public static String dataPath = null;
-
-	/** Used to create in-memory stores */
-	private DataStore (Map<String, T> map) {
-		this.map = map;
-	}
 	
 	/** Create a new data store in the default location with transactional support enabled and the default cache and serializer */
 	public DataStore(String dataFile) {
@@ -198,15 +192,5 @@ public class DataStore<T> {
 	public int getInt(String name) {
 		return db.getAtomicInteger(name).get();
 	}
-
-	/** Create an in-memory store from this store */
-	public DataStore<T> toMemoryStore() {
-		// NB we are creating a new datastore rather than modifying this one so it will be gc'ed soon after it is used.
-		// Also it changes to the new datastore will not be reflected in the underlying store.
-
-		Map<String, T> newMap = new HashMap<>();
-		newMap.putAll(map);
-
-		return new DataStore<T>(newMap);
-	}
+	
 }
