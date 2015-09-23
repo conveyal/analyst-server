@@ -169,7 +169,7 @@ public class QueryResults {
 			}
 			else {
 				// just use the id -> feature mapping directly
-				weightStore = weightBy.getShapeFeatureStore();
+				weightStore = weightBy.getShapeFeatureStore().toMemoryStore();
 			}
 			
 			// build a spatial index for the features of this queryresult
@@ -180,7 +180,7 @@ public class QueryResults {
 			// this does not actually load all the features into memory; this is a MapDB, and
 			// DataStore is delegating to MapDB's map values() function, which returns a disk-backed
 			// collection
-			for (final ShapeFeature aggregateFeature : aggregateTo.getShapeFeatureStore().getAll()) {
+			for (final ShapeFeature aggregateFeature : aggregateTo.getShapeFeatureStore().toMemoryStore().getAll()) {
 				// TODO: this should be moved into Akka actors and parallelized
 				// TODO: ensure STRtree is threadsafe. There is some debate on this point.
 				Envelope env = aggregateFeature.geom.getEnvelopeInternal();
