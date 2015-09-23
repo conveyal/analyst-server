@@ -57,7 +57,7 @@ public class Gis extends Controller {
 		ResultEnvelope.Which param = ResultEnvelope.Which.valueOf(req.queryParams("which"));
 
 		if (param == null) {
-			halt (BAD_REQUEST, "unknown envelope parameter")
+			halt (BAD_REQUEST, "unknown envelope parameter");
 		}
 
 		Query query = Query.getQuery(queryId);
