@@ -2,6 +2,10 @@ package com.conveyal.analyst.server.utils;
 
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.MultiPolygon;
+import com.vividsolutions.jts.geom.Polygon;
+import com.vividsolutions.jts.geom.prep.PreparedGeometry;
+import com.vividsolutions.jts.geom.prep.PreparedPolygon;
 import com.vividsolutions.jts.index.SpatialIndex;
 import com.vividsolutions.jts.index.strtree.STRtree;
 import models.Query;
@@ -88,20 +92,20 @@ public class QueryResults {
        double value;
 
        for (Iterator<ResultSet> it = q.getResults().getAll(dest.categoryId + "." + attributeId, which); it.hasNext();) {
-    	   ResultSet feature = it.next();
+       ResultSet feature = it.next();
 
-           value = (double) feature.sum(timeLimit, dest.categoryId + "." + attributeId);
-        	
-        	if(maxValue == null || value > maxValue)
-        		maxValue = value;
-        	if(minValue == null || minValue > value)
-        		minValue = value;
-        	
-        	QueryResultItem item = new QueryResultItem();
-        	
-        	item.value = value;
-        	        	
-        	item.feature = origin.getShapeFeatureStore().getById(feature.id);
+       value = (double) feature.sum(timeLimit, dest.categoryId + "." + attributeId);
+
+        if(maxValue == null || value > maxValue)
+            maxValue = value;
+        if(minValue == null || minValue > value)
+            minValue = value;
+
+        QueryResultItem item = new QueryResultItem();
+
+        item.value = value;
+
+        item.feature = origin.getShapeFeatureStore().getById(feature.id);
         	
         	items.put(feature.id, item);
        }
@@ -207,15 +211,17 @@ public class QueryResults {
 						weight = weightStore.getById(match.feature.id).getAttribute(weightByAttribute);
 					}
 					else {
-						weight = 0;
-						
 						// query the spatial index
 						List<ShapeFeature> potentialWeights =
 								weightIdx.query(matchGeom.getEnvelopeInternal());
-						
-						for (ShapeFeature weightFeature : potentialWeights) {
-							// calculate the weight of the entire item geometry that we are weighting by
-							Geometry weightGeom = weightFeature.geom;
+
+						// Generally, people want to aggregate a relatively large number of features into a relatively
+						// small number of features (perhaps only one). Thus we can gain more by parallelism here than
+						// we would by parallelizing the outside loop over aggregation features. We also neatly avoid
+						// any concerns about thread safety with STRtrees
+						weight = potentialWeights.parallelStream().mapToDouble(weightFeature -> {
+                            // calculate the weight of the entire item geometry that we are weighting by
+                            Geometry weightGeom = weightFeature.geom;
 
 							double totalWeight = weightFeature.getAttribute(weightByAttribute);
 
@@ -224,33 +230,34 @@ public class QueryResults {
 							
 							// don't divide by zeroish
 							if (weightArea < 0.0000000001)
-								continue;
+								return 0;
 
 							Geometry overlap = weightGeom.intersection(matchGeom);
 							if (overlap.isEmpty())
-								continue;
+								return 0;
 							
 							double overlapArea = GeoUtils.getArea(overlap);
 							
-							weight += totalWeight * (overlapArea / weightArea);
-								
-						}
+							return totalWeight * (overlapArea / weightArea);
+						}).sum();
 					}
-					
-					// this aggregate geography may not completely contain the original geography.
-					// discount weight to account for that.
-					
-					double matchArea = GeoUtils.getArea(matchGeom);
-					
-					if (matchArea < 0.0000000001)
-						continue;
 
-					Geometry overlap = matchGeom.intersection(aggregateFeature.geom);
-					
-					if (overlap.isEmpty())
-						continue;
-					
-					weight *= GeoUtils.getArea(overlap) / matchArea;
+                    if (!match.feature.geom.within(aggregateFeature.geom)) {
+                        // this aggregate geography does not completely contain the original geography.
+                        // discount weight to account for that.
+
+                        double matchArea = GeoUtils.getArea(matchGeom);
+
+                        if (matchArea < 0.0000000001)
+                            continue;
+
+                        Geometry overlap = matchGeom.intersection(aggregateFeature.geom);
+
+                        if (overlap.isEmpty())
+                            continue;
+
+                        weight *= GeoUtils.getArea(overlap) / matchArea;
+                    }
 					
 					weightedVal += match.value * weight;
 					sumOfWeights += weight;
