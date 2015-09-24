@@ -153,11 +153,13 @@ public class Gis extends Controller {
 		Collection<ShapeFeature> features = outputFeatures.getShapeFeatureStore().getAll();
 
 		List<String> fields = new ArrayList<String>();
+		List<String> fieldDescriptions = new ArrayList<>();
 		List<String> fieldTypes = new ArrayList<>();
 
 		// add fields from the origins as well
 		for (Attribute a : outputAttributes) {
 			fields.add("o_" + a.fieldName);
+			fieldDescriptions.add(a.name + " value associated with the origin or aggregation area in the uploaded shapefile. Not an accessibility value.");
 			fieldTypes.add(a.numeric ? "Double" : "String");
 		}
 
@@ -165,6 +167,7 @@ public class Gis extends Controller {
 		for (Attribute a : destinationAttributes) {
 			for (ResultEnvelope.Which which : params) {
 				fields.add(which.toString().substring(0, 1) + "_" + a.fieldName);
+				fieldDescriptions.add(which.toHumanString() + " accessibility to " + a.name);
 				fieldTypes.add(a.numeric ? "Double" : "String");
 			}
 		}
@@ -208,7 +211,7 @@ public class Gis extends Controller {
 
 		res.header("Content-Disposition", "attachment; filename=" + shapeName + ".zip");
 
-		generateZippedShapefile(shapeName, fields, gisFeatures, false, false, fieldTypes, res);
+		generateZippedShapefile(shapeName, fields, gisFeatures, false, false, fieldTypes, fieldDescriptions, res);
 		return "";
     }
 	
@@ -351,7 +354,7 @@ public class Gis extends Controller {
 	/** generate a zipped shapefile with field types inferred automatically. Won't work with null values */
 	static void generateZippedShapefile (String fileName, List<String> fieldNames, List<GisShapeFeature> features,
 										 boolean difference, boolean includeTimeFields, Response res) throws Exception {
-		generateZippedShapefile(fileName, fieldNames, features, difference, includeTimeFields, null, res);
+		generateZippedShapefile(fileName, fieldNames, features, difference, includeTimeFields, null, null, res);
 	}
 
 	/**
@@ -359,7 +362,8 @@ public class Gis extends Controller {
 	 * (field types are non optional if there are null values, as dynamic type inference won't work on nulls).
 	 */
 	static void generateZippedShapefile(String fileName, List<String> fieldNames, List<GisShapeFeature> features,
-										boolean difference, boolean includeTimeFields, List<String> fieldTypes, Response res)
+										boolean difference, boolean includeTimeFields, List<String> fieldTypes,
+										List<String> fieldDescriptions, Response res)
 			throws Exception {
 			
 		String shapeFileId = HashUtils.hashString("shapefile_" + (new Date()).toString()).substring(0, 6) + "_" + fileName;
@@ -398,6 +402,7 @@ public class Gis extends Controller {
 		int fieldPosition = 0;
 
 		Set<String> usedFieldNames = new HashSet<>();
+		List<String> shortFieldNames = new ArrayList<String>();
 
 		for(String fieldName : fieldNames) {
 
@@ -414,6 +419,7 @@ public class Gis extends Controller {
 			}
 
 			usedFieldNames.add(shortFieldName);
+			shortFieldNames.add(shortFieldName);
 
 			featureDefinition += "," + shortFieldName + ":";
 
@@ -488,6 +494,20 @@ public class Gis extends Controller {
 		else
 		{
 			throw new Exception(typeName + " does not support read/write access");
+		}
+
+		// create a data dictionary if requested
+		if (fieldDescriptions != null) {
+			File readme = new File(outputDirectory, "README.txt");
+			FileWriter w = new FileWriter(readme);
+
+			w.write("Field descriptions\n");
+
+			for (int i = 0; i < fieldNames.size(); i++) {
+				w.write(String.format("%s: %s\n", shortFieldNames.get(i), fieldDescriptions.get(i)));
+			}
+
+			w.close();
 		}
 
 		res.header("Content-Type", "application/x-zip");
