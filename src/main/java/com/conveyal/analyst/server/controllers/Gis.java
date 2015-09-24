@@ -5,7 +5,6 @@ import com.conveyal.analyst.server.utils.HashUtils;
 import com.conveyal.analyst.server.utils.QueryResults;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
-import com.sun.javafx.geom.Shape;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Point;
@@ -402,10 +401,12 @@ public class Gis extends Controller {
 
 		for(String fieldName : fieldNames) {
 
-			String shortFieldName = fieldName;
+			// clean the names. shapefiles are lame and have issues with some column names, see
+			// http://support.esri.com/en/knowledgebase/techarticles/detail/23087
+			String shortFieldName = Attribute.convertNameToId(fieldName);
 
-			if(fieldName.length() > 10)
-				shortFieldName = fieldName.substring(0, 10);
+			if (shortFieldName.length() > 10)
+				shortFieldName = shortFieldName.substring(0, 10);
 
 			int i = 0;
 			while (usedFieldNames.contains(shortFieldName)) {
@@ -423,7 +424,8 @@ public class Gis extends Controller {
 				else if (features.get(0).fields.get(fieldPosition) instanceof Number)
 					featureDefinition += "Double";
 				else {
-					LOG.error("Cannot process field of type {}", features.get(0).fields.get(fieldPosition).getClass());
+					LOG.error("Cannot process field of type {}, assuming String", features.get(0).fields.get(fieldPosition).getClass());
+					featureDefinition += "String";
 				}
 			} else {
 				featureDefinition += fieldTypes.get(fieldPosition);
@@ -449,7 +451,7 @@ public class Gis extends Controller {
 			featureBuilder.add(feature.id);
 
 			if (includeTimeFields)
-			featureBuilder.add(feature.time);
+				featureBuilder.add(feature.time);
 
 			if (difference && includeTimeFields) {
 				featureBuilder.add(feature.time2);
