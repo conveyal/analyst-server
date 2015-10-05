@@ -1,6 +1,5 @@
 package com.conveyal.analyst.server.utils;
 
-import com.sun.tools.javac.jvm.ByteCodes;
 import com.vividsolutions.jts.geom.*;
 import com.vividsolutions.jts.noding.IteratedNoder;
 import com.vividsolutions.jts.noding.NodedSegmentString;
