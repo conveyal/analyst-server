@@ -167,7 +167,7 @@ public class Tile {
 		    	}
 			}
 			else {
-				gr.fillOval((int)coords[0].x, (int)coords[0].y, 5, 5);
+				gr.fillOval((int)coords[0].x, (int)coords[0].y, 10, 10);
 			}
 		}
 	}
