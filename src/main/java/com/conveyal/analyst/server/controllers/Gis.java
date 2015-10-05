@@ -1,6 +1,7 @@
 package com.conveyal.analyst.server.controllers;
 
 import com.conveyal.analyst.server.utils.DirectoryZip;
+import com.conveyal.analyst.server.utils.GeoUtils;
 import com.conveyal.analyst.server.utils.HashUtils;
 import com.conveyal.analyst.server.utils.QueryResults;
 import com.google.common.io.ByteStreams;
@@ -8,6 +9,7 @@ import com.google.common.io.Files;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Point;
+import com.vividsolutions.jts.geom.Polygon;
 import models.Attribute;
 import models.Query;
 import models.Shapefile;
@@ -36,6 +38,8 @@ import spark.Response;
 import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static spark.Spark.halt;
 public class Gis extends Controller {
@@ -220,11 +224,45 @@ public class Gis extends Controller {
      * Get a ResultSet.
      */
     public static String single(Request req, Response res) throws Exception {
-    	ResultEnvelope.Which whichEnum = ResultEnvelope.Which.valueOf(req.queryParams("which"));
+		ResultEnvelope.Which whichEnum = ResultEnvelope.Which.valueOf(req.queryParams("which"));
 		String key = req.queryParams("key");
 
 		ResultEnvelope env = SinglePoint.getResultSet(key);
 		ResultSet result = env.get(whichEnum);
+
+		// handle vector isochrones separately from accessibility results
+		if (result.isochrones != null && result.isochrones.length > 0)
+			return singleIsochrones(req, res, env, result);
+		else
+			return singleAccessibility(req, res, env, result);
+	}
+
+	/** Handle GIS download for vector isochrones */
+	public static String singleIsochrones (Request req, Response res, ResultEnvelope env, ResultSet result) throws Exception {
+		res.header("Content-Disposition", "attachment; filename=" + req.queryParams("which") + ".zip");
+
+		List<GisShapeFeature> features = Stream.of(result.isochrones)
+				.map(iso -> {
+					GisShapeFeature ret = new GisShapeFeature();
+					Polygon[] polys = new Polygon[iso.geometry.getNumGeometries()];
+
+					for (int i = 0; i < iso.geometry.getNumGeometries(); i++) {
+						polys[i] = (Polygon) iso.geometry.getGeometryN(i);
+ 					}
+
+					ret.geom = GeoUtils.getGeometryFactory().createMultiPolygon(polys);
+					ret.time = iso.cutoffSec;
+					ret.id = "" + iso.cutoffSec;
+					return ret;
+				})
+				.collect(Collectors.toList());
+
+		generateZippedShapefile(req.queryParams("which"), Collections.emptyList(), features, false, true, res);
+		return "";
+	}
+
+	/** Handle a GIS download for shapefile accessibility results */
+	public static String singleAccessibility(Request req, Response res, ResultEnvelope env, ResultSet result) throws Exception {
 
 		final Shapefile shp = Shapefile.getShapefile(env.destinationPointsetId);
 
