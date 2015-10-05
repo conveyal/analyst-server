@@ -167,7 +167,7 @@ public class Gis extends Controller {
 		for (Attribute a : destinationAttributes) {
 			for (ResultEnvelope.Which which : params) {
 				fields.add(which.toString().substring(0, 1) + "_" + a.fieldName);
-				fieldDescriptions.add(which.toHumanString() + " accessibility to " + a.name);
+				fieldDescriptions.add((weightByShapefile != null ? "difference in " : "") + which.toHumanString() + " accessibility to " + a.name);
 				fieldTypes.add(a.numeric ? "Double" : "String");
 			}
 		}
