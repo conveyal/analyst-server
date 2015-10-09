@@ -1,19 +1,21 @@
-html.analyst, body.analyst, #app, #app-map, #app-body {
+html.analyst, body.analyst, #app, #app-map,#app-body {
   height: 100%;
+  width: 100%;
   overflow: hidden;
   padding: 0px;
   margin: 0px;
   font-family: 'Open Sans', sans-serif;
-  font-size: 10pt;
 }
 
 #app-side-panel {
   /* z-index needs to be relatively small so it stays behind the select2 popup menu */
 	z-index: 100;
-  height: 100%;
-  overflow: scroll;
-  /* stay below nav bar */
-  margin-top: 35px;
+	position: fixed;
+	bottom: 10px;
+	right: 10px;
+	width: 450px;
+     max-height: 600px;
+     overflow: scroll;
 }
 
 .panel-body{

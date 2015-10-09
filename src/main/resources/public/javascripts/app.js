@@ -194,7 +194,8 @@ var Analyst = Analyst || {};
 
 		regions: {
 			appNav: 			"#app-nav",
-			appSidePanel:       "#app-side-panel"
+			appSidePanel:       "#app-side-panel",
+			appCenterPanel:     "#app-center-panel"
 		},
 
 		initialize : function() {

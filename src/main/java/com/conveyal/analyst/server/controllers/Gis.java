@@ -486,7 +486,7 @@ public class Gis extends Controller {
 			fieldPosition++;
 		}
 
-			SimpleFeatureType featureType = DataUtilities.createType("Analyst", featureDefinition);
+		SimpleFeatureType featureType = DataUtilities.createType("Analyst", featureDefinition);
 
 		SimpleFeatureBuilder featureBuilder = null;
 
