@@ -725,6 +725,7 @@ public class Shapefile implements Serializable {
 			try {
 				shapefile.writeToClusterCache();
 			} catch (IOException e) {
+				LOG.error("Error writing shapefile to cluster cache", e);
 				continue;
 			}
 		}
