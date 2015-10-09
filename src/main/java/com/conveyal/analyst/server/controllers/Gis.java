@@ -171,8 +171,14 @@ public class Gis extends Controller {
 		for (Attribute a : destinationAttributes) {
 			for (ResultEnvelope.Which which : params) {
 				fields.add(which.toString().substring(0, 1) + "_" + a.fieldName);
+				fields.add(which.toString().substring(0, 1) + "pct_" + a.fieldName);
 				fieldDescriptions.add((weightByShapefile != null ? "difference in " : "") + which.toHumanString() + " accessibility to " + a.name);
+				fieldDescriptions.add((weightByShapefile != null ? "difference in " : "") + which.toHumanString() +
+						" accessibility to " + a.name + "(percentage points relative to total " + a.name + ")");
+				// TODO does it even make sense to calculate accessibility to non-numeric attributes?
 				fieldTypes.add(a.numeric ? "Double" : "String");
+				// for the percentage
+				fieldTypes.add("Double");
 			}
 		}
 
@@ -202,10 +208,13 @@ public class Gis extends Controller {
 			for (QueryResults qr : results) {
 				if (qr.items.containsKey(feature.id)) {
 					gf.fields.add(qr.items.get(feature.id).value);
+					gf.fields.add(qr.items.get(feature.id).value / qr.maxPossible);
 				}
-				else
+				else {
 					// preserve positional information
 					gf.fields.add(null);
+					gf.fields.add(null);
+				}
 			}
 
 			gisFeatures.add(gf);
@@ -248,7 +257,7 @@ public class Gis extends Controller {
 
 					for (int i = 0; i < iso.geometry.getNumGeometries(); i++) {
 						polys[i] = (Polygon) iso.geometry.getGeometryN(i);
- 					}
+					}
 
 					ret.geom = GeoUtils.getGeometryFactory().createMultiPolygon(polys);
 					ret.time = iso.cutoffSec;
@@ -427,7 +436,7 @@ public class Gis extends Controller {
 		String featureDefinition = null;
 
 		if(features.size() > 0 && features.get(0).geom instanceof Point)
-			featureDefinition = "the_geom:Point:srid=4326,id:String,time:Integer";
+			featureDefinition = "the_geom:Point:srid=4326,id:String";
 		else
 			featureDefinition = "the_geom:MultiPolygon:srid=4326,id:String";
 
