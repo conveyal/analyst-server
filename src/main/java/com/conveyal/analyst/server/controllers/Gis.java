@@ -435,10 +435,17 @@ public class Gis extends Controller {
 
 		String featureDefinition = null;
 
-		if(features.size() > 0 && features.get(0).geom instanceof Point)
+		if (features.isEmpty())
+			throw new IllegalArgumentException("Empty collection of features");
+
+		if (features.get(0).geom instanceof Point)
 			featureDefinition = "the_geom:Point:srid=4326,id:String";
-		else
+		else if (features.get(0).geom instanceof Polygon)
+			featureDefinition = "the_geom:Polygon:srid=4326,id:String";
+		else if (features.get(0).geom instanceof MultiPolygon)
 			featureDefinition = "the_geom:MultiPolygon:srid=4326,id:String";
+		else
+			throw new IllegalArgumentException("Unrecognized geometry type");
 
 		if (includeTimeFields)
 			featureDefinition += ",time:Integer";
@@ -497,10 +504,7 @@ public class Gis extends Controller {
 
 		for(GisShapeFeature feature : features)
 		{
-			if(feature.geom instanceof Point	)
-				featureBuilder.add((Point)feature.geom);
-			else
-				featureBuilder.add((MultiPolygon)feature.geom);
+			featureBuilder.add(feature.geom);
 			featureBuilder.add(feature.id);
 
 			if (includeTimeFields)
