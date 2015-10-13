@@ -440,9 +440,10 @@ public class Gis extends Controller {
 
 		if (features.get(0).geom instanceof Point)
 			featureDefinition = "the_geom:Point:srid=4326,id:String";
-		else if (features.get(0).geom instanceof Polygon)
-			featureDefinition = "the_geom:Polygon:srid=4326,id:String";
-		else if (features.get(0).geom instanceof MultiPolygon)
+		// it's fine to write polygons (and even mixed polygons and multipolygons, which can occur when data is cleaned)
+		// to a MultiPolygon shapefile as GeoTools converts all polygon features to MultiPolygons internally anyhow:
+		// https://github.com/geotools/geotools/blob/f71b2e2cc6d15dbfa03555dd8ccf96242efd3453/modules/plugin/shapefile/src/main/java/org/geotools/data/shapefile/ShapefileFeatureWriter.java#L372
+		else if (features.get(0).geom instanceof Polygon || features.get(0).geom instanceof MultiPolygon)
 			featureDefinition = "the_geom:MultiPolygon:srid=4326,id:String";
 		else
 			throw new IllegalArgumentException("Unrecognized geometry type");
