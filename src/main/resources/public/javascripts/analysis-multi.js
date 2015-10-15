@@ -99,6 +99,17 @@ var Analyst = Analyst || {};
 				_this.updateResults();
 			}).data('slider');
 
+      this.reachabilityThresholdSlider = this.$('#reachabilityThresholdSlider').slider({
+          formater: function(value) {
+            var pct = Math.round(value * 100);
+            _this.$('#reachabilityThresholdValue').html(window.Messages("analysis.reachability-threshold", pct));
+            return pct + '%';
+          }
+        }).on('slideStop', function(value) {
+
+        _this.updateResults();
+      }).data('slider');
+
       this.scenarios = new A.models.Scenarios();
       this.queries = new A.models.Queries();
       this.shapefiles = new A.models.Shapefiles();
@@ -199,6 +210,7 @@ var Analyst = Analyst || {};
       var walkSpeed = (this.walkSpeedSlider.getValue() * 1000 / 60 / 60 );
       var walkTime = this.walkTimeSlider.getValue();
       var bikeTime = this.bikeTimeSlider.getValue();
+      var reachabilityThreshold = this.reachabilityThresholdSlider.getValue();
 
       var data = {
         name: this.$("#name").val(),
@@ -213,7 +225,8 @@ var Analyst = Analyst || {};
         walkSpeed: walkSpeed,
         bikeSpeed: bikeSpeed,
         maxWalkTime: walkTime,
-        maxBikeTime: bikeTime
+        maxBikeTime: bikeTime,
+        reachabilityThreshold: reachabilityThreshold
       };
 
       // profile routing uses a to time as well

@@ -51,6 +51,9 @@ public class Query implements Serializable {
 	public String projectId;
 	public String name;
 
+	/** The reachability threshold used for this query */
+	public float reachabilityThreshold;
+
 	public RaptorWorkerTimetable.BoardingAssumption boardingAssumption;
 
 	private static final AmazonS3 s3 = new AmazonS3Client();
@@ -275,8 +278,12 @@ public class Query implements Serializable {
 			if (bikeSpeed > 1e-6)
 				profileRequest.bikeSpeed = (float) bikeSpeed;
 
+			profileRequest.reachabilityThreshold = reachabilityThreshold;
+
 		}
 		// At this point PR is known not to be null, it was either supplied by the caller or has been created above.
+		// store profile request in MapDB
+		this.save();
 
 		// TODO batch?
 		long now = System.currentTimeMillis();
