@@ -148,6 +148,17 @@ var Analyst = Analyst || {};
 				_this.updateResults();
 			}).data('slider');
 
+			this.reachabilityThresholdSlider = this.$('#reachabilityThresholdSlider').slider({
+					formater: function(value) {
+						var pct = Math.round(value * 100);
+						_this.$('#reachabilityThresholdValue').html(window.Messages("analysis.reachability-threshold", pct));
+						return pct + '%';
+					}
+				}).on('slideStop', function(value) {
+
+				_this.updateResults();
+			}).data('slider');
+
 			this.mode = 'TRANSIT,WALK';
 
 			this.shapefiles.fetch({reset: true, data : {projectId: A.app.selectedProject}})
@@ -306,8 +317,9 @@ var Analyst = Analyst || {};
 
 		  	var bikeSpeed = (this.bikeSpeedSlider.getValue() * 1000 / 60 / 60 );
 		  	var walkSpeed = (this.walkSpeedSlider.getValue() * 1000 / 60 / 60 );
-				var walkTime = this.walkTimeSlider.getValue();
-				var bikeTime = this.bikeTimeSlider.getValue();
+			var walkTime = this.walkTimeSlider.getValue();
+			var bikeTime = this.bikeTimeSlider.getValue();
+			var reachabilityThreshold = this.reachabilityThresholdSlider.getValue();
 
  			this.scenario1 = this.scenarios.get(this.$('#scenario1').val());
 			this.scenario2 = this.scenarios.get(this.$('#scenario2').val());
@@ -387,6 +399,7 @@ var Analyst = Analyst || {};
 				minBikeTime: 10,
 				minCarTime: 10,
 				suboptimalMinutes: 5,
+				reachabilityThreshold: reachabilityThreshold,
 				analyst: true,
 				bikeSafe: 1,
 				bikeSlope: 1,

@@ -236,6 +236,9 @@ analysis.show-settings=Show Settings
 analysis.n-minutes={0} minutes
 analysis.travel-time-range=Travel Time Range: {0}–{1} minutes
 
+analysis.reachability-threshold=Minimum reachability: {0}%
+analysis.reachability-threshold-tooltip=The minumum percentage of the time window that this destination must be accessible for for it to be considered in the average. For instance, if there is an express bus that affords access to a location for only the first half of the time window, that bus would be considered only if the threshold is less than 50%.
+
 ledger.starting=Starting balance
 ledger.ending=Ending balance
 ledger.total=Total activity

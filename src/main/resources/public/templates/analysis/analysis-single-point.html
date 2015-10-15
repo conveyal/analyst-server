@@ -139,6 +139,18 @@
             <label><span class="notes" id="bikeTimeValue"></span></label>
           <input id="bikeTimeSlider" data-slider-id="bikeTimeSlider" style="width: 250px;" type="text" data-slider-min="1" data-slider-max="60" data-slider-step="1" data-slider-value="20"/>
         </div>
+
+        <div class="form-group">
+          <!--
+            the reachability threshold, see extensive javadoc on the parameter in ProfileRequest.
+            This is more of an advanced parameter, in the new UI we should probably have some sort of "advanced settings" pane where
+            settings like this are hidden.
+
+            The default here is zero, which is not really a recommended value but was the hard-wired value until Analyst Server 0.7.26
+            -->
+          <label><span class="notes" id="reachabilityThresholdValue"></span></label>
+          <input id="reachabilityThresholdSlider" data-slider-id="reachabilityThresholdSlider" style="width: 250px;" type="text" data-slider-min="0" data-slider-max="1" data-slider-step="0.01" data-slider-value="0"/>
+        </div>
       </div>
     </div>
   </div>
