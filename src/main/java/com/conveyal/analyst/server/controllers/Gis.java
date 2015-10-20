@@ -222,6 +222,8 @@ public class Gis extends Controller {
 
 		String shapeName = query.name + (query2 != null ? "_" + query2.name : "") + "_" + attributeName + "_" + (timeLimit / 60) + "mins";
 
+		shapeName = shapeName.replaceAll("[^A-Za-z0-9_\\-]", "_");
+
 		res.header("Content-Disposition", "attachment; filename=" + shapeName + ".zip");
 
 		generateZippedShapefile(shapeName, fields, gisFeatures, false, false, fieldTypes, fieldDescriptions, res);
