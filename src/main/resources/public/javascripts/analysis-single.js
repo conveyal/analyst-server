@@ -330,9 +330,15 @@ var Analyst = Analyst || {};
 			this.$('#showSettings').show();
 			this.$('#queryResults').hide();
 			this.$('#requestFailed').hide();
-			this.$('#queryProcessing').show();
 			this.$('#insufficientQuota').hide();
-			this.$('#initializingCluster').hide();
+			
+			// don't flip to processing if the cluster is still initializing
+			if (!this.initializingCluster) {
+				this.$('#queryProcessing').show();
+				this.$('#initializingCluster').hide();
+			}
+
+			this.initializingCluster = false;
 
 			this.mode = this.$('input[name="mode"]:checked').val();
 
@@ -417,6 +423,8 @@ var Analyst = Analyst || {};
 				_this.$('#requestFailed').hide();
 				_this.$('#insufficientQuota').hide();
 				_this.$('#initializingCluster').show();
+				// note this so that we don't show processing query when we call it again and get a 503 back
+				_this.initializingCluster = true;
 
 				// call back in 15 seconds
 				// TODO updateResults gets called twice on comparison queries
