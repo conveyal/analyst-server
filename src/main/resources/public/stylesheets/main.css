@@ -12,9 +12,9 @@ html.analyst, body.analyst, #app, #app-map,#app-body {
 	z-index: 100;
 	position: fixed;
 	bottom: 10px;
+  top: 65px;
 	right: 10px;
 	width: 450px;
-     max-height: 600px;
      overflow: scroll;
 }
 
@@ -29,10 +29,6 @@ html.analyst, body.analyst, #app, #app-map,#app-body {
      width: 350px;
 }
 
-.list-group {
-     overflow: scroll;
-     max-height: 300px;
-}
 
 #app-center-panel {
      z-index: 2000;
