@@ -7,6 +7,10 @@ html.analyst, body.analyst, #app, #app-map,#app-body {
   font-family: 'Open Sans', sans-serif;
 }
 
+.navbar-default, nav, .dropdown-menu, .pannel-header {
+  background-color: rgba(225, 225, 225, 0.95);
+}
+
 #app-side-panel {
   /* z-index needs to be relatively small so it stays behind the select2 popup menu */
 	z-index: 100;
@@ -47,7 +51,6 @@ html.analyst, body.analyst, #app, #app-map,#app-body {
      margin: 0px;
      padding: 10px;
      font-size: 14px;
-     background: rgba(183, 183, 183, 0.25);
      color: #777777;
 }
 
