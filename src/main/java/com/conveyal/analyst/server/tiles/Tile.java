@@ -162,7 +162,7 @@ public class Tile {
 		    	
 		    	if(stroke != null) {
 		    		gr.setColor(stroke);
-		    		gr.setStroke(new BasicStroke(2));
+		    		gr.setStroke(new BasicStroke(0.25f));
 		    		gr.draw(p);
 		    	}
 			}
