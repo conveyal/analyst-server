@@ -252,12 +252,11 @@
     </plugins>
   </build>
 
-
   <repositories>
-	  <repository>
-	    <id>conveyal</id>
-	    <name>Conveyal Maven Repository</name>
-	    <url>http://maven.conveyal.com/</url>
+    <repository>
+      <id>conveyal</id>
+      <name>Conveyal Maven Repository</name>
+      <url>http://maven.conveyal.com/</url>
 	</repository>
 
     <!-- commons imaging -->
