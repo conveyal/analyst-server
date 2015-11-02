@@ -28,9 +28,9 @@ public class AnalystMain {
 			InputStream is = AnalystMain.class.getClassLoader().getResourceAsStream("git.properties");
 			gitVersion.load(is);
 			is.close();
-		} catch (IOException e) {
-			LOG.error("Error loading git commit information", e);
-			LOG.info("If you are working within an IDE, run a command line Maven build to ensure a git version properties file is present.");
+		} catch (Exception e) {
+			LOG.error("Error while loading git commit information", e);
+			LOG.info("If you are working within an IDE, run a command line Maven build to ensure a git.properties file is present.");
 		}
 	}
 
