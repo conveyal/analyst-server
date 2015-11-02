@@ -30,6 +30,7 @@ public class AnalystMain {
 			is.close();
 		} catch (IOException e) {
 			LOG.error("Error loading git commit information", e);
+			LOG.info("If you are working within an IDE, run a command line Maven build to ensure a git version properties file is present.");
 		}
 	}
 
