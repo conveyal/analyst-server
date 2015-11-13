@@ -393,6 +393,7 @@ var Analyst = Analyst || {};
 				fromTime:  A.util.makeTime(this.$('#fromTime').data('DateTimePicker').date()),
 				toTime: A.util.makeTime(this.$('#toTime').data('DateTimePicker').date()),
 				accessModes: A.util.removeTransit(this.mode),
+				directModes: A.util.removeTransit(this.mode),
 				egressModes: 'WALK',
 				transitModes: this.mode,
 				walkSpeed: walkSpeed,
