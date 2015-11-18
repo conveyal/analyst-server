@@ -117,6 +117,9 @@ public class Query implements Serializable {
 	/** max bike time in minutes. */
 	public int maxBikeTime;
 
+	/** has this query been archived? */
+	public boolean archived;
+
 	/**
 	 * Profile request to use for this query. If set, graphId must not be null. If set, mode, fromTime, toTime,
 	 * scenarioId, and date will be ignored.
@@ -397,10 +400,17 @@ public class Query implements Serializable {
 		else return null;
 	}
 
+	/** delete or archive this query */
 	public void delete() throws IOException {
-		queryData.delete(id);
-		
-		LOG.info("delete query q" +id);
+		if (!complete) {
+			queryData.delete(id);
+			LOG.info("delete query q" + id);
+		}
+		else {
+			// we don't delete complete queries, we just archive them so they're hidden from the UI
+			this.archived = true;
+			this.save();
+		}
 	}
 
 	private synchronized void makeResultDb() {
