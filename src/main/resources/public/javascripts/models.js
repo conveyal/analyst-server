@@ -144,7 +144,8 @@ var Analyst = Analyst || {};
   A.models.Queries = Backbone.Collection.extend({
     type: 'Queries',
     model: A.models.Query,
-    url: '/api/query'
+    url: '/api/query',
+    comparator: 'name'
   });
 
   A.models.User = Backbone.Model.extend({
