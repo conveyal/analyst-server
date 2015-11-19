@@ -367,13 +367,14 @@ public class Bundle implements Serializable {
 	static public void writeAllToClusterCache () throws IOException {
 		// two pass loop to avoid concurrent modification
 		List<String> bundlesToReprocess = new ArrayList<>();
-		for (Bundle s : bundleData.getAll()) {
+		for (Map.Entry<String, Bundle> e : bundleData.getEntries()) {
+			Bundle s = e.getValue();
 			// if the shapes are null, compute them.
 			// They are built on upload, but older databases may not have them.
 			// but don't rebuild failed uploads every time the server is started
 			if ((s.getSegments().isEmpty() || s.timeZone == null || s.startDate == null || s.endDate == null) &&
 					s.failed != null && !s.failed) {
-				LOG.warn("Marking bundle {} for reprocessing", s.id);
+				LOG.warn("Marking bundle {} (map key: {}}for reprocessing", s.id, e.getKey());
 				// this bundle needs to be reprocessed, but we can't do it here because it will cause issues with
 				// concurrent modification.
 				bundlesToReprocess.add(s.id);
