@@ -374,7 +374,7 @@ public class Bundle implements Serializable {
 			// but don't rebuild failed uploads every time the server is started
 			if ((s.getSegments().isEmpty() || s.timeZone == null || s.startDate == null || s.endDate == null) &&
 					s.failed != null && !s.failed) {
-				LOG.warn("Marking bundle {} (map key: {}}for reprocessing", s.id, e.getKey());
+				LOG.warn("Marking bundle {} (map key: {}) for reprocessing", s.id, e.getKey());
 				// this bundle needs to be reprocessed, but we can't do it here because it will cause issues with
 				// concurrent modification.
 				bundlesToReprocess.add(s.id);
@@ -383,8 +383,8 @@ public class Bundle implements Serializable {
 			try {
 				// writing to the cluster cache just uploads the GTFS file, so even if the bundle is being reprocessed, it's fine
 				s.writeToClusterCache();
-			} catch (Exception e) {
-				LOG.error("Failed to write bundle {} to cluster cache", s, e);
+			} catch (Exception ex) {
+				LOG.error("Failed to write bundle {} to cluster cache", s, ex);
 			}
 		}
 
