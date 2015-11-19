@@ -372,7 +372,10 @@ public class Bundle implements Serializable {
 	}
 	
 	static public void writeAllToClusterCache () throws IOException {
-		for (Bundle s : bundleData.getAll()) {
+		// make our own list divorced from the database to avoid concurrent modification
+		List<String> bundleIds = new ArrayList<>(bundleData.getKeys());
+		for (String bundleId : bundleIds) {
+			Bundle s = Bundle.getBundle(bundleId);
 			try {
 				s.writeToClusterCache();
 			} catch (Exception e) {
