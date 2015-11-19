@@ -211,13 +211,6 @@ public class Bundle implements Serializable {
 	
 	public void writeToClusterCache () throws IOException {
 		clusterGraphService.addGraphFile(getBundleDataPath());
-		
-		// if the shapes are null, compute them.
-		// They are built on upload, but older databases may not have them.
-		// but don't rebuild failed uploads every time the server is started
-		if ((this.getSegments().isEmpty() || this.timeZone == null || this.startDate == null || this.endDate == null) && this.failed != null && !this.failed) {
-			processGtfs();
-		}
 	}
 	
 	public void processGtfs () {		
@@ -372,15 +365,30 @@ public class Bundle implements Serializable {
 	}
 	
 	static public void writeAllToClusterCache () throws IOException {
-		// make our own list divorced from the database to avoid concurrent modification
-		List<String> bundleIds = new ArrayList<>(bundleData.getKeys());
-		for (String bundleId : bundleIds) {
-			Bundle s = Bundle.getBundle(bundleId);
+		// two pass loop to avoid concurrent modification
+		List<String> bundlesToReprocess = new ArrayList<>();
+		for (Bundle s : bundleData.getAll()) {
+			// if the shapes are null, compute them.
+			// They are built on upload, but older databases may not have them.
+			// but don't rebuild failed uploads every time the server is started
+			if ((s.getSegments().isEmpty() || s.timeZone == null || s.startDate == null || s.endDate == null) &&
+					s.failed != null && !s.failed) {
+				// this bundle needs to be reprocessed, but we can't do it here because it will cause issues with
+				// concurrent modification.
+				bundlesToReprocess.add(s.id);
+			}
+
 			try {
+				// writing to the cluster cache just uploads the GTFS file, so even if the bundle is being reprocessed, it's fine
 				s.writeToClusterCache();
 			} catch (Exception e) {
 				LOG.error("Failed to write bundle {} to cluster cache", s, e);
 			}
+		}
+
+		for (String bundleId : bundlesToReprocess) {
+			Bundle bundle = Bundle.getBundle(bundleId);
+			bundle.processGtfs();
 		}
 	}
 
