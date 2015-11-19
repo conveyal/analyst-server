@@ -192,5 +192,8 @@ public class DataStore<T> {
 	public int getInt(String name) {
 		return db.getAtomicInteger(name).get();
 	}
-	
+
+	public Collection<String> getKeys() {
+		return map.keySet();
+	}
 }
