@@ -583,5 +583,6 @@ public class Gis extends Controller {
 		}
 		finally {
 			outputDirectory.delete();
+		}
 	}
 }
