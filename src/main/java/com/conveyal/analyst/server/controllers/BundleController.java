@@ -76,9 +76,8 @@ public class BundleController extends Controller {
             File tempFile = File.createTempFile("shape", ".zip");
             file.write(tempFile);
 
+            // true indicates to delete file when upload succeeds
             Bundle s = Bundle.create(tempFile, bundleType, augmentBundleId, true);
-
-            tempFile.delete();
 
             s.name = files.get("name").get(0).getString("UTF-8");
             s.description = files.get("description").get(0).getString("UTF-8");
