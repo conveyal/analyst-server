@@ -218,130 +218,135 @@ public class Bundle implements Serializable {
 
 		for(File f : getBundleDataPath().listFiles()) {			
 			if(f.getName().toLowerCase().endsWith(".zip")) {
-				final GTFSFeed feed;
-				
-				LOG.info("Processing file " + f.getName());
-				
+				GTFSFeed feed = null;
+
 				try {
-					feed = GTFSFeed.fromFile(f.getAbsolutePath());
-				} catch (RuntimeException e) {
-					if (e.getCause() instanceof ZipException) {
-						LOG.error("Unable to process GTFS file for bundle %s, project %s", this.name, Project.getProject(this.projectId).name);
-						continue;
-					}
-					throw e;
-				}
-				
-				// this is not a gtfs feed
-				if (feed.agency.isEmpty())
-					continue;
+					LOG.info("Processing file " + f.getName());
 
-				// loop over stop times not stops to build the bounds, so that unused stops are ignored.
-				for(StopTime st : feed.stop_times.values()) {
-					Stop s = feed.stops.get(st.stop_id);
-
-					if (s == null)
-						// GTFS reader has already printed an error
-						continue;
-
-					// few agencies provide submarine service in the gulf of guinea, so these stops are almost
-					// certainly errors.
-					if (Math.abs(s.stop_lon) < 1 && Math.abs(s.stop_lat) < 1) {
-						LOG.warn("Ignoring stop {}, it is in the Gulf of Guinea", s.stop_name);
-						continue;
+					try {
+						feed = GTFSFeed.fromFile(f.getAbsolutePath());
+					} catch (RuntimeException e) {
+						if (e.getCause() instanceof ZipException) {
+							LOG.error("Unable to process GTFS file for bundle %s, project %s", this.name, Project.getProject(this.projectId).name);
+							continue;
+						}
+						throw e;
 					}
 
-					envelope.include(s.stop_lon, s.stop_lat);
-				}
+					// this is not a gtfs feed
+					if (feed.agency.isEmpty())
+						continue;
 
-				if (envelope.getWidth() > 5 || envelope.getHeight() > 5) {
-					LOG.warn("Envelope size for bundle {} is excessive, refusing to build. Check your GTFS?");
-					this.failed = true;
-					this.tooBig = true;
-					return;
-				}
+					// loop over stop times not stops to build the bounds, so that unused stops are ignored.
+					for (StopTime st : feed.stop_times.values()) {
+						Stop s = feed.stops.get(st.stop_id);
 
-				// figure out the service range
-				LocalDate start = null, end = null;
-
-				for (Service c : feed.services.values()) {
-					if (c.calendar != null) {
-						LocalDate cs = fromInt(c.calendar.start_date);
-						LocalDate ce = fromInt(c.calendar.end_date);
-
-						if (start == null || cs.isBefore(start))
-							start = cs;
-
-						if (end == null || ce.isAfter(end))
-							end = ce;
-					}
-					
-					for (CalendarDate cd : c.calendar_dates.values()) {
-						if (cd.exception_type == 2)
-							// removed service, does not count
+						if (s == null)
+							// GTFS reader has already printed an error
 							continue;
 
-						LocalDate ld = LocalDate.of(cd.date.getYear(), cd.date.getMonthOfYear(), cd.date.getMonthOfYear());
+						// few agencies provide submarine service in the gulf of guinea, so these stops are almost
+						// certainly errors.
+						if (Math.abs(s.stop_lon) < 1 && Math.abs(s.stop_lat) < 1) {
+							LOG.warn("Ignoring stop {}, it is in the Gulf of Guinea", s.stop_name);
+							continue;
+						}
 
-						if (start == null || ld.isBefore(start))
-							start = ld;
-
-						if (end == null || ld.isAfter(end))
-							end = ld;
+						envelope.include(s.stop_lon, s.stop_lat);
 					}
-				}
 
-				if (start != null && end != null) {
-					// we want the dates when *all* feeds are active
-					if (this.startDate == null || start.isAfter(this.startDate))
-						this.startDate = start;
-
-					if (this.endDate == null || end.isBefore(this.endDate))
-						this.endDate = end;
-				}
-
-				Agency a = feed.agency.values().iterator().next();
-				this.timeZone = a.agency_timezone;
-				
-				// cache the routes
-				for (Route route : feed.routes.values()) {
-					this.routes.add(new RouteSummary(route, f.getName()));					
-				}
-				
-				// build the spatial index for the map view
-				Collection<Trip> exemplarTrips = feed.findPatterns().values().stream()
-						.map(tripIds -> feed.trips.get(tripIds.get(0)))
-						.collect(Collectors.toList());
-				
-				GeometryFactory gf = new GeometryFactory();
-
-				for (Trip trip : exemplarTrips) {
-					// if it has a shape, use that
-					Coordinate[] coords;
-					if (trip.shape_id != null) {
-						Map<?, Shape> shape = feed.shapePoints.subMap(new Tuple2(trip.shape_id, null), new Tuple2(trip.shape_id, Fun.HI));
-						
-						coords = shape.values().stream()
-								.map(s -> new Coordinate(s.shape_pt_lon, s.shape_pt_lon))
-								.toArray(size -> new Coordinate[size]);
+					if (envelope.getWidth() > 5 || envelope.getHeight() > 5) {
+						LOG.warn("Envelope size for bundle {} is excessive, refusing to build. Check your GTFS?");
+						this.failed = true;
+						this.tooBig = true;
+						return;
 					}
-					else {
-						Collection<StopTime> stopTimes = feed.stop_times.subMap(new Tuple2(trip.trip_id, null), new Tuple2(trip.trip_id, Fun.HI)).values();
-						coords = new Coordinate[stopTimes.size()];
-						int i = 0;
-						for (StopTime st : stopTimes) {
-							Stop stop = feed.stops.get(st.stop_id);
-							coords[i++] = new Coordinate(stop.stop_lon, stop.stop_lat);
+
+					// figure out the service range
+					LocalDate start = null, end = null;
+
+					for (Service c : feed.services.values()) {
+						if (c.calendar != null) {
+							LocalDate cs = fromInt(c.calendar.start_date);
+							LocalDate ce = fromInt(c.calendar.end_date);
+
+							if (start == null || cs.isBefore(start))
+								start = cs;
+
+							if (end == null || ce.isAfter(end))
+								end = ce;
+						}
+
+						for (CalendarDate cd : c.calendar_dates.values()) {
+							if (cd.exception_type == 2)
+								// removed service, does not count
+								continue;
+
+							LocalDate ld = LocalDate.of(cd.date.getYear(), cd.date.getMonthOfYear(), cd.date.getMonthOfYear());
+
+							if (start == null || ld.isBefore(start))
+								start = ld;
+
+							if (end == null || ld.isAfter(end))
+								end = ld;
 						}
 					}
 
-					if (coords.length < 2)
-						continue;
-					
-					LineString geom = gf.createLineString(coords);
-					TransitSegment seg = new TransitSegment(geom);
-					
-					this.segments.put(new Tuple2(this.id, this.nextSegmentId.getAndIncrement()), seg);
+					if (start != null && end != null) {
+						// we want the dates when *all* feeds are active
+						if (this.startDate == null || start.isAfter(this.startDate))
+							this.startDate = start;
+
+						if (this.endDate == null || end.isBefore(this.endDate))
+							this.endDate = end;
+					}
+
+					Agency a = feed.agency.values().iterator().next();
+					this.timeZone = a.agency_timezone;
+
+					// cache the routes
+					for (Route route : feed.routes.values()) {
+						this.routes.add(new RouteSummary(route, f.getName()));
+					}
+
+					// build the spatial index for the map view
+					final GTFSFeed feedFinal = feed;
+					Collection<Trip> exemplarTrips = feed.findPatterns().values().stream()
+							.map(tripIds -> feedFinal.trips.get(tripIds.get(0)))
+							.collect(Collectors.toList());
+
+					GeometryFactory gf = new GeometryFactory();
+
+					for (Trip trip : exemplarTrips) {
+						// if it has a shape, use that
+						Coordinate[] coords;
+						if (trip.shape_id != null) {
+							Map<?, Shape> shape = feed.shapePoints.subMap(new Tuple2(trip.shape_id, null), new Tuple2(trip.shape_id, Fun.HI));
+
+							coords = shape.values().stream()
+									.map(s -> new Coordinate(s.shape_pt_lon, s.shape_pt_lon))
+									.toArray(size -> new Coordinate[size]);
+						} else {
+							Collection<StopTime> stopTimes = feed.stop_times.subMap(new Tuple2(trip.trip_id, null), new Tuple2(trip.trip_id, Fun.HI)).values();
+							coords = new Coordinate[stopTimes.size()];
+							int i = 0;
+							for (StopTime st : stopTimes) {
+								Stop stop = feed.stops.get(st.stop_id);
+								coords[i++] = new Coordinate(stop.stop_lon, stop.stop_lat);
+							}
+						}
+
+						if (coords.length < 2)
+							continue;
+
+						LineString geom = gf.createLineString(coords);
+						TransitSegment seg = new TransitSegment(geom);
+
+						this.segments.put(new Tuple2(this.id, this.nextSegmentId.getAndIncrement()), seg);
+					}
+				}
+				finally {
+					if (feed != null) feed.close();
 				}
 			}
 		}
