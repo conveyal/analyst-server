@@ -78,6 +78,8 @@ public class BundleController extends Controller {
 
             Bundle s = Bundle.create(tempFile, bundleType, augmentBundleId);
 
+            tempFile.delete();
+
             s.name = files.get("name").get(0).getString("UTF-8");
             s.description = files.get("description").get(0).getString("UTF-8");
             s.projectId = projectId;

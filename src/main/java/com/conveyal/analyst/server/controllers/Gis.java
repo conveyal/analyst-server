@@ -582,6 +582,7 @@ public class Gis extends Controller {
 			}
 		}
 		finally {
+			Stream .of(outputDirectory.listFiles()).forEach(File::delete);
 			outputDirectory.delete();
 		}
 	}
