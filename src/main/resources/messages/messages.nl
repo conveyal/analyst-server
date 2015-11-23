@@ -1,271 +1,231 @@
-# en strings
+# Dutch interface strings
 
-app.shared.create=Create
-app.shared.add=Add
-app.shared.save=Save
-app.shared.cancel=Cancel
-app.shared.name=Name
-app.shared.description=Description
-app.shared.loading=Loading...
-app.shared.username=Username
-app.shared.password=Password
+app.shared.create=Maak
+app.shared.add=Voeg toe
+app.shared.save=Bewaar
+app.shared.cancel=Annuleer
+app.shared.name=Naam
+app.shared.description=Omschrijving
+app.shared.loading=Laden...
+app.shared.username=Gebruikersnaam
+app.shared.password=Wachtwoord
 app.shared.login=Login
-app.shared.delete=Delete
-
-app.projects=Projects
-app.no-project-selected=No project selected
-app.create-new-project=Create new project
-
-app.account.logout=Logout
-app.account.change-password=Change Password
-app.manage-users=Manage Users
-
+app.shared.delete=Verwijder
+app.projects=Projecten
+app.no-project-selected=Geen project geselecteerd
+app.create-new-project=Maak een nieuw project
+app.account.logout=Uitloggen
+app.account.change-password=Verander Wachtwoord
+app.manage-users=Manage Gebruikers
 app.data = Data
 app.data.shapefiles=Shapefiles
 app.data.transport-scenarios=Transport Scenarios
-app.data.transport-bundles=Transport Bundles
+app.data.transport-bundles=Transport Bundel
+app.analysis=Analyse
+app.project-settings=Project Instellingen
+app.project-settings.description=. Om een project aan te maken voer de naam en omschrijving in, navigeer vervolgens de kaart naar de plaats in de wereld waar de analyse van wordt gemaakt en druk dan op ‘bepaal locatie’. Dit betekent dat elke keer dat je dit project selecteert de kaart naar de juiste locatie in de wereld zoomt.
 
-app.analysis=Analysis
-app.project-settings=Project Settings
+project-settings.project-location=Project Locatie
+project-settings.set-project-location=Bepaal Locatie
 
-app.project-settings.description=To create a project enter a name and description, then navigate the map to the area of the world where the analysis will be based and press ‘set location’.  This will mean each time you select this project the map will zoom to the correct area of the world.
+data-manager.spaitial-data-sets=Ruimtelijke Data Sets
+data-manager.transport-bundles=Transport Bundels
+data-manager.no-data=Geen data
+data-manager.no-pointsets=Geen ruimtelijke data sets voor dit project
+data-manager.pointset-description=Ruimtelijke data sets staan meting toe of toegang ruimtelijk verspreide gegevens zoals bevolking of banen. Maak er een door op “Voeg Toe” te klikken en laad een Shapefile.
+data-manager.shapefile-description=Shapefile data sets worden gebruikt om toegang te meten tot ruimtelijk verspreide eigenschappen zoals populatie of banen.
+data-manager.shapefile-upload-description=Shapefiles moeten worden gezipt voordat ze worden geladen in een algemeen projectiesysteem.
+data-manager.no-bundles=Geen openbaar vervoer bundels voor dit project.
+data-manager.bundles-description-a=Maak een transport bundel door op “Voeg toe” te klikken hierboven en laad een GTFS feed, of maak a GTFS feed door TransitMix of TransitWand te gebruiken.
+data-manager.bundles-description=Transport bundels zijn een essentiële vereiste om een tbereikbaarheidsanalyse te maken. Door er meer dan een toe te voegen kunnen vergelijkingen worden gemaakt.
+data-manager.no-shapefiles=Geen Shapefiles
+data-manager.shapefiles-upload-description=Voor het aanmaken van een ruimtelijke data set moet eerst een Shapefile worden geladen, die de geometrie en eigenschappen bevat die men wil meten.
+data-manager.create-new-spatial-data=Maak Nieuwe Ruimtelijke Data set
+data-manager.select-shapefile=Selecteer Shapefile
+data-manager.select-shapefile-field=Selecteer Shapefile Veld
+data-manager.create-new-category-name=Data Set Naam
+data-manager.create-new-category-description=Data Set Omschrijving
+data-manager.create-new-attribute=Maak Nieuwe Eigenschap
+data-manager.create-new-attribute-name=Naam Eigenschap
+data-manager.create-new-attribute-description=Eigenschap Omschrijving
+data-manager.create-new-attribute-color=Eigenschap Kleur
 
-project-settings.project-location=Project Location
-project-settings.set-project-location=Set Location
-
-data-manager.spaitial-data-sets=Spatial Data Sets
-data-manager.transport-bundles=Transport Bundles
-
-data-manager.no-data=No data
-
-data-manager.no-pointsets=No spatial data sets for this project.
-data-manager.pointset-description=Spatial data sets allow measurement of access to spatially distributed characteristics like population or jobs. Create one by clicking "Add" above and upload a Shapefile.
-
-data-manager.shapefile-description=Shapefile data sets are used to measure accessibility to spatially distributed characteristics like population or jobs.
-data-manager.shapefile-upload-description=Shapefiles must be zipped before uploading and in a common projection system.
-
-data-manager.no-bundles=No transit bundles for this project.
-data-manager.bundles-description-a=Create a transport bundle by clicking "Add" above and uploading a GTFS feed, or create a GTFS feed using TransitMix or TransitWand.
-data-manager.bundles-description=Transport bundles are an essential requirement to performing accessibility analysis.  Adding more than one allows comparisons to be made.
-
-data-manager.no-shapefiles=No Shapefiles
-data-manager.shapefiles-upload-description=To create a spatial data set first upload a Shapefile containing the geometries and attributes you wish to measure.
-
-data-manager.create-new-spatial-data=Create New Spatial Data Set
-data-manager.select-shapefile=Select Shapefile
-data-manager.select-shapefile-field=Select Shapefile Field
-
-data-manager.create-new-category-name=Data Set Name
-
-data-manager.create-new-category-description=Data Set Description
-
-
-data-manager.create-new-attribute=Create New Attribute
-data-manager.create-new-attribute-name=Attribute Name
-data-manager.create-new-attribute-description=Attribute Description
-data-manager.create-new-attribute-color=Attribute Color
-
-data-manager.create-bundle=Create Bundle
-data-manager.new-bundle=New Bundle
-data-manager.augment-bundle=Augment Existing Bundle
-
-data-manager.bundle-gtfs-file=Bundle GTFS File
-data-manager.bundle-name=Bundle Name
-data-manager.bundle-description=Bundle Description
+data-manager.create-bundle=Maak Bundel
+data-manager.new-bundle=Nieuwe Bundel
+data-manager.augment-bundle=Verbeter Bestaande Bundel
+data-manager.bundle-gtfs-file=Bundel GTFS Bestand
+data-manager.bundle-name=Bundel Naam
+data-manager.bundle-description=Bundel Omschrijving
 
 data-manager.transport-scenarios=Transport Scenarios
-data-manager.scenarios-description=Transport scenarios represent potential states of a transport network. They refer to a transport bundle, and may contain modifications to that bundle.
-data-manager.no-scenarios=No scenarios
-data-manager.scenario-name=Scenario name
-data-manager.scenario-description=Scenario description
-data-manager.banned-routes=Removed routes
-data-manager.create-scenario=Create scenario
+data-manager.scenarios-description= Transport scenario’s vertegenwoordigen mogelijke toestanden van een transport netwerk, en kunnen aanpassing op die bundel bevatten.
+data-manager.no-scenarios=Geen scenarios
+data-manager.scenario-name=Scenario Naam
+data-manager.scenario-description=Scenario omschrijving
+data-manager.banned-routes=Verwijder routes
+data-manager.create-scenario=Maak scenario
 
-data-manager.upload-shapefile-file=Shapefile (zipped)
-data-manager.upload-shapefile-name=Shapefile Name
-data-manager.upload-shapefile-description=Shapefile Description
-data-manager.upload-shapefile=Upload Shapefile
+data-manager.upload-shapefile-file=Shapefile (gezipt)
+data-manager.upload-shapefile-name=Shapefile Naam
+data-manager.upload-shapefile-description=Shapefile Omschrijving
+data-manager.upload-shapefile=Laad Shapefile
+data-manager.upload-shapefile-uploading=Laad & Verwerk Shapefile
 
-data-manager.upload-shapefile-uploading=Uploading & Processing Shapefile
+analysis.single-point-description=Klik ergens op de kaart om een berekening uit te voeren en gebruik de opties hieronder om de parameters aan te passen. Versleep de aanwijzer om het beginpunt van de analyse te veranderen.
+analysis.analysis-type=Analyse Type
+analysis.single-point=Enkel punt Analyse
+analysis.multi-point=Regionale & Geaggregeerde Analyse
+analysis.query-settings=Zoekopdracht Instellingen
+analysis.query-results=Zoekopdracht Uitkomsten
+analysis.run-new-query=Voer Nieuwe Zoekopdracht Uit
+analysis.create-query=Maak Zoekopdracht
+analysis.primary-indicator=Primaire Indicator
+analysis.multi-point.description=Klik "begin nieuwe Zoekopdracht" om de bereikbaarheid voor alle beginpunten in het studiegebied te berekenen. Regionale analyse staat aggregatie toe en het toekennen van gewicht aan te meten bereikbaarheidsmaatregelen.
+analysis.scenario-comparison=Scenario Vergelijking
+analysis.scenario.no-comparison=Geen Vergelijking
+analysis.scenario.compare=Vergelijk
+analysis.boarding-assumption=Instap Aannames
+analysis.boarding-assumption.worst-case=Slechtste geval (volledige voortgang)
+analysis.boarding-assumption.expectation=Verwachting (halve voortgang)
+analysis.boarding-assumption.monte-carlo= Monte Carlo
+analysis.boarding-assumption.best-case= Beste geval (geen wachttijd)
 
-
-analysis.single-point-description=Click anywhere on the map to perform a calculation and use the options below to change the parameters.  Drag the pin point marker to change the origin point of the analysis.
-
-analysis.analysis-type=Analysis Type
-
-analysis.single-point=Single-point Analysis
-analysis.multi-point=Regional & Aggregate Analysis
-
-analysis.query-settings=Query Settings
-analysis.query-results=Query Results
-
-analysis.run-new-query=Run new query
-analysis.create-query=Create Query
-
-analysis.primary-indicator=Primary Indicator
-
-analysis.multi-point.description=Click "run new query" to calculate accessibily for all origins with the study area. Regional analysis allows aggregation and weighting of accessibility measures to measure.
-
-analysis.scenario-comparison=Scenario Comparison
-
-analysis.scenario.no-comparison=No comparison
-analysis.scenario.compare=Compare
-
-analysis.boarding-assumption=Boarding assumption
-analysis.boarding-assumption.worst-case=Worst case (full headway)
-analysis.boarding-assumption.expectation=Expectation (half headway)
-analysis.boarding-assumption.monte-carlo=Monte Carlo
-analysis.boarding-assumption.best-case=Best case (no wait time)
-
-analysis.date=Date
-analysis.earliest-departure-time=Earliest departure time
-analysis.latest-departure-time=Latest departure time
-
+analysis.date=Datum
+analysis.earliest-departure-time=Vroegste vertrektijd
+analysis.latest-departure-time=Laatste vertrektijd
 analysis.scenario=Scenario
 analysis.scenario-1=Scenario 1
 analysis.scenario-2=Scenario 2
-analysis.minutes=Minutes
+analysis.minutes=Minuten
+analysis.scenario-2.no-change=Scenario 2 Geen verandering
+analysis.scenario-2.new-coverage=Scenario 2 Nieuwe Dekking
+analysis.scenario-2.faster=Scenario 2 Sneller
+analysis.not-in-range=Niet in bereik
+analysis.travel-time=Reistijd
+analysis.processing=Zoekopdracht verwerken...
+analysis.initializing-cluster=Initialiseren van cluster (kan enkele minuten duren)...
+analysis.failed=Analyse Mislukt.
 
-analysis.scenario-2.no-change=Scenario 2 No Change
-analysis.scenario-2.new-coverage=Scenario 2 New Coverage
-analysis.scenario-2.faster=Scenario 2 Faster
-analysis.not-in-range=Not in range
-analysis.travel-time=Travel Time
+analysis.accessibility=Bereikbaarheid
+analysis.isochrone=Isochronen
+analysis.show-isochrones=Laat Isochronen zien
+analysis.show-points=Laat Punten zien
+analysis.show-transit=Laat Transit zien
 
-
-analysis.processing=Processing query...
-analysis.initializing-cluster=Initializing cluster (may take several minutes)...
-analysis.failed=Analysis failed.
-
-analysis.accessibility=Accessibility
-analysis.isochrone=Isochrones
-
-analysis.show-isochrones=Show Isochrones
-analysis.show-points=Show Points
-analysis.show-transit=Show Transit
-
-analysis.results=Results
-
-analysis.number-accessible=Accessible
-analysis.percent-accessible=Percent Accessible
-
-analysis.create-new-query-name=Query Name
-analysis.run-query=Run Query
-
+analysis.results=Resultaten
+analysis.number-accessible=Bereikbaar
+analysis.percent-accessible=Percentage Bereikbaarheid
+analysis.create-new-query-name=Zoekopdracht Naam
+analysis.run-query=Voer Zoekopdracht Uit
 analysis.shapefile=Download GIS
 analysis.csv=Download CSV
+analysis.shapefile-field=Veld
+analysis.exact-time=Exacte vertrektijd
+analysis.profile=Bereik van vertrektijden
 
-analysis.shapefile-field=Field
+analysis.credit-usage=Herkomst tegoed verbruik
+analysis.nearing-quota={0} Herkomst tegoed resterend
+analysis.insufficient-quota=U heeft niet genoeg herkomsttegoed om deze operatie uit te voeren.
+analysis.query-quota-consumption=Deze zoekopdracht zal {0} of {1} van het resterende herkomst tegoed gebruiken.
 
-analysis.exact-time=Exact departure time
-analysis.profile=Range of departure times
-
-analysis.credit-usage=Origin credit usage
-analysis.nearing-quota={0} origin credits remain
-analysis.insufficient-quota=You do not have enough origin credits to complete this operation.
-analysis.query-quota-consumption=This query will use {0} of {1} remaining origin credits.
-
-# {0} is the name and {1} is the field name from the shapefile
+# {0} is de naam en {1} is de veldnaam van de shapefile
 analysis.attribute-name={0} ({1})
 
-# {0} is the name of the shapefile and {1} is the name of the attribute
+# {0} is de naam van de shapefile en {1} is de naam van de eigenschap
 analysis.point-set-name={1} ({0})
 
-analysis.aggregate=Aggregate
-analysis.aggregate-summary=Summarize results to a larger unit of analysis, weighting by another indicator. For example, you might summarize job access to municipalities and weight by population, to generate an estimate of job access for the average person in each municipality.
-analysis.aggregate-to=Aggregate to
-analysis.weight-by-shapefile=Weighted by shapefile
-analysis.weight-by-attribute=Weighted by attribute
-# {0} is replaced with the name of an indicator
-analysis.accessibility-to=Accessibility to {0}
-analysis.aggregated-title=Accessibility to {0} aggregated to {1} weighted by {2}
+analysis.aggregate=Aggregeer
+analysis.aggregate-summary=Vat de resultaten samen in een grotere eenheid van analyse, gewogen tegen een andere indicator. Zo kun je bijvoorbeeld toegang tot werk voor gemeenten samenvatten en wegen tegen de bevolking om zo een schatting te krijgen over de toegang tot werk per gemiddelde persoon in elke gemeente.
+analysis.aggregate-to=Aggregeer naar
+analysis.weight-by-shapefile=Gewogen door shapefile
+analysis.weight-by-attribute=Gewogen door eigenschap
 
-# 0 is lower bound, 1 is upper bound
+# {0} is is vervangen door de naam van de indicator
+analysis.accessibility-to=Bereikbaarheid tot {0}
+analysis.aggregated-title=Bereikbaarheid tot {0} geaggregeerd tot {1} gewogen tegen {2}
+
+# 0 is ondergrens, 1 is bovengrens
 analysis.bin-range={0} - {1}
-# 0 is lower percentage bound, 1 is upper percentage bound, 2 is point set name
-analysis.bin-percent-range={0}% - {1}% of total {2}
 
-analysis.graph-mouseover=Minute {0}: Reliable: {1}, average: {2}, maximum possible: {3}
+# 0 is ondergrens percentage, 1 is bovengrens percentage, 2 is gezette punt naam
+analysis.bin-percent-range={0}% - {1}% of totaal {2}
+analysis.graph-mouseover=Minuut {0}: Betrouwbaar: {1}, gemiddeld: {2}, maximum mogelijk: {3}
 
-# the same for a single-value class
-# 0 is the value
+# hetzelfde voor een enkele waarde klasse
+# 0 is de waarde
 analysis.bin-single={0}
 
-# 0 is the percent value, 1 is point set name
-analysis.bin-percent-single={0}% of total {1}
+# 0 is de percentuele waarde, 1 is punt bepaal naam
+analysis.bin-percent-single={0}% van totaal {1}
 
-# Terms for the different numbers generated by a profile run
+# Voorwaarden voor de verschillende waarden die zijn gegenereerd door een profiel run
+# Zal worden vertoond als b.v. Statistiek: ondergrens
+analysis.statistic=Statistiek
 
-# Will be displayed as e.g. Statistic: lower bound
-analysis.statistic=Statistic
+# de -optie versies worden getoond in de dropdown
+# de -achtervoegsel versies worden getoond in de legenda titel
+analysis.worst-case-option=Slechtste geval
+analysis.best-case-option=Beste geval
+analysis.average-option=Gemiddeld
+analysis.point-estimate-option=geschatte bereikbaarheid
 
-# the -option versions are displayed in the dropsown
-# the -suffix versions are displayed in the legend title
-analysis.worst-case-option=Worst case
-analysis.best-case-option=Best case
-analysis.average-option=Average
-analysis.point-estimate-option=Estimated accessibility
-
-# spread is some measure of dispersion, e.g. standard deviation or interquartile range
-analysis.spread-option=spread
-
-analysis.worst-case-suffix=(worst case)
-analysis.best-case-suffix=(best case)
-analysis.average-suffix=(average)
+# spreiding is een gevolg van de verspreiding, b.v. standaarddeviatie of interquartiele spreiding
+analysis.spread-option=spreiding
+analysis.worst-case-suffix=(slechtste geval)
+analysis.best-case-suffix=(beste geval)
+analysis.average-suffix=(gemiddelde)
 analysis.point-estimate-suffix=
-analysis.spread-suffix=(spread)
-analysis.compare=Compare
-analysis.compare-to=Compare to
-
-analysis.group=Group
-analysis.dont-group=Don't Group
-
-analysis.change-in-time=Change in travel time {0} minutes
-analysis.queued=queued for calculation
-analysis.assembling-results=assembling results
-analysis.number-complete={0} of {1} complete
-analysis.n-minutes={0} minutes
+analysis.spread-suffix=(spreiding)
+analysis.compare=Vergelijk
+analysis.compare-to=Vergelijk met
+analysis.group=Groepeer
+analysis.dont-group=Groepeer Niet
+analysis.change-in-time=Verandering in reistijd {0} minuten
+analysis.queued=Klaargezet voor berekenen
+analysis.assembling-results=Samenstellen van resultaten
+analysis.number-complete={0} van {1} compleet
+analysis.n-minutes={0} minuten
 analysis.calculating=Calculating&nbsp;.&nbsp;.&nbsp;.
-analysis.update-map=Update map
+analysis.update-map=Ververs kaart
 analysis.choose-shapefile=Shapefile
-analysis.average-walk-speed=Average walk speed: {0} km/h
-analysis.average-bike-speed=Average bike speed: {0} km/h
+analysis.average-walk-speed=Gemiddelde loopsnelheid: {0} km/h
+analysis.average-bike-speed=Gemiddelde fietssnelheid: {0} km/h
 analysis.km-per-hour={0} km/h
-analysis.show-settings=Show Settings
-analysis.n-minutes={0} minutes
-analysis.travel-time-range=Travel Time Range: {0}&ndash;{1} minutes
+analysis.show-settings=Laat Settings zien
+analysis.n-minutes={0} minuten
+analysis.travel-time-range=Reistijd spreiding: {0}&ndash;{1} minutes
 
-ledger.starting=Starting balance
-ledger.ending=Ending balance
-ledger.total=Total activity
-ledger.single-point=Single point analysis
-ledger.multi-point=Regional analysis
-ledger.purchases=Purchases
-ledger.refunds=Refunds
-ledger.date=Date
-ledger.delta=Charge
-ledger.reason=Reason
-ledger.username=Username
-ledger.note=Note
-ledger.credit=Credit amount
-ledger.issue-credit=Issue credit
-ledger.return-to-app=Return to Analyst
-ledger.issue-refund=Issue refund
-ledger.query-name=Query name
-ledger.confirm-refund-text=refund?
-ledger.cancel-refund=no
-ledger.confirm-refund=yes
-ledger.ledger=Ledger
+ledger.starting=Start balans
+ledger.ending=Eind balans
+ledger.total=Totale activiteit
+ledger.single-point=Enkel punt analyse
+ledger.multi-point=Regionale analyse
+ledger.purchases=Aankopen
+ledger.refunds=Teruggave
+ledger.date=Datum
+ledger.delta=Laden
+ledger.reason=Reden
+ledger.username=Gebruikersnaam
+ledger.note=Notitie
+ledger.credit=Tegoed
+ledger.issue-credit=Geef tegoed uit
+ledger.return-to-app=Ga terug naar Analyst
+ledger.issue-refund=Geef teruggave
+ledger.query-name=Zoekopdracht naam
+ledger.confirm-refund-tekst=Teruggave?
+ledger.cancel-refund=nee
+ledger.confirm-refund=ja
+ledger.ledger=Grootboekrekening
 
-shared.january=January
-shared.february=February
-shared.march=March
+shared.january=Januari
+shared.february=Februari
+shared.march=Maart
 shared.april=April
-shared.may=May
-shared.june=June
-shared.july=July
-shared.august=August
+shared.may=Mei
+shared.june=Juni
+shared.july=Juli
+shared.august=Augustus
 shared.september=September
-shared.october=October
+shared.october=Oktober
 shared.november=November
 shared.december=December

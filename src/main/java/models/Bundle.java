@@ -175,7 +175,7 @@ public class Bundle implements Serializable {
 		
 		bundleData.save(id, this);
 		
-		LOG.info("saved bundle " +id);
+		LOG.info("Saved bundle {} and committed data.", id);
 	}
 	
 	@JsonIgnore
@@ -210,7 +210,11 @@ public class Bundle implements Serializable {
 	}
 	
 	public void writeToClusterCache () throws IOException {
+		// These log messages should be clearer and located down inside the ClusterGraphService,
+		// but that class is in the OTP project so I'm just logging the operation at a higher stack frame.
+		LOG.info("Adding network inputs to cluster cache and uploading to S3 (if needed).");
 		clusterGraphService.addGraphFile(getBundleDataPath());
+		LOG.info("Done adding network inputs to cluster cache and uploading to S3 (if needed).");
 	}
 	
 	public void processGtfs () {		
@@ -368,7 +372,7 @@ public class Bundle implements Serializable {
 		int day = date % 100;
 		return LocalDate.of(year, month, day);
 	}
-	
+
 	static public void writeAllToClusterCache () throws IOException {
 		// two pass loop to avoid concurrent modification
 		List<String> bundlesToReprocess = new ArrayList<>();
