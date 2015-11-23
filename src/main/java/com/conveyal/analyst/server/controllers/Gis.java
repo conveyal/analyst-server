@@ -425,159 +425,163 @@ public class Gis extends Controller {
 			outputDirectory.mkdirs();
 		}
 
-		ShapefileDataStoreFactory dataStoreFactory = new ShapefileDataStoreFactory();
+		try {
 
-		Map<String, Serializable> params = new HashMap<String, Serializable>();
-		params.put("url", outputShapefile.toURI().toURL());
-		params.put("create spatial index", Boolean.TRUE);
+			ShapefileDataStoreFactory dataStoreFactory = new ShapefileDataStoreFactory();
 
-		ShapefileDataStore dataStore = (ShapefileDataStore)dataStoreFactory.createNewDataStore(params);
-		dataStore.forceSchemaCRS(DefaultGeographicCRS.WGS84);
+			Map<String, Serializable> params = new HashMap<String, Serializable>();
+			params.put("url", outputShapefile.toURI().toURL());
+			params.put("create spatial index", Boolean.TRUE);
 
-
-		String featureDefinition = null;
-
-		if (features.isEmpty())
-			throw new IllegalArgumentException("Empty collection of features");
-
-		if (features.get(0).geom instanceof Point)
-			featureDefinition = "the_geom:Point:srid=4326,id:String";
-		// it's fine to write polygons (and even mixed polygons and multipolygons, which can occur when data is cleaned)
-		// to a MultiPolygon shapefile as GeoTools converts all polygon features to MultiPolygons internally anyhow:
-		// https://github.com/geotools/geotools/blob/f71b2e2cc6d15dbfa03555dd8ccf96242efd3453/modules/plugin/shapefile/src/main/java/org/geotools/data/shapefile/ShapefileFeatureWriter.java#L372
-		else if (features.get(0).geom instanceof Polygon || features.get(0).geom instanceof MultiPolygon)
-			featureDefinition = "the_geom:MultiPolygon:srid=4326,id:String";
-		else
-			throw new IllegalArgumentException("Unrecognized geometry type");
-
-		if (includeTimeFields)
-			featureDefinition += ",time:Integer";
-
-		if (difference && includeTimeFields)
-			featureDefinition += ",time2:Integer,difference:Integer";
-
-		int fieldPosition = 0;
-
-		Set<String> usedFieldNames = new HashSet<>();
-		List<String> shortFieldNames = new ArrayList<String>();
-
-		for(String fieldName : fieldNames) {
-
-			// clean the names. shapefiles are lame and have issues with some column names, see
-			// http://support.esri.com/en/knowledgebase/techarticles/detail/23087
-			String shortFieldName = Attribute.convertNameToId(fieldName);
-
-			if (shortFieldName.length() > 10)
-				shortFieldName = shortFieldName.substring(0, 10);
-
-			int i = 0;
-			while (usedFieldNames.contains(shortFieldName)) {
-				shortFieldName = shortFieldName.substring(0, 8) + i++;
-			}
-
-			usedFieldNames.add(shortFieldName);
-			shortFieldNames.add(shortFieldName);
-
-			featureDefinition += "," + shortFieldName + ":";
+			ShapefileDataStore dataStore = (ShapefileDataStore) dataStoreFactory.createNewDataStore(params);
+			dataStore.forceSchemaCRS(DefaultGeographicCRS.WGS84);
 
 
-			if (fieldTypes == null) {
-				if (features.get(0).fields.get(fieldPosition) instanceof String)
-					featureDefinition += "String";
-				else if (features.get(0).fields.get(fieldPosition) instanceof Number)
-					featureDefinition += "Double";
-				else {
-					LOG.error("Cannot process field of type {}, assuming String", features.get(0).fields.get(fieldPosition).getClass());
-					featureDefinition += "String";
-				}
-			} else {
-				featureDefinition += fieldTypes.get(fieldPosition);
-			}
-			fieldPosition++;
-		}
+			String featureDefinition = null;
 
-		SimpleFeatureType featureType = DataUtilities.createType("Analyst", featureDefinition);
+			if (features.isEmpty())
+				throw new IllegalArgumentException("Empty collection of features");
 
-		SimpleFeatureBuilder featureBuilder = null;
-
-		List<SimpleFeature> featureList = new ArrayList<SimpleFeature>();
-
-		dataStore.createSchema(featureType);
-		featureBuilder = new SimpleFeatureBuilder(featureType);
-
-		for(GisShapeFeature feature : features)
-		{
-			featureBuilder.add(feature.geom);
-			featureBuilder.add(feature.id);
+			if (features.get(0).geom instanceof Point)
+				featureDefinition = "the_geom:Point:srid=4326,id:String";
+				// it's fine to write polygons (and even mixed polygons and multipolygons, which can occur when data is cleaned)
+				// to a MultiPolygon shapefile as GeoTools converts all polygon features to MultiPolygons internally anyhow:
+				// https://github.com/geotools/geotools/blob/f71b2e2cc6d15dbfa03555dd8ccf96242efd3453/modules/plugin/shapefile/src/main/java/org/geotools/data/shapefile/ShapefileFeatureWriter.java#L372
+			else if (features.get(0).geom instanceof Polygon || features.get(0).geom instanceof MultiPolygon)
+				featureDefinition = "the_geom:MultiPolygon:srid=4326,id:String";
+			else
+				throw new IllegalArgumentException("Unrecognized geometry type");
 
 			if (includeTimeFields)
-				featureBuilder.add(feature.time);
+				featureDefinition += ",time:Integer";
 
-			if (difference && includeTimeFields) {
-				featureBuilder.add(feature.time2);
-				featureBuilder.add(feature.difference);
+			if (difference && includeTimeFields)
+				featureDefinition += ",time2:Integer,difference:Integer";
+
+			int fieldPosition = 0;
+
+			Set<String> usedFieldNames = new HashSet<>();
+			List<String> shortFieldNames = new ArrayList<String>();
+
+			for (String fieldName : fieldNames) {
+
+				// clean the names. shapefiles are lame and have issues with some column names, see
+				// http://support.esri.com/en/knowledgebase/techarticles/detail/23087
+				String shortFieldName = Attribute.convertNameToId(fieldName);
+
+				if (shortFieldName.length() > 10)
+					shortFieldName = shortFieldName.substring(0, 10);
+
+				int i = 0;
+				while (usedFieldNames.contains(shortFieldName)) {
+					shortFieldName = shortFieldName.substring(0, 8) + i++;
+				}
+
+				usedFieldNames.add(shortFieldName);
+				shortFieldNames.add(shortFieldName);
+
+				featureDefinition += "," + shortFieldName + ":";
+
+
+				if (fieldTypes == null) {
+					if (features.get(0).fields.get(fieldPosition) instanceof String)
+						featureDefinition += "String";
+					else if (features.get(0).fields.get(fieldPosition) instanceof Number)
+						featureDefinition += "Double";
+					else {
+						LOG.error("Cannot process field of type {}, assuming String", features.get(0).fields.get(fieldPosition).getClass());
+						featureDefinition += "String";
+					}
+				} else {
+					featureDefinition += fieldTypes.get(fieldPosition);
+				}
+				fieldPosition++;
 			}
 
+			SimpleFeatureType featureType = DataUtilities.createType("Analyst", featureDefinition);
 
-			for(Object o : feature.fields)
-				featureBuilder.add(o);
+			SimpleFeatureBuilder featureBuilder = null;
 
-			SimpleFeature f = featureBuilder.buildFeature(null);
-			featureList.add(f);
+			List<SimpleFeature> featureList = new ArrayList<SimpleFeature>();
 
-		}
+			dataStore.createSchema(featureType);
+			featureBuilder = new SimpleFeatureBuilder(featureType);
 
-		ListFeatureCollection featureCollection = new ListFeatureCollection(featureType, featureList);
+			for (GisShapeFeature feature : features) {
+				featureBuilder.add(feature.geom);
+				featureBuilder.add(feature.id);
 
-		Transaction transaction = new DefaultTransaction("create");
+				if (includeTimeFields)
+					featureBuilder.add(feature.time);
 
-		String typeName = dataStore.getTypeNames()[0];
-		SimpleFeatureSource featureSource = dataStore.getFeatureSource(typeName);
+				if (difference && includeTimeFields) {
+					featureBuilder.add(feature.time2);
+					featureBuilder.add(feature.difference);
+				}
 
-		if (featureSource instanceof SimpleFeatureStore)
-		{
-			SimpleFeatureStore featureStore = (SimpleFeatureStore) featureSource;
 
-			featureStore.setTransaction(transaction);
+				for (Object o : feature.fields)
+					featureBuilder.add(o);
 
-			featureStore.addFeatures(featureCollection);
-			transaction.commit();
+				SimpleFeature f = featureBuilder.buildFeature(null);
+				featureList.add(f);
 
-			transaction.close();
-		}
-		else
-		{
-			throw new Exception(typeName + " does not support read/write access");
-		}
-
-		// create a data dictionary if requested
-		if (fieldDescriptions != null) {
-			File readme = new File(outputDirectory, "README.txt");
-			FileWriter w = new FileWriter(readme);
-
-			w.write("Field descriptions\n");
-
-			for (int i = 0; i < fieldNames.size(); i++) {
-				w.write(String.format("%s: %s\n", shortFieldNames.get(i), fieldDescriptions.get(i)));
 			}
 
-			w.close();
+			ListFeatureCollection featureCollection = new ListFeatureCollection(featureType, featureList);
+
+			Transaction transaction = new DefaultTransaction("create");
+
+			String typeName = dataStore.getTypeNames()[0];
+			SimpleFeatureSource featureSource = dataStore.getFeatureSource(typeName);
+
+			if (featureSource instanceof SimpleFeatureStore) {
+				SimpleFeatureStore featureStore = (SimpleFeatureStore) featureSource;
+
+				featureStore.setTransaction(transaction);
+
+				featureStore.addFeatures(featureCollection);
+				transaction.commit();
+
+				transaction.close();
+			} else {
+				throw new Exception(typeName + " does not support read/write access");
+			}
+
+			// create a data dictionary if requested
+			if (fieldDescriptions != null) {
+				File readme = new File(outputDirectory, "README.txt");
+				FileWriter w = new FileWriter(readme);
+
+				w.write("Field descriptions\n");
+
+				for (int i = 0; i < fieldNames.size(); i++) {
+					w.write(String.format("%s: %s\n", shortFieldNames.get(i), fieldDescriptions.get(i)));
+				}
+
+				w.close();
+			}
+
+			res.header("Content-Type", "application/x-zip");
+
+			// buffer to a file
+			File temp = File.createTempFile("shapefile", "zip");
+			try {
+				FileOutputStream fos = new FileOutputStream(temp);
+				DirectoryZip.zip(outputDirectory, fos);
+				fos.close();
+
+				FileInputStream fis = new FileInputStream(temp);
+				OutputStream os = res.raw().getOutputStream();
+				ByteStreams.copy(fis, os);
+				os.close();
+				fis.close();
+			}
+			finally {
+				temp.delete();
+			}
 		}
-
-		res.header("Content-Type", "application/x-zip");
-
-		// buffer to a file
-		File temp = File.createTempFile("shapefile", "zip");
-		FileOutputStream fos = new FileOutputStream(temp);
-		DirectoryZip.zip(outputDirectory, fos);
-		fos.close();
-
-		FileInputStream fis = new FileInputStream(temp);
-		OutputStream os = res.raw().getOutputStream();
-		ByteStreams.copy(fis, os);
-		os.close();
-		fis.close();
-		temp.delete();
-		outputDirectory.delete();
+		finally {
+			outputDirectory.delete();
 	}
 }
