@@ -140,13 +140,13 @@ public class Bundle implements Serializable {
 			return "BUILT";
 		
 	}
-	
-	static public Bundle create(final File gtfsFile, final String bundleType, final String augmentBundleId) throws IOException {
+
+	static public Bundle create(final File gtfsFile, final String bundleType, final String augmentBundleId, boolean deleteWhenDone) throws IOException {
 		
 		final Bundle bundle = new Bundle();
 		bundle.save();
 		
-		bundle.processGtfs(gtfsFile, bundleType, augmentBundleId);
+		bundle.processGtfs(gtfsFile, bundleType, augmentBundleId, deleteWhenDone);
 
 		return bundle;
 	}
@@ -205,8 +205,8 @@ public class Bundle implements Serializable {
 		LOG.info("delete bundle s" +id);
 	}
 	
-	public void processGtfs(final File gtfsFile, final String bundleType, final String augmentBundleId) {
-		new Thread(new ProcessTransitBundleJob(this, gtfsFile, bundleType, augmentBundleId)).start();
+	public void processGtfs(final File gtfsFile, final String bundleType, final String augmentBundleId, boolean deleteWhenDone) {
+		new Thread(new ProcessTransitBundleJob(this, gtfsFile, bundleType, augmentBundleId, deleteWhenDone)).start();
 	}
 	
 	public void writeToClusterCache () throws IOException {

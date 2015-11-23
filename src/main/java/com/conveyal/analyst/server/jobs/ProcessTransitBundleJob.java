@@ -19,7 +19,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 /**
- * Process an uploaded GTFS file or shapefile.
+ * Process an uploaded GTFS file or shapefile. Warning: will delete upload file when job completes.
  */
 public class ProcessTransitBundleJob implements Runnable {
 	private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(ProcessTransitBundleJob.class);
@@ -28,13 +28,15 @@ public class ProcessTransitBundleJob implements Runnable {
 	private File uploadFile;
 	private String bundleType;
 	private String augmentBundleId;
-	
+	private boolean deleteWhenDone;
+
 	public ProcessTransitBundleJob(Bundle bundle, File uploadFile,
-			String bundleType, String augmentBundleId) {
+			String bundleType, String augmentBundleId, boolean deleteWhenDone) {
 		this.bundle = bundle;
 		this.uploadFile = uploadFile;
 		this.bundleType = bundleType;
 		this.augmentBundleId = augmentBundleId;
+		this.deleteWhenDone = deleteWhenDone;
 	}
 	
 	public void run() {
@@ -88,7 +90,7 @@ public class ProcessTransitBundleJob implements Runnable {
 				File configFile = new File(outputDirectory, confFile);
 				
 				newFile = new File(bundle.getBundleDataPath(), HashUtils.hashFile(uploadFile) + ".zip");
-				new Geom2GtfsJob(bundle, configFile, shapeFile, newFile).run();
+				new Geom2GtfsJob(bundle, configFile, shapeFile, newFile).run(); // run in current thread
 
 				FileUtils.deleteDirectory(outputDirectory);
 				zipFile.close();
@@ -110,6 +112,9 @@ public class ProcessTransitBundleJob implements Runnable {
 			}
 			
 			zipFile.close();
+
+			if (deleteWhenDone)
+				uploadFile.delete(); // don't need this file anymore
 			
 			if((bundleType != null && augmentBundleId != null && bundleType.equals("augment"))) 
 			{	

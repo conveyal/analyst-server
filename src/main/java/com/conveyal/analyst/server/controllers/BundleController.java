@@ -76,7 +76,7 @@ public class BundleController extends Controller {
             File tempFile = File.createTempFile("shape", ".zip");
             file.write(tempFile);
 
-            Bundle s = Bundle.create(tempFile, bundleType, augmentBundleId);
+            Bundle s = Bundle.create(tempFile, bundleType, augmentBundleId, true);
 
             tempFile.delete();
 
