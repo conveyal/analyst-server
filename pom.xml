@@ -434,7 +434,7 @@
     <dependency>
       <groupId>com.stormpath.sdk</groupId>
       <artifactId>stormpath-sdk-api</artifactId>
-      <version>1.0.RC4.5</version>
+      <version>1.0.RC6</version>
     </dependency>
 
     <dependency>
