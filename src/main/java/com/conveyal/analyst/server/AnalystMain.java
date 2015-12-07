@@ -6,8 +6,10 @@ import models.Query;
 import models.Shapefile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import spark.Session;
 import spark.Spark;
 
+import javax.servlet.http.Cookie;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -67,8 +69,17 @@ public class AnalystMain {
 
 		// use secure session cookies to prevent man-in-the-middle attacks
 		after((req, res) -> {
-			res.removeCookie("JSESSIONID");
-			res.cookie("JSESSIONID", req.session().id(), req.session().maxInactiveInterval(), useSecureCookie);
+			Session sess = req.session(false);
+
+			if (sess == null) return;
+
+			Cookie cookie = new Cookie("JSESSIONID", req.session().id());
+			cookie.setSecure(useSecureCookie);
+			// TODO hardwired path
+			cookie.setPath("/");
+			// prevent some types of XSS
+			cookie.setHttpOnly(true);
+			res.raw().addCookie(cookie);
 		});
 	}
 

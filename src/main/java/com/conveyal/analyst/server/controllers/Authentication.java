@@ -77,6 +77,8 @@ public class Authentication extends Controller {
             halt(UNAUTHORIZED, "Invalid username or password");
         }
 
+        // create a new session ID, prevents session hijacking
+        request.raw().changeSessionId();
         request.session().attribute("username", username);
 
         return "welcome " + username;
@@ -93,6 +95,9 @@ public class Authentication extends Controller {
         }
 
         clearCache(a);
+
+        // create a new session, prevents hijacking
+        req.raw().changeSessionId();
         req.session().attribute("username", a.getUsername());
 
         // TODO track intent through login
@@ -173,6 +178,8 @@ public class Authentication extends Controller {
 
     public static String logout(Request request, Response response)  {
         request.session().removeAttribute("username");
+        // just destroy the session, we don't need it anymore -- a new one will be created on the next request
+        request.session().invalidate();
 
         if (Boolean.parseBoolean(AnalystMain.config.getProperty("auth.use-stormpath-id-site"))) {
             // log out of ID site
