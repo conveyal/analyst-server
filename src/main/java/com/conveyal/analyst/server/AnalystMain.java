@@ -6,6 +6,7 @@ import models.Query;
 import models.Shapefile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import spark.Spark;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -13,8 +14,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-import static spark.SparkBase.ipAddress;
-import static spark.SparkBase.port;
+import static spark.Spark.after;
+import static spark.Spark.ipAddress;
+import static spark.Spark.port;
 
 public class AnalystMain {
 	private static final Logger LOG = LoggerFactory.getLogger(AnalystMain.class);
@@ -60,6 +62,12 @@ public class AnalystMain {
 
 		// set routes
 		Routes.routes();
+
+		// use secure session cookies to prevent man-in-the-middle attacks
+		after((req, res) -> {
+			res.removeCookie("JSESSIONID");
+			res.cookie("JSESSIONID", req.session().id(), req.session().maxInactiveInterval(), true);
+		});
 	}
 
 	/** initialize the database */
