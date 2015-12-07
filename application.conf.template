@@ -22,6 +22,10 @@ application.site-url=http://localhost:9090
 
 api.allow-unauthenticated-access=true
 
+# Should a secure session cookie be used? If you're serving over HTTPS, set to true to prevent man-in-the-middle attacks
+# If you're not serving over HTTPS (you should be), setting to true will prevent users from logging in to Analyst.
+application.use-secure-cookie=false
+
 # Path for data files
 application.data=data/
 

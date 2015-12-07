@@ -63,10 +63,12 @@ public class AnalystMain {
 		// set routes
 		Routes.routes();
 
+		final boolean useSecureCookie = Boolean.parseBoolean(config.getProperty("application.use-secure-cookie", "true"));
+
 		// use secure session cookies to prevent man-in-the-middle attacks
 		after((req, res) -> {
 			res.removeCookie("JSESSIONID");
-			res.cookie("JSESSIONID", req.session().id(), req.session().maxInactiveInterval(), true);
+			res.cookie("JSESSIONID", req.session().id(), req.session().maxInactiveInterval(), useSecureCookie);
 		});
 	}
 
