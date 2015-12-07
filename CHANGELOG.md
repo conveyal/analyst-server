@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.36 (2015-12-07)
+
+- Secure cookies prevent man-in-the-middle attacks, changing session ID prevents session fixation
+
 ## 0.7.30 (2015-11-13)
 
 - Upgrade to version of OTP that calculates averages accurately by not including extrema in averages (mostly relevant to mixed schedules/frequency networks).
