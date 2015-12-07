@@ -7,7 +7,6 @@ import models.Shapefile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Session;
-import spark.Spark;
 
 import javax.servlet.http.Cookie;
 import java.io.File;
