@@ -78,6 +78,8 @@ public class Authentication extends Controller {
         }
 
         // create a new session ID, prevents session hijacking
+        // but first, make sure a session exists
+        request.session(true);
         request.raw().changeSessionId();
         request.session().attribute("username", username);
 
@@ -90,6 +92,7 @@ public class Authentication extends Controller {
 
         if (a == null) {
             req.session().removeAttribute("username");
+            req.session().invalidate();
             res.redirect("/login", MOVED_TEMPORARILY);
             return "";
         }
@@ -97,6 +100,8 @@ public class Authentication extends Controller {
         clearCache(a);
 
         // create a new session, prevents hijacking
+        // but first, make sure a session exists
+        req.session(true);
         req.raw().changeSessionId();
         req.session().attribute("username", a.getUsername());
 
