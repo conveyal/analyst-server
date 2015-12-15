@@ -68,7 +68,7 @@ public class Attribute implements Serializable {
 
 		else {
 			synchronized (attributeIdCache) {
-				String id = name.toLowerCase().trim().replaceAll(" ", "_").replaceAll("\\W","");
+				String id = name.toLowerCase().trim().replaceAll("[^0-9a-zA-Z]", "_");
 				attributeIdCache.put(name, id);
 				return id;
 			}

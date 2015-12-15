@@ -304,7 +304,7 @@ public class Gis extends Controller {
 			// TODO: handle non-integer attributes
 			for (Attribute a : shp.attributes.values()) {
 				if (a.numeric) {
-					gf.fields.add(feature.getAttribute(a.name));
+					gf.fields.add(feature.getAttribute(a.fieldName));
 				}
 			}
 
@@ -474,7 +474,7 @@ public class Gis extends Controller {
 
 				int i = 0;
 				while (usedFieldNames.contains(shortFieldName)) {
-					shortFieldName = shortFieldName.substring(0, 8) + i++;
+					shortFieldName = shortFieldName.substring(0, 7) + i++;
 				}
 
 				usedFieldNames.add(shortFieldName);
@@ -521,7 +521,7 @@ public class Gis extends Controller {
 
 
 				for (Object o : feature.fields)
-					featureBuilder.add(o);
+					featureBuilder.add(o == null || !(o instanceof Number) ? o : ((Number) o).doubleValue());
 
 				SimpleFeature f = featureBuilder.buildFeature(null);
 				featureList.add(f);
@@ -582,7 +582,7 @@ public class Gis extends Controller {
 			}
 		}
 		finally {
-			Stream .of(outputDirectory.listFiles()).forEach(File::delete);
+			Stream.of(outputDirectory.listFiles()).forEach(File::delete);
 			outputDirectory.delete();
 		}
 	}
