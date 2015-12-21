@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.39 (2015-12-21)
+
+- Updated geom2gtfs to solve concurrency issues
+
 ## 0.7.36 (2015-12-07)
 
 - Secure cookies prevent man-in-the-middle attacks, changing session ID prevents session fixation
