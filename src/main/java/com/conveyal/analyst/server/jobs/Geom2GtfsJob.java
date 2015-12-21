@@ -33,10 +33,9 @@ public class Geom2GtfsJob implements Runnable {
 		if (newFile.exists())
 			newFile.delete();
 
-		// this is cloogy - we're calling a Java main function from inside a Java program
 		try {
-			Main.main(new String[] { shapeFile.getAbsolutePath(), configFile.getAbsolutePath(),
-					newFile.getAbsolutePath() });
+			new Main().main(shapeFile.getAbsolutePath(), configFile.getAbsolutePath(),
+					newFile.getAbsolutePath());
 		} catch (Exception e) {
 			LOG.error("geom2gtfs error", e);
 			return;
