@@ -8,7 +8,7 @@ auth.stormpath-name=<STORMPATH NAME>
 
 # Stormpath ID is "hosted and pre-built user interface screens that take care of common identity functions 
 # for your applications — login, registration, and password reset."
-# We generally do not use this.
+# We use this for the public deployments, but you can switch it off when running locally for testing and development.
 auth.use-stormpath-id-site=false
 
 # Port that Analyst web UI server will be available on. Optional, defaults to 9090
@@ -22,8 +22,10 @@ application.site-url=http://localhost:9090
 
 api.allow-unauthenticated-access=true
 
-# Should a secure session cookie be used? If you're serving over HTTPS, set to true to prevent man-in-the-middle attacks
-# If you're not serving over HTTPS (you should be), setting to true will prevent users from logging in to Analyst.
+# Should a secure session cookie be used? If you're serving over HTTPS (which you should be in any real public
+# deployment), set this to true to prevent man-in-the-middle attacks.
+# If you're not serving over HTTPS (e.g. you're running offline locally for development or testing), setting this to
+# true will cause logins to fail silently, as the browser will refuse to send a secure cookie over a non-TLS connection.
 application.use-secure-cookie=false
 
 # Path for data files
