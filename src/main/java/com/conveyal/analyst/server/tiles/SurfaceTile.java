@@ -2,14 +2,15 @@ package com.conveyal.analyst.server.tiles;
 
 import com.conveyal.analyst.server.controllers.SinglePoint;
 import com.conveyal.analyst.server.utils.HaltonPoints;
+import com.conveyal.r5.analyst.FreeFormPointSet;
+import com.conveyal.r5.analyst.PointSet;
+import com.conveyal.r5.analyst.ResultSet;
+import com.conveyal.r5.analyst.cluster.ResultEnvelope;
 import models.Attribute;
 import models.Shapefile;
 import org.apache.commons.imaging.ImageWriteException;
 import org.opengis.geometry.MismatchedDimensionException;
 import org.opengis.referencing.operation.TransformException;
-import org.opentripplanner.analyst.PointSet;
-import org.opentripplanner.analyst.ResultSet;
-import org.opentripplanner.analyst.cluster.ResultEnvelope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,7 +64,7 @@ public class SurfaceTile extends AnalystTileRequest {
 
         List<Shapefile.ShapeFeature> features = shp.query(tile.envelope);
 
-        PointSet ps = shp.getPointSet();
+        FreeFormPointSet ps = shp.getPointSet();
 
         for(Shapefile.ShapeFeature feature : features) {
 

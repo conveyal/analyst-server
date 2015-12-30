@@ -2,6 +2,9 @@ package com.conveyal.analyst.server.tiles;
 
 import com.conveyal.analyst.server.controllers.SinglePoint;
 import com.conveyal.analyst.server.utils.HaltonPoints;
+import com.conveyal.r5.analyst.FreeFormPointSet;
+import com.conveyal.r5.analyst.ResultSet;
+import com.conveyal.r5.analyst.cluster.ResultEnvelope;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -13,9 +16,6 @@ import models.Shapefile;
 import org.apache.commons.imaging.ImageWriteException;
 import org.opengis.geometry.MismatchedDimensionException;
 import org.opengis.referencing.operation.TransformException;
-import org.opentripplanner.analyst.PointSet;
-import org.opentripplanner.analyst.ResultSet;
-import org.opentripplanner.analyst.cluster.ResultEnvelope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,7 +74,7 @@ public class SurfaceComparisonTile extends AnalystTileRequest implements UTFIntG
         Tile tile = new Tile(this);
 
         Shapefile shp = Shapefile.getShapefile(env1.destinationPointsetId);
-        PointSet ps = shp.getPointSet();
+        FreeFormPointSet ps = shp.getPointSet();
         
         List<Shapefile.ShapeFeature> features = shp.query(tile.envelope);
 
@@ -165,7 +165,7 @@ public class SurfaceComparisonTile extends AnalystTileRequest implements UTFIntG
         }
 
         Shapefile shp = Shapefile.getShapefile(env1.destinationPointsetId);
-        PointSet ps = shp.getPointSet();
+        FreeFormPointSet ps = shp.getPointSet();
 		
 		int[][] grid = new int[64][64];
 		

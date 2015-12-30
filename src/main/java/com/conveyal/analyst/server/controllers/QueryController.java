@@ -1,11 +1,11 @@
 package com.conveyal.analyst.server.controllers;
 
 import com.conveyal.analyst.server.utils.*;
+import com.conveyal.r5.analyst.cluster.ResultEnvelope;
 import models.Project;
 import models.Query;
 import models.Shapefile;
 import models.User;
-import org.opentripplanner.analyst.cluster.ResultEnvelope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;

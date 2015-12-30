@@ -383,6 +383,10 @@ var Analyst = Analyst || {};
 				// this can happen when the shapefiles have not yet loaded
 				return;
 
+			// The type field clarifies that this is an analyst request
+			// rather than a request for a single origin point for a static site.
+			params.type = "analyst";
+
 			// We always send a profile request, but if we're not using transit the window will be treated as zero-width.
 			params.profileRequest = {
 				fromLat:  A.map.marker.getLatLng().lat,

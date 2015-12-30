@@ -7,6 +7,11 @@ import com.conveyal.analyst.server.utils.HaltonPoints;
 import com.conveyal.analyst.server.utils.PointSetDatastore;
 import com.conveyal.data.geobuf.GeobufDecoder;
 import com.conveyal.data.geobuf.GeobufFeature;
+import com.conveyal.r5.analyst.EmptyPolygonException;
+import com.conveyal.r5.analyst.FreeFormPointSet;
+import com.conveyal.r5.analyst.PointFeature;
+import com.conveyal.r5.analyst.PointSet;
+import com.conveyal.r5.analyst.UnsupportedGeometryException;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.annotations.VisibleForTesting;
@@ -34,10 +39,6 @@ import org.opengis.feature.type.PropertyType;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.MathTransform;
-import org.opentripplanner.analyst.EmptyPolygonException;
-import org.opentripplanner.analyst.PointFeature;
-import org.opentripplanner.analyst.PointSet;
-import org.opentripplanner.analyst.UnsupportedGeometryException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import utils.Bounds;
@@ -102,7 +103,7 @@ public class Shapefile implements Serializable {
 
 	/** the pointset for this shapefile */
 	@VisibleForTesting
-	transient SoftReference<PointSet> pointSet;
+	transient SoftReference<FreeFormPointSet> pointSet;
 
 	@JsonIgnore
 	public File file;
@@ -232,8 +233,8 @@ public class Shapefile implements Serializable {
 	 * Get the pointset.
 	 */
 	@JsonIgnore
-	public synchronized PointSet getPointSet() {
-		PointSet pointSet = this.pointSet != null ? this.pointSet.get() : null;
+	public synchronized FreeFormPointSet getPointSet() {
+		FreeFormPointSet pointSet = this.pointSet != null ? this.pointSet.get() : null;
 
 		if (pointSet != null)
 			return pointSet;
@@ -248,8 +249,8 @@ public class Shapefile implements Serializable {
 	 * is also used on already in-memory features when loading a new shapefile. This avoids the relatively slow
 	 * deserialization of every MapDB shape feature.
 	 */
-	private PointSet pointSetFromIterator (Iterator<ShapeFeature> iterator) {
-		PointSet pointSet = new PointSet(getFeatureCount());
+	private FreeFormPointSet pointSetFromIterator (Iterator<ShapeFeature> iterator) {
+		FreeFormPointSet pointSet = new FreeFormPointSet(getFeatureCount());
 
 		pointSet.id = categoryId;
 		pointSet.label = this.name;
@@ -293,7 +294,7 @@ public class Shapefile implements Serializable {
 		if (datastore.isCached(id))
 			return id;
 
-		PointSet ps = this.getPointSet();
+		FreeFormPointSet ps = this.getPointSet();
 
 		File f = File.createTempFile(id, ".json");
 

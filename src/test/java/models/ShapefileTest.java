@@ -1,13 +1,13 @@
 package models;
 
 import com.conveyal.analyst.server.AnalystMain;
+import com.conveyal.r5.analyst.FreeFormPointSet;
+import com.conveyal.r5.analyst.PointFeature;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 import junit.framework.TestCase;
 import models.Shapefile;
 import org.junit.Test;
-import org.opentripplanner.analyst.PointFeature;
-import org.opentripplanner.analyst.PointSet;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -39,12 +39,12 @@ public class ShapefileTest extends TestCase {
 
         Shapefile sf = Shapefile.create(shpLoc, "PROJECT", "shapefile");
         // get the pointset that was built by the create function
-        PointSet ps1 = sf.getPointSet();
+        FreeFormPointSet ps1 = sf.getPointSet();
 
         // null out the pointset reference, force it to be regenerated
         sf.pointSet = null;
 
-        PointSet ps2 = sf.getPointSet();
+        FreeFormPointSet ps2 = sf.getPointSet();
 
         // should not be the same object
         assertFalse(ps1 == ps2);

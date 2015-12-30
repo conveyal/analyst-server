@@ -1,9 +1,9 @@
 package com.conveyal.analyst.server.utils;
 
 import com.conveyal.analyst.server.AnalystMain;
-import org.opentripplanner.analyst.broker.JobStatus;
-import org.opentripplanner.analyst.cluster.AnalystClusterRequest;
-import org.opentripplanner.analyst.cluster.ResultEnvelope;
+import com.conveyal.r5.analyst.broker.JobStatus;
+import com.conveyal.r5.analyst.cluster.AnalystClusterRequest;
+import com.conveyal.r5.analyst.cluster.ResultEnvelope;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -35,11 +35,9 @@ public abstract class QueueManager {
 		if (manager == null) {
 			synchronized (QueueManager.class) {
 				if (manager == null) {
-					if (Boolean.FALSE.equals(Boolean.parseBoolean(
-							AnalystMain.config.getProperty("cluster.work-offline"))))
-						manager = new ClusterQueueManager();
-					else
-						manager = new LocalQueueManager();
+					// AnalystMain.config.getProperty("cluster.work-offline")
+					// Doesn't affect anything here anymore, we only use the ClusterQueueManager
+					manager = new ClusterQueueManager();
 				}
 			}
 		}

@@ -1,18 +1,13 @@
 package com.conveyal.analyst.server.otp;
 
-import org.joda.time.DateTimeZone;
-import org.joda.time.LocalDate;
-import org.opentripplanner.api.parameter.QualifiedMode;
-import org.opentripplanner.api.parameter.QualifiedModeSet;
-import org.opentripplanner.common.model.GenericLocation;
-import org.opentripplanner.profile.Option;
-import org.opentripplanner.profile.ProfileRequest;
-import org.opentripplanner.routing.core.RoutingRequest;
-import org.opentripplanner.routing.core.TraverseMode;
-import org.opentripplanner.routing.core.TraverseModeSet;
-import org.opentripplanner.routing.spt.DominanceFunction;
+import com.conveyal.r5.profile.Mode;
+import com.conveyal.r5.profile.ProfileRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.time.LocalDate;
+import java.util.EnumSet;
+import java.util.Set;
 
 public class Analyst {
 	private static final Logger LOG = LoggerFactory.getLogger(Analyst.class);
@@ -20,56 +15,20 @@ public class Analyst {
 	public Analyst() {
 		
 	}
-	 
-	/**
-	 * Build a routing request. Note that this does not set the routing context, you'll have to do that
-	 * manually; this is because, in cluster mode, we don't want to serialize the routing context and send
-	 * it over the wire.
-	 */
-	
-	public static RoutingRequest buildRequest(String graphId, LocalDate date, int time, GenericLocation latLon, String mode, int cutoffMinutes, DateTimeZone tz) {
-		RoutingRequest req = new RoutingRequest();
-		
-		req.dateTime = date.toDateTimeAtStartOfDay(tz).toDate().getTime() / 1000;
-		req.dateTime += time;
-		req.modes = new TraverseModeSet(mode);
-		req.routerId = graphId;
-		req.from = latLon;
-		req.dominanceFunction = new DominanceFunction.EarliestArrival();
-		req.worstTime = req.dateTime + cutoffMinutes * 60;
-		
-		// initial wait clamping is algorithmically invalid.
-		req.clampInitialWait = 0;
-		
-		if (req.modes.isTransit()) {
-			LOG.warn("Building a non-profile transit routing request, this probably shouldn't be happening.");
-			req.walkReluctance = 1.0;
-		}
 
-		return req;
-	}
-	
-	public static ProfileRequest buildProfileRequest(String mode, LocalDate date, int fromTime, int toTime, double lat, double lon) {
+	public static ProfileRequest buildProfileRequest(String modes, LocalDate date, int fromTime, int toTime, double lat, double lon) {
 		ProfileRequest req = new ProfileRequest();
-		
-		// split the modeset into two modes, using the logic in TraverseModeSet
-		TraverseModeSet modes = new TraverseModeSet(mode);
-		modes.setTransit(false);
 
-		TraverseModeSet transitModes = new TraverseModeSet(mode);
-		transitModes.setBicycle(false);
-		transitModes.setCar(false);
-		transitModes.setWalk(false);
-
-        QualifiedModeSet qModes = new QualifiedModeSet("WALK");
-        qModes.qModes.clear();
-        for (TraverseMode tm : modes.getModes()) {
-        	QualifiedMode qMode = new QualifiedMode(tm.toString());
-        	qModes.qModes.add(qMode);
-        }
-
-		req.accessModes = req.egressModes = req.directModes = qModes;
-		req.transitModes = transitModes;
+		EnumSet<Mode> modeSet = EnumSet.noneOf(Mode.class);
+		for (String mode : modes.split(",")) {
+			modeSet.add(Mode.valueOf(mode));
+		}
+		req.transitModes = EnumSet.noneOf(Mode.class);
+		if (modeSet.contains(Mode.TRANSIT)) {
+			req.transitModes.add(Mode.TRANSIT);
+			modeSet.remove(Mode.TRANSIT);
+		}
+		req.accessModes = req.egressModes = req.directModes = modeSet;
 
         req.fromLat    = lat;
         req.fromLon    = lon;
@@ -97,7 +56,7 @@ public class Analyst {
 		req.suboptimalMinutes = 5;
 		
 		// doesn't matter for analyst requests
-		req.orderBy = Option.SortOrder.AVG;
+		// req.orderBy = Option.SortOrder.AVG;
 		
 		return req;
 	}	

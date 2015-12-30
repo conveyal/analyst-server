@@ -7,19 +7,19 @@ import com.amazonaws.services.s3.model.S3Object;
 import com.conveyal.analyst.server.AnalystMain;
 import com.conveyal.analyst.server.otp.Analyst;
 import com.conveyal.analyst.server.utils.*;
+import com.conveyal.r5.analyst.BoardingAssumption;
+import com.conveyal.r5.analyst.FreeFormPointSet;
+import com.conveyal.r5.analyst.PointFeature;
+import com.conveyal.r5.analyst.broker.JobStatus;
+import com.conveyal.r5.analyst.cluster.AnalystClusterRequest;
+import com.conveyal.r5.analyst.cluster.ResultEnvelope;
+import com.conveyal.r5.analyst.scenario.*;
+import com.conveyal.r5.analyst.scenario.Scenario;
+import com.conveyal.r5.profile.Mode;
+import com.conveyal.r5.profile.ProfileRequest;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.Lists;
-import org.joda.time.LocalDate;
-import org.opentripplanner.analyst.PointFeature;
-import org.opentripplanner.analyst.PointSet;
-import org.opentripplanner.analyst.broker.JobStatus;
-import org.opentripplanner.analyst.cluster.AnalystClusterRequest;
-import org.opentripplanner.analyst.cluster.ResultEnvelope;
-import org.opentripplanner.analyst.scenario.RemoveTrip;
-import org.opentripplanner.profile.ProfileRequest;
-import org.opentripplanner.profile.RaptorWorkerTimetable;
-import org.opentripplanner.routing.core.TraverseModeSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,6 +27,7 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
@@ -54,7 +55,7 @@ public class Query implements Serializable {
 	/** The reachability threshold used for this query */
 	public float reachabilityThreshold;
 
-	public RaptorWorkerTimetable.BoardingAssumption boardingAssumption;
+	public BoardingAssumption boardingAssumption;
 
 	private static final AmazonS3 s3 = new AmazonS3Client();
 
@@ -197,9 +198,9 @@ public class Query implements Serializable {
 	 */
 	public boolean isTransit () {
 		if (this.profileRequest == null) {
-			return new TraverseModeSet(this.mode).isTransit();
+			return Mode.TRANSIT.equals(Mode.valueOf(this.mode));
 		}
-		return (this.profileRequest.transitModes != null && this.profileRequest.transitModes.isTransit());
+		return (this.profileRequest.transitModes != null && this.profileRequest.transitModes.contains(Mode.TRANSIT));
 	}
 
 	public void save() {
@@ -222,7 +223,7 @@ public class Query implements Serializable {
 
 		// enqueue all the requests
 		Shapefile shp = Shapefile.getShapefile(this.originShapefileId);
-		PointSet ps = shp.getPointSet();
+		FreeFormPointSet ps = shp.getPointSet();
 
 		totalPoints = ps.capacity;
 		completePoints = 0;
@@ -247,9 +248,9 @@ public class Query implements Serializable {
 
 			// If no boarding assumption is provided, default to worst-case (full-headway waits)
 			profileRequest.boardingAssumption = this.boardingAssumption != null ? this.boardingAssumption :
-					RaptorWorkerTimetable.BoardingAssumption.WORST_CASE;
+					BoardingAssumption.WORST_CASE;
 
-			profileRequest.scenario = new org.opentripplanner.analyst.scenario.Scenario(0);
+			profileRequest.scenario = new Scenario(0);
 
 			if (scenario.bannedRoutes != null) {
 				profileRequest.scenario.modifications = scenario.bannedRoutes.stream().map(rs -> {

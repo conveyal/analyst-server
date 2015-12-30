@@ -1,6 +1,6 @@
 package utils;
 
-import org.opentripplanner.analyst.ResultSet;
+import com.conveyal.r5.analyst.ResultSet;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -9,7 +9,7 @@ import java.util.Map;
 /**
  * This is a class that stores several result sets: an upper bound, a lower bound, and a central tendency.
  *
- * It is now inside OTP; this remains here so we can deserialize old databases.
+ * The current version of this class is now inside OTP/R5; this remains here so we can deserialize old databases.
  *
  * @author mattwigway
  */

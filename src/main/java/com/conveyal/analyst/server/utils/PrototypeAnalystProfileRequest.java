@@ -1,9 +1,10 @@
 package com.conveyal.analyst.server.utils;
 
-import org.opentripplanner.api.parameter.QualifiedModeSet;
-import org.opentripplanner.profile.Option;
-import org.opentripplanner.profile.ProfileRequest;
-import org.opentripplanner.routing.core.TraverseModeSet;
+import com.conveyal.r5.profile.Mode;
+import com.conveyal.r5.profile.ProfileRequest;
+import com.sun.scenario.effect.Blend;
+
+import java.util.EnumSet;
 
 /**
  * A profile request with reasonable defaults.
@@ -24,13 +25,13 @@ public class PrototypeAnalystProfileRequest extends ProfileRequest {
 		minCarTime = 10;
 		
 		// doesn't matter for analyst requests
-		orderBy = Option.SortOrder.AVG;
+		// orderBy = Option.SortOrder.AVG;
 		
 		analyst = true;
 		
 		limit = 10;
 		suboptimalMinutes = 5;
-		accessModes = directModes = egressModes = new QualifiedModeSet("WALK");
-		transitModes = new TraverseModeSet("TRANSIT");
+		accessModes = directModes = egressModes = EnumSet.of(Mode.WALK);
+		transitModes = EnumSet.of(Mode.TRANSIT);
 	}
 }

@@ -3,6 +3,7 @@ package com.conveyal.analyst.server.tiles;
 import com.conveyal.analyst.server.utils.HaltonPoints;
 import com.conveyal.analyst.server.utils.NaturalBreaksClassifier;
 import com.conveyal.analyst.server.utils.QueryResults;
+import com.conveyal.r5.analyst.cluster.ResultEnvelope;
 import com.google.common.base.Charsets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
@@ -17,7 +18,6 @@ import models.Shapefile.ShapeFeature;
 import org.apache.commons.imaging.ImageWriteException;
 import org.opengis.geometry.MismatchedDimensionException;
 import org.opengis.referencing.operation.TransformException;
-import org.opentripplanner.analyst.cluster.ResultEnvelope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

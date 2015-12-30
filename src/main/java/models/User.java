@@ -2,13 +2,13 @@ package models;
 
 import com.conveyal.analyst.server.AnalystMain;
 import com.conveyal.analyst.server.utils.QuotaLedger;
+import com.conveyal.r5.common.MavenVersion;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.annotations.VisibleForTesting;
 import com.stormpath.sdk.account.Account;
 import com.stormpath.sdk.account.AccountStatus;
 import com.stormpath.sdk.group.Group;
 import com.stormpath.sdk.group.GroupList;
-import org.opentripplanner.common.MavenVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -124,7 +124,7 @@ public class User implements Serializable {
 	 * making frequent requests to retrieve the user. This has both the analyst version and the OTP version in parens.
 	 */
 	public String getAnalystVersion () {
-		return String.format("%s (%s)", AnalystMain.gitVersion.getProperty("git.commit.id.describe"), MavenVersion.VERSION.commit.substring(0, 7));
+		return String.format("%s (%s)", AnalystMain.gitVersion.getProperty("git.commit.id.describe"), MavenVersion.commit.substring(0, 7));
 	}
 
 	public void addProjectPermission(String projectId) {

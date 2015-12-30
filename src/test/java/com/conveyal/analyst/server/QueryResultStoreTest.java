@@ -1,12 +1,12 @@
 package com.conveyal.analyst.server;
 
 import com.conveyal.analyst.server.utils.QueryResultStore;
+import com.conveyal.r5.analyst.Histogram;
+import com.conveyal.r5.analyst.ResultSet;
+import com.conveyal.r5.analyst.cluster.ResultEnvelope;
 import com.google.common.io.Files;
 import junit.framework.TestCase;
 import org.junit.Test;
-import org.opentripplanner.analyst.Histogram;
-import org.opentripplanner.analyst.ResultSet;
-import org.opentripplanner.analyst.cluster.ResultEnvelope;
 
 import java.io.File;
 import java.util.Arrays;

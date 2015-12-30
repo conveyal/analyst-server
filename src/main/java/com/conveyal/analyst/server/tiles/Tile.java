@@ -1,5 +1,6 @@
 package com.conveyal.analyst.server.tiles;
 
+import com.conveyal.analyst.server.otp.SlippyTile;
 import com.conveyal.analyst.server.utils.HaltonPoints;
 import com.vividsolutions.jts.geom.*;
 import org.apache.commons.imaging.ImageFormats;
@@ -13,8 +14,6 @@ import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.geometry.MismatchedDimensionException;
 import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.TransformException;
-import org.opentripplanner.analyst.core.SlippyTile;
-import org.opentripplanner.analyst.request.TileRequest;
 
 import java.awt.*;
 import java.awt.geom.Path2D;
@@ -58,14 +57,14 @@ public class Tile {
     	envelope = new Envelope(maxLon, minLon, maxLat, minLat);
          
     	Envelope2D env = JTS.getEnvelope2D(envelope, DefaultGeographicCRS.WGS84);
-    	
-    	TileRequest tileRequest = new TileRequest(env, 256 * this.scaleFactor, 256 * this.scaleFactor);
-    	GridEnvelope2D gridEnv = new GridEnvelope2D(0, 0, tileRequest.width, tileRequest.height);
-    	GridGeometry2D gg = new GridGeometry2D(gridEnv, (org.opengis.geometry.Envelope)(tileRequest.bbox));
+    	int width = 256 * this.scaleFactor;
+		int height = 256 * this.scaleFactor;
+    	GridEnvelope2D gridEnv = new GridEnvelope2D(0, 0, width, height);
+    	GridGeometry2D gg = new GridGeometry2D(gridEnv, (org.opengis.geometry.Envelope)env);
     	
       	tr = gg.getCRSToGrid2D();
       	
-      	buffer = new BufferedImage(tileRequest.width, tileRequest.height, BufferedImage.TYPE_4BYTE_ABGR);
+      	buffer = new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
       
 	}
 	

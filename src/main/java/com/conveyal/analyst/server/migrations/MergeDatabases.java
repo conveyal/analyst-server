@@ -2,6 +2,7 @@ package com.conveyal.analyst.server.migrations;
 
 import com.conveyal.analyst.server.utils.DataStore;
 import com.conveyal.analyst.server.utils.QueryResultStore;
+import com.conveyal.r5.analyst.cluster.ResultEnvelope;
 import com.google.common.io.Files;
 import models.*;
 import org.apache.commons.io.FileUtils;
@@ -143,7 +144,7 @@ public class MergeDatabases implements Runnable {
                         map.values().stream()
                                 // convert to OTP result envelopes
                                 .map(re -> {
-                                    org.opentripplanner.analyst.cluster.ResultEnvelope out = new org.opentripplanner.analyst.cluster.ResultEnvelope();
+                                    ResultEnvelope out = new ResultEnvelope();
                                     out.id = re.id;
                                     out.avgCase = re.avgCase;
                                     out.bestCase = re.bestCase;

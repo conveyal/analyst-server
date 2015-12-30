@@ -1,6 +1,9 @@
 package com.conveyal.analyst.server.utils;
 
 import com.conveyal.analyst.server.AnalystMain;
+import com.conveyal.r5.analyst.broker.JobStatus;
+import com.conveyal.r5.analyst.cluster.AnalystClusterRequest;
+import com.conveyal.r5.analyst.cluster.ResultEnvelope;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,9 +21,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.util.EntityUtils;
-import org.opentripplanner.analyst.broker.JobStatus;
-import org.opentripplanner.analyst.cluster.AnalystClusterRequest;
-import org.opentripplanner.analyst.cluster.ResultEnvelope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

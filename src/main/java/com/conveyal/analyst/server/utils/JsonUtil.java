@@ -12,9 +12,6 @@ import com.fasterxml.jackson.databind.module.SimpleKeyDeserializers;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.module.SimpleSerializers;
 import org.onebusaway.gtfs.model.AgencyAndId;
-import org.opentripplanner.api.model.JodaLocalDateSerializer;
-import org.opentripplanner.api.parameter.QualifiedModeSet;
-import org.opentripplanner.routing.core.TraverseModeSet;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -29,7 +26,6 @@ public class JsonUtil {
     static {
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new CustomSerializerModule());
-        objectMapper.registerModule(JodaLocalDateSerializer.makeModule());
         objectMapper.registerModule(new GeoJsonModule());
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         objectMapper.setSerializationInclusion(JsonInclude.Include.ALWAYS);
@@ -37,22 +33,6 @@ public class JsonUtil {
 
     public static ObjectMapper getObjectMapper() {
         return objectMapper;
-    }
-
-    /** Serialize a traverse mode set as a string. No need for a deserializer as TraverseModeSet has a single-arg string constructor */
-    public static class TraverseModeSetSerializer extends JsonSerializer<TraverseModeSet> {
-        @Override
-        public void serialize(TraverseModeSet traverseModeSet, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException, JsonProcessingException {
-            jsonGenerator.writeString(traverseModeSet.getAsStr());
-        }
-    }
-
-    /** Serialize a traverse mode set as a string. No need for a deserializer as TraverseModeSet has a single-arg string constructor */
-    public static class QualifiedModeSetSerializer extends JsonSerializer<QualifiedModeSet> {
-        @Override
-        public void serialize(QualifiedModeSet qualifiedModeSet, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException, JsonProcessingException {
-            jsonGenerator.writeString(qualifiedModeSet.toString());
-        }
     }
 
     /** Deserializer for AgencyAndId, for agencyid_id format in bannedTrips */
@@ -96,8 +76,6 @@ public class JsonUtil {
             ctx.addKeyDeserializers(kd);
 
             SimpleSerializers s = new SimpleSerializers();
-            s.addSerializer(TraverseModeSet.class, new TraverseModeSetSerializer());
-            s.addSerializer(QualifiedModeSet.class, new QualifiedModeSetSerializer());
             s.addSerializer(LocalDate.class, new JavaLocalDateIsoSerializer());
             ctx.addSerializers(s);
 

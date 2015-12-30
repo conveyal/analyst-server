@@ -374,17 +374,9 @@
     </dependency>
 
     <dependency>
-      <groupId>org.opentripplanner</groupId>
-      <artifactId>otp</artifactId>
-      <version>0.20.0-SNAPSHOT</version>
-
-      <!-- OTP depends on an old protobuf library. exclude it from the build -->
-      <exclusions>
-        <exclusion>
-          <groupId>com.google.protobuf</groupId>
-          <artifactId>protobuf-java</artifactId>
-        </exclusion>
-      </exclusions>
+      <groupId>com.conveyal</groupId>
+      <artifactId>r5</artifactId>
+      <version>0.1-SNAPSHOT</version>
     </dependency>
 
     <dependency>

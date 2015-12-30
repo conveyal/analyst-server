@@ -1,19 +1,15 @@
 package com.conveyal.analyst.server.utils;
 
+import com.conveyal.r5.analyst.ResultSet;
+import com.conveyal.r5.analyst.cluster.ResultEnvelope;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.MultiPolygon;
-import com.vividsolutions.jts.geom.Polygon;
-import com.vividsolutions.jts.geom.prep.PreparedGeometry;
-import com.vividsolutions.jts.geom.prep.PreparedPolygon;
 import com.vividsolutions.jts.index.SpatialIndex;
 import com.vividsolutions.jts.index.strtree.STRtree;
 import models.Query;
 import models.Shapefile;
 import models.Shapefile.ShapeFeature;
 import org.mapdb.Fun.Tuple3;
-import org.opentripplanner.analyst.ResultSet;
-import org.opentripplanner.analyst.cluster.ResultEnvelope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

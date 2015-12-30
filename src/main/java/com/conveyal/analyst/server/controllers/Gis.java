@@ -4,6 +4,9 @@ import com.conveyal.analyst.server.utils.DirectoryZip;
 import com.conveyal.analyst.server.utils.GeoUtils;
 import com.conveyal.analyst.server.utils.HashUtils;
 import com.conveyal.analyst.server.utils.QueryResults;
+import com.conveyal.r5.analyst.FreeFormPointSet;
+import com.conveyal.r5.analyst.ResultSet;
+import com.conveyal.r5.analyst.cluster.ResultEnvelope;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 import com.vividsolutions.jts.geom.Geometry;
@@ -27,9 +30,6 @@ import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
-import org.opentripplanner.analyst.PointSet;
-import org.opentripplanner.analyst.ResultSet;
-import org.opentripplanner.analyst.cluster.ResultEnvelope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
@@ -291,7 +291,7 @@ public class Gis extends Controller {
 
 		ArrayList<GisShapeFeature> gisFeatures = new ArrayList<GisShapeFeature>();
 
-		PointSet ps = shp.getPointSet();
+		FreeFormPointSet ps = shp.getPointSet();
 
 		for (ShapeFeature feature : features) {
 
@@ -353,7 +353,7 @@ public class Gis extends Controller {
 
 		ArrayList<GisShapeFeature> gisFeatures = new ArrayList<GisShapeFeature>();
 
-		PointSet ps = shp.getPointSet();
+		FreeFormPointSet ps = shp.getPointSet();
 
 		for (ShapeFeature feature : features) {
 

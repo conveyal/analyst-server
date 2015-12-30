@@ -1,9 +1,9 @@
 package models;
 
 import com.conveyal.analyst.server.utils.DataStore;
+import com.conveyal.r5.analyst.scenario.Modification;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
-import org.opentripplanner.analyst.scenario.Modification;
 
 import java.io.Serializable;
 import java.util.Collection;

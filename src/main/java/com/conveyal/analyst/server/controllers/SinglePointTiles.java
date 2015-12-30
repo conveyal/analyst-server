@@ -3,7 +3,7 @@ package com.conveyal.analyst.server.controllers;
 import com.conveyal.analyst.server.tiles.AnalystTileRequest;
 import com.conveyal.analyst.server.tiles.SurfaceComparisonTile;
 import com.conveyal.analyst.server.tiles.SurfaceTile;
-import org.opentripplanner.analyst.cluster.ResultEnvelope;
+import com.conveyal.r5.analyst.cluster.ResultEnvelope;
 import spark.Request;
 import spark.Response;
 

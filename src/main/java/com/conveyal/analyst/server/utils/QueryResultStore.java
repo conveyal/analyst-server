@@ -1,13 +1,13 @@
 package com.conveyal.analyst.server.utils;
 
 import com.conveyal.analyst.server.AnalystMain;
+import com.conveyal.r5.analyst.Histogram;
+import com.conveyal.r5.analyst.ResultSet;
+import com.conveyal.r5.analyst.cluster.ResultEnvelope;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import models.Query;
 import org.mapdb.Fun;
-import org.opentripplanner.analyst.Histogram;
-import org.opentripplanner.analyst.ResultSet;
-import org.opentripplanner.analyst.cluster.ResultEnvelope;
 
 import java.io.*;
 import java.util.*;
