@@ -13,6 +13,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Properties;
 
 import static spark.Spark.after;
@@ -38,7 +41,10 @@ public class AnalystMain {
 	}
 
 	public static void main (String... args) throws Exception {
-		LOG.info("Welcome to Transport Analyst by conveyal");
+		// include date in startup log message so that log files have unique fingerprints for
+		// AWS CloudWatch Logs.
+		LOG.info("Welcome to Transport Analyst by conveyal. Starting at " +
+				LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
 		LOG.info("Reading properties . . .");
 		// TODO don't hardwire
 		FileInputStream in;
