@@ -12,5 +12,5 @@ echo $! > /tmp/ANALYST_PID
 
 # start the broker. conveniently enough we can use the analyst server jar, which just happens to already have the
 # logentries client baked into it.
-java -Xmx2G -Dlogback.configurationFile=/etc/broker-logentries.xml -cp /opt/otp/analyst-server.jar org.opentripplanner.analyst.broker.BrokerMain /etc/broker.conf > /home/ubuntu/broker.log < /dev/null 2>&1 &
+java -Xmx2G -Dlogback.configurationFile=/etc/broker-logentries.xml -cp /opt/otp/analyst-server.jar com.conveyal.r5.analyst.broker.BrokerMain /etc/broker.conf > /home/ubuntu/broker.log < /dev/null 2>&1 &
 echo $! > /tmp/BROKER_PID
