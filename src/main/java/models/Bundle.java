@@ -285,14 +285,12 @@ public class Bundle implements Serializable {
 							if (cd.exception_type == 2)
 								// removed service, does not count
 								continue;
+							
+							if (start == null || cd.date.isBefore(start))
+								start = cd.date;
 
-							LocalDate ld = LocalDate.of(cd.date.getYear(), cd.date.getMonthOfYear(), cd.date.getMonthOfYear());
-
-							if (start == null || ld.isBefore(start))
-								start = ld;
-
-							if (end == null || ld.isAfter(end))
-								end = ld;
+							if (end == null || cd.date.isAfter(end))
+								end = cd.date;
 						}
 					}
 
