@@ -2,7 +2,7 @@
 
 Analyst Server is a graphical user interface-driven, web-based tool for accessibility analysis of transportation networks:
 
-<img src="splash.png" alt="Analyst Server performing accessibility analysis in Portland, Ore." />
+<img src="splash.png" alt="Analyst Server performing accessibility analysis in Portland, Oregon, USA" />
 
 ## Installation
 
