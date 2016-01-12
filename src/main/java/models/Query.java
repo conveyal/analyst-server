@@ -308,7 +308,8 @@ public class Query implements Serializable {
 		}
 
 		// enqueue the requests
-		qm.enqueue(requests);
+		for (AnalystClusterRequest request : requests)
+			qm.enqueue(request);
 
 		// add the callback after enqueuing so it doesn't get deleted when the job is not found
 		qm.addCallback(id, this::updateStatus);
