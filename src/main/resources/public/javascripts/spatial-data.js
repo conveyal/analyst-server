@@ -107,18 +107,20 @@ A.spatialData = {};
 
 			values.projectId = this.projectId;
 
-			var shapefile = new A.models.Shapefile();
+		    // turn it back into a hidden form with all the values we want, and submit it
+		    var form = $('<form method="POST" action="/api/shapefile" enctype="multipart/form-data">')
+		    	.append(this.$('form :file'))
 
-			shapefile.save(values, { iframe: true,
-				files: this.$('form :file'),
-				data: values,
-				success: function() {
-					_this.trigger("shapefileUpload:save");
-				}
-			});
+		    for (var v in values) {
+		    	if (values.hasOwnProperty(v)) {
+		    		form.append($('<input type="hidden" name="' + v + '" value="' + values[v] +'" />'))
+		    	}
+		    }
 
-			this.$("#uploadShapefile").hide();
-			this.$("#uploadingShapefile").show();
+		    // pass in hash
+		    form.append($('<input type="hidden" name="location" value="' + window.location.hash + '" />'))
+
+		    form.submit()
 
 		}
 
