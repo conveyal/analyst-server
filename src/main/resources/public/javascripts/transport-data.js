@@ -141,14 +141,20 @@ A.transportData = {};
 		    if(values.bundleType === "augment")
 			values.augmentBundleId = this.$('#augmentBundleId').val();
 
-		    var bundle = new A.models.Bundle();
+		    // turn it back into a hidden form with all the values we want, and submit it
+		    var form = $('<form method="POST" action="/api/bundle" enctype="multipart/form-data">')
+		    	.append(this.$('form :file'))
 
-		    bundle.save(values, { iframe: true,
-		                              files: this.$('form :file'),
-		                              data: values,
-		                              success: function(){
-		                      				_this.trigger("bundleCreate:save");
-		                              }});
+		    for (var v in values) {
+		    	if (values.hasOwnProperty(v)) {
+		    		form.append($('<input type="hidden" name="' + v + '" value="' + values[v] +'" />'))
+		    	}
+		    }
+
+		    // pass in hash
+		    form.append($('<input type="hidden" name="location" value="' + window.location.hash + '" />'))
+
+		    form.submit()
 		}
 
 	});
