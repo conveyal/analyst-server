@@ -328,7 +328,7 @@ public class Bundle implements Serializable {
 							Map<?, Shape> shape = feed.shapePoints.subMap(new Tuple2(trip.shape_id, null), new Tuple2(trip.shape_id, Fun.HI));
 
 							coords = shape.values().stream()
-									.map(s -> new Coordinate(s.shape_pt_lon, s.shape_pt_lon))
+									.map(s -> new Coordinate(s.shape_pt_lon, s.shape_pt_lat))
 									.toArray(size -> new Coordinate[size]);
 						} else {
 							Collection<StopTime> stopTimes = feed.stop_times.subMap(new Tuple2(trip.trip_id, null), new Tuple2(trip.trip_id, Fun.HI)).values();
