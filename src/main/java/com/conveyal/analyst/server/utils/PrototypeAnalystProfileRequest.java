@@ -1,8 +1,11 @@
 package com.conveyal.analyst.server.utils;
 
+import com.conveyal.r5.api.util.LegMode;
+import com.conveyal.r5.api.util.TransitModes;
 import com.conveyal.r5.profile.Mode;
 import com.conveyal.r5.profile.ProfileRequest;
 import com.sun.scenario.effect.Blend;
+import org.opentripplanner.api.model.Leg;
 
 import java.util.EnumSet;
 
@@ -31,7 +34,7 @@ public class PrototypeAnalystProfileRequest extends ProfileRequest {
 		
 		limit = 10;
 		suboptimalMinutes = 5;
-		accessModes = directModes = egressModes = EnumSet.of(Mode.WALK);
-		transitModes = EnumSet.of(Mode.TRANSIT);
+		accessModes = directModes = egressModes = EnumSet.of(LegMode.WALK);
+		transitModes = EnumSet.allOf(TransitModes.class);
 	}
 }

@@ -1,5 +1,7 @@
 package com.conveyal.analyst.server.otp;
 
+import com.conveyal.r5.api.util.LegMode;
+import com.conveyal.r5.api.util.TransitModes;
 import com.conveyal.r5.profile.Mode;
 import com.conveyal.r5.profile.ProfileRequest;
 import org.slf4j.Logger;
@@ -19,14 +21,27 @@ public class Analyst {
 	public static ProfileRequest buildProfileRequest(String modes, LocalDate date, int fromTime, int toTime, double lat, double lon) {
 		ProfileRequest req = new ProfileRequest();
 
-		EnumSet<Mode> modeSet = EnumSet.noneOf(Mode.class);
+		EnumSet<LegMode> modeSet = EnumSet.noneOf(LegMode.class);
 		for (String mode : modes.split(",")) {
-			modeSet.add(Mode.valueOf(mode));
+			try {
+				modeSet.add(LegMode.valueOf(mode));
+			} catch (IllegalArgumentException e) {
+				continue;
+			}
 		}
-		req.transitModes = EnumSet.noneOf(Mode.class);
-		if (modeSet.contains(Mode.TRANSIT)) {
-			req.transitModes.add(Mode.TRANSIT);
-			modeSet.remove(Mode.TRANSIT);
+
+		req.transitModes = EnumSet.noneOf(TransitModes.class);
+		for (String mode : modes.split(",")) {
+			if ("TRANSIT".equals(mode)) {
+				req.transitModes = EnumSet.allOf(TransitModes.class);
+				break;
+			}
+
+			try {
+				req.transitModes.add(TransitModes.valueOf(mode));
+			} catch (IllegalArgumentException e) {
+				continue;
+			}
 		}
 		req.accessModes = req.egressModes = req.directModes = modeSet;
 
