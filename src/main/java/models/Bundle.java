@@ -397,7 +397,11 @@ public class Bundle implements Serializable {
 
 		for (String bundleId : bundlesToReprocess) {
 			Bundle bundle = Bundle.getBundle(bundleId);
-			bundle.processGtfs();
+			try {
+				bundle.processGtfs();
+			} catch (Exception e) {
+				LOG.warn("Exception processing GTFS feed {}", bundleId, e);
+			}
 		}
 	}
 
