@@ -4,6 +4,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.S3Object;
+import com.beust.jcommander.internal.Sets;
 import com.conveyal.analyst.server.AnalystMain;
 import com.conveyal.analyst.server.otp.Analyst;
 import com.conveyal.analyst.server.utils.*;
@@ -253,12 +254,12 @@ public class Query implements Serializable {
 			profileRequest.scenario = new Scenario(0);
 
 			if (scenario.bannedRoutes != null) {
-				profileRequest.scenario.modifications = scenario.bannedRoutes.stream().map(rs -> {
-					RemoveTrip ret = new RemoveTrip();
-					ret.agencyId = rs.agencyId;
-					ret.routeId = Arrays.asList(rs.id);
-					return ret;
-				}).collect(Collectors.toList());
+				RemoveTrip removeTrip = new RemoveTrip();
+				removeTrip.routeId = scenario.bannedRoutes.stream()
+					// TODO scope with feed ID like this: .map(rid -> ":".join(rid.feed, rid.id))
+					.map(rid -> rid.id)
+					.collect(Collectors.toSet());
+				profileRequest.scenario.modifications = Arrays.asList(removeTrip);
 			}
 			else {
 				profileRequest.scenario.modifications = new ArrayList<>();
