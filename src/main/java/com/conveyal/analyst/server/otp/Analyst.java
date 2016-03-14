@@ -21,13 +21,26 @@ public class Analyst {
 	public static ProfileRequest buildProfileRequest(String modes, LocalDate date, int fromTime, int toTime, double lat, double lon) {
 		ProfileRequest req = new ProfileRequest();
 
-		req.transitModes = EnumSet.noneOf(TransitModes.class);
 		EnumSet<LegMode> modeSet = EnumSet.noneOf(LegMode.class);
 		for (String mode : modes.split(",")) {
-			if ("TRANSIT".equalsIgnoreCase(mode)) {
-				req.transitModes = EnumSet.allOf(TransitModes.class);
-			} else {
+			try {
 				modeSet.add(LegMode.valueOf(mode));
+			} catch (IllegalArgumentException e) {
+				continue;
+			}
+		}
+
+		req.transitModes = EnumSet.noneOf(TransitModes.class);
+		for (String mode : modes.split(",")) {
+			if ("TRANSIT".equals(mode)) {
+				req.transitModes = EnumSet.allOf(TransitModes.class);
+				break;
+			}
+
+			try {
+				req.transitModes.add(TransitModes.valueOf(mode));
+			} catch (IllegalArgumentException e) {
+				continue;
 			}
 		}
 		req.accessModes = req.egressModes = req.directModes = modeSet;

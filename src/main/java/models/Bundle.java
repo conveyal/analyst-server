@@ -285,14 +285,12 @@ public class Bundle implements Serializable {
 							if (cd.exception_type == 2)
 								// removed service, does not count
 								continue;
+							
+							if (start == null || cd.date.isBefore(start))
+								start = cd.date;
 
-							LocalDate ld = LocalDate.of(cd.date.getYear(), cd.date.getMonthOfYear(), cd.date.getMonthOfYear());
-
-							if (start == null || ld.isBefore(start))
-								start = ld;
-
-							if (end == null || ld.isAfter(end))
-								end = ld;
+							if (end == null || cd.date.isAfter(end))
+								end = cd.date;
 						}
 					}
 
@@ -399,7 +397,11 @@ public class Bundle implements Serializable {
 
 		for (String bundleId : bundlesToReprocess) {
 			Bundle bundle = Bundle.getBundle(bundleId);
-			bundle.processGtfs();
+			try {
+				bundle.processGtfs();
+			} catch (Exception e) {
+				LOG.warn("Exception processing GTFS feed {}", bundleId, e);
+			}
 		}
 	}
 

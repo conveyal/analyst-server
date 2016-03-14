@@ -5,6 +5,7 @@ import com.conveyal.r5.api.util.TransitModes;
 import com.conveyal.r5.profile.Mode;
 import com.conveyal.r5.profile.ProfileRequest;
 import com.sun.scenario.effect.Blend;
+import org.opentripplanner.api.model.Leg;
 
 import java.util.EnumSet;
 
