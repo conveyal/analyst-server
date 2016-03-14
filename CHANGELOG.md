@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.41 (2015-12-31)
+- Print date and time at startup to ensure logfile uniqueness
+
+## 0.7.40
+- Accidental release, no changes.
+
 ## 0.7.39 (2015-12-21)
 
 - Updated geom2gtfs to solve concurrency issues

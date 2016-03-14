@@ -85,7 +85,11 @@ public class BundleController extends Controller {
 
             s.save();
 
-            return s;
+            // redirect back from whence we came.
+            // NB this is not so CRUD, but we need to send users back to the app.
+            // We pass the location hash in so we can redirect to the right part of the app.
+            res.redirect(String.format("/%s", files.get("location").get(0).getString()));
+            return null;
         }
         else {
             halt(BAD_REQUEST, "Please upload a file");
