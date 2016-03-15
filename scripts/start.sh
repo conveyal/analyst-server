@@ -8,8 +8,8 @@ ANALYST_MEM=`echo "$TOTAL_MEM - (4500 * 1024)" | bc`
 # One would think that the nohup command should do this but it doesn't detach standard error
 cd /ebs/scratch
 java -Xmx${ANALYST_MEM}k -jar /opt/otp/analyst-server.jar /etc/analyst.conf > /home/ubuntu/analyst.log < /dev/null 2>&1 &
-echo $! > /tmp/ANALYST_PID
+echo $! > /var/lock/ANALYST_PID
 
 # start the broker.
 java -Xmx2G -cp /opt/otp/analyst-server.jar org.opentripplanner.analyst.broker.BrokerMain /etc/broker.conf > /home/ubuntu/broker.log < /dev/null 2>&1 &
-echo $! > /tmp/BROKER_PID
+echo $! > /var/lock/BROKER_PID
