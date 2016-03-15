@@ -12,6 +12,6 @@ java -Xmx${ANALYST_MEM}k -jar /opt/otp/analyst-server.jar /etc/analyst.conf > /h
 echo $! > /var/lock/ANALYST_PID
 
 # start the broker.
-java -Xmx2G -cp /opt/otp/analyst-server.jar org.opentripplanner.analyst.broker.BrokerMain /etc/broker.conf > /home/ubuntu/broker.log < /dev/null 2>&1 &
+java -Xmx2G -cp /opt/otp/analyst-server.jar com.conveyal.r5.analyst.broker.BrokerMain /etc/broker.conf > /home/ubuntu/broker.log < /dev/null 2>&1 &
 echo $! > /var/lock/BROKER_PID
 
