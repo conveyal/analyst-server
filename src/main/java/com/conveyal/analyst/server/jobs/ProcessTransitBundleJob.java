@@ -52,6 +52,7 @@ public class ProcessTransitBundleJob implements Runnable {
 
 			String shpFile = null;
 			String confFile = null;
+			ZipEntry osmFile = null;
 			
 			// this allows one to upload a ZIP file full of GTFS files and have them all added.
 			List<ZipEntry> zips = Lists.newArrayList(); 
@@ -72,6 +73,9 @@ public class ProcessTransitBundleJob implements Runnable {
 				
 				if (entry.getName().toLowerCase().endsWith(".zip") && !entry.isDirectory())
 					zips.add(entry);
+
+				if (entry.getName().toLowerCase().endsWith(".pbf") && !entry.isDirectory())
+					osmFile = entry;
 			}
 
 			File newFile;
@@ -94,7 +98,6 @@ public class ProcessTransitBundleJob implements Runnable {
 
 				FileUtils.deleteDirectory(outputDirectory);
 				zipFile.close();
-				uploadFile.delete();
 				graphFiles.add(newFile);
 			}
 			else if (!zips.isEmpty()) {
@@ -110,11 +113,6 @@ public class ProcessTransitBundleJob implements Runnable {
 				FileUtils.copyFile(uploadFile, newFile);
 				graphFiles.add(newFile);
 			}
-			
-			zipFile.close();
-
-			if (deleteWhenDone)
-				uploadFile.delete(); // don't need this file anymore
 			
 			if((bundleType != null && augmentBundleId != null && bundleType.equals("augment"))) 
 			{	
@@ -139,38 +137,49 @@ public class ProcessTransitBundleJob implements Runnable {
 
 			File osmPbfFile = new File(bundle.getBundleDataPath(), bundle.id + ".osm.pbf");
 
-			Double south = bundle.bounds.north < bundle.bounds.south ? bundle.bounds.north : bundle.bounds.south;
-			Double west = bundle.bounds.east < bundle.bounds.west ? bundle.bounds.east : bundle.bounds.west;
-			Double north = bundle.bounds.north > bundle.bounds.south ? bundle.bounds.north : bundle.bounds.south;
-			Double east = bundle.bounds.east > bundle.bounds.west ? bundle.bounds.east : bundle.bounds.west;
+			if (osmFile != null) {
+				ZipUtils.unzip(zipFile, osmFile, osmPbfFile);
+			}
+			else {
+				Double south = bundle.bounds.north < bundle.bounds.south ? bundle.bounds.north : bundle.bounds.south;
+				Double west = bundle.bounds.east < bundle.bounds.west ? bundle.bounds.east : bundle.bounds.west;
+				Double north = bundle.bounds.north > bundle.bounds.south ? bundle.bounds.north : bundle.bounds.south;
+				Double east = bundle.bounds.east > bundle.bounds.west ? bundle.bounds.east : bundle.bounds.west;
 
-			String vexUrl = AnalystMain.config.getProperty("application.vex");
+				String vexUrl = AnalystMain.config.getProperty("application.vex");
 
-			if (!vexUrl.endsWith("/"))
-				vexUrl += "/";
+				if (!vexUrl.endsWith("/"))
+					vexUrl += "/";
 
-			vexUrl += String.format("%.6f,%.6f,%.6f,%.6f.pbf", south, west, north, east);
+				vexUrl += String.format("%.6f,%.6f,%.6f,%.6f.pbf", south, west, north, east);
 
-			HttpURLConnection conn = (HttpURLConnection) new URL(vexUrl).openConnection();
+				HttpURLConnection conn = (HttpURLConnection) new URL(vexUrl).openConnection();
 
-			conn.connect();
+				conn.connect();
 
-			if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
-				LOG.warn("Received response code {} from vex server", conn.getResponseCode());
-				bundle.failed = true;
-				bundle.save();
-				return;
+				if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
+					LOG.warn("Received response code {} from vex server", conn.getResponseCode());
+					bundle.failed = true;
+					bundle.save();
+					return;
+				}
+
+				// download the file
+				LOG.info("Beginning to download OSM data...");
+				InputStream is = conn.getInputStream();
+				OutputStream os = new FileOutputStream(osmPbfFile);
+				ByteStreams.copy(is, os);
+				is.close();
+				os.close();
+				LOG.info("OSM PBF retrieved.");
 			}
 
-			// download the file
-			LOG.info("Beginning to download OSM data...");
-			InputStream is = conn.getInputStream();
-			OutputStream os = new FileOutputStream(osmPbfFile);
-			ByteStreams.copy(is, os);
-			is.close();
-			os.close();
 			graphFiles.add(osmPbfFile);
-			LOG.info("OSM PBF retrieved.");
+
+			zipFile.close();
+
+			if (deleteWhenDone)
+				uploadFile.delete(); // don't need this file anymore
 
 		} catch (IOException e) {
 			LOG.error("Failed to process GTFS", e);

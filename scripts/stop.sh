@@ -1,14 +1,14 @@
 #!/bin/bash
 
 # stop analyst server
-if [ -e /tmp/ANALYST_PID ]; then
-  kill `cat /tmp/ANALYST_PID`
-  rm /tmp/ANALYST_PID
+if [ -e /var/lock/ANALYST_PID ]; then
+  kill `cat /var/lock/ANALYST_PID`
+  rm /var/lock/ANALYST_PID
 fi
 
-if [ -e /tmp/BROKER_PID ]; then
-  kill `cat /tmp/BROKER_PID`
-  rm /tmp/BROKER_PID
+if [ -e /var/lock/BROKER_PID ]; then
+  kill `cat /var/lock/BROKER_PID`
+  rm /var/lock/BROKER_PID
 fi
 
 if [ -e /opt/otp/analyst-server.jar ]; then

@@ -12,6 +12,7 @@ import spark.Request;
 import spark.Response;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -31,6 +32,8 @@ public class QueryController extends Controller {
 
         String projectId = req.queryParams("projectId");
 
+        Collection<Query> result = null;
+
         if(req.params("id") != null) {
             Query q = Query.getQuery(req.params("id"));
             if (q != null && currentUser(req).hasReadPermission(q.projectId))
@@ -42,7 +45,7 @@ public class QueryController extends Controller {
             if (Project.getProject(projectId) == null || !currentUser(req).hasReadPermission(projectId))
                 halt(NOT_FOUND, "Could not find project");
 
-            return Query.getQueriesByProject(projectId);
+            result = Query.getQueriesByProject(projectId);
         }
         else {
             // all queries for the user
@@ -51,11 +54,15 @@ public class QueryController extends Controller {
                     .map(pp -> pp.projectId)
                     .collect(Collectors.toSet());
 
-            return Query.getQueries().stream().filter(q -> userProjects.contains(q.projectId))
+            result = Query.getQueries().stream().filter(q -> userProjects.contains(q.projectId))
                     .collect(Collectors.toList());
         }
 
-        return null;
+        if (!Boolean.parseBoolean(req.queryParams("archived"))) {
+            result = result.stream().filter(q -> !q.archived).collect(Collectors.toList());
+        }
+
+        return result;
     }
 
     public static Query createQuery(Request req, Response res) {
