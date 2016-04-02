@@ -16,7 +16,6 @@ import com.conveyal.r5.analyst.cluster.AnalystClusterRequest;
 import com.conveyal.r5.analyst.cluster.ResultEnvelope;
 import com.conveyal.r5.analyst.scenario.*;
 import com.conveyal.r5.analyst.scenario.Scenario;
-import com.conveyal.r5.profile.Mode;
 import com.conveyal.r5.profile.ProfileRequest;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -199,9 +198,9 @@ public class Query implements Serializable {
 	 */
 	public boolean isTransit () {
 		if (this.profileRequest == null) {
-			return Mode.TRANSIT.equals(Mode.valueOf(this.mode));
+			return "TRANSIT".equalsIgnoreCase(this.mode);
 		}
-		return (this.profileRequest.transitModes != null && this.profileRequest.transitModes.contains(Mode.TRANSIT));
+		return (this.profileRequest.transitModes != null && !this.profileRequest.transitModes.isEmpty());
 	}
 
 	public void save() {
@@ -254,12 +253,12 @@ public class Query implements Serializable {
 			profileRequest.scenario = new Scenario(0);
 
 			if (scenario.bannedRoutes != null) {
-				RemoveTrip removeTrip = new RemoveTrip();
-				removeTrip.routeId = scenario.bannedRoutes.stream()
+				RemoveTrip removeTrips = new RemoveTrip();
+				removeTrips.routeId = scenario.bannedRoutes.stream()
 					// TODO scope with feed ID like this: .map(rid -> ":".join(rid.feed, rid.id))
 					.map(rid -> rid.id)
 					.collect(Collectors.toSet());
-				profileRequest.scenario.modifications = Arrays.asList(removeTrip);
+				profileRequest.scenario.modifications = Arrays.asList(removeTrips);
 			}
 			else {
 				profileRequest.scenario.modifications = new ArrayList<>();
