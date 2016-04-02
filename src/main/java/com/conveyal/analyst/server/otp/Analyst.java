@@ -2,14 +2,12 @@ package com.conveyal.analyst.server.otp;
 
 import com.conveyal.r5.api.util.LegMode;
 import com.conveyal.r5.api.util.TransitModes;
-import com.conveyal.r5.profile.Mode;
 import com.conveyal.r5.profile.ProfileRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
 import java.util.EnumSet;
-import java.util.Set;
 
 public class Analyst {
 	private static final Logger LOG = LoggerFactory.getLogger(Analyst.class);
