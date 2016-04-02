@@ -4,7 +4,7 @@
 
   <groupId>com.conveyal</groupId>
   <artifactId>analyst-server</artifactId>
-  <version>0.7.47-SNAPSHOT</version>
+  <version>0.7.48</version>
   <packaging>jar</packaging>
 
   <name>analyst-server</name>
