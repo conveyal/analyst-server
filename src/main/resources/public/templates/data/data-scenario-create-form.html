@@ -27,11 +27,9 @@
       <input id="description" name="description" value="{{description}}" type='text' class="form-control"/>
     </div>
 
-    <!-- banned routes selector -->
     <div class="form-group">
-      <label for="bannedRoutes">{{I18n "data-manager.banned-routes"}}</label>
-      <select id="bannedRoutes" multiple style="width: 400px">
-      </select>
+      <label for="file">{{I18n "data-manager.scenario-file"}}</label>
+      <input type="file" id="file" />
     </div>
 
 <button id="scenarioSave" type="button" class="save btn btn-primary">{{I18n "app.shared.create"}}</button> <button type="button" id="scenarioCancel" class="cancel btn btn-default">{{I18n "app.shared.cancel"}}</button>

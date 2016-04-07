@@ -108,14 +108,9 @@ var Analyst = Analyst || {};
       description: '#description'
     },
 
-    regions: {
-      shapefileSelect: "#shapefileSelect"
-    },
-
     events: {
       'click #scenarioSave': 'saveScenarioEdit',
-      'click #scenarioCancel': 'cancelScenarioEdit',
-      'change #bundleId': 'bundleChange'
+      'click #scenarioCancel': 'cancelScenarioEdit'
     },
 
     initialize: function(options) {
@@ -147,35 +142,8 @@ var Analyst = Analyst || {};
 
             opt.appendTo(_this.$('#bundleId'));
           });
-
-          _this.bundleChange();
         }
       });
-    },
-
-    bundleChange: function () {
-      this.$('#bannedRoutes').empty();
-
-      var _this = this;
-
-      _.each(this.bundles.get(this.$('#bundleId').val()).get('routes'), function (route, i) {
-        var opt = $('<option/>')
-          .text(route.shortName + ' ' + route.longName)
-          // use index in routes list as value because the value in the banned routes list is
-          // the entire json block
-          .attr('value', i);
-
-          // if some are already selected fill them in
-          if (_this.$('#bundleId').val() == _this.model.get('bundleId')) {
-            if (_.findWhere(_this.model.get('bannedRoutes'), {agencyId: route.agencyId, id: route.id})) {
-              opt.attr('selected', 'selected');
-            }
-          }
-
-          opt.appendTo(_this.$('#bannedRoutes'));
-      });
-
-      _this.$('#bannedRoutes').select2();
     },
 
     cancelScenarioEdit: function(evt) {
@@ -194,19 +162,17 @@ var Analyst = Analyst || {};
         description: this.$('#description').val()
       });
 
-      // figure out the banned routes
-      // route indices are the form values
-      var bannedRoutes = [];
-      var routes = this.bundles.get(this.model.get('bundleId')).get('routes');
-      _.each(this.$('#bannedRoutes').val(), function (routeIdx) {
-        bannedRoutes.push(routes[Number(routeIdx)]);
-      });
-
-      this.model.set('bannedRoutes', bannedRoutes);
-
-      this.model.save().done(function () {
-        _this.trigger("scenarioEdit:save");
-      });
+      // read the scenario
+      var reader = new window.FileReader()
+      reader.onloadend = function (e) {
+        var val = JSON.parse(e.target.result);
+        _this.model.set('modifications', val.modifications);
+        _this.model.save().done(function () {
+          _this.trigger("scenarioEdit:save");
+        })
+      };
+      
+      reader.readAsText(this.$('#file').get(0).files[0])
     }
   });
 
@@ -250,24 +216,6 @@ var Analyst = Analyst || {};
 
     deleteScenario: function(evt) {
       this.model.destroy();
-    },
-
-    editScenario: function (evt) {
-      // kind of ugly to trigger this on the model but there is a wall against bubbling from
-      // children to parents in compositeview . . .
-      // also context is not preserved so pass the model along.
-      this.model.trigger('scenarioEdit', this.model);
-    },
-
-    duplicateScenario: function (evt) {
-      var newScenario = new A.models.Scenario();
-      newScenario.set(_.omit(this.model.toJSON(), 'id'));
-      newScenario.set('name', newScenario.get('name') + " (copy)");
-
-      var _this = this;
-      newScenario.save().done(function () {
-        _this.model.collection.fetch({reset: true, data: {projectId: _this.model.get('projectId')}});
-      });
     },
 
     onRender: function() {

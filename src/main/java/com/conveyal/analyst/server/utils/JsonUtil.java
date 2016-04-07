@@ -1,6 +1,8 @@
 package com.conveyal.analyst.server.utils;
 
 import com.conveyal.geojson.GeoJsonModule;
+import com.conveyal.geojson.GeometryDeserializer;
+import com.conveyal.geojson.GeometrySerializer;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -11,6 +13,7 @@ import com.fasterxml.jackson.databind.module.SimpleDeserializers;
 import com.fasterxml.jackson.databind.module.SimpleKeyDeserializers;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.module.SimpleSerializers;
+import com.vividsolutions.jts.geom.MultiPolygon;
 import org.onebusaway.gtfs.model.AgencyAndId;
 
 import java.io.IOException;
@@ -77,11 +80,24 @@ public class JsonUtil {
 
             SimpleSerializers s = new SimpleSerializers();
             s.addSerializer(LocalDate.class, new JavaLocalDateIsoSerializer());
+            s.addSerializer(MultiPolygon.class, new GeometrySerializer());
             ctx.addSerializers(s);
 
             SimpleDeserializers d = new SimpleDeserializers();
             d.addDeserializer(LocalDate.class, new JavaLocalDateIsoDeserializer());
+            d.addDeserializer(MultiPolygon.class, new MultipolygonDeserializer());
             ctx.addDeserializers(d);
+        }
+    }
+
+    /** slightly hacky way to deserialize GeoJSON multipolygon */
+    public static class MultipolygonDeserializer extends JsonDeserializer<MultiPolygon> {
+        private GeometryDeserializer geometryDeserializer = new GeometryDeserializer();
+
+
+        @Override
+        public MultiPolygon deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException, JsonProcessingException {
+            return (MultiPolygon) geometryDeserializer.deserialize(jsonParser, deserializationContext);
         }
     }
 }

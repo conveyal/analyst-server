@@ -42,9 +42,6 @@ public class TransportScenario implements Serializable {
 	public String description;
 	
 	/** The project that this scenario is associated with */
-	
-	/** A list of banned routes */
-	public List<Bundle.RouteSummary> bannedRoutes;
 
 	/** A list of other modifications to make to the graph, for advanced users */
 	public List<Modification> modifications;

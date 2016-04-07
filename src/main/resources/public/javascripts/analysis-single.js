@@ -364,14 +364,7 @@ var Analyst = Analyst || {};
 				graphId: this.scenario1.get('bundleId')
 			};
 
-			var mods1 = _.map(this.scenario1.get('bannedRoutes'), function (route) {
-				return {
-					type: 'remove-trip',
-					agencyId: route.agencyId,
-					routeId: [route.id],
-					tripId: null
-				};
-			});
+			var mods1 = []
 
 			if (this.scenario1.get('modifications'))
 				mods1 = mods1.concat(this.scenario1.get('modifications'));
@@ -447,12 +440,7 @@ var Analyst = Analyst || {};
 					// ok to be destructive - we've already stringified the request
 					params.graphId = this.scenario2.get('bundleId');
 
-					var mods2 = _.map(this.scenario2.get('bannedRoutes'), function (route) {
-						return {
-							type: 'remove-trip',
-							agencyId: route.agencyId,
-							routeId: [route.id],
-						}});
+					var mods2 = []
 
 					if (this.scenario2.get('modifications'))
 						mods2 = mods2.concat(this.scenario2.get('modifications'));

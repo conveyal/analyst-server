@@ -246,23 +246,10 @@ public class Query implements Serializable {
 				profileRequest.toTime = profileRequest.fromTime + 60;
 			}
 
-			// If no boarding assumption is provided, default to worst-case (full-headway waits)
-			profileRequest.boardingAssumption = this.boardingAssumption != null ? this.boardingAssumption :
-					BoardingAssumption.WORST_CASE;
 
 			profileRequest.scenario = new Scenario(0);
 
-			if (scenario.bannedRoutes != null) {
-				RemoveTrip removeTrips = new RemoveTrip();
-				removeTrips.routeId = scenario.bannedRoutes.stream()
-					// TODO scope with feed ID like this: .map(rid -> ":".join(rid.feed, rid.id))
-					.map(rid -> rid.id)
-					.collect(Collectors.toSet());
-				profileRequest.scenario.modifications = Arrays.asList(removeTrips);
-			}
-			else {
-				profileRequest.scenario.modifications = new ArrayList<>();
-			}
+			profileRequest.scenario.modifications = new ArrayList<>();
 
 			if (scenario.modifications != null) {
 				profileRequest.scenario.modifications.addAll(scenario.modifications);

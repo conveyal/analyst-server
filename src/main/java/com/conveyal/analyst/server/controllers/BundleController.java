@@ -3,6 +3,7 @@ package com.conveyal.analyst.server.controllers;
 import com.conveyal.analyst.server.utils.JsonUtil;
 import models.Bundle;
 import models.Project;
+import models.TransportScenario;
 import models.User;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
@@ -77,11 +78,20 @@ public class BundleController extends Controller {
             file.write(tempFile);
 
             // true indicates to delete file when upload succeeds
-            Bundle s = Bundle.create(tempFile, bundleType, augmentBundleId, true);
+            Bundle b = Bundle.create(tempFile, bundleType, augmentBundleId, true);
 
-            s.name = files.get("name").get(0).getString("UTF-8");
-            s.description = files.get("description").get(0).getString("UTF-8");
-            s.projectId = projectId;
+            b.name = files.get("name").get(0).getString("UTF-8");
+            b.description = files.get("description").get(0).getString("UTF-8");
+            b.projectId = projectId;
+
+            b.save();
+
+            // Create a baseline transport scenario
+            TransportScenario s = new TransportScenario();
+            s.bundleId = b.id;
+            s.projectId = b.projectId;
+            s.name = b.name;
+            s.generateId();
 
             s.save();
 
