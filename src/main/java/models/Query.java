@@ -252,16 +252,14 @@ public class Query implements Serializable {
 
 			profileRequest.scenario = new Scenario(0);
 
+			profileRequest.scenario.modifications = new ArrayList<>();
 			if (scenario.bannedRoutes != null) {
 				RemoveTrip removeTrips = new RemoveTrip();
 				removeTrips.routeId = scenario.bannedRoutes.stream()
 					// TODO scope with feed ID like this: .map(rid -> ":".join(rid.feed, rid.id))
 					.map(rid -> rid.id)
 					.collect(Collectors.toSet());
-				profileRequest.scenario.modifications = Arrays.asList(removeTrips);
-			}
-			else {
-				profileRequest.scenario.modifications = new ArrayList<>();
+				profileRequest.scenario.modifications.add(removeTrips);
 			}
 
 			if (scenario.modifications != null) {
