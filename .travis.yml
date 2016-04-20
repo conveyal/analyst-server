@@ -15,7 +15,7 @@ before_install:
 #  - sed -i.bak -e 's|https://nexus.codehaus.org/snapshots/|https://oss.sonatype.org/content/repositories/codehaus-snapshots/|g' ~/.m2/settings.xml
   # Use scenario branch of r5
   - git clone https://github.com/conveyal/r5.git -b scenario --depth 100
-  - cd r5 && mvn install
+  - cd r5; mvn install; cd ..
 
 # Make a CodeDeploy deployment object
 before_deploy:
