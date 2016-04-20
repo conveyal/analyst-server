@@ -246,11 +246,8 @@ public class Query implements Serializable {
 				profileRequest.toTime = profileRequest.fromTime + 60;
 			}
 
-
 			profileRequest.scenario = new Scenario(0);
-
 			profileRequest.scenario.modifications = new ArrayList<>();
-
 			if (scenario.modifications != null) {
 				profileRequest.scenario.modifications.addAll(scenario.modifications);
 			}

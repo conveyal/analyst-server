@@ -1,6 +1,7 @@
 logs
 project/project
 project/target
+/S3/
 .target
 target
 .DS_Store
