@@ -411,6 +411,7 @@ var Analyst = Analyst || {};
 				// use monte carlo at all times; it also produces true best/worst case numbers.
 				boardingAssumption: 'RANDOM',
 				scenario: {
+				    id: this.scenario1.get('id'),
 					modifications: mods1
 				}
 			}
@@ -448,7 +449,10 @@ var Analyst = Analyst || {};
 					if (window.modifications2)
 						mods2 = mods2.concat(window.modifications2);
 
-					params.profileRequest.scenario = { modifications : mods2 };
+					params.profileRequest.scenario = {
+    				    id: this.scenario2.get('id'),
+    				    modifications: mods2,
+                    };
 
 					var p2 = $.ajax({
 						url: '/api/single',
