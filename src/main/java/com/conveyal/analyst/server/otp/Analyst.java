@@ -47,7 +47,6 @@ public class Analyst {
         req.fromLon    = lon;
         req.toLat	   = lat; // not used but required
         req.toLon      = lon;
-        req.analyst	   = true;
         req.fromTime   = fromTime;
         req.toTime     = toTime;
         req.walkSpeed  = 1.4f;

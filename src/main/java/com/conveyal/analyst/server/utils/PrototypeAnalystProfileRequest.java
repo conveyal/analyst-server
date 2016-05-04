@@ -23,12 +23,7 @@ public class PrototypeAnalystProfileRequest extends ProfileRequest {
 		maxCarTime = 45;
 		minBikeTime = 10;
 		minCarTime = 10;
-		
-		// doesn't matter for analyst requests
-		// orderBy = Option.SortOrder.AVG;
-		
-		analyst = true;
-		
+
 		limit = 10;
 		suboptimalMinutes = 5;
 		accessModes = directModes = egressModes = EnumSet.of(LegMode.WALK);
