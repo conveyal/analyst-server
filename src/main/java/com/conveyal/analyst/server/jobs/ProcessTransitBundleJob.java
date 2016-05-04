@@ -3,6 +3,7 @@ package com.conveyal.analyst.server.jobs;
 import com.conveyal.analyst.server.AnalystMain;
 import com.conveyal.analyst.server.utils.HashUtils;
 import com.conveyal.analyst.server.utils.ZipUtils;
+import com.conveyal.r5.transit.TransportNetwork;
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
 import models.Bundle;
@@ -113,7 +114,14 @@ public class ProcessTransitBundleJob implements Runnable {
 				FileUtils.copyFile(uploadFile, newFile);
 				graphFiles.add(newFile);
 			}
-			
+
+			// if there is an r5 build config file present, copy it to bundle
+			if (zipFile.getEntry(TransportNetwork.BUILDER_CONFIG_FILENAME) != null) {
+				File r5Config = new File(bundle.getBundleDataPath(), TransportNetwork.BUILDER_CONFIG_FILENAME);
+				ZipUtils.unzip(zipFile, zipFile.getEntry(TransportNetwork.BUILDER_CONFIG_FILENAME), r5Config);
+				graphFiles.add(r5Config);
+			}
+
 			if((bundleType != null && augmentBundleId != null && bundleType.equals("augment"))) 
 			{	
 				for(File f : Bundle.getBundle(augmentBundleId).getBundleDataPath().listFiles()) {
