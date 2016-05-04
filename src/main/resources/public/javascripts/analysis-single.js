@@ -159,6 +159,16 @@ var Analyst = Analyst || {};
 				_this.updateResults();
 			}).data('slider');
 
+			this.iterationSlider = this.$('#iterationSlider').slider({
+					formater: function (value) {
+						_this.$('#iterationValue').html(window.Messages("analysis.monte-carlo-draws", value));
+						return value
+					} 
+				}).on('slideStop', function(value) {
+
+				_this.updateResults();
+			}).data('slider');
+
 			this.mode = 'TRANSIT,WALK';
 
 			this.shapefiles.fetch({reset: true, data : {projectId: A.app.selectedProject}})
@@ -320,6 +330,7 @@ var Analyst = Analyst || {};
 			var walkTime = this.walkTimeSlider.getValue();
 			var bikeTime = this.bikeTimeSlider.getValue();
 			var reachabilityThreshold = this.reachabilityThresholdSlider.getValue();
+			var iterations = this.iterationSlider.getValue()
 
  			this.scenario1 = this.scenarios.get(this.$('#scenario1').val());
 			this.scenario2 = this.scenarios.get(this.$('#scenario2').val());
@@ -399,6 +410,7 @@ var Analyst = Analyst || {};
 				streetTime: 90,
 				maxWalkTime: walkTime,
 				maxBikeTime: bikeTime,
+				maxFare: window.maxFare1,
 				maxCarTime: 45,
 				minBikeTime: 10,
 				minCarTime: 10,
@@ -410,6 +422,7 @@ var Analyst = Analyst || {};
 				bikeTime: 1,
 				// use monte carlo at all times; it also produces true best/worst case numbers.
 				boardingAssumption: 'RANDOM',
+				monteCarloDraws: iterations,
 				scenario: {
 				    id: this.scenario1.get('id'),
 					modifications: mods1
@@ -449,10 +462,8 @@ var Analyst = Analyst || {};
 					if (window.modifications2)
 						mods2 = mods2.concat(window.modifications2);
 
-					params.profileRequest.scenario = {
-    				    id: this.scenario2.get('id'),
-    				    modifications: mods2,
-                    };
+					params.profileRequest.scenario = { modifications : mods2, id: this.scenario2.get('id') };
+					params.profileRequest.maxFare = window.maxFare2;
 
 					var p2 = $.ajax({
 						url: '/api/single',

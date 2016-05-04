@@ -118,6 +118,9 @@ public class Query implements Serializable {
 	/** max bike time in minutes. */
 	public int maxBikeTime;
 
+	/** number of draws to use for the Monte Carlo simulation of frequency trips */
+	public int monteCarloDraws;
+
 	/** has this query been archived? */
 	public boolean archived;
 
@@ -248,10 +251,13 @@ public class Query implements Serializable {
 
 			profileRequest.scenario = new Scenario();
 			profileRequest.scenario.id = scenario.id;
+
 			profileRequest.scenario.modifications = new ArrayList<>();
 			if (scenario.modifications != null) {
 				profileRequest.scenario.modifications.addAll(scenario.modifications);
 			}
+
+			if (this.monteCarloDraws > 0) profileRequest.monteCarloDraws = this.monteCarloDraws;
 
 			// fill in speeds/times iff they were supplied and are non-zero. If they were not supplied they will
 			// be zero since java initializes primitives to zero.

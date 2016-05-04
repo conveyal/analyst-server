@@ -110,6 +110,16 @@ var Analyst = Analyst || {};
         _this.updateResults();
       }).data('slider');
 
+      this.iterationSlider = this.$('#iterationSlider').slider({
+          formater: function (value) {
+            _this.$('#iterationValue').html(window.Messages("analysis.monte-carlo-draws", value));
+            return value
+          } 
+        }).on('slideStop', function(value) {
+
+        _this.updateResults();
+      }).data('slider');
+
       this.scenarios = new A.models.Scenarios();
       this.queries = new A.models.Queries();
       this.shapefiles = new A.models.Shapefiles();
@@ -211,6 +221,7 @@ var Analyst = Analyst || {};
       var walkTime = this.walkTimeSlider.getValue();
       var bikeTime = this.bikeTimeSlider.getValue();
       var reachabilityThreshold = this.reachabilityThresholdSlider.getValue();
+      var monteCarloDraws = this.iterationSlider.getValue();
 
       var data = {
         name: this.$("#name").val(),
@@ -226,6 +237,7 @@ var Analyst = Analyst || {};
         bikeSpeed: bikeSpeed,
         maxWalkTime: walkTime,
         maxBikeTime: bikeTime,
+        monteCarloDraws: monteCarloDraws,
         reachabilityThreshold: reachabilityThreshold
       };
 
