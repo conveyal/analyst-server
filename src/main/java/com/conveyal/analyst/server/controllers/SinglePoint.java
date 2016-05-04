@@ -62,7 +62,8 @@ public class SinglePoint extends Controller {
 			halt(BAD_REQUEST, e.getMessage());
 		}
 
-		req.includeTimes = true;
+		// don't include times on isochrone requests, they're enormous
+		req.includeTimes = req.destinationPointsetId != null;
 		req.jobId = IdUtils.getId();
 
 		Bundle bundle = Bundle.getBundle(req.graphId);
