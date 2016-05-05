@@ -12,7 +12,8 @@ var Analyst = Analyst || {};
 		  'change #scenario2': 'updateResults',
 		  'change #shapefile': 'updateResults',
 			'cahnge .timesel': 'updateResults',
-			'change #shapefileColumn': 'updateCharts',
+			'change #shapefileColumn1': 'updateCharts',
+			'change #shapefileColumn2': 'updateCharts',
 		  'change #chartType' : 'updateResults',
 			'change .which input' : 'updateEnvelope',
 			'change #shapefile' : 'updateAttributes',
@@ -220,7 +221,8 @@ var Analyst = Analyst || {};
 			var shp = this.shapefiles.get(shpId);
 			var _this = this;
 
-			this.$('#shapefileColumn').empty();
+			this.$('#shapefileColumn1').empty();
+			this.$('#shapefileColumn2').empty();
 
 			shp.getNumericAttributes().forEach(function (attr) {
 				var atName = A.models.Shapefile.attributeName(attr);
@@ -229,7 +231,12 @@ var Analyst = Analyst || {};
 					$('<option>')
 					.attr('value', attr.fieldName)
 					.text(atName)
-					.appendTo(_this.$('#shapefileColumn'));
+					.appendTo(_this.$('#shapefileColumn1'));
+
+					$('<option>')
+					.attr('value', attr.fieldName)
+					.text(atName)
+					.appendTo(_this.$('#shapefileColumn2'));
 				}
 			});
 		},
@@ -547,13 +554,14 @@ var Analyst = Analyst || {};
 			if (this.scenario1Data.isochrones === undefined) {
 				// draw accessibility plots only if there is accessibility
 				var categoryId = this.shapefiles.get(this.$("#shapefile").val()).get('categoryId');
-				var attributeId = this.$('#shapefileColumn').val();
+				var attributeId1 = this.$('#shapefileColumn1').val();
+				var attributeId2 = this.$('#shapefileColumn2').val();
 
 				if (this.scenario2Data) {
-					this.drawChart(categoryId + '.' + attributeId, this.scenario1Data, this.scenario2Data);
+					this.drawChart(categoryId + '.' + attributeId1, this.scenario1Data, categoryId + '.' + attributeId2, this.scenario2Data);
 					this.$('#downloadCsv').hide();
 				} else {
-					this.drawChart(categoryId + '.' + attributeId, this.scenario1Data);
+					this.drawChart(categoryId + '.' + attributeId1, this.scenario1Data);
 					this.$('#downloadCsv').show();
 				}
 			}
@@ -772,7 +780,6 @@ var Analyst = Analyst || {};
 		},
 
 		downloadGis : function(evt) {
-			var attributeName = this.$('#shapefileColumn').val();
 			var which = this.$('input[name="which"]:checked').val();
 
 
@@ -800,25 +807,28 @@ var Analyst = Analyst || {};
 			this.$('#querySettings').show();
 		},
 
-		drawChart : function(attribute, result1, result2) {
+		drawChart : function(attribute1, result1, attribute2, result2) {
 			// ensure we don't make a mess.
 			this.$('#chart').empty();
 			this.$('#chartLegend').empty();
 
 			// pivot the data into an object array for MetricsGraphics and make a cumulative distribution
-			var plotData = this.getPlotData(result1, attribute);
+			var plotData = this.getPlotData(result1, attribute1);
 			var max = plotData[119].bestCase !== undefined ? plotData[119].bestCase : plotData[119].pointEstimate;
 
 			// this is how you make a multi-line plot with metricsgraphics
 			if (result2) {
-				plotData = [plotData, this.getPlotData(result2, attribute)];
+				plotData = [plotData, this.getPlotData(result2, attribute2)];
 				max = Math.max(max, plotData[1][119].bestCase !== undefined ? plotData[1][119].bestCase : plotData[1][119].pointEstimate);
 			}
 
 			var fmt = d3.format();
 
+			let label1 = result1.properties.schema[attribute1].label
+			let label2 = attribute2 ? result2.properties.schema[attribute2].label : null
+
 			MG.data_graphic({
-				title: window.Messages('analysis.accessibility-to', result1.properties.schema[attribute].label),
+				title: window.Messages('analysis.accessibility-to', label2 && label1 !== label2 ? label1 + '/' + label2 : label1),
 				width: 400,
 				height: 225,
 				data: plotData,
