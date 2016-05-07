@@ -459,18 +459,20 @@ public abstract class AnalystTileRequest {
 	 */
 	public static class QueryComparisonTile extends QueryTile {
 		public final String compareTo;
+		public final String compareAttributeName;
 		
 		public QueryComparisonTile(String queryId, String compareTo, Integer x, Integer y, Integer z, Integer timeLimit,
 				String weightByShapefile, String weightByAttribute, String groupBy, ResultEnvelope.Which which,
-				String attributeName) {
+				String attributeName, String compareAttributeName) {
 			super(queryId, x, y, z, timeLimit, weightByShapefile, weightByAttribute, groupBy, which, attributeName);
 
 			this.compareTo = compareTo;
+			this.compareAttributeName = compareAttributeName;
 		}
 		
 		@Override
 		public String getId () {
-			return super.getId() + "_" + compareTo;
+			return super.getId() + "_" + compareTo + "_" + compareAttributeName;
 		}
 		
 		@Override
@@ -482,7 +484,7 @@ public abstract class AnalystTileRequest {
 				return null;
 			
 			String q1key = queryId + "_" + timeLimit + "_" + which + "_" + attributeName;
-			String q2key = compareTo + "_" + timeLimit + "_" + which + "_" + attributeName;
+			String q2key = compareTo + "_" + timeLimit + "_" + which + "_" + compareAttributeName;
 			
 			QueryResults qr1, qr2;
 			
@@ -495,7 +497,7 @@ public abstract class AnalystTileRequest {
 			}
 			
 			if (!QueryResults.queryResultsCache.containsKey(q2key)) {
-				qr2 = new QueryResults(q2, timeLimit, which, attributeName);
+				qr2 = new QueryResults(q2, timeLimit, which, compareAttributeName);
 				QueryResults.queryResultsCache.put(q2key, qr2);
 			}
 			else {

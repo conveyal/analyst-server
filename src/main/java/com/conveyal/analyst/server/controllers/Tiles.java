@@ -145,6 +145,7 @@ public class Tiles extends Controller {
         String weightByShapefile = req.queryParams("weightByShapefile");
         String weightByAttribute = req.queryParams("weightByAttribute");
         String groupBy = req.queryParams("groupBy");
+        String compareAttributeName = req.queryParams("compareAttributeName") != null ? req.queryParams("compareAttributeName") : attributeName;
 
         AnalystTileRequest tileRequest;
         if (compareTo == null)
@@ -152,7 +153,7 @@ public class Tiles extends Controller {
                     weightByAttribute, groupBy, which, attributeName);
         else
             tileRequest = new AnalystTileRequest.QueryComparisonTile(queryId, compareTo, x, y, z, timeLimit,
-                    weightByShapefile, weightByAttribute, groupBy, which, attributeName);
+                    weightByShapefile, weightByAttribute, groupBy, which, attributeName, compareAttributeName);
 
         return tileBuilder(req, res, tileRequest);
     }

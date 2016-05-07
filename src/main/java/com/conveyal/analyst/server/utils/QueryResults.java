@@ -296,6 +296,8 @@ public class QueryResults {
 	/**
 	 * Subtract the other queryresults from this one, and return the query results.
 	 * The other queryresults must have come from or been aggregated to the same shapefile.
+	 *
+	 * It is possible to use different attributes though in order to model land use changes.
 	 */
 	public QueryResults subtract(QueryResults otherQr) {
 		synchronized (subtracted) {
@@ -303,7 +305,7 @@ public class QueryResults {
 				return subtracted.get(otherQr.id);
 			
 			// TODO: check that indicator is same also
-			if (!shapeFileId.equals(otherQr.shapeFileId) || !attributeId.equals(otherQr.attributeId)) {
+			if (!shapeFileId.equals(otherQr.shapeFileId)) {
 				throw new IllegalArgumentException("Query results in difference operation do not come from same attribute of same shapefile!");
 			}
 			

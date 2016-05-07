@@ -168,6 +168,7 @@ public class QueryController extends Controller {
         ResultEnvelope.Which which = ResultEnvelope.Which.valueOf(req.queryParams("which"));
         String attributeName = req.queryParams("attributeName");
         String compareTo = req.params("compareTo");
+        String compareAttributeName = req.queryParams("compareAttributeName") != null ? req.queryParams("compareAttributeName") : attributeName;
 
         Query query = Query.getQuery(queryId);
 
@@ -205,9 +206,9 @@ public class QueryController extends Controller {
         if (otherQuery != null) {
             QueryResults otherQr = null;
 
-            queryKey = compareTo + "_" + timeLimit + "_" + which + "_" + attributeName;
+            queryKey = compareTo + "_" + timeLimit + "_" + which + "_" + compareAttributeName;
             if (!QueryResults.queryResultsCache.containsKey(queryKey)) {
-                otherQr = new QueryResults(otherQuery, timeLimit, which, attributeName);
+                otherQr = new QueryResults(otherQuery, timeLimit, which, compareAttributeName);
                 QueryResults.queryResultsCache.put(queryKey, otherQr);
             } else {
                 otherQr = QueryResults.queryResultsCache.get(queryKey);

@@ -83,7 +83,7 @@ var Analyst = Analyst || {};
 			this.$('#fromTime').data('DateTimePicker').date(new Date(2014, 11, 15, 7, 0, 0));
 			this.$('#toTime')  .data('DateTimePicker').date(new Date(2014, 11, 15, 9, 0, 0));
 
-			this.$('#scenario2-controls').hide();
+			this.$('.scenario2-controls').hide();
 
 			if(A.map.tileOverlay && A.map.hasLayer(A.map.tileOverlay))
 		  		A.map.removeLayer(A.map.tileOverlay);
@@ -223,6 +223,10 @@ var Analyst = Analyst || {};
 
 			this.$('#shapefileColumn1').empty();
 			this.$('#shapefileColumn2').empty();
+
+			$('<option>')
+				.text(window.Messages('analysis.same-field'))
+				.appendTo(this.$('#shapefileColumn2'))
 
 			shp.getNumericAttributes().forEach(function (attr) {
 				var atName = A.models.Shapefile.attributeName(attr);
@@ -556,6 +560,9 @@ var Analyst = Analyst || {};
 				var categoryId = this.shapefiles.get(this.$("#shapefile").val()).get('categoryId');
 				var attributeId1 = this.$('#shapefileColumn1').val();
 				var attributeId2 = this.$('#shapefileColumn2').val();
+
+                // item zero is (same field)
+				if (this.$('#shapefileColumn2').get(0).selectedIndex === 0) attributeId2 = attributeId1
 
 				if (this.scenario2Data) {
 					this.drawChart(categoryId + '.' + attributeId1, this.scenario1Data, categoryId + '.' + attributeId2, this.scenario2Data);
@@ -934,10 +941,10 @@ var Analyst = Analyst || {};
 			this.comparisonType = this.$('#scenarioComparison').val();
 
 			if(this.comparisonType == 'compare') {
-				$('#scenario2-controls').show();
+				$('.scenario2-controls').show();
 			}
 			else {
-				$('#scenario2-controls').hide();
+				$('.scenario2-controls').hide();
 			}
 
 			this.updateResults();

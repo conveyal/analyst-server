@@ -78,7 +78,7 @@ data-manager.scenarios-description=Transport scenarios represent potential state
 data-manager.no-scenarios=No scenarios
 data-manager.scenario-name=Scenario name
 data-manager.scenario-description=Scenario description
-data-manager.banned-routes=Removed routes
+data-manager.scenario-file=Scenario file
 data-manager.create-scenario=Create scenario
 
 data-manager.upload-shapefile-file=Shapefile (zipped)
@@ -156,6 +156,9 @@ analysis.shapefile=Download GIS
 analysis.csv=Download CSV
 
 analysis.shapefile-field=Field
+analysis.shapefile-field-scenario-1=Field (scenario 1)
+analysis.shapefile-field-scenario-2=Field (scenario 2)
+analysis.same-field=(same field)
 
 analysis.exact-time=Exact departure time
 analysis.profile=Range of departure times

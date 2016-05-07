@@ -77,11 +77,20 @@
 				</label>
 			</div>
 
-			<div class="form-group hidden" id="compareControls" data-id="{{id}}">
-				<label for="compareTo" class="sr-only">{{ I18n "analysis.compare-to" }}</label>
-				<select id="compareTo" class="form-control">
-					<!-- this will be populated by the view with the pointsets that are comparable to this one -->
-				</select>
+			<div id="compareControls" class="hidden" data-id="{{id}}">
+				<div class="form-group"> 
+					<label for="compareTo" class="sr-only">{{ I18n "analysis.compare-to" }}</label>
+					<select id="compareTo" class="form-control">
+						<!-- this will be populated by the view with the pointsets that are comparable to this one -->
+					</select>
+				</div>
+
+				<div class="form-group">
+					<label for="compareToColumn">{{I18n "analysis.shapefile-field"}}</label>
+					<select id="compareToColumn" class="primary-indicator form-control">
+						<option>{{I18n "analysis.same-field"}}</option>
+					</select>
+				</div>
 			</div>
 
 				<div class="form-group">
