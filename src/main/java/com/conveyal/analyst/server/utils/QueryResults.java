@@ -342,6 +342,8 @@ public class QueryResults {
 			
 			// we preserve the maxPossible from the original. This is because we want to represent percentages as
 			// a percentage of total possible still, not a percent change.
+			// TODO when using different fields this means that the percentage is relative to the LHS of the subtraction,
+			// which may not be desirable
 			ret.maxPossible = this.maxPossible;
 
 			// don't use a bimodal classifier if there are only a few values above or below zero.
