@@ -12,10 +12,10 @@ files:
 hooks:
   ApplicationStart:
     - location: scripts/start.sh
-      runas: ubuntu
+      runas: ec2-user
       timeout: 60
 
   ApplicationStop:
     - location: scripts/stop.sh
-      runas: ubuntu
+      runas: ec2-user
       timeout: 60
