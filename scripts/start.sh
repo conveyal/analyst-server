@@ -7,9 +7,9 @@ ANALYST_MEM=`echo "$TOTAL_MEM - (4500 * 1024)" | bc`
 # start analyst server, detaching it from the terminal
 # One would think that the nohup command should do this but it doesn't detach standard error
 cd /ebs/scratch
-java -Xmx${ANALYST_MEM}k -jar /opt/otp/analyst-server.jar /etc/analyst.conf > /home/ec2-user/analyst.log < /dev/null 2>&1 &
+java8 -Xmx${ANALYST_MEM}k -jar /opt/otp/analyst-server.jar /etc/analyst.conf > /home/ec2-user/analyst.log < /dev/null 2>&1 &
 echo $! > /home/ec2-user/ANALYST_PID
 
 # start the broker.
-java -Xmx2G -cp /opt/otp/analyst-server.jar org.opentripplanner.analyst.broker.BrokerMain /etc/broker.conf > /home/ec2-user/broker.log < /dev/null 2>&1 &
+java8 -Xmx2G -cp /opt/otp/analyst-server.jar org.opentripplanner.analyst.broker.BrokerMain /etc/broker.conf > /home/ec2-user/broker.log < /dev/null 2>&1 &
 echo $! > /home/ec2-user/BROKER_PID
