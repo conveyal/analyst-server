@@ -102,6 +102,8 @@ public class ProcessTransitBundleJob implements Runnable {
 				graphFiles.add(newFile);
 			}
 			else if (!zips.isEmpty()) {
+				// Copy all the ZIP files present in the upload (the GTFS feeds) into the bundle's data directory.
+				// They will all have names of the form 123456789abcdef_gtfs_2.zip with the final number incrementing.
 				int i = 0;
 				for (ZipEntry ze : zips) {
 					File file = new File(bundle.getBundleDataPath(), bundle.id + "_gtfs_" + (i++) + ".zip");
@@ -132,6 +134,8 @@ public class ProcessTransitBundleJob implements Runnable {
 				}
 			}
 
+			// When OSM data is supplied in the zip, we don't need to worry about downloading too much OSM.
+			bundle.maxExtentDegrees = (osmFile != null) ? 90 : 5;
 			bundle.processGtfs();
 			bundle.processingGtfs = false;
 
@@ -143,12 +147,13 @@ public class ProcessTransitBundleJob implements Runnable {
 			bundle.processingOsm = true;
 			bundle.save();
 
+			// If a PBF file was supplied in the zip file, use it. Otherwise download one from Vex.
 			File osmPbfFile = new File(bundle.getBundleDataPath(), bundle.id + ".osm.pbf");
 
 			if (osmFile != null) {
+				LOG.info("An OSM PBF file was supplied in the upload. Using that rather than downloading OSM from VEX.");
 				ZipUtils.unzip(zipFile, osmFile, osmPbfFile);
-			}
-			else {
+			} else {
 				Double south = bundle.bounds.north < bundle.bounds.south ? bundle.bounds.north : bundle.bounds.south;
 				Double west = bundle.bounds.east < bundle.bounds.west ? bundle.bounds.east : bundle.bounds.west;
 				Double north = bundle.bounds.north > bundle.bounds.south ? bundle.bounds.north : bundle.bounds.south;
@@ -156,8 +161,7 @@ public class ProcessTransitBundleJob implements Runnable {
 
 				String vexUrl = AnalystMain.config.getProperty("application.vex");
 
-				if (!vexUrl.endsWith("/"))
-					vexUrl += "/";
+				if (!vexUrl.endsWith("/")) vexUrl += "/";
 
 				vexUrl += String.format("%.6f,%.6f,%.6f,%.6f.pbf", south, west, north, east);
 

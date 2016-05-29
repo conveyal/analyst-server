@@ -87,7 +87,10 @@ public class Bundle implements Serializable {
 	public Boolean tooBig = false;
 	
 	public Bounds bounds;
-	
+
+	/** Building this bundle will fail if the extent of all stops referenced by stoptimes is bigger than this. */
+	public double maxExtentDegrees = 5;
+
 	public List<RouteSummary> routes = Lists.newArrayList();
 	
 	/** spatial index of transit layer. */
@@ -259,8 +262,8 @@ public class Bundle implements Serializable {
 						envelope.include(s.stop_lon, s.stop_lat);
 					}
 
-					if (envelope.getWidth() > 5 || envelope.getHeight() > 5) {
-						LOG.warn("Envelope size for bundle {} is excessive, refusing to build. Check your GTFS?");
+					if (envelope.getWidth() > maxExtentDegrees || envelope.getHeight() > maxExtentDegrees) {
+						LOG.warn("Envelope size for bundle {} is excessive, refusing to build. Check your GTFS?", id);
 						this.failed = true;
 						this.tooBig = true;
 						return;
