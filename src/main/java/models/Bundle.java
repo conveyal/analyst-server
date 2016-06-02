@@ -44,7 +44,7 @@ public class Bundle implements Serializable {
 
 	private static final Logger LOG = LoggerFactory.getLogger(Bundle.class);
 	
-	private static ClusterGraphService clusterGraphService;
+	public static ClusterGraphService clusterGraphService;
 	
 	static {
 		String s3credentials = AnalystMain.config.getProperty("cluster.aws-credentials");

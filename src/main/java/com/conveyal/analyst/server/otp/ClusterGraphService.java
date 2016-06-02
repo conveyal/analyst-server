@@ -4,19 +4,26 @@ import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
+import com.conveyal.analyst.server.utils.JsonUtil;
+import com.conveyal.r5.analyst.scenario.Scenario;
 import com.google.common.collect.Maps;
+import models.TransportScenario;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
@@ -106,7 +113,24 @@ public class ClusterGraphService {
 		graphDataZip.delete();
 		
 	}
-	
+
+	/** Upload a scenario to S3, storing it alongside the graph data. */
+	public void uploadScenario (String graphId, String scenarioId, Scenario scenario) throws IOException {
+		LOG.info("Uploading scenario {} to s3", scenarioId);
+		PipedInputStream pis = new PipedInputStream();
+		ObjectMetadata metadata = new ObjectMetadata();
+		metadata.setContentType("application/json");
+
+		new Thread(() -> {
+			s3.putObject(graphBucket, String.format("%s_%s.json", graphId, scenarioId), pis, metadata);
+			LOG.info("Scenario {} uploaded to S3", scenarioId);
+		}).start();
+
+		PipedOutputStream pos = new PipedOutputStream(pis);
+		JsonUtil.getObjectMapper().writeValue(pos, scenario);
+		pos.close();
+	}
+
 	public synchronized File getZippedGraph(String graphId) throws IOException {
 		
 		File graphDataDir = new File(GRAPH_DIR, graphId);

@@ -65,6 +65,7 @@ public class ScenarioController extends Controller {
 
 		s.generateId();
 		s.save();
+		s.writeToClusterCache();
 		return s;
 	}
 	

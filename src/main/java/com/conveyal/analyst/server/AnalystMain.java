@@ -4,6 +4,7 @@ import com.conveyal.analyst.server.utils.QueueManager;
 import models.Bundle;
 import models.Query;
 import models.Shapefile;
+import models.TransportScenario;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Session;
@@ -96,6 +97,7 @@ public class AnalystMain {
 		try {
 			Bundle.writeAllToClusterCache();
 			Shapefile.writeAllToClusterCache();
+			TransportScenario.writeAllToClusterCache();
 		} catch (IOException e) {
 			LOG.error("error accessing S3", e);
 			throw new RuntimeException(e);

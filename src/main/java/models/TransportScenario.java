@@ -1,10 +1,14 @@
 package models;
 
 import com.conveyal.analyst.server.utils.DataStore;
-import com.conveyal.r5.analyst.scenario.Modification;
+import com.conveyal.r5.analyst.scenario.*;
+import com.conveyal.r5.analyst.scenario.Scenario;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
@@ -21,6 +25,8 @@ import java.util.UUID;
  */
 public class TransportScenario implements Serializable {
 	public static final long serialVersionUID = 1L;
+
+	private static final Logger LOG = LoggerFactory.getLogger(TransportScenario.class);
 	
 	// called transport_scenario not scenario because scenario is what bundles used to be called.
 	// _data is to avoid clashes with transport_scenario.db from 0.5.x which is this class but with a different class name
@@ -91,5 +97,23 @@ public class TransportScenario implements Serializable {
 
 	public void delete() {
 		scenarioStore.delete(id);
+	}
+
+	public void writeToClusterCache () throws IOException {
+		com.conveyal.r5.analyst.scenario.Scenario scenario = new com.conveyal.r5.analyst.scenario.Scenario();
+		scenario.modifications = this.modifications;
+		scenario.description = this.name;
+		scenario.id = this.id;
+		Bundle.clusterGraphService.uploadScenario(this.bundleId, this.id, scenario);
+	}
+
+	public static void writeAllToClusterCache() {
+		scenarioStore.getEntries().parallelStream().forEach(e -> {
+			try {
+				e.getValue().writeToClusterCache();
+			} catch (IOException ex) {
+				LOG.warn("Error uploading scenarios to cluster cache", ex);
+			}
+		});
 	}
 }
