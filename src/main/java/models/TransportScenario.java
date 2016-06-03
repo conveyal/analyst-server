@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -101,7 +102,8 @@ public class TransportScenario implements Serializable {
 
 	public void writeToClusterCache () throws IOException {
 		com.conveyal.r5.analyst.scenario.Scenario scenario = new com.conveyal.r5.analyst.scenario.Scenario();
-		scenario.modifications = this.modifications;
+		// Modifications must be an empty list, not null, otherwise R5 will crash.
+		scenario.modifications = this.modifications != null ? this.modifications : new ArrayList<>();
 		scenario.description = this.name;
 		scenario.id = this.id;
 		Bundle.clusterGraphService.uploadScenario(this.bundleId, this.id, scenario);
