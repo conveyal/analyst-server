@@ -13,7 +13,7 @@ import com.conveyal.r5.analyst.PointFeature;
 import com.conveyal.r5.analyst.broker.JobStatus;
 import com.conveyal.r5.analyst.cluster.AnalystClusterRequest;
 import com.conveyal.r5.analyst.cluster.ResultEnvelope;
-import com.conveyal.r5.common.MavenVersion;
+import com.conveyal.r5.common.R5Version;
 import com.conveyal.r5.profile.ProfileRequest;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -290,7 +290,7 @@ public class Query implements Serializable {
 			req.jobId = this.id;
 			req.id = pointFeature.getId();
 			req.includeTimes = false;
-			req.workerVersion = p.r5version != null && !p.r5version.isEmpty() ? p.r5version : MavenVersion.commit;
+			req.workerVersion = p.r5version != null && !p.r5version.isEmpty() ? p.r5version : R5Version.version;
 			requests.add(req);
 		}
 

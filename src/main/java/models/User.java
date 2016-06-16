@@ -2,7 +2,7 @@ package models;
 
 import com.conveyal.analyst.server.AnalystMain;
 import com.conveyal.analyst.server.utils.QuotaLedger;
-import com.conveyal.r5.common.MavenVersion;
+import com.conveyal.r5.common.R5Version;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.annotations.VisibleForTesting;
 import com.stormpath.sdk.account.Account;
@@ -124,7 +124,7 @@ public class User implements Serializable {
 	 * making frequent requests to retrieve the user. This has both the analyst version and the OTP version in parens.
 	 */
 	public String getAnalystVersion () {
-		return String.format("%s (%s)", AnalystMain.gitVersion.getProperty("git.commit.id.describe"), MavenVersion.commit.substring(0, 7));
+		return String.format("%s (%s)", AnalystMain.gitVersion.getProperty("git.commit.id.describe"), R5Version.commit.substring(0, 7));
 	}
 
 	public void addProjectPermission(String projectId) {
