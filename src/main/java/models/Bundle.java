@@ -326,7 +326,7 @@ public class Bundle implements Serializable {
 						// if it has a shape, use that
 						Coordinate[] coords;
 						if (trip.shape_id != null) {
-							Map<?, Shape> shape = feed.shapePoints.subMap(new Tuple2(trip.shape_id, null), new Tuple2(trip.shape_id, Fun.HI));
+							Map<Tuple2<String, Integer>, com.conveyal.gtfs.model.ShapePoint> shape = feed.shape_points.subMap(new Tuple2(trip.shape_id, null), new Tuple2(trip.shape_id, Fun.HI));
 
 							coords = shape.values().stream()
 									.map(s -> new Coordinate(s.shape_pt_lon, s.shape_pt_lat))
