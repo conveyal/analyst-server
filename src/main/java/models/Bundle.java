@@ -18,6 +18,7 @@ import org.apache.commons.io.FileUtils;
 import org.geotools.geometry.Envelope2D;
 import org.mapdb.*;
 import org.mapdb.Fun.Tuple2;
+import org.onebusaway.gtfs.model.ShapePoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import utils.Bounds;
@@ -27,6 +28,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.stream.Collectors;
 import java.util.zip.ZipException;
 
@@ -309,11 +311,6 @@ public class Bundle implements Serializable {
 					Agency a = feed.agency.values().iterator().next();
 					this.timeZone = a.agency_timezone;
 
-					// cache the routes
-					for (Route route : feed.routes.values()) {
-						this.routes.add(new RouteSummary(route, f.getName()));
-					}
-
 					// build the spatial index for the map view
 					final GTFSFeed feedFinal = feed;
 					Collection<Trip> exemplarTrips = feed.findPatterns().values().stream()
@@ -443,6 +440,7 @@ public class Bundle implements Serializable {
 	}
 	
 	/** Represents a single route (for use in banning) */
+	@Deprecated
 	public static class RouteSummary implements Serializable {
 		private static final long serialVersionUID = 1L;
 		
@@ -451,15 +449,15 @@ public class Bundle implements Serializable {
 			this.shortName = route.route_short_name;
 			this.longName = route.route_long_name;
 			this.id = route.route_id;
-			this.agencyId = route.agency.agency_id;
+			this.agencyId = route.agency_id;
 
 			// workaround for #118
 			// OBA replaces agency ID with agency name, evidently, when there is no agency ID
 			// There is a comment in the OTP source (GtfsModule.java):
 			//  "TODO figure out how and why this is happening"
-			if (this.agencyId == null) {
-				this.agencyId = route.agency.agency_name;
-			}
+//			if (this.agencyId == null) {
+//				this.agencyId = route.agency.agency_name;
+//			}
 
 
 			this.feed = feedName;
