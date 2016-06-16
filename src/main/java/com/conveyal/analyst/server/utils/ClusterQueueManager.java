@@ -202,7 +202,7 @@ public class ClusterQueueManager extends QueueManager {
 		}
 
 		try {
-			req.setURI(new URI(broker + "enqueue/jobs"));
+			req.setURI(new URI(broker + "enqueue/regional"));
 		} catch (URISyntaxException e) {
 			LOG.error("Invalid broker URL", e);
 			throw new RuntimeException(e);
@@ -250,7 +250,7 @@ public class ClusterQueueManager extends QueueManager {
 		post.setConfig(priorityConfig);
 
 		try {
-			post.setURI(new URI(broker + "enqueue/priority"));
+			post.setURI(new URI(broker + "enqueue/single"));
 		} catch (URISyntaxException e) {
 			LOG.error("Malformed broker URI {}, analysis will not be possible", broker);
 			throw new RuntimeException(e);
