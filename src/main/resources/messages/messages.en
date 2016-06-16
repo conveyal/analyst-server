@@ -29,6 +29,7 @@ app.analysis=Analysis
 app.project-settings=Project Settings
 
 app.project-settings.description=To create a project enter a name and description, then navigate the map to the area of the world where the analysis will be based and press ‘set location’.  This will mean each time you select this project the map will zoom to the correct area of the world.
+app.project-settings.r5-version=Analysis backend version
 
 project-settings.project-location=Project Location
 project-settings.set-project-location=Set Location
