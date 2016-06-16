@@ -4,7 +4,6 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.S3Object;
-import com.beust.jcommander.internal.Sets;
 import com.conveyal.analyst.server.AnalystMain;
 import com.conveyal.analyst.server.otp.Analyst;
 import com.conveyal.analyst.server.utils.*;
@@ -14,8 +13,6 @@ import com.conveyal.r5.analyst.PointFeature;
 import com.conveyal.r5.analyst.broker.JobStatus;
 import com.conveyal.r5.analyst.cluster.AnalystClusterRequest;
 import com.conveyal.r5.analyst.cluster.ResultEnvelope;
-import com.conveyal.r5.analyst.scenario.*;
-import com.conveyal.r5.analyst.scenario.Scenario;
 import com.conveyal.r5.common.MavenVersion;
 import com.conveyal.r5.profile.ProfileRequest;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -293,7 +290,7 @@ public class Query implements Serializable {
 			req.jobId = this.id;
 			req.id = pointFeature.getId();
 			req.includeTimes = false;
-			req.workerCommit = p.r5version != null && !p.r5version.isEmpty() ? p.r5version : MavenVersion.commit;
+			req.workerVersion = p.r5version != null && !p.r5version.isEmpty() ? p.r5version : MavenVersion.commit;
 			requests.add(req);
 		}
 

@@ -242,8 +242,7 @@ public class ClusterQueueManager extends QueueManager {
 	}
 
 	/** Get a single point job */
-	@Override public ResultEnvelope getSinglePoint(AnalystClusterRequest req)
-			throws IOException {
+	@Override public ResultEnvelope getSinglePoint(AnalystClusterRequest req) throws IOException {
 		String json = objectMapper.writeValueAsString(req);
 		HttpPost post = new HttpPost();
 		post.setHeader("Content-Type", "application/json");

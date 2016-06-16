@@ -93,7 +93,7 @@ public class SinglePoint extends Controller {
 			halt(NOT_FOUND, "No such bundle or pointset, or you do not have permission to access them");
 
 		// specify r5 version
-		req.workerCommit = p.r5version != null && !p.r5version.isEmpty() ? p.r5version : MavenVersion.commit;
+		req.workerVersion = p.r5version != null && !p.r5version.isEmpty() ? p.r5version : MavenVersion.commit;
 
 		// TODO enforce quota for users who are not logged on, or remove unauthenticated access
 		if (u.getQuota() < 1)
