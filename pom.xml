@@ -276,7 +276,7 @@
     <dependency>
       <groupId>com.conveyal</groupId>
       <artifactId>gtfs-lib</artifactId>
-      <version>0.2-SNAPSHOT</version>
+      <version>0.3-SNAPSHOT</version>
 
       <!-- GTFS Lib includes an SLF4j backend but we're using Logback -->
       <exclusions>
@@ -375,7 +375,7 @@
     <dependency>
       <groupId>com.conveyal</groupId>
       <artifactId>r5</artifactId>
-      <version>0.1-SNAPSHOT</version>
+      <version>0.2-SNAPSHOT</version>
     </dependency>
 
     <dependency>
