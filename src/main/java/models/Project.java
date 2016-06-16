@@ -29,7 +29,9 @@ public class Project implements Serializable {
 	public Integer defaultZoom;
 	
 	public String defaultScenario;
-	
+
+	/** Version of R5 to use for computations on this project. If null, will use latest R5 version. */
+	public String r5version;
 	
 	public Project() {
 		

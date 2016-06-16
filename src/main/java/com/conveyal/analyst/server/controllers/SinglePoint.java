@@ -8,6 +8,7 @@ import com.conveyal.r5.analyst.Histogram;
 import com.conveyal.r5.analyst.ResultSet;
 import com.conveyal.r5.analyst.cluster.AnalystClusterRequest;
 import com.conveyal.r5.analyst.cluster.ResultEnvelope;
+import com.conveyal.r5.common.MavenVersion;
 import com.csvreader.CsvWriter;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -90,6 +91,9 @@ public class SinglePoint extends Controller {
 		if (u != null && !u.hasReadPermission(p))
 			// NB this message is exactly the same as the one above, so as to not reveal any information
 			halt(NOT_FOUND, "No such bundle or pointset, or you do not have permission to access them");
+
+		// specify r5 version
+		req.workerCommit = p.r5version != null && !p.r5version.isEmpty() ? p.r5version : MavenVersion.commit;
 
 		// TODO enforce quota for users who are not logged on, or remove unauthenticated access
 		if (u.getQuota() < 1)

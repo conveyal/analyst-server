@@ -16,6 +16,7 @@ import com.conveyal.r5.analyst.cluster.AnalystClusterRequest;
 import com.conveyal.r5.analyst.cluster.ResultEnvelope;
 import com.conveyal.r5.analyst.scenario.*;
 import com.conveyal.r5.analyst.scenario.Scenario;
+import com.conveyal.r5.common.MavenVersion;
 import com.conveyal.r5.profile.ProfileRequest;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -275,6 +276,8 @@ public class Query implements Serializable {
 		// store profile request in MapDB
 		this.save();
 
+		Project p = Project.getProject(projectId);
+
 		// TODO batch?
 		long now = System.currentTimeMillis();
 		List<AnalystClusterRequest> requests = Lists.newArrayList();
@@ -290,6 +293,7 @@ public class Query implements Serializable {
 			req.jobId = this.id;
 			req.id = pointFeature.getId();
 			req.includeTimes = false;
+			req.workerCommit = p.r5version != null && !p.r5version.isEmpty() ? p.r5version : MavenVersion.commit;
 			requests.add(req);
 		}
 
