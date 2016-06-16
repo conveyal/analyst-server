@@ -13,6 +13,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -52,6 +53,9 @@ public class TransportScenario implements Serializable {
 
 	/** A list of other modifications to make to the graph, for advanced users */
 	public List<Modification> modifications;
+
+	/** Scenarios have checksums of included feeds which are used to ensure that scenarios are not applied to the wrong feeds */
+	public Map<String, Long> feedChecksums;
 	
 	// TODO additional types of modifications
 	
@@ -104,6 +108,7 @@ public class TransportScenario implements Serializable {
 		com.conveyal.r5.analyst.scenario.Scenario scenario = new com.conveyal.r5.analyst.scenario.Scenario();
 		// Modifications must be an empty list, not null, otherwise R5 will crash.
 		scenario.modifications = this.modifications != null ? this.modifications : new ArrayList<>();
+		scenario.feedChecksums = this.feedChecksums; // ok if this is null, it will simply be ignored
 		scenario.description = this.name;
 		scenario.id = this.id;
 		Bundle.clusterGraphService.uploadScenario(this.bundleId, this.id, scenario);

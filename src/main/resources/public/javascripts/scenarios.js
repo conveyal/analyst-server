@@ -167,6 +167,7 @@ var Analyst = Analyst || {};
       reader.onloadend = function (e) {
         var val = JSON.parse(e.target.result);
         _this.model.set('modifications', val.modifications);
+        _this.model.set('feedChecksums', val.feedChecksums)
         _this.model.save().done(function () {
           _this.trigger("scenarioEdit:save");
         })
