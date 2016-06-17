@@ -124,7 +124,8 @@ public class User implements Serializable {
 	 * making frequent requests to retrieve the user. This has both the analyst version and the OTP version in parens.
 	 */
 	public String getAnalystVersion () {
-		return String.format("%s (%s)", AnalystMain.gitVersion.getProperty("git.commit.id.describe"), R5Version.commit.substring(0, 7));
+		return String.format("UI: %s R5: %s",
+			AnalystMain.gitVersion.getProperty("git.commit.id.describe"), R5Version.version);
 	}
 
 	public void addProjectPermission(String projectId) {
