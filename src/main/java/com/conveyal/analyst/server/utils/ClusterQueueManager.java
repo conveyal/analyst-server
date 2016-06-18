@@ -92,25 +92,21 @@ public class ClusterQueueManager extends QueueManager {
 			while (true) {
 				try {
 					if (callbacks.size() > 0) {
-						// query across all jobs at once
-						String jobs = String.join(",", callbacks.keySet());
+						// Query for the status of all jobs known to the broker.
 						HttpGet get = new HttpGet();
 						get.setConfig(taskConfig);
-
 						try {
-							get.setURI(new URI(broker + "status/" + jobs));
+							get.setURI(new URI(broker + "jobs"));
 						} catch (URISyntaxException e) {
 							LOG.error("Invalid broker URL");
 							throw new RuntimeException(e);
 						}
 
-						// don't catch errors here, allow them to be thrown to the next level up
-						CloseableHttpResponse res= httpClient.execute(get);
-
+						// Don't catch errors here, allow them to be thrown to the next level up the stack.
+						CloseableHttpResponse res = httpClient.execute(get);
 						if (res.getStatusLine().getStatusCode() != 200) {
 							LOG.warn("error retrieving job status: " + res.getStatusLine()
 									.getStatusCode() + " " + res.getStatusLine().getReasonPhrase());
-
 							if (res.getStatusLine().getStatusCode() == 404) {
 								// TODO call every callback
 								callbacks.clear();
@@ -120,9 +116,7 @@ public class ClusterQueueManager extends QueueManager {
 
 						try {
 							InputStream is = res.getEntity().getContent();
-							List<JobStatus> stats = objectMapper
-									.readValue(is, new TypeReference<List<JobStatus>>() {
-									});
+							List<JobStatus> stats = objectMapper.readValue(is, new TypeReference<List<JobStatus>>(){});
 							is.close();
 							res.close();
 							get.releaseConnection();
