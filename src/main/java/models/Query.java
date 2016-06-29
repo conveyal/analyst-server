@@ -53,6 +53,9 @@ public class Query implements Serializable {
 	/** The reachability threshold used for this query */
 	public float reachabilityThreshold;
 
+	/** maximum surrogate level of traffic stress for cycling */
+	public int bikeTrafficStress = 4;
+
 	public BoardingAssumption boardingAssumption;
 
 	private static final AmazonS3 s3 = new AmazonS3Client();
@@ -267,6 +270,7 @@ public class Query implements Serializable {
 				profileRequest.bikeSpeed = (float) bikeSpeed;
 
 			profileRequest.reachabilityThreshold = reachabilityThreshold;
+			profileRequest.bikeTrafficStress = bikeTrafficStress;
 
 		}
 		// At this point PR is known not to be null, it was either supplied by the caller or has been created above.

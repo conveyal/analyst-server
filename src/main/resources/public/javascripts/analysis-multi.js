@@ -120,6 +120,16 @@ var Analyst = Analyst || {};
         _this.updateResults();
       }).data('slider');
 
+      this.ltsSlider = this.$('#ltsSlider').slider({
+          formater: function (value) {
+            _this.$('#ltsValue').html(window.Messages("analysis.bike-lts", value));
+            return value
+          } 
+        }).on('slideStop', function(value) {
+
+        _this.updateResults();
+      }).data('slider');
+
       this.scenarios = new A.models.Scenarios();
       this.queries = new A.models.Queries();
       this.shapefiles = new A.models.Shapefiles();
@@ -238,7 +248,8 @@ var Analyst = Analyst || {};
         maxWalkTime: walkTime,
         maxBikeTime: bikeTime,
         monteCarloDraws: monteCarloDraws,
-        reachabilityThreshold: reachabilityThreshold
+        reachabilityThreshold: reachabilityThreshold,
+        bikeTrafficStress: this.ltsSlider.getValue()
       };
 
       // profile routing uses a to time as well
