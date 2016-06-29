@@ -170,6 +170,26 @@ var Analyst = Analyst || {};
 				_this.updateResults();
 			}).data('slider');
 
+			this.ltsSlider1 = this.$('#ltsSlider1').slider({
+					formater: function (value) {
+						_this.$('#ltsValue1').html(window.Messages("analysis.bike-lts-scenario-1", value));
+						return value
+					} 
+				}).on('slideStop', function(value) {
+
+				_this.updateResults();
+			}).data('slider');
+
+			this.ltsSlider2 = this.$('#ltsSlider2').slider({
+					formater: function (value) {
+						_this.$('#ltsValue2').html(window.Messages("analysis.bike-lts-scenario-2", value));
+						return value
+					} 
+				}).on('slideStop', function(value) {
+
+				_this.updateResults();
+			}).data('slider');
+
 			this.mode = 'TRANSIT,WALK';
 
 			this.shapefiles.fetch({reset: true, data : {projectId: A.app.selectedProject}})
@@ -431,6 +451,7 @@ var Analyst = Analyst || {};
 				bikeSafe: 1,
 				bikeSlope: 1,
 				bikeTime: 1,
+				bikeTrafficStress: this.ltsSlider1.getValue(),
 				// use monte carlo at all times; it also produces true best/worst case numbers.
 				boardingAssumption: 'RANDOM',
 				monteCarloDraws: iterations,
@@ -475,6 +496,7 @@ var Analyst = Analyst || {};
 
 					params.profileRequest.scenario = { modifications : mods2, id: this.scenario2.get('id') };
 					params.profileRequest.maxFare = window.maxFare2;
+					params.profileRequest.bikeTrafficStress = this.ltsSlider2.getValue()
 
 					var p2 = $.ajax({
 						url: '/api/single',

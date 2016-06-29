@@ -244,6 +244,9 @@ analysis.monte-carlo-draws={0} simulated schedules
 analysis.reachability-threshold=Minimum reachability: {0}%
 analysis.reachability-threshold-tooltip=The minumum percentage of the time window that this destination must be accessible for for it to be considered in the average. For instance, if there is an express bus that affords access to a location for only the first half of the time window, that bus would be considered only if the threshold is less than 50%.
 
+analysis.bike-lts-1=Bicycle surrogate LTS (scenario 1): {0}
+analysis.bike-lts-2=Bicycle surrogate LTS (scenario 2): {0}
+
 ledger.starting=Starting balance
 ledger.ending=Ending balance
 ledger.total=Total activity
