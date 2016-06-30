@@ -27,20 +27,13 @@ port other than 9090 by specifying the port number in the configuration file. Al
 
 The Analyst server distributes tasks to a cluster of worker instances, and work is coordinated by a broker component. The broker automatically starts up worker instances as needed on AWS EC2, and workers will shut down the machine they are running on after a period of inactivity. The broker and workers are started up as separate processes, usually on separate virtual machines.
 
-The broker and worker code is entirely within the OpenTripPlanner repository, but because analyst-server includes OpenTripPlanner as a Maven dependency, all the necessary runnable main classes are present in a build of analyst-server. However, when doing development work it's best to run the worker and broker processes from an OTP project in your IDE. This way you can change the worker code on the fly without deploying an OTP Maven artifact and rebuilding the Transport Analyst server.
+The broker and worker code is entirely within the OpenTripPlanner/R5 repositories, but because analyst-server includes OpenTripPlanner and R5 as Maven dependencies, all the necessary runnable main classes are present in a build of analyst-server. However, when doing development work it's best to run the worker and broker processes from an OTP project in your IDE. This way you can change the worker code on the fly without deploying an OTP Maven artifact and rebuilding the Transport Analyst server.
 
 For debugging purposes we can tell the broker not to start up any EC2 instances, then run one worker process manually.
 
 The broker main class is `org.opentripplanner.analyst.broker.BrokerMain`. The worker main class is `org.opentripplanner.analyst.cluster.AnalystWorker`.
 
 [TODO] Describe running broker and worker instances and their config files, including offline debug mode.
-
-## Setting up custom logging
-
-It is possible to log messages to Logentries. To do this, copy `logentries.xml.template` to any convenient
-location, edit the file to add you logentries key, and start the server with `-Dlogback.configurationFile=path/to/logentries.xml`.
-If it's in the working directory you must refer to it as `./logentries.xml` or Logback will attempt
-to find it on the classpath.
 
 ## Internationalization
 
