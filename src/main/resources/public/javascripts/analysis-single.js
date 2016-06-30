@@ -26,7 +26,9 @@ var Analyst = Analyst || {};
 			'click #showSettings' : 'showSettings',
 			'click #downloadGis' : 'downloadGis',
 			'click #downloadCsv' : 'downloadCsv',
-			'change #useMaxFare' : 'selectMaxFare'
+			'change #useMaxFare' : 'selectMaxFare',
+			'blur #maxFare1': 'updateResults',
+			'blur #maxFare2': 'updateResults'
 		},
 
 		regions: {
@@ -84,8 +86,8 @@ var Analyst = Analyst || {};
 			this.$('#fromTime').data('DateTimePicker').date(new Date(2014, 11, 15, 7, 0, 0));
 			this.$('#toTime')  .data('DateTimePicker').date(new Date(2014, 11, 15, 9, 0, 0));
 
-			this.selectComparisonType();
-			this.selectMaxFare();
+			this.$('.scenario2-controls').hide()
+			this.$('.fare-controls').hide()
 
 			if(A.map.tileOverlay && A.map.hasLayer(A.map.tileOverlay))
 		  		A.map.removeLayer(A.map.tileOverlay);
@@ -984,6 +986,8 @@ var Analyst = Analyst || {};
 
 			if (this.useMaxFare) $('.fare-controls').show()
 			else $('.fare-controls').hide()
+
+			this.updateResults()
 		}
 	});
 
