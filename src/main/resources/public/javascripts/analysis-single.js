@@ -25,7 +25,8 @@ var Analyst = Analyst || {};
 			'change .which-selector': 'updateResults',
 			'click #showSettings' : 'showSettings',
 			'click #downloadGis' : 'downloadGis',
-			'click #downloadCsv' : 'downloadCsv'
+			'click #downloadCsv' : 'downloadCsv',
+			'change #useMaxFare' : 'selectMaxFare'
 		},
 
 		regions: {
@@ -33,7 +34,7 @@ var Analyst = Analyst || {};
 		},
 
 		initialize: function(options){
-			_.bindAll(this, 'updateResults', 'updateMap', 'onMapClick', 'updateAttributes', 'updateCharts');
+			_.bindAll(this, 'updateResults', 'updateMap', 'onMapClick', 'updateAttributes', 'updateCharts', 'selectMaxFare');
 
 			this.transitOverlays = {};
 		},
@@ -83,7 +84,8 @@ var Analyst = Analyst || {};
 			this.$('#fromTime').data('DateTimePicker').date(new Date(2014, 11, 15, 7, 0, 0));
 			this.$('#toTime')  .data('DateTimePicker').date(new Date(2014, 11, 15, 9, 0, 0));
 
-			this.$('.scenario2-controls').hide();
+			this.selectComparisonType();
+			this.selectMaxFare();
 
 			if(A.map.tileOverlay && A.map.hasLayer(A.map.tileOverlay))
 		  		A.map.removeLayer(A.map.tileOverlay);
@@ -422,6 +424,10 @@ var Analyst = Analyst || {};
 			// rather than a request for a single origin point for a static site.
 			params.type = "analyst";
 
+			var maxFare1 = this.$('#useMaxFare').prop('checked') ? parseInt(this.$('#maxFare1').val()) : undefined
+			var maxFare2 = this.$('#useMaxFare').prop('checked') ? parseInt(this.$('#maxFare2').val()) : undefined
+
+
 			// We always send a profile request, but if we're not using transit the window will be treated as zero-width.
 			params.profileRequest = {
 				fromLat:  A.map.marker.getLatLng().lat,
@@ -441,7 +447,7 @@ var Analyst = Analyst || {};
 				streetTime: 90,
 				maxWalkTime: walkTime,
 				maxBikeTime: bikeTime,
-				maxFare: window.maxFare1,
+				maxFare: maxFare1,
 				maxCarTime: 45,
 				minBikeTime: 10,
 				minCarTime: 10,
@@ -495,7 +501,7 @@ var Analyst = Analyst || {};
 						mods2 = mods2.concat(window.modifications2);
 
 					params.profileRequest.scenario = { modifications : mods2, id: this.scenario2.get('id') };
-					params.profileRequest.maxFare = window.maxFare2;
+					params.profileRequest.maxFare = maxFare2;
 					params.profileRequest.bikeTrafficStress = this.ltsSlider2.getValue()
 
 					var p2 = $.ajax({
@@ -970,6 +976,14 @@ var Analyst = Analyst || {};
 			}
 
 			this.updateResults();
+		},
+
+		/** toggle max fare on or off */
+		selectMaxFare: function (e) {
+			this.useMaxFare = this.$('#useMaxFare').prop('checked')
+
+			if (this.useMaxFare) $('.fare-controls').show()
+			else $('.fare-controls').hide()
 		}
 	});
 

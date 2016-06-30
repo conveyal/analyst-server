@@ -122,6 +122,9 @@ public class Query implements Serializable {
 	/** number of draws to use for the Monte Carlo simulation of frequency trips */
 	public int monteCarloDraws;
 
+	/** Maximum fare. If nonnegative, the McRAPTOR algorithm will be used, and fares will be limited. */
+	public int maxFare = -1;
+
 	/** has this query been archived? */
 	public boolean archived;
 
@@ -271,6 +274,7 @@ public class Query implements Serializable {
 
 			profileRequest.reachabilityThreshold = reachabilityThreshold;
 			profileRequest.bikeTrafficStress = bikeTrafficStress;
+			profileRequest.maxFare = maxFare;
 
 		}
 		// At this point PR is known not to be null, it was either supplied by the caller or has been created above.

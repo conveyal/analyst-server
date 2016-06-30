@@ -248,6 +248,10 @@ analysis.bike-lts-1=Bicycle surrogate LTS (scenario 1): {0}
 analysis.bike-lts-2=Bicycle surrogate LTS (scenario 2): {0}
 analysis.bike-lts=Bicycle surrogate LTS: {0}
 
+analysis.max-fare=Maximum fare
+analysis.max-fare-scenario-1=Maximum fare (scenario 1): {0}
+analysis.max-fare-scenario-2=Maximum fare (scenario 2): {0}
+
 ledger.starting=Starting balance
 ledger.ending=Ending balance
 ledger.total=Total activity

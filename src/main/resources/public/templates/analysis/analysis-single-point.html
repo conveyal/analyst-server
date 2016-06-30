@@ -175,6 +175,26 @@
           <input id="ltsSlider2" data-slider-id="ltsSlider2" style="width: 250px;" type="text" data-slider-min="1" data-slider-max="4" data-slider-step="1"
             data-slider-value="4" />
         </div>
+
+        <div class="form-group">
+          <label>
+            {{I18n "analysis.use-max-fare"}}
+            <input type="checkbox" id="useMaxFare" />
+          </label>
+        </div>
+
+        <div class="form-group fare-controls">
+          <label>{{I18n "analysis.max-fare-scenario-1"}}</label>
+          <input type="number" id="maxFare1" class="maxFareInput" value="200" />
+        </div>
+
+        <!-- wrapping div so that when the fare controls are shown, the scenario 2 controls are hidden on non-comparison searches -->
+        <div class="scenario2-controls">
+          <div class="form-group fare-controls">
+            <label>{{I18n "analysis.max-fare-scenario-2"}}</label>
+            <input type="number" id="maxFare2" class="maxFareInput" value="200" />
+          </div>
+        </div>
       </div>
     </div>
   </div>

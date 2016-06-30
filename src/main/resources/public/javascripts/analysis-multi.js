@@ -10,7 +10,8 @@ var Analyst = Analyst || {};
       'click #createQuery': 'createQuery',
       'click #cancelQuery': 'cancelQuery',
       'click #newQuery': 'newQuery',
-      'change #origin-shapefile': 'updateQuota'
+      'change #origin-shapefile': 'updateQuota',
+      'change #useMaxFare' : 'selectMaxFare'
     },
 
     regions: {
@@ -19,7 +20,7 @@ var Analyst = Analyst || {};
     },
 
     initialize: function(options) {
-      _.bindAll(this, 'createQuery', 'cancelQuery');
+      _.bindAll(this, 'createQuery', 'cancelQuery', 'selectMaxFare');
     },
 
     onRender: function() {
@@ -209,6 +210,8 @@ var Analyst = Analyst || {};
         collection: this.queries
       });
 
+      this.selectMaxFare()
+
       this.main.show(queryListLayout);
     },
 
@@ -247,6 +250,7 @@ var Analyst = Analyst || {};
         bikeSpeed: bikeSpeed,
         maxWalkTime: walkTime,
         maxBikeTime: bikeTime,
+        maxFare: this.$('#useMaxFare').prop('checked') ? parseInt(this.$('#maxFare').val()) : undefined,
         monteCarloDraws: monteCarloDraws,
         reachabilityThreshold: reachabilityThreshold,
         bikeTrafficStress: this.ltsSlider.getValue()
@@ -290,8 +294,15 @@ var Analyst = Analyst || {};
 
     newQuery: function(evt) {
       this.$("#createQueryForm").show();
-    }
+    },
 
+    /** toggle max fare on or off */
+    selectMaxFare: function (e) {
+      this.useMaxFare = this.$('#useMaxFare').prop('checked')
+
+      if (this.useMaxFare) $('.fare-controls').show()
+      else $('.fare-controls').hide()
+    }
   });
 
   A.analysis.QueryListItem = Backbone.Marionette.ItemView.extend({
