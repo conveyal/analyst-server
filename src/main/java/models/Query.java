@@ -92,6 +92,8 @@ public class Query implements Serializable {
 	public Integer totalPoints;
 	public Integer completePoints;
 
+	public int maxRides = 8;
+
 	/** Has this query finished computing _and_ have the results been downloaded from S3? */
 	public boolean complete = false;
 	
@@ -275,6 +277,7 @@ public class Query implements Serializable {
 			profileRequest.reachabilityThreshold = reachabilityThreshold;
 			profileRequest.bikeTrafficStress = bikeTrafficStress;
 			profileRequest.maxFare = maxFare;
+			profileRequest.maxRides = maxRides;
 
 		}
 		// At this point PR is known not to be null, it was either supplied by the caller or has been created above.

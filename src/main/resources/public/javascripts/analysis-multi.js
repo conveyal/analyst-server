@@ -90,6 +90,16 @@ var Analyst = Analyst || {};
 				_this.updateResults();
 			}).data('slider');
 
+      this.maxTransfersSlider = this.$('#maxTransfersSlider').slider({
+          formater: function(value) {
+            _this.$('#maxTransfersValue').html(window.Messages("analysis.max-transfers", value));
+            return window.Messages("analysis.max-transfers", value)
+          }
+        }).on('slideStop', function(value) {
+
+        _this.updateResults();
+      }).data('slider');
+
 			this.bikeTimeSlider = this.$('#bikeTimeSlider').slider({
 					formater: function(value) {
 						_this.$('#bikeTimeValue').html(window.Messages("analysis.bike-time", value));
@@ -235,6 +245,7 @@ var Analyst = Analyst || {};
       var bikeTime = this.bikeTimeSlider.getValue();
       var reachabilityThreshold = this.reachabilityThresholdSlider.getValue();
       var monteCarloDraws = this.iterationSlider.getValue();
+      var maxRides = this.maxTransfersSlider.getValue() + 1; // transfers + 1 = rides
 
       var data = {
         name: this.$("#name").val(),
@@ -249,6 +260,7 @@ var Analyst = Analyst || {};
         walkSpeed: walkSpeed,
         bikeSpeed: bikeSpeed,
         maxWalkTime: walkTime,
+        maxRides: maxRides,
         maxBikeTime: bikeTime,
         maxFare: this.$('#useMaxFare').prop('checked') ? parseInt(this.$('#maxFare').val()) : undefined,
         monteCarloDraws: monteCarloDraws,
