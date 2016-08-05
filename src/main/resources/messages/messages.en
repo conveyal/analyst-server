@@ -253,6 +253,8 @@ analysis.max-fare-scenario-1=Maximum fare (scenario 1)
 analysis.max-fare-scenario-2=Maximum fare (scenario 2)
 analysis.use-max-fare=Use maximum fare cutoff (if fare data is present)
 
+analysis.max-transfers=Maximum transfers: {0}
+
 ledger.starting=Starting balance
 ledger.ending=Ending balance
 ledger.total=Total activity

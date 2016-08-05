@@ -153,6 +153,16 @@ var Analyst = Analyst || {};
 				_this.updateResults();
 			}).data('slider');
 
+			this.maxTransfersSlider = this.$('#maxTransfersSlider').slider({
+					formater: function(value) {
+						_this.$('#maxTransfersValue').html(window.Messages("analysis.max-transfers", value));
+						return window.Messages("analysis.max-transfers", value);
+					}
+				}).on('slideStop', function(value) {
+
+				_this.updateResults();
+			}).data('slider');
+
 			this.reachabilityThresholdSlider = this.$('#reachabilityThresholdSlider').slider({
 					formater: function(value) {
 						var pct = Math.round(value * 100);
@@ -366,6 +376,7 @@ var Analyst = Analyst || {};
 			var bikeTime = this.bikeTimeSlider.getValue();
 			var reachabilityThreshold = this.reachabilityThresholdSlider.getValue();
 			var iterations = this.iterationSlider.getValue()
+			var maxRides = this.maxTransfersSlider.getValue() + 1 // One more ride than transfer, but transfers are more understandable
 
  			this.scenario1 = this.scenarios.get(this.$('#scenario1').val());
 			this.scenario2 = this.scenarios.get(this.$('#scenario2').val());
@@ -459,6 +470,7 @@ var Analyst = Analyst || {};
 				bikeSafe: 1,
 				bikeSlope: 1,
 				bikeTime: 1,
+				maxRides: maxRides,
 				bikeTrafficStress: this.ltsSlider1.getValue(),
 				// use monte carlo at all times; it also produces true best/worst case numbers.
 				boardingAssumption: 'RANDOM',
