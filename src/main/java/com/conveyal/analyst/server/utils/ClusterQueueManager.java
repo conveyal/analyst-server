@@ -253,7 +253,7 @@ public class ClusterQueueManager extends QueueManager {
 
 		CloseableHttpResponse res = httpClient.execute(post);
 
-		if (res.getStatusLine().getStatusCode() == 503) {
+		if (res.getStatusLine().getStatusCode() == 202) {
 			EntityUtils.consumeQuietly(res.getEntity());
 			res.close();
 			post.releaseConnection();
@@ -261,13 +261,13 @@ public class ClusterQueueManager extends QueueManager {
 			return null;
 		}
 
-		if (res.getStatusLine().getStatusCode() != 200 && res.getStatusLine().getStatusCode() != 202)
+		if (res.getStatusLine().getStatusCode() != 200)
 			LOG.warn("not ok: " + res.getStatusLine().getStatusCode() + " " + res.getStatusLine()
 					.getReasonPhrase());
 
 		// read the response
 		InputStream is = res.getEntity().getContent();
-			ResultEnvelope re = objectMapper.readValue(is, ResultEnvelope.class);
+		ResultEnvelope re = objectMapper.readValue(is, ResultEnvelope.class);
 		is.close();
 
 		res.close();
