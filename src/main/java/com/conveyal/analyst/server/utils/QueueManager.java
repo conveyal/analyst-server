@@ -3,6 +3,7 @@ package com.conveyal.analyst.server.utils;
 import com.conveyal.analyst.server.AnalystMain;
 import com.conveyal.r5.analyst.broker.JobStatus;
 import com.conveyal.r5.analyst.cluster.AnalystClusterRequest;
+import com.conveyal.r5.analyst.cluster.GenericClusterRequest;
 import com.conveyal.r5.analyst.cluster.ResultEnvelope;
 
 import java.io.IOException;
@@ -25,6 +26,8 @@ public abstract class QueueManager {
 
 	public abstract ResultEnvelope getSinglePoint (AnalystClusterRequest req)
 			throws IOException;
+
+	public abstract byte[] getGenericRequest (GenericClusterRequest req) throws IOException;
 
 	/** Add a callback for job status. Note that it may be called multiple times in parallel if it takes a long time to return */
 	public abstract void addCallback(String jobId, Predicate<JobStatus> callback);

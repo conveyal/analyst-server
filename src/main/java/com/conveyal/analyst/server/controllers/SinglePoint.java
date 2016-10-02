@@ -1,5 +1,6 @@
 package com.conveyal.analyst.server.controllers;
 
+import com.conveyal.analyst.server.otp.Analyst;
 import com.conveyal.analyst.server.utils.IdUtils;
 import com.conveyal.analyst.server.utils.JsonUtil;
 import com.conveyal.analyst.server.utils.QueueManager;
@@ -7,6 +8,7 @@ import com.conveyal.analyst.server.utils.QuotaLedger;
 import com.conveyal.r5.analyst.Histogram;
 import com.conveyal.r5.analyst.ResultSet;
 import com.conveyal.r5.analyst.cluster.AnalystClusterRequest;
+import com.conveyal.r5.analyst.cluster.GenericClusterRequest;
 import com.conveyal.r5.analyst.cluster.ResultEnvelope;
 import com.conveyal.r5.common.R5Version;
 import com.csvreader.CsvWriter;
@@ -56,81 +58,91 @@ public class SinglePoint extends Controller {
     	
     	// deserialize a result
     	// figure out if it's profile or not
-		AnalystClusterRequest req = null;
+		GenericClusterRequest genericReq = null;
 		try {
-			req = objectMapper.readValue(request.body(), AnalystClusterRequest.class);
+			genericReq = objectMapper.readValue(request.body(), GenericClusterRequest.class);
 		} catch (IOException e) {
 			halt(BAD_REQUEST, e.getMessage());
 		}
 
-		// don't include times on isochrone requests, they're enormous
-		req.includeTimes = req.destinationPointsetId != null;
-		req.jobId = IdUtils.getId();
+		if (genericReq instanceof AnalystClusterRequest) {
+			AnalystClusterRequest req = (AnalystClusterRequest) genericReq;
 
-		Bundle bundle = Bundle.getBundle(req.graphId);
+			// don't include times on isochrone requests, they're enormous
+			req.includeTimes = req.destinationPointsetId != null;
+			req.jobId = IdUtils.getId();
 
-		// provide some security; if we don't have this bundle and shapefile here, don't let them make a request
-		// against it (they may have the UUID from somewhere else and be trying to use our server as a back door
-		// to the cluster)
-		if (bundle == null)
-			halt(NOT_FOUND, "No such bundle or pointset, or you do not have permission to access them");
+			Bundle bundle = Bundle.getBundle(req.graphId);
 
-		if (req.destinationPointsetId != null) {
-			Shapefile shp = Shapefile.getShapefile(req.destinationPointsetId);
-
-			if (shp == null)
+			// provide some security; if we don't have this bundle and shapefile here, don't let them make a request
+			// against it (they may have the UUID from somewhere else and be trying to use our server as a back door
+			// to the cluster)
+			if (bundle == null)
 				halt(NOT_FOUND, "No such bundle or pointset, or you do not have permission to access them");
 
-			if (!bundle.projectId.equals(shp.projectId))
-				halt(BAD_REQUEST, "bundle and pointset do not match");
-		}
+			if (req.destinationPointsetId != null) {
+				Shapefile shp = Shapefile.getShapefile(req.destinationPointsetId);
 
-		// permissions check
-		Project p = Project.getProject(bundle.projectId);
-		User u = currentUser(request);
-		if (u != null && !u.hasReadPermission(p))
-			// NB this message is exactly the same as the one above, so as to not reveal any information
-			halt(NOT_FOUND, "No such bundle or pointset, or you do not have permission to access them");
+				if (shp == null)
+					halt(NOT_FOUND, "No such bundle or pointset, or you do not have permission to access them");
 
-		// specify r5 version
-		req.workerVersion = p.r5version != null && !p.r5version.isEmpty() ? p.r5version : R5Version.version;
-
-		// TODO enforce quota for users who are not logged on, or remove unauthenticated access
-		if (u.getQuota() < 1)
-			halt(FORBIDDEN, INSUFFICIENT_QUOTA);
-
-		try {
-			ResultEnvelope re = QueueManager.getManager().getSinglePoint(req);
-
-			if (re == null) {
-				// graph is still building/workers are starting
-				// Client should retry later
-				halt(SERVICE_UNAVAILABLE, "Workers starting up");
+				if (!bundle.projectId.equals(shp.projectId))
+					halt(BAD_REQUEST, "bundle and pointset do not match");
 			}
 
-			re.id = req.jobId;
+			// permissions check
+			Project p = Project.getProject(bundle.projectId);
+			User u = currentUser(request);
+			if (u != null && !u.hasReadPermission(p))
+				// NB this message is exactly the same as the one above, so as to not reveal any information
+				halt(NOT_FOUND, "No such bundle or pointset, or you do not have permission to access them");
 
-			envelopeCache.put(re.id, re);
+			// specify r5 version
+			req.workerVersion = p.r5version != null && !p.r5version.isEmpty() ? p.r5version : R5Version.version;
 
-			res.type("application/json");
+			// TODO enforce quota for users who are not logged on, or remove unauthenticated access
+			if (u.getQuota() < 1)
+				halt(FORBIDDEN, INSUFFICIENT_QUOTA);
 
-			String json = resultSetToJson(re);
+			try {
+				ResultEnvelope re = QueueManager.getManager().getSinglePoint(req);
 
-			// increment the quota at the last possible moment so that we don't charge them if something went wrong
-			QuotaLedger.LedgerEntry entry = new QuotaLedger.LedgerEntry();
-			entry.delta = -1;
-			entry.userId = u.username;
-			entry.groupId = u.groupName;
-			entry.reason = QuotaLedger.LedgerReason.SINGLE_POINT;
-			u.addLedgerEntry(entry);
-			return json;
-		} catch (Exception e) {
-			// don't halt if we've already halted
-			if (e instanceof HaltException)
-				throw e;
+				if (re == null) {
+					// graph is still building/workers are starting
+					// Client should retry later
+					halt(SERVICE_UNAVAILABLE, "Workers starting up");
+				}
 
-			LOG.error("Error creating single-point result", e);
-			halt(INTERNAL_SERVER_ERROR, e.getMessage());
+				re.id = req.jobId;
+
+				envelopeCache.put(re.id, re);
+
+				res.type("application/json");
+
+				String json = resultSetToJson(re);
+
+				// increment the quota at the last possible moment so that we don't charge them if something went wrong
+				QuotaLedger.LedgerEntry entry = new QuotaLedger.LedgerEntry();
+				entry.delta = -1;
+				entry.userId = u.username;
+				entry.groupId = u.groupName;
+				entry.reason = QuotaLedger.LedgerReason.SINGLE_POINT;
+				u.addLedgerEntry(entry);
+				return json;
+			} catch (Exception e) {
+				// don't halt if we've already halted
+				if (e instanceof HaltException)
+					throw e;
+
+				LOG.error("Error creating single-point result", e);
+				halt(INTERNAL_SERVER_ERROR, e.getMessage());
+			}
+		} else {
+			// hand it off to the broker directly
+			// no need to check permissions, UUIDs are stronger than passwords
+			byte[] result = QueueManager.getManager().getGenericRequest(genericReq);
+			if (result == null) halt(202); // 202 Accepted, indicating workers are starting
+			else return result;
 		}
 
 		return null;

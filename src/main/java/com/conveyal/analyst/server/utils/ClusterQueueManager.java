@@ -3,6 +3,7 @@ package com.conveyal.analyst.server.utils;
 import com.conveyal.analyst.server.AnalystMain;
 import com.conveyal.r5.analyst.broker.JobStatus;
 import com.conveyal.r5.analyst.cluster.AnalystClusterRequest;
+import com.conveyal.r5.analyst.cluster.GenericClusterRequest;
 import com.conveyal.r5.analyst.cluster.ResultEnvelope;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -10,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
+import com.google.common.io.ByteStreams;
 import models.Query;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -24,6 +26,7 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -274,6 +277,45 @@ public class ClusterQueueManager extends QueueManager {
 		post.releaseConnection();
 
 		return re;
+	}
+
+	@Override public byte[] getGenericRequest (GenericClusterRequest req) throws IOException {
+		// TODO use in getSinglePoint
+		String json = objectMapper.writeValueAsString(req);
+		HttpPost post = new HttpPost();
+		post.setHeader("Content-Type", "application/json");
+		post.setConfig(priorityConfig);
+
+		try {
+			post.setURI(new URI(broker + "enqueue/single"));
+		} catch (URISyntaxException e) {
+			LOG.error("Malformed broker URI {}, analysis will not be possible", broker);
+			throw new RuntimeException(e);
+		}
+
+		post.setEntity(new StringEntity(json));
+
+		CloseableHttpResponse res = httpClient.execute(post);
+
+		if (res.getStatusLine().getStatusCode() == 202) {
+			EntityUtils.consumeQuietly(res.getEntity());
+			res.close();
+			post.releaseConnection();
+			// tell the client to retry later
+			return null;
+		}
+
+		if (res.getStatusLine().getStatusCode() != 200)
+			LOG.warn("not ok: " + res.getStatusLine().getStatusCode() + " " + res.getStatusLine()
+					.getReasonPhrase());
+
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		InputStream is = res.getEntity().getContent();
+		ByteStreams.copy(is, baos);
+		is.close();
+		post.releaseConnection();
+
+		return baos.toByteArray();
 	}
 
 	/**
