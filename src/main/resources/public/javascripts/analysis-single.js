@@ -442,11 +442,12 @@ var Analyst = Analyst || {};
 
 
 			// We always send a profile request, but if we're not using transit the window will be treated as zero-width.
+			// Call wrap() on the map marker coordinates to normalize to the [-180,180] range, to avoid confusing the back end.
 			params.profileRequest = {
-				fromLat:  A.map.marker.getLatLng().lat,
-				fromLon: A.map.marker.getLatLng().lng,
-				toLat:  A.map.marker.getLatLng().lat,
-				toLon: A.map.marker.getLatLng().lng,
+				fromLat:  A.map.marker.getLatLng().wrap().lat,
+				fromLon: A.map.marker.getLatLng().wrap().lng,
+				toLat:  A.map.marker.getLatLng().wrap().lat,
+				toLon: A.map.marker.getLatLng().wrap().lng,
 				date: date,
 				fromTime:  A.util.makeTime(this.$('#fromTime').data('DateTimePicker').date()),
 				toTime: A.util.makeTime(this.$('#toTime').data('DateTimePicker').date()),
