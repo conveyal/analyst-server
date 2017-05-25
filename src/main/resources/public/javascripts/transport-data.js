@@ -154,6 +154,11 @@ A.transportData = {};
 		    // pass in hash
 		    form.append($('<input type="hidden" name="location" value="' + window.location.hash + '" />'))
 
+            // recent versions of chrome and firefox require the form to be attached to the document for submission to
+            // succeed, so add it to document body.
+            // Since we're reloading the page on form submission it doesn't matter if we mess up the formatting of the page
+            $('body').append(form)
+
 		    form.submit()
 		}
 
