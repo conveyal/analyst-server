@@ -1,5 +1,7 @@
 # Analyst Server
 
+NOTE: this project is deprecated. For Conveyal's more recent and more advanced accessibility analysis tools, see [analysis-ui](https://github.com/conveyal/analysis-ui) and [analysis-backend](https://github.com/conveyal/analysis-backend).
+
 Analyst Server is a graphical user interface-driven, web-based tool for accessibility analysis of transportation networks:
 
 <img src="splash.png" alt="Analyst Server performing accessibility analysis in Portland, Ore." />
